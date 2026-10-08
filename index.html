@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008212058">
-<script src="finance.js?v=20261008212058"></script>
+<link rel="stylesheet" href="finance.css?v=20261008213052">
+<script src="finance.js?v=20261008213052"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -607,10 +607,9 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 /* Day view: Calendar on the left, Tasks on the right */
 .dh.lane-h{gap:8px;align-items:center}
 .dh.lane-h em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px;letter-spacing:0}
-.cal.split2{flex-direction:row}
-.cal.split2 .sp{flex:1 1 0;min-width:0;min-height:0;display:flex;flex-direction:column}
-.cal.split2 .sp-tasks{box-shadow:inset 1px 0 0 var(--hair),inset 2px 0 0 var(--hair)}
-.cal.split2 .sp .tl{flex:1 1 0;min-height:0;height:auto}
+.cal-split{flex:1;min-height:0;display:flex;gap:10px}
+.cal-split > .cal{flex:1 1 0;min-width:0;min-height:0}
+.cal-split .tl{flex:1 1 0;min-height:0;height:auto}
 /* the magnified Tasks timeline: quarter-hour labels and lines */
 .tl-zoom .tl-hours span.q{font-size:9px;color:var(--ink-3);opacity:.75}
 .tl-zoom .tl-col{background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h)),repeating-linear-gradient(to bottom,var(--well) 0 1px,transparent 1px calc(var(--h) / 4))}
@@ -631,7 +630,8 @@ html.idle-cursor,html.idle-cursor *{cursor:none!important}
 .any-cell{display:flex;flex-direction:column;gap:4px;padding:6px 3px;min-width:0;box-shadow:inset 1px 0 0 var(--hair)}
 .achip{border:0;background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);border-radius:10px;padding:5px 8px;font-size:12px;font-weight:500;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .achip.done{opacity:.5;text-decoration:line-through}
-.tl{position:relative;height:clamp(380px,calc(100vh - 330px),1500px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.tl{position:relative;height:clamp(380px,calc(100vh - 330px),1500px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tl::-webkit-scrollbar{display:none}
 .tl-grid{position:relative}
 .tl-hours{position:relative;height:calc(var(--h) * 24)}
 .tl-hours span{position:absolute;right:8px;transform:translateY(-50%);font-size:10px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -1132,13 +1132,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008212058"></script>
+<script src="appearance.js?v=20261008213052"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008212058';
+  const VERSION = '20261008213052';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1801,18 +1801,18 @@ dialog::backdrop{background:transparent}
         ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
       return wrap(`${head}${err}
       ${strip}
-      <section class="float cal split2">
-        <div class="sp sp-cal" style="--n:1">
+      <div class="cal-split">
+        <section class="float cal sp-pane sp-cal" style="--n:1" aria-label="Calendar">
           <div class="cal-days"><span></span><div class="dh lane-h"><span>Calendar</span></div></div>
           ${anyFor(0)}
           <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${dayColumn(k0, false, 'cal')}</div></div>
-        </div>
-        <div class="sp sp-tasks" style="--n:1">
+        </section>
+        <section class="float cal sp-pane sp-tasks" style="--n:1" aria-label="Tasks">
           <div class="cal-days"><span></span><div class="dh lane-h"><span>Tasks</span>${openTasks ? `<em>${openTasks}</em>` : ''}</div></div>
           ${anyFor(1)}
           <div class="tl tl-zoom" id="tlTasks"><div class="tl-grid">${hoursCol(true)}${dayColumn(k0, true, 'tasks')}</div></div>
-        </div>
-      </section>`);
+        </section>
+      </div>`);
     }
     const cols = lanes.map(([k, lane]) => dayColumn(k, lane === 'tasks', lane)).join('');
     return wrap(`${head}${err}
@@ -1883,12 +1883,16 @@ dialog::backdrop{background:transparent}
   const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   function slideNav(dir, fn) {
     const sel = S.tab === 'home' ? '#view .daycal' : '#view .cal';
-    const old = document.querySelector(sel);
-    const snap = old && dir && !reduceMotion() && old.animate ? old.cloneNode(true) : null;
-    const sts = old ? [...old.querySelectorAll('.tl, .yscroll')].map(e => e.scrollTop) : [];
+    const olds = [...document.querySelectorAll(sel)];
+    const can = dir && !reduceMotion() && olds.length && olds[0].animate;
+    const snaps = can ? olds.map(o => ({ snap: o.cloneNode(true), sts: [...o.querySelectorAll('.tl, .yscroll')].map(e => e.scrollTop) })) : [];
     fn();
-    const neu = document.querySelector(sel);
-    if (!snap || !neu || neu === old) return;
+    const neus = [...document.querySelectorAll(sel)];
+    if (!can || neus.length !== olds.length || neus[0] === olds[0]) return;
+    neus.forEach((neu, i) => slidePanel(neu, snaps[i].snap, snaps[i].sts, dir));
+  }
+  // the old contents slide out of one side of a panel while the new ones slide in from the other
+  function slidePanel(neu, snap, sts, dir) {
     for (const el of [snap, ...snap.querySelectorAll('[id]')]) el.removeAttribute('id');
     snap.classList.add('slide-old');
     snap.setAttribute('aria-hidden', 'true');
