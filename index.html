@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008194300">
-<script src="finance.js?v=20261008194300"></script>
+<link rel="stylesheet" href="finance.css?v=20261008203915">
+<script src="finance.js?v=20261008203915"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -521,13 +521,13 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
   .week{margin-top:-2px}
   .wd{padding:5px 0 4px;gap:2px}
   .wd b{width:30px;height:30px;font-size:16px}
-  #view > .cal{margin:0 -18px calc(-1 * env(safe-area-inset-bottom, 0px));border-radius:0;box-shadow:inset 0 1px 0 var(--glass-border)}
-  #view > .cal .cal-days{padding:8px 0 6px}
+  .calx-main > .cal{margin:0 -18px calc(-1 * env(safe-area-inset-bottom, 0px));border-radius:0;box-shadow:inset 0 1px 0 var(--glass-border)}
+  .calx-main > .cal .cal-days{padding:8px 0 6px}
   /* Day view: the strip above already says which day it is */
-  #view > .cal.n1 .cal-days{display:none}
+  .calx-main > .cal.n1 .cal-days{display:none}
   /* room to scroll the last hours (and the last weeks) clear of the corner buttons */
-  #view > .cal .tl,#view > .cal .yscroll{padding-bottom:calc(var(--corner) + 70px + env(safe-area-inset-bottom, 0px))}
-  #view > .cal.mon{padding-bottom:calc(var(--corner) + 62px + env(safe-area-inset-bottom, 0px))}
+  .calx-main > .cal .tl,.calx-main > .cal .yscroll{padding-bottom:calc(var(--corner) + 70px + env(safe-area-inset-bottom, 0px))}
+  .calx-main > .cal.mon{padding-bottom:calc(var(--corner) + 62px + env(safe-area-inset-bottom, 0px))}
 }
 /* a whole week on a phone: stacked day headings, blocks show just their names */
 @media (max-width:679px){
@@ -555,6 +555,40 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .wd i u{width:4px;height:4px;border-radius:50%;background:var(--ink-3)}
 
 .cal{overflow:hidden;position:relative}
+/* phones lay the calendar out in one column (the wrappers step aside); tablets and computers add the side bar */
+.calx,.calx-main{display:contents}
+.cal-side{display:none}
+@media (min-width:760px) and (min-height:500px){
+  body[data-view="calendar"] .top{display:none}
+  .calx{flex:1;min-height:0;display:flex;gap:10px}
+  .calx-main{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:12px}
+  .calx-main > .cal-head,.calx-main > .week{display:none}
+  .calx-main > .cal{flex:1;min-height:0}
+  .cal-side{display:flex;flex:none;width:92px;flex-direction:column;align-items:center;gap:8px;padding:18px 8px 14px;border-radius:30px;overflow-y:auto;scrollbar-width:none;text-shadow:none;
+    background:var(--g-lines),var(--g-sheen),var(--sheet);box-shadow:inset 0 0 0 1px var(--glass-border),var(--glow),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+  .cal-side::-webkit-scrollbar{display:none}
+  .cal-side .r-line{margin:6px 0;width:48px}
+  .cs-title{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;padding:2px 0 4px;max-width:100%}
+  .cs-title b{font-size:19px;font-weight:400;letter-spacing:-.01em;line-height:1.1;overflow-wrap:anywhere}
+  .cs-title span{font-size:11px;color:var(--ink-2);letter-spacing:.04em}
+  .cs-nav{display:flex;gap:6px}
+  .cs-nav .circle{width:34px;height:34px}
+  .cs-today{width:100%;padding-inline:0;min-height:34px;font-size:12.5px}
+  .cs-views{display:flex;flex-direction:column;gap:3px;width:100%;padding:3px;border-radius:20px;background:var(--well)}
+  :root[data-wall] .cs-views{background:var(--control);box-shadow:inset 0 0 0 1px var(--glass-border)}
+  .cs-views button{border:0;background:none;border-radius:999px;padding:8px 0;font-size:12.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+  .cs-views button[aria-pressed="true"]{background:var(--solid);color:var(--on-solid);box-shadow:var(--sel-glow),var(--lift-sm)}
+  .cs-week{display:flex;flex-direction:column;gap:2px;width:100%}
+  .csd{display:grid;grid-template-columns:30px 30px;justify-content:center;align-items:center;column-gap:2px;border:0;background:none;border-radius:14px;padding:3px 0;color:var(--ink-2);position:relative}
+  .csd span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-align:right}
+  .csd b{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;font-size:14px;font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
+  .csd{grid-template-columns:30px 30px 6px}
+  .csd i{display:flex;flex-direction:column;gap:2px;justify-self:start}
+  .csd i u{width:3px;height:3px;border-radius:50%;background:var(--ink-3)}
+  .csd.in{background:var(--well)}
+  .csd.today b{box-shadow:inset 0 0 0 1.5px var(--ink)}
+  .csd.sel b{background:var(--solid);color:var(--on-solid);box-shadow:none}
+}
 /* the days sliding away when you step to the next ones */
 .slide-old{position:absolute!important;inset:0;margin:0!important;padding:0!important;background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important;pointer-events:none;z-index:4;flex:none!important}
 .slide-old .dc-head,.slide-old .mhead{visibility:hidden}
@@ -1065,13 +1099,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008194300"></script>
+<script src="appearance.js?v=20261008203915"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008194300';
+  const VERSION = '20261008203915';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1567,6 +1601,15 @@ dialog::backdrop{background:transparent}
     const days = visibleDays();
     return [days[0], days[days.length - 1]];
   }
+  // the side bar's two-line title: "Oct" over "2026", or "Oct 8" over "Thursday" for one day
+  function calTitleParts() {
+    const v = S.calView, d = fromKey(S.calDay);
+    if (v === 'year') return [String(d.getFullYear()), ''];
+    if (v === 'month') return [monFmt.format(d), String(d.getFullYear())];
+    if (v === 'day') return [`${monFmt.format(d)} ${d.getDate()}`, wdLong.format(d)];
+    const days = visibleDays(), a = fromKey(days[0]), z = fromKey(days[days.length - 1]);
+    return [a.getMonth() === z.getMonth() ? monFmt.format(a) : `${monFmt.format(a)}–${monFmt.format(z)}`, String(z.getFullYear())];
+  }
   function calTitle() {
     const v = S.calView, d = fromKey(S.calDay);
     if (v === 'year') return String(d.getFullYear());
@@ -1673,11 +1716,28 @@ dialog::backdrop{background:transparent}
     const head = `<div class="cal-head"><p class="cal-month">${esc(calTitle())}</p>${pick}
         <div class="cal-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Previous ${unit}">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Next ${unit}">${ICON.right}</button></div></div>`;
     const err = S.evErr ? `<p class="meta stale-note cal-err">Google Calendar: ${esc(S.evErr)}</p>` : '';
-    if (v === 'month') return head + err + vMonth();
-    if (v === 'year') return head + err + vYear();
     const days = visibleDays(), n = days.length;
     const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
     const week = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+    // tablets and computers: everything that steers the calendar lives in a slim bar beside the icon bar,
+    // so the calendar itself runs the full height of the screen
+    const [big, small] = calTitleParts();
+    const sideWeek = v === 'day' || v === '3day' ? `<i class="r-line"></i><div class="cs-week" role="group" aria-label="Pick a day">${week.map(k => {
+      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
+      const cls = ['csd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
+      return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} things` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
+    }).join('')}</div>` : '';
+    const side = `<aside class="cal-side" aria-label="Calendar controls">
+        <div class="cs-title"><b>${esc(big)}</b><span>${esc(small)}</span></div>
+        <div class="cs-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Previous ${unit}">${ICON.left}</button><button type="button" class="circle" data-act="cal-next" aria-label="Next ${unit}">${ICON.right}</button></div>
+        <button type="button" class="btn cs-today" data-act="cal-today">Today</button>
+        <i class="r-line"></i>
+        <div class="cs-views" role="group" aria-label="Calendar view">${CAL_VIEWS.map(([id, name]) => `<button type="button" data-act="cal-view" data-view-id="${id}" aria-pressed="${v === id}">${name}</button>`).join('')}</div>
+        ${sideWeek}
+      </aside>`;
+    const wrap = inner => `<div class="calx">${side}<div class="calx-main">${inner}</div></div>`;
+    if (v === 'month') return wrap(head + err + vMonth());
+    if (v === 'year') return wrap(head + err + vYear());
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
       const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
@@ -1690,13 +1750,13 @@ dialog::backdrop{background:transparent}
       ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
     const cols = days.map(k => dayColumn(k, false)).join('');
-    return `${head}${err}
+    return wrap(`${head}${err}
       ${strip}
       <section class="float cal${n === 7 ? ' n7' : n === 1 ? ' n1' : ''}" style="--n:${n}">
         <div class="cal-days"><span></span>${heads}</div>
         ${anyRow}
         <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
-      </section>`;
+      </section>`);
   }
   // Month: every day of the month with what's on it. Click a day's number to open that day; click empty space to add a task on it.
   function vMonth() {
