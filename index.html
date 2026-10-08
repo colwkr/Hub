@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008203915">
-<script src="finance.js?v=20261008203915"></script>
+<link rel="stylesheet" href="finance.css?v=20261008204405">
+<script src="finance.js?v=20261008204405"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -523,8 +523,6 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
   .wd b{width:30px;height:30px;font-size:16px}
   .calx-main > .cal{margin:0 -18px calc(-1 * env(safe-area-inset-bottom, 0px));border-radius:0;box-shadow:inset 0 1px 0 var(--glass-border)}
   .calx-main > .cal .cal-days{padding:8px 0 6px}
-  /* Day view: the strip above already says which day it is */
-  .calx-main > .cal.n1 .cal-days{display:none}
   /* room to scroll the last hours (and the last weeks) clear of the corner buttons */
   .calx-main > .cal .tl,.calx-main > .cal .yscroll{padding-bottom:calc(var(--corner) + 70px + env(safe-area-inset-bottom, 0px))}
   .calx-main > .cal.mon{padding-bottom:calc(var(--corner) + 62px + env(safe-area-inset-bottom, 0px))}
@@ -588,11 +586,20 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
   .csd.in{background:var(--well)}
   .csd.today b{box-shadow:inset 0 0 0 1.5px var(--ink)}
   .csd.sel b{background:var(--solid);color:var(--on-solid);box-shadow:none}
+  .cs-add{margin-top:auto;flex:none;width:56px;height:56px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--solid);color:var(--on-solid);box-shadow:var(--fab-glow),var(--lift-sm)}
+  .cs-add svg.i{width:24px;height:24px}
+  .cs-add:active{transform:scale(.96)}
+  body[data-view="calendar"] #fab{display:none}
 }
+/* Day view: Calendar on the left, Tasks on the right */
+.dh.lane-h{gap:8px;align-items:center}
+.dh.lane-h em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px;letter-spacing:0}
+.cal.split .tl-col[data-lane="tasks"]{box-shadow:inset 1px 0 0 var(--hair),inset 2px 0 0 var(--hair)}
 /* the days sliding away when you step to the next ones */
 .slide-old{position:absolute!important;inset:0;margin:0!important;padding:0!important;background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important;pointer-events:none;z-index:4;flex:none!important}
 .slide-old .dc-head,.slide-old .mhead{visibility:hidden}
 body.zooming,body.zooming *{cursor:ns-resize!important}
+html.idle-cursor,html.idle-cursor *{cursor:none!important}
 .cal-days,.cal-any,.tl-grid{display:grid;grid-template-columns:48px repeat(var(--n),minmax(0,1fr))}
 .cal-days{padding:12px 0 8px;box-shadow:inset 0 -1px 0 var(--hair)}
 .dh{display:flex;align-items:baseline;justify-content:center;gap:6px;color:var(--ink-2);font-size:11px;letter-spacing:.1em;text-transform:uppercase;min-width:0;border:0;background:none;padding:0}
@@ -1099,13 +1106,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008203915"></script>
+<script src="appearance.js?v=20261008204405"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008203915';
+  const VERSION = '20261008204405';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1623,7 +1630,7 @@ dialog::backdrop{background:transparent}
     const m = {};
     const put = (k, x) => (m[k] || (m[k] = [])).push(x);
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
-    for (let k = from; k <= to; k = addDays(k, 1)) for (const t of dayItems(k)) if (t.kind !== 'marker') put(k, { t, s: t.time ? toMin(t.time) : -1 });
+    for (let k = from; k <= to; k = addDays(k, 1)) for (const t of dayItems(k)) if (t.kind !== 'marker' && t.kind !== 'task') put(k, { t, s: t.time ? toMin(t.time) : -1 });
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
   }
@@ -1653,11 +1660,12 @@ dialog::backdrop{background:transparent}
     return `<div class="tl-hours">${h}</div>`;
   }
   const chk = (t, cls) => `<button type="button" class="${cls}" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>`;
-  function dayColumn(k, withCheck) {
+  const inLane = (t, lane) => (lane === 'cal' ? t.kind !== 'task' : lane === 'tasks' ? t.kind === 'task' : true);
+  function dayColumn(k, withCheck, lane) {
     const tk = todayKey(), nm = nowMin();
     const items = layout([
-      ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
-      ...S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) })),
+      ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane)).map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
+      ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) }))),
     ]);
     const blocks = items.map(x => {
       const len = x.e - x.s;
@@ -1684,11 +1692,11 @@ dialog::backdrop{background:transparent}
     }).join('');
     const line = k === tk ? `<div class="nowline" data-nowline style="top:calc(var(--h) * ${(nm / 60).toFixed(4)})"></div>` : '';
     // markers: a named moment (like waking up). A dashed line and a label, taking no time at all.
-    const marks = dayItems(k).filter(t => t.kind === 'marker' && t.time).map(t => {
+    const marks = (lane === 'tasks' ? [] : dayItems(k)).filter(t => t.kind === 'marker' && t.time).map(t => {
       const s0 = toMin(t.time);
       return `<div class="mark" style="top:calc(var(--h) * ${(s0 / 60).toFixed(4)})" data-task="${esc(t.id)}" data-s="${s0}" data-e="${s0}"><button type="button" class="mark-chip" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(fmtTime(s0))}, marker${t.repeat ? ', repeats' : ''}"><span class="mark-t">${esc(shortTime(s0))}</span><span class="mark-n">${esc(t.title)}</span>${t.repeat ? ICON.rep : ''}</button></div>`;
     }).join('');
-    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))} timeline">${blocks}${marks}${line}</div>`;
+    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}"${lane ? ` data-lane="${lane}"` : ''} aria-label="${esc(shortFmt.format(fromKey(k)))}${lane === 'tasks' ? ' tasks' : ''} timeline">${blocks}${marks}${line}</div>`;
   }
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
   function vDayCal(cls) {
@@ -1734,6 +1742,7 @@ dialog::backdrop{background:transparent}
         <i class="r-line"></i>
         <div class="cs-views" role="group" aria-label="Calendar view">${CAL_VIEWS.map(([id, name]) => `<button type="button" data-act="cal-view" data-view-id="${id}" aria-pressed="${v === id}">${name}</button>`).join('')}</div>
         ${sideWeek}
+        <button type="button" class="cs-add" data-act="cal-add" aria-label="Add to the calendar" title="Add">${ICON.plus}</button>
       </aside>`;
     const wrap = inner => `<div class="calx">${side}<div class="calx-main">${inner}</div></div>`;
     if (v === 'month') return wrap(head + err + vMonth());
@@ -1743,16 +1752,21 @@ dialog::backdrop{background:transparent}
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
-    const heads = days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
-    const anyByDay = days.map(k => dayItems(k).filter(t => kindOf(t) === 'anytime').sort(cmp));
-    const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
+    const split = v === 'day', k0 = days[0];
+    const openTasks = S.tasks.filter(t => t.date === k0 && !t.done).length;
+    const heads = split
+      ? `<div class="dh lane-h"><span>Calendar</span></div><div class="dh lane-h"><span>Tasks</span>${openTasks ? `<em>${openTasks}</em>` : ''}</div>`
+      : days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
+    const lanes = split ? [[k0, 'cal'], [k0, 'tasks']] : days.map(k => [k, 'cal']);
+    const anyByDay = lanes.map(([k, lane]) => dayItems(k).filter(t => kindOf(t) === 'anytime' && inLane(t, lane)).sort(cmp));
+    const allByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : S.events.filter(g => g.date === k && g.allDay));
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
       ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
-    const cols = days.map(k => dayColumn(k, false)).join('');
+    const cols = lanes.map(([k, lane]) => dayColumn(k, lane === 'tasks', lane)).join('');
     return wrap(`${head}${err}
       ${strip}
-      <section class="float cal${n === 7 ? ' n7' : n === 1 ? ' n1' : ''}" style="--n:${n}">
+      <section class="float cal${split ? ' split' : n === 7 ? ' n7' : ''}" style="--n:${split ? 2 : n}">
         <div class="cal-days"><span></span>${heads}</div>
         ${anyRow}
         <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
@@ -2583,7 +2597,7 @@ dialog::backdrop{background:transparent}
     if (m.ghost) m.ghost.remove();
     if (m.on) quietUntil = Date.now() + 400;
     flushLater();
-    if (open && m.on) openTask(null, { date: m.day, time: hhmm(m.lo), mins: m.hi - m.lo });
+    if (open && m.on) openTask(null, { date: m.day, time: hhmm(m.lo), mins: m.hi - m.lo }, m.col.dataset.lane === 'tasks' ? 'task' : null);
   }
   document.addEventListener('pointerdown', e => {
     if (mk) endMark(false);
@@ -2802,7 +2816,7 @@ dialog::backdrop{background:transparent}
     if (!id && !blk.dataset.ev) return;
     const col = blk.closest('.tl-col'), rz = mouse && id ? e.target.closest('.rz') : null;
     const s0 = id ? +blk.dataset.s : 0, e0 = id ? +blk.dataset.e : 0;
-    mv = { blk, col, cols: [...col.parentElement.querySelectorAll('.tl-col')], tl: col.closest('.tl'), id, ev: !id, marker: blk.classList.contains('mark'), pid: e.pointerId,
+    mv = { blk, col, cols: [...col.parentElement.querySelectorAll('.tl-col')].filter(c => c.dataset.lane === col.dataset.lane), tl: col.closest('.tl'), id, ev: !id, marker: blk.classList.contains('mark'), pid: e.pointerId,
       x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, mouse, on: false, mode: rz ? (rz.classList.contains('rz-t') ? 'top' : 'bot') : 'move',
       s0, e0, grab: minAt(col, e.clientY) - s0, ns: s0, nd: col.dataset.day, nlen: e0 - s0 };
     // a finger holds still to pick it up; a mouse picks it up by moving, or by holding a moment
@@ -2866,6 +2880,22 @@ dialog::backdrop{background:transparent}
   });
   document.addEventListener('fullscreenchange', updFs);
   document.addEventListener('webkitfullscreenchange', updFs);
+  // full screen on a computer: the pointer hides after 30 seconds without moving, and comes back as soon as it moves
+  // (counts the browser's own full screen too, like F11)
+  const finePointer = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const fullNow = () => inFs() || (Math.abs(window.innerWidth - screen.width) < 2 && Math.abs(window.innerHeight - screen.height) < 2);
+  let idleT = null, lastXY = '';
+  function wakePointer() {
+    document.documentElement.classList.remove('idle-cursor');
+    clearTimeout(idleT);
+    idleT = setTimeout(() => { if (fullNow()) document.documentElement.classList.add('idle-cursor'); }, 30000);
+  }
+  if (finePointer) {
+    document.addEventListener('mousemove', e => { const xy = e.clientX + ',' + e.clientY; if (xy !== lastXY) { lastXY = xy; wakePointer(); } }, { passive: true });
+    for (const t of ['mousedown', 'wheel', 'keydown']) document.addEventListener(t, wakePointer, { passive: true });
+    document.addEventListener('fullscreenchange', wakePointer);
+    wakePointer();
+  }
 
   /* ---------- events ---------- */
   function setTab(tab) {
@@ -2903,7 +2933,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'slot') {
       const r = b.getBoundingClientRect();
       const m = clamp(Math.floor((e.clientY - r.top) / (r.height / 24) * 4) * 15, 0, 1425);
-      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: 30 });
+      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: 30 }, b.dataset.lane === 'tasks' ? 'task' : null);
     }
     else if (act === 'hd-prev') shiftHome(-1);
     else if (act === 'hd-next') shiftHome(1);
@@ -2913,6 +2943,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'cal-today') { const tk = todayKey(), d = tk > S.calDay ? 1 : tk < S.calDay ? -1 : 0; slideNav(d, () => { S.calDay = tk; aimTimeline(); render(); }); loadEvents(false); }
     else if (act === 'cal-day') { const k = b.dataset.day, d = k > S.calDay ? 1 : k < S.calDay ? -1 : 0; slideNav(d, () => { S.calDay = k; render(); }); }
     else if (act === 'cal-view') setCalView(b.dataset.viewId);
+    else if (act === 'cal-add') openTask(null, { date: S.calDay }, null);
     else if (act === 'cal-open') setCalView('day', b.dataset.day);
     else if (act === 'cal-month') setCalView('month', b.dataset.day);
     else if (act === 'm-cell') { if (window.innerWidth < 680) setCalView('day', b.dataset.day); else openTask(null, { date: b.dataset.day }); }
