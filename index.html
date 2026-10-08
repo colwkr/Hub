@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008193419">
-<script src="finance.js?v=20261008193419"></script>
+<link rel="stylesheet" href="finance.css?v=20261008194300">
+<script src="finance.js?v=20261008194300"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -343,7 +343,7 @@ body[data-view="home"] .top{display:none}
 .day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .list > .day-div{box-shadow:none}
 .trow.first .name{font-size:16px}.g-wx{grid-area:wx}.g-now{grid-area:now}.g-od{grid-area:od}.g-cal{grid-area:cal}.g-uns{grid-area:uns}
-.daycal{display:flex;flex-direction:column;overflow:hidden}
+.daycal{display:flex;flex-direction:column;overflow:hidden;position:relative}
 .dc-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 14px 12px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
 .dc-head > div:first-child{min-width:0;display:flex;flex-direction:column;gap:2px}
 .dc-any{display:flex;gap:10px;align-items:flex-start;padding:10px 14px 10px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
@@ -554,7 +554,11 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .wd i{display:flex;gap:3px;height:4px}
 .wd i u{width:4px;height:4px;border-radius:50%;background:var(--ink-3)}
 
-.cal{overflow:hidden}
+.cal{overflow:hidden;position:relative}
+/* the days sliding away when you step to the next ones */
+.slide-old{position:absolute!important;inset:0;margin:0!important;padding:0!important;background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important;pointer-events:none;z-index:4;flex:none!important}
+.slide-old .dc-head,.slide-old .mhead{visibility:hidden}
+body.zooming,body.zooming *{cursor:ns-resize!important}
 .cal-days,.cal-any,.tl-grid{display:grid;grid-template-columns:48px repeat(var(--n),minmax(0,1fr))}
 .cal-days{padding:12px 0 8px;box-shadow:inset 0 -1px 0 var(--hair)}
 .dh{display:flex;align-items:baseline;justify-content:center;gap:6px;color:var(--ink-2);font-size:11px;letter-spacing:.1em;text-transform:uppercase;min-width:0;border:0;background:none;padding:0}
@@ -1061,13 +1065,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008193419"></script>
+<script src="appearance.js?v=20261008194300"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008193419';
+  const VERSION = '20261008194300';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1156,7 +1160,10 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 1100 ? 'week' : window.innerWidth >= 680 ? '3day' : 'day';
   }
-  let mk = null, mv = null, renderLater = false, scopeOpen = false; // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
+  let mk = null, mv = null, renderLater = false, scopeOpen = false;
+  // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
+  const H_MIN = 24, H_MAX = 180;
+  try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
     all: [], tasks: [], items: [], weather: null, mtgId: null,
@@ -1744,20 +1751,42 @@ dialog::backdrop{background:transparent}
     S.aim.hometl = at * hourPx();
   }
   function shiftHome(dir) {
-    S.homeDay = addDays(S.homeDay, dir);
-    aimHome();
-    render();
+    slideNav(dir, () => { S.homeDay = addDays(S.homeDay, dir); render(); });
     loadEvents(false);
+  }
+  // the old days slide out one side while the new ones slide in from the other
+  const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function slideNav(dir, fn) {
+    const sel = S.tab === 'home' ? '#view .daycal' : '#view .cal';
+    const old = document.querySelector(sel);
+    const snap = old && dir && !reduceMotion() && old.animate ? old.cloneNode(true) : null;
+    const tl0 = old && old.querySelector('.tl, .yscroll'), st = tl0 ? tl0.scrollTop : 0;
+    fn();
+    const neu = document.querySelector(sel);
+    if (!snap || !neu || neu === old) return;
+    for (const el of [snap, ...snap.querySelectorAll('[id]')]) el.removeAttribute('id');
+    snap.classList.add('slide-old');
+    snap.setAttribute('aria-hidden', 'true');
+    snap.inert = true;
+    neu.appendChild(snap);
+    const tl1 = snap.querySelector('.tl, .yscroll'); if (tl1) tl1.scrollTop = st;
+    const W = neu.clientWidth, opts = { duration: 340, easing: 'cubic-bezier(.22,.8,.24,1)' };
+    for (const c of neu.children) {
+      if (c === snap || c.classList.contains('dc-head') || c.classList.contains('mhead')) continue;
+      c.animate([{ transform: `translateX(${dir * W}px)` }, { transform: 'none' }], opts);
+    }
+    const a = snap.animate([{ transform: 'none' }, { transform: `translateX(${-dir * W}px)` }], opts);
+    a.onfinish = a.oncancel = () => snap.remove();
   }
   function shiftCal(dir) {
     const v = S.calView;
+    if (!dir) return;
     if (v === 'month' || v === 'year') {
       const d = fromKey(S.calDay);
       const y = d.getFullYear() + (v === 'year' ? dir : 0), m = d.getMonth() + (v === 'month' ? dir : 0);
       S.calDay = dkey(new Date(y, m, Math.min(d.getDate(), new Date(y, m + 1, 0).getDate())));
     } else S.calDay = addDays(S.calDay, dir * (v === 'day' ? 1 : v === '3day' ? 3 : 7));
-    aimTimeline();
-    render();
+    slideNav(dir, render);
     loadEvents(false);
   }
   function setCalView(v, day) {
@@ -2522,6 +2551,73 @@ dialog::backdrop{background:transparent}
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
   function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !scopeOpen && !typingInMeeting()) render(); }, 0); }
 
+  // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
+  let zoomSaveT = null;
+  function zoomTo(h, tl, fy) {
+    const h0 = hourPx();
+    h = clamp(h, H_MIN, H_MAX);
+    if (!tl || Math.abs(h - h0) < 0.05) return;
+    const r = tl.getBoundingClientRect(), y = clamp(fy - r.top, 0, r.height), at = (tl.scrollTop + y) / h0;
+    document.documentElement.style.setProperty('--h', h.toFixed(2) + 'px');
+    tl.scrollTop = at * h - y;
+    clearTimeout(zoomSaveT);
+    zoomSaveT = setTimeout(() => { try { localStorage.setItem('pos.hourH', h.toFixed(1)); } catch (e) {} }, 300);
+  }
+  // phones and iPads: two fingers on a timeline
+  let pz = null;
+  const span = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length !== 2) return;
+    const [a, b] = e.touches, tl = a.target.closest && a.target.closest('.tl');
+    if (!tl || !(b.target.closest && b.target.closest('.tl') === tl)) return;
+    if (mk) endMark(false);
+    if (mv) endMove(false);
+    sw = null; drag = null;
+    pz = { tl, d0: Math.max(24, span(a, b)), h0: hourPx() };
+  }, { passive: true, capture: true });
+  document.addEventListener('touchmove', e => {
+    if (!pz || e.touches.length !== 2) return;
+    e.preventDefault();
+    const [a, b] = e.touches;
+    zoomTo(pz.h0 * Math.max(24, span(a, b)) / pz.d0, pz.tl, (a.clientY + b.clientY) / 2);
+  }, { passive: false, capture: true });
+  const endPinch = e => { if (pz && e.touches.length < 2) { pz = null; quietUntil = Date.now() + 350; } };
+  document.addEventListener('touchend', endPinch, { capture: true });
+  document.addEventListener('touchcancel', endPinch, { capture: true });
+  // computers: hold the middle mouse button on a timeline and drag down to zoom in, up to zoom out
+  let mz = null;
+  document.addEventListener('mousedown', e => { if (e.button === 1 && e.target.closest && e.target.closest('.tl')) e.preventDefault(); }); // no autoscroll
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' || e.button !== 1) return;
+    const tl = e.target.closest && e.target.closest('.tl');
+    if (!tl) return;
+    e.preventDefault();
+    mz = { tl, y0: e.clientY, fy: e.clientY, h0: hourPx(), pid: e.pointerId };
+    try { tl.setPointerCapture(e.pointerId); } catch (err) {}
+    document.body.classList.add('zooming');
+  });
+  document.addEventListener('pointermove', e => { if (mz && e.pointerId === mz.pid) zoomTo(mz.h0 * Math.exp((e.clientY - mz.y0) / 160), mz.tl, mz.fy); });
+  const endMz = e => { if (mz && e.pointerId === mz.pid) { mz = null; document.body.classList.remove('zooming'); } };
+  document.addEventListener('pointerup', endMz);
+  document.addEventListener('pointercancel', endMz);
+  // trackpad pinch (and Ctrl + scroll wheel) over a timeline
+  document.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;
+    const tl = e.target.closest && e.target.closest('.tl');
+    if (!tl) return;
+    e.preventDefault();
+    zoomTo(hourPx() * Math.exp(-e.deltaY * 0.01), tl, e.clientY);
+  }, { passive: false });
+  // Safari on a Mac reports trackpad pinches as gestures (iPhone and iPad use the touch path above)
+  let gz = null;
+  document.addEventListener('gesturestart', e => {
+    if (pz || navigator.maxTouchPoints > 0) return;
+    const tl = e.target.closest && e.target.closest('.tl');
+    gz = tl ? { tl, h0: hourPx(), fy: e.clientY || 0 } : null;
+  });
+  document.addEventListener('gesturechange', e => { if (gz && !pz) zoomTo(gz.h0 * e.scale, gz.tl, gz.fy || gz.tl.getBoundingClientRect().top + gz.tl.clientHeight / 2); });
+  document.addEventListener('gestureend', () => { gz = null; });
+
   // timeline: pick a task up and move it — hold it with a finger until it lifts, or press and drag with a mouse.
   // With a mouse, its top or bottom edge can also be dragged to change when it starts or ends. Everything snaps to 15 minutes.
   const snap15 = m => Math.round(m / 15) * 15;
@@ -2751,11 +2847,11 @@ dialog::backdrop{background:transparent}
     }
     else if (act === 'hd-prev') shiftHome(-1);
     else if (act === 'hd-next') shiftHome(1);
-    else if (act === 'hd-today') { S.homeDay = todayKey(); aimHome(); render(); }
+    else if (act === 'hd-today') { const tk = todayKey(), d = tk > S.homeDay ? 1 : tk < S.homeDay ? -1 : 0; slideNav(d, () => { S.homeDay = tk; aimHome(); render(); }); }
     else if (act === 'cal-prev') shiftCal(-1);
     else if (act === 'cal-next') shiftCal(1);
-    else if (act === 'cal-today') { S.calDay = todayKey(); aimTimeline(); render(); }
-    else if (act === 'cal-day') { S.calDay = b.dataset.day; aimTimeline(); render(); }
+    else if (act === 'cal-today') { const tk = todayKey(), d = tk > S.calDay ? 1 : tk < S.calDay ? -1 : 0; slideNav(d, () => { S.calDay = tk; aimTimeline(); render(); }); loadEvents(false); }
+    else if (act === 'cal-day') { const k = b.dataset.day, d = k > S.calDay ? 1 : k < S.calDay ? -1 : 0; slideNav(d, () => { S.calDay = k; render(); }); }
     else if (act === 'cal-view') setCalView(b.dataset.viewId);
     else if (act === 'cal-open') setCalView('day', b.dataset.day);
     else if (act === 'cal-month') setCalView('month', b.dataset.day);
