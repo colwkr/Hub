@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008222501">
-<script src="finance.js?v=20261008222501"></script>
+<link rel="stylesheet" href="finance.css?v=20261008224113">
+<script src="finance.js?v=20261008224113"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -75,7 +75,7 @@
   --lift:0 24px 50px -22px rgba(0,0,0,.9),0 6px 16px -8px rgba(0,0,0,.6);
   --lift-sm:0 10px 22px -12px rgba(0,0,0,.95);
   --glow:0 0 26px -12px rgba(255,255,255,.22);
-  --sel-glow:0 0 22px -6px rgba(255,255,255,.42);
+  --sel-glow:0 0 22px -6px rgba(255,255,255,.42); --now-line:0 0 10px 1px rgba(255,255,255,.5);
   --fab-glow:0 0 0 1px rgba(255,255,255,.4),0 0 28px -4px rgba(255,255,255,.35);
   --active:linear-gradient(90deg,rgba(255,255,255,.15),rgba(255,255,255,.05) 62%,rgba(255,255,255,0));
   --active-sq:rgba(255,255,255,.12);
@@ -107,7 +107,7 @@
   --lift:0 22px 44px -24px rgba(30,34,50,.38),0 6px 14px -8px rgba(30,34,50,.12);
   --lift-sm:0 10px 22px -12px rgba(30,34,50,.35);
   --glow:0 0 0 0 transparent;
-  --sel-glow:0 0 0 0 transparent;
+  --sel-glow:0 0 0 0 transparent; --now-line:none;
   --fab-glow:0 0 0 0 transparent;
   --active:linear-gradient(90deg,rgba(20,22,30,.085),rgba(20,22,30,.03) 62%,rgba(20,22,30,0));
   --active-sq:rgba(20,22,30,.07);
@@ -622,25 +622,29 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .tq{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:6px 8px 16px;display:flex;flex-direction:column;gap:4px}
 .tq::-webkit-scrollbar{display:none}
 .tq-list > .day-div:first-child{padding-top:8px}
-.tq-list > .trow.live{display:flex;margin:6px 0}
 .tq-row .meta{font-variant-numeric:tabular-nums}
-/* the countdown: big on the next task, smaller on the rest */
+/* the task that's on right now: a lit line down its left edge, no frame, no pulse */
+.tq-list > .trow.live{display:block;margin:2px 0;border-radius:14px;background:none;box-shadow:none;animation:none}
+.tq-list > .trow.live .sw-face::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--solid);box-shadow:var(--now-line)}
+.tq-list > .trow.live.dragging .sw-face,.tq-list > .trow.live.armed .sw-face{background:var(--sheet)}
+.tq-list .trow.live .sw-handle{color:var(--ink-2)}
+.tq-list .trow.live .sw-handle::before{box-shadow:inset 0 0 0 1.5px var(--ink-3);background:none}
+.tq-list .trow.live .sw-handle svg.i{animation:none}
+/* the countdown on the right: big on the next task, smaller on the rest; "Now" on the one that's on */
 .sp-tasks{container-type:inline-size}
-.tq-cd{flex:none;display:flex;align-items:baseline;gap:5px;margin-left:6px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+.tq-cd{flex:none;display:flex;align-items:baseline;gap:4px;margin-left:6px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
 .tq-cd b{font-weight:300;font-size:17px;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .tq-cd small{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--ink-3)}
+.tq-cd.now b{color:var(--ink);font-weight:400}
 .tq-row.first .tq-cd{color:var(--ink);gap:6px}
 .tq-row.first .tq-cd b{font-size:clamp(32px,14.5cqi,48px);font-weight:200;letter-spacing:-.04em;text-shadow:var(--halo)}
-.tq-row.first .tq-cd.cd-h b{font-size:clamp(26px,10.5cqi,36px)}
 .tq-row.first .tq-cd small{font-size:13px;color:var(--ink-2)}
-.tq-row.first.live .tq-cd small{color:var(--ink)}
-/* narrow panel (iPad upright): the big countdown gets its own line under the name */
+/* narrow panel (iPad upright): the countdown gets its own line under the name */
 @container (max-width: 240px){
-  .tq-row.has-cd{flex-wrap:wrap;row-gap:0}
+  .tq-row.has-cd .sw-face{flex-wrap:wrap;row-gap:0}
   .tq-row.has-cd .tmain{flex:1 1 0;padding-bottom:0}
   .tq-row .tq-cd{flex-basis:100%;justify-content:flex-end;margin:0 0 6px}
   .tq-row.first .tq-cd b{font-size:clamp(26px,17cqi,36px)}
-  .tq-row.first .tq-cd.cd-h b{font-size:clamp(24px,14cqi,32px)}
 }
 .tq-add{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;border-radius:16px;padding:12px 14px;margin-top:4px;color:var(--ink-2);font-size:13.5px;font-weight:500;text-align:left}
 .tq-add svg.i{width:16px;height:16px}
@@ -1180,13 +1184,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008222501"></script>
+<script src="appearance.js?v=20261008224113"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008222501';
+  const VERSION = '20261008224113';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1201,10 +1205,10 @@ dialog::backdrop{background:transparent}
   const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
   // a day key plus minutes into that day, as a moment in time
   const atEpoch = (k, min) => { const d = fromKey(k); d.setMinutes(min); return d.getTime(); };
-  // 12:47 under an hour, 1:05:12 over
-  const cdText = ms => {
-    const s = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60, p = n => String(n).padStart(2, '0');
-    return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`;
+  // a countdown in whole minutes: [number, unit] — "12" "min" under an hour, "1:13" over
+  const cdParts = ms => {
+    const m = Math.max(0, Math.ceil(ms / 60000));
+    return m < 60 ? [String(m), 'min'] : [`${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`, ''];
   };
   const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 
@@ -1914,11 +1918,22 @@ dialog::backdrop{background:transparent}
       const s0 = t.time ? toMin(t.time) : null, live = today && s0 != null && s0 <= nm && nm < s0 + effMins(t);
       const soon = today && s0 != null && s0 > nm;
       const when = s0 == null ? (t.mins ? fmtDur(t.mins) : 'Anytime') : fmtTime(s0);
-      // today's coming and running tasks count down to the second on the right: to the start, or to the end while it's on
-      const cd = live || soon ? atEpoch(k, live ? s0 + effMins(t) : s0) : 0;
-      const sr = live ? `, ${inMins(s0 + effMins(t) - nm)} left` : soon ? `, in ${inMins(s0 - nm)}` : '';
-      const cdHtml = cd ? `<span class="tq-cd${cd - Date.now() >= 3600000 ? ' cd-h' : ''}" data-cd="${cd}" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true">${live ? '' : '<small>in</small>'}<b>${cdText(cd - Date.now())}</b>${live ? '<small>left</small>' : ''}</span>` : '';
-      return `<div class="trow tq-row${live ? ' live' : ''}${cd ? ' has-cd' : ''}${cls ? ' ' + cls : ''}">${chk(t, 'chk')}<button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}</span>${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>${cdHtml}</div>`;
+      // on the right: how long until today's coming tasks start, or just "Now" on the one that's on
+      const cd = soon ? atEpoch(k, s0) : 0, cp = cd ? cdParts(cd - Date.now()) : null;
+      const sr = live ? ', now' : soon ? `, in ${inMins(s0 - nm)}` : '';
+      const cdHtml = live ? `<span class="tq-cd now" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><b>Now</b></span>`
+        : cd ? `<span class="tq-cd" data-cd="${cd}" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><small>in</small><b>${cp[0]}</b><small class="u">${cp[1]}</small></span>` : '';
+      const big = cls === 'first' && !live;
+      // swipe right to complete, the same as Home's Next list; no checkboxes here
+      return `<div class="trow sw tq-row${live ? ' live' : ''}${cdHtml ? ' has-cd' : ''}${big ? ' first' : ''}" data-swipe="${esc(t.id)}">
+        <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
+        <div class="sw-face">
+          <button type="button" class="sw-handle" data-act="swipe-hint" aria-hidden="true" tabindex="-1">${ICON.arrow}</button>
+          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta"><span>${esc(when)}</span>${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>
+          ${cdHtml}
+          <button type="button" class="sr-only" data-act="done" data-id="${esc(t.id)}">Complete ${esc(t.title)}</button>
+        </div>
+      </div>`;
     };
     const sec = (label, list, first) => list.length ? `<div class="day-div">${label}</div>${list.map((t, i) => row(t, first && i === 0 ? 'first' : '')).join('')}` : '';
     let body = '';
@@ -2152,8 +2167,9 @@ dialog::backdrop{background:transparent}
   function tickCountdowns() {
     const now = Date.now();
     for (const el of document.querySelectorAll('[data-cd]')) {
-      const b = el.querySelector('b'), txt = cdText(+el.dataset.cd - now);
-      if (b && b.textContent !== txt) b.textContent = txt;
+      const [n, u] = cdParts(+el.dataset.cd - now), b = el.querySelector('b'), us = el.querySelector('.u');
+      if (b && b.textContent !== n) b.textContent = n;
+      if (us && us.textContent !== u) us.textContent = u;
     }
   }
   setInterval(() => { if (document.hidden) return; tickCountdowns(); tick(); }, 1000);
@@ -2222,10 +2238,21 @@ dialog::backdrop{background:transparent}
   }
   $('#cfNo').addEventListener('click', () => cfSheet.close());
   $('#cfYes').addEventListener('click', async () => {
-    const id = cfId; cfId = null;
+    const id = cfId, row = cfRow; cfId = null; cfRow = null; // the swiped row stays pushed aside, then slides away
     cfSheet.close();
+    if (row) await sweepOut(row);
     if (id) await toggleDone(id);
   });
+  // a completed row carries on off to the right, then the gap closes
+  async function sweepOut(row) {
+    if (!row.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const face = row.querySelector('.sw-face'), w = row.offsetWidth, h = row.offsetHeight;
+    try {
+      row.style.pointerEvents = 'none';
+      await face.animate([{ transform: getComputedStyle(face).transform }, { transform: `translateX(${w + 24}px)` }], { duration: 240, easing: 'cubic-bezier(.45,0,.75,.4)', fill: 'forwards' }).finished;
+      await row.animate([{ height: `${h}px`, opacity: 1 }, { height: '0px', opacity: 0, marginTop: '0px', marginBottom: '0px' }], { duration: 220, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'forwards' }).finished;
+    } catch (err) {}
+  }
   cfSheet.addEventListener('close', () => { cfId = null; settleRow(); });
 
   async function clearExamples() {
