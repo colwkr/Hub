@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008172654">
-<script src="finance.js?v=20261008172654"></script>
+<link rel="stylesheet" href="finance.css?v=20261008174211">
+<script src="finance.js?v=20261008174211"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -341,17 +341,28 @@ body[data-view="home"] .top{display:none}
 .day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .list > .day-div{box-shadow:none}
 .trow.first .name{font-size:16px}.g-wx{grid-area:wx}.g-now{grid-area:now}.g-od{grid-area:od}.g-cal{grid-area:cal}.g-uns{grid-area:uns}
-.daycal{display:flex;flex-direction:column;overflow:hidden}
-.dc-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 14px 12px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
-.dc-head > div:first-child{min-width:0;display:flex;flex-direction:column;gap:2px}
-.dc-any{display:flex;gap:10px;align-items:flex-start;padding:10px 14px 10px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
-.dc-any .lab{padding-top:9px;flex:none}
-.dc-chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.daycal{display:flex;flex-direction:column;overflow:hidden;container-type:inline-size}
+/* Home calendar header: what you're looking at, the view switcher, then back / today / forward */
+.dc-head{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"t v n";align-items:center;gap:10px 12px;padding:14px 14px 12px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
+.dc-t{grid-area:t;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dc-t .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-head .cal-views{grid-area:v}
+.dc-head .cal-nav{grid-area:n;justify-self:end}
+@container (max-width:620px){
+  .dc-head{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t n" "v v"}
+  .dc-head .cal-views{justify-self:start}
+}
+.any-cell .achip2{height:28px}
+/* a short task in a week column: its name matters more than its time */
+.daycal.n7 .blk.tight small{display:none}
+.any-cell .achip2 .bchk{width:28px;height:28px}
+.any-cell .achip2 .bchk::before{left:6px;top:calc(50% - 8px);width:16px;height:16px}
+.any-cell .achip2 .bchk svg.i{left:8.5px;top:calc(50% - 5.5px);width:11px;height:11px}
+.any-cell .achip2.evt .bmain{padding-left:10px}
 .achip2{display:inline-flex;align-items:center;max-width:100%;min-width:0;height:32px;border-radius:999px;background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair)}
 .achip2 .bmain{padding:0 12px 0 0;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .achip2.done .bmain{text-decoration:line-through;color:var(--ink-3)}
 .daycal .tl{height:min(68vh,560px)}
-.tl-grid.one{grid-template-columns:52px minmax(0,1fr)}
 
 /* sign-in */
 .login{min-height:calc(100vh - 120px);display:grid;place-items:center;padding-block:24px}
@@ -623,7 +634,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .app{height:100%;padding-block:12px;gap:16px}
   .top{padding-top:8px}
-  body[data-view="home"] .top{display:none}
+  body[data-view="home"] .top,body[data-view="calendar"] .top{display:none}
   body[data-auth="out"] .app{padding-left:12px}
   #view{flex:1;min-height:0;display:flex;flex-direction:column;gap:16px}
   .cal{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -638,10 +649,11 @@ body.marking,body.marking *{cursor:ns-resize!important}
   /* upright iPad: calendar down the left; on the right the clock, what's next (filling the middle), then the weather */
   .home > .g-next{display:flex}
   .home{flex:1;min-height:0;display:grid;gap:16px 18px;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
     grid-template-rows:auto minmax(0,1fr) auto;
     grid-template-areas:"cal hero" "cal next" "cal wx"}
   .g-next .list{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
+  .g-next .list > *{flex-shrink:0}
   .g-next .list > .empty:only-child{margin:auto;padding:28px;text-align:center}
   .home > *{min-height:0}
   .g-hero{align-items:center;text-align:center;padding:6px 6px 0}
@@ -651,17 +663,20 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .g-uns{display:flex;flex-direction:column}
   .g-uns .list{min-height:0;overflow-y:auto;scrollbar-width:none}
 }
-/* sideways iPad: calendar left, tasks in the middle, clock top-right, weather bottom-right */
+/* sideways iPad and computers: like Google Calendar, the calendar takes the screen from the rail to a slim column
+   on the right that holds the clock, what's next and the weather */
 @media (min-width:1000px) and (min-height:500px){
-  .home{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr);
-    grid-template-rows:auto minmax(0,1fr);
-    grid-template-areas:"cal next hero" "cal next wx"}
-  .clock{font-size:clamp(64px,7.4vw,112px)}
-  .g-wx{justify-content:flex-start;gap:18px}
-  /* the days ahead share whatever height is left, so the card fills its column without empty bands */
+  .home{grid-template-columns:minmax(0,1fr) clamp(280px,22vw,340px);gap:16px 14px}
+  .clock{font-size:clamp(56px,6.2vw,96px)}
+  .hero .long{font-size:16px;margin-top:8px}
+  .g-wx{padding:16px;gap:14px}
+  .g-wx .wx-now .fig{font-size:54px}
+  .g-wx .wx-now{gap:12px}
+}
+/* tall screens have room for the days ahead too; they share what's left so the card has no empty bands */
+@media (min-width:1000px) and (min-height:1050px){
   .g-wx .wx-days{display:flex;flex:1;min-height:0}
-  .g-wx .wd-row{flex:1 1 0;min-height:34px;max-height:64px}
-  .g-wx .wx-now .fig{font-size:72px}
+  .g-wx .wd-row{flex:1 1 0;min-height:32px;max-height:56px}
 }
 
 /* sheet: a glass panel that floats clear of every edge, flick it down to dismiss */
@@ -887,13 +902,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008172654"></script>
+<script src="appearance.js?v=20261008174211"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008172654';
+  const VERSION = '20261008174211';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -977,11 +992,16 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 1100 ? 'week' : window.innerWidth >= 680 ? '3day' : 'day';
   }
+  const HOME_VIEWS = CAL_VIEWS.slice(0, 3); // Home's calendar: Day, 3 Day, Week
+  function savedHomeView() {
+    try { const v = localStorage.getItem('pos.homeView'); if (HOME_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
+    return window.innerWidth >= 1200 ? 'week' : window.innerWidth >= 1000 ? '3day' : 'day';
+  }
   let mk = null, renderLater = false; // a drag on the timeline in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
     tasks: [], weather: null,
-    tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
+    tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), homeView: savedHomeView(), showDone: false, confirmClear: false,
     aim: {}, busy: new Set(),
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
@@ -1226,12 +1246,13 @@ dialog::backdrop{background:transparent}
 
   /* ---------- calendar ---------- */
   // the days a timeline view shows: Day, 3 Day and Next 7 start on the picked day; Week runs Sunday to Saturday
-  function visibleDays() {
-    const k = S.calDay, v = S.calView;
+  function daysFor(v, k) {
     const n = v === 'day' ? 1 : v === '3day' ? 3 : 7;
     const start = v === 'week' || v === 'month' || v === 'year' ? addDays(k, -fromKey(k).getDay()) : k;
     return Array.from({ length: n }, (_, i) => addDays(start, i));
   }
+  const visibleDays = () => daysFor(S.calView, S.calDay);
+  const homeDays = () => daysFor(S.homeView, S.homeDay);
   // Month: the weeks that touch the month. Year: January 1 to December 31.
   function monthGrid() {
     const d = fromKey(S.calDay), first = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -1315,27 +1336,49 @@ dialog::backdrop{background:transparent}
     return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))} timeline">${blocks}${line}</div>`;
   }
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
+  // the time grid both calendars share: day headings, an anytime row when needed, then 24 hours.
+  // On Home every task carries its done circle.
+  function timeGrid(days, home) {
+    const tk = todayKey();
+    const heads = days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="${home ? 'hd-open' : 'cal-open'}" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
+    const anyByDay = days.map(k => S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
+    const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
+    const evChip = g => home
+      ? `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`
+      : `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`;
+    const taskChip = t => home
+      ? `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`
+      : `<button type="button" class="achip${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button>`;
+    const anyRow = anyByDay.some(x => x.length) || allByDay.some(x => x.length)
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(evChip).join('')}${list.map(taskChip).join('')}</div>`).join('')}</div>`
+      : '';
+    return `<div class="cal-days"><span></span>${heads}</div>
+        ${anyRow}
+        <div class="tl" id="${home ? 'hometl' : 'tl'}" data-keep><div class="tl-grid">${hoursCol()}${days.map(k => dayColumn(k, home)).join('')}</div></div>`;
+  }
+  const viewPick = (list, cur, act) => `<div class="cal-views" role="group" aria-label="Calendar view">${list.map(([id, name]) => `<button type="button" data-act="${act}" data-view-id="${id}" aria-pressed="${cur === id}">${name}</button>`).join('')}</div>`;
+  // Home's calendar: the biggest thing on the screen, with Day, 3 Day and Week
   function vDayCal(cls) {
-    const k = S.homeDay, tk = todayKey();
-    const any = S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp);
-    const open = S.tasks.filter(t => t.date === k && !t.done).length;
-    const allDay = S.events.filter(g => g.date === k && g.allDay);
-    const nEv = S.events.filter(g => g.date === k).length;
-    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    const days = homeDays(), n = days.length, k = days[0], last = days[n - 1], tk = todayKey();
+    const open = S.tasks.filter(t => t.date >= k && t.date <= last && !t.done).length;
+    const nEv = S.events.filter(g => g.date >= k && g.date <= last).length;
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
-    return `<section class="float daycal ${cls}" aria-label="Day calendar">
+    const lab = n === 1 ? dayLabel(k) : `${monFmt.format(fromKey(k))} ${fromKey(k).getDate()} – ${fromKey(k).getMonth() === fromKey(last).getMonth() ? '' : monFmt.format(fromKey(last)) + ' '}${fromKey(last).getDate()}`;
+    const title = n === 1 ? longFmt.format(fromKey(k)) : monthLabel(k, last);
+    const unit = n === 1 ? 'day' : n === 3 ? '3 days' : 'week';
+    return `<section class="float daycal cal-pane ${cls}${n === 7 ? ' n7' : ''}" style="--n:${n}" aria-label="Calendar">
       <div class="dc-head">
-        <div><span class="lab">${esc(dayLabel(k))}</span><p class="name">${esc(longFmt.format(fromKey(k)))}</p><p class="meta">${S.loaded ? esc(counts) : ''}</p>${S.evErr ? `<p class="meta stale-note">Google Calendar: ${esc(S.evErr)}</p>` : ''}</div>
-        <div class="cal-nav"><button type="button" class="circle" data-act="hd-prev" aria-label="Previous day">${ICON.left}</button>${k !== tk ? '<button type="button" class="btn" data-act="hd-today">Today</button>' : ''}<button type="button" class="circle" data-act="hd-next" aria-label="Next day">${ICON.right}</button></div>
+        <div class="dc-t"><span class="lab">${esc(lab)}</span><p class="name">${esc(title)}</p><p class="meta">${S.loaded ? esc(counts) : ''}</p>${S.evErr ? `<p class="meta stale-note">Google Calendar: ${esc(S.evErr)}</p>` : ''}</div>
+        ${viewPick(HOME_VIEWS, S.homeView, 'hd-view')}
+        <div class="cal-nav"><button type="button" class="circle" data-act="hd-prev" aria-label="Previous ${unit}">${ICON.left}</button>${days.includes(tk) ? '' : '<button type="button" class="btn" data-act="hd-today">Today</button>'}<button type="button" class="circle" data-act="hd-next" aria-label="Next ${unit}">${ICON.right}</button></div>
       </div>
-      ${anyRow}
-      <div class="tl" id="hometl" data-keep><div class="tl-grid one">${hoursCol()}${dayColumn(k, true)}</div></div>
+      ${timeGrid(days, true)}
     </section>`;
   }
 
   function vCalendar() {
     const v = S.calView, tk = todayKey();
-    const pick = `<div class="cal-views" role="group" aria-label="Calendar view">${CAL_VIEWS.map(([id, name]) => `<button type="button" data-act="cal-view" data-view-id="${id}" aria-pressed="${v === id}">${name}</button>`).join('')}</div>`;
+    const pick = viewPick(CAL_VIEWS, v, 'cal-view');
     const unit = v === 'year' ? 'year' : v === 'month' ? 'month' : v === 'day' ? 'day' : v === '3day' ? '3 days' : 'week';
     const head = `<div class="cal-head"><p class="cal-month">${esc(calTitle())}</p>${pick}
         <div class="cal-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Previous ${unit}">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Next ${unit}">${ICON.right}</button></div></div>`;
@@ -1350,19 +1393,10 @@ dialog::backdrop{background:transparent}
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
-    const heads = days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
-    const anyByDay = days.map(k => S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
-    const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
-    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
-      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
-      : '';
-    const cols = days.map(k => dayColumn(k, false)).join('');
     return `${head}${err}
       ${strip}
-      <section class="float cal${n === 7 ? ' n7' : ''}" style="--n:${n}">
-        <div class="cal-days"><span></span>${heads}</div>
-        ${anyRow}
-        <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
+      <section class="float cal cal-pane${n === 7 ? ' n7' : ''}" style="--n:${n}">
+        ${timeGrid(days, false)}
       </section>`;
   }
   // Month: every day of the month with what's on it. Click a day's number to open that day; click empty space to add a task on it.
@@ -1414,11 +1448,11 @@ dialog::backdrop{background:transparent}
     S.aim.tl = at * hourPx();
   }
   function aimHome() {
-    const at = S.homeDay === todayKey() ? Math.max(0, nowMin() / 60 - 1.5) : 7;
+    const at = homeDays().includes(todayKey()) ? Math.max(0, nowMin() / 60 - 1.5) : 7;
     S.aim.hometl = at * hourPx();
   }
   function shiftHome(dir) {
-    S.homeDay = addDays(S.homeDay, dir);
+    S.homeDay = addDays(S.homeDay, dir * (S.homeView === 'day' ? 1 : S.homeView === '3day' ? 3 : 7));
     aimHome();
     render();
     loadEvents(false);
@@ -1431,6 +1465,15 @@ dialog::backdrop{background:transparent}
       S.calDay = dkey(new Date(y, m, Math.min(d.getDate(), new Date(y, m + 1, 0).getDate())));
     } else S.calDay = addDays(S.calDay, dir * (v === 'day' ? 1 : v === '3day' ? 3 : 7));
     aimTimeline();
+    render();
+    loadEvents(false);
+  }
+  function setHomeView(v, day) {
+    if (!HOME_VIEWS.some(x => x[0] === v)) return;
+    S.homeView = v;
+    if (day) S.homeDay = day;
+    try { localStorage.setItem('pos.homeView', v); } catch (e) {}
+    aimHome();
     render();
     loadEvents(false);
   }
@@ -2003,6 +2046,8 @@ dialog::backdrop{background:transparent}
     else if (act === 'hd-prev') shiftHome(-1);
     else if (act === 'hd-next') shiftHome(1);
     else if (act === 'hd-today') { S.homeDay = todayKey(); aimHome(); render(); }
+    else if (act === 'hd-view') setHomeView(b.dataset.viewId);
+    else if (act === 'hd-open') setHomeView('day', b.dataset.day);
     else if (act === 'cal-prev') shiftCal(-1);
     else if (act === 'cal-next') shiftCal(1);
     else if (act === 'cal-today') { S.calDay = todayKey(); aimTimeline(); render(); }
@@ -2064,8 +2109,9 @@ dialog::backdrop{background:transparent}
     if (!S.gcal) { if (S.events.length || S.evErr) { S.events = []; S.evErr = ''; render(); } return; }
     // what's on screen (on Home, also today, for what's next), plus a margin so stepping around doesn't refetch
     const tk = todayKey();
-    const far = Math.abs(fromKey(S.homeDay) - fromKey(tk)) > 300 * 864e5;
-    const [a, b] = S.tab === 'calendar' ? calSpan() : far ? [S.homeDay, S.homeDay] : [S.homeDay < tk ? S.homeDay : tk, S.homeDay > tk ? S.homeDay : tk];
+    const hd = homeDays(), h0 = hd[0], h1 = hd[hd.length - 1];
+    const far = Math.abs(fromKey(h0) - fromKey(tk)) > 300 * 864e5;
+    const [a, b] = S.tab === 'calendar' ? calSpan() : far ? [h0, h1] : [h0 < tk ? h0 : tk, h1 > tk ? h1 : tk];
     const w = S.evWin;
     const inside = w && a >= w.from && b <= w.to;
     if (!force && inside && Date.now() - w.at < 10 * 60e3) return;
