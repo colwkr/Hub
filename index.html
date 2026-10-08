@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008220048">
-<script src="finance.js?v=20261008220048"></script>
+<link rel="stylesheet" href="finance.css?v=20261008220920">
+<script src="finance.js?v=20261008220920"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -655,7 +655,9 @@ html.idle-cursor,html.idle-cursor *{cursor:none!important}
 .tl-grid{position:relative}
 .tl-hours{position:relative;height:calc(var(--h) * 24)}
 .tl-hours span{position:absolute;right:8px;transform:translateY(-50%);font-size:10px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
-.tl-col{position:relative;height:calc(var(--h) * 24);box-shadow:inset 1px 0 0 var(--hair);
+.tl-hours span.h-top{transform:translateY(3px)}
+.tl-hours span.h-bot{transform:translateY(calc(-100% - 3px))}
+.tl-col{position:relative;height:calc(var(--h) * 24);box-shadow:inset 1px 0 0 var(--hair),inset 0 -1px 0 var(--hair);
   background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* the block you draw by dragging across empty time */
@@ -842,8 +844,8 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .r-dot.ok{background:var(--good)}
 .r-dot.off{background:var(--bad)}
 @media (min-width:760px) and (min-height:500px){
-  :root{padding-bottom:0}
-  #rail{position:fixed;z-index:5;left:12px;top:calc(12px + env(safe-area-inset-top, 0px));bottom:12px;width:var(--rail);
+  :root{padding-bottom:0;padding-top:max(env(safe-area-inset-top, 0px), var(--sb-under, 0px))}
+  #rail{position:fixed;z-index:5;left:12px;top:calc(12px + max(env(safe-area-inset-top, 0px), var(--sb-under, 0px)));bottom:12px;width:var(--rail);
     display:flex;flex-direction:column;align-items:center;padding:20px 0 16px;border-radius:30px;overflow-y:auto;scrollbar-width:none;
     background:var(--g-lines),var(--g-sheen),var(--sheet);box-shadow:inset 0 0 0 1px var(--glass-border),var(--glow),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
   #rail::-webkit-scrollbar{display:none}
@@ -1160,13 +1162,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008220048"></script>
+<script src="appearance.js?v=20261008220920"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008220048';
+  const VERSION = '20261008220920';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1257,7 +1259,7 @@ dialog::backdrop{background:transparent}
   }
   let mk = null, mv = null, renderLater = false, scopeOpen = false;
   // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
-  const H_MIN = 24, H_MAX = 180;
+  const H_MIN = 16, H_MAX = 180;
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
@@ -1711,7 +1713,10 @@ dialog::backdrop{background:transparent}
   }
   function hoursCol(fine) {
     let h = '';
+    const mid = esc(hourFmt.format(new Date(2000, 0, 1, 0)));
+    h += `<span class="h-top" style="top:0">${mid}</span>`;
     for (let i = 1; i < 24; i++) h += `<span style="top:calc(var(--h) * ${i})">${esc(hourFmt.format(new Date(2000, 0, 1, i)))}</span>`;
+    h += `<span class="h-bot" style="top:calc(var(--h) * 24)">${mid}</span>`;
     if (fine) for (let q = 1; q < 96; q++) if (q % 4) h += `<span class="q" style="top:calc(var(--h) * ${(q / 4).toFixed(2)})">:${pad((q % 4) * 15)}</span>`;
     return `<div class="tl-hours">${h}</div>`;
   }
@@ -2074,6 +2079,8 @@ dialog::backdrop{background:transparent}
       else if (keep[el.id] != null) el.scrollTop = keep[el.id];
     }
     wireTaskLens();
+    const mn = minHourPx();
+    if (hourPx() < mn - 0.01) document.documentElement.style.setProperty('--h', mn.toFixed(2) + 'px');
     const tk = todayKey();
     const od = S.tasks.filter(isOverdue).length;
     const todayLeft = S.tasks.filter(t => t.date === tk && !t.done).length;
@@ -2825,6 +2832,16 @@ dialog::backdrop{background:transparent}
 
   // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
   let zoomSaveT = null;
+  // the furthest out you can zoom: midnight at the top, midnight at the bottom, no empty space below
+  function minHourPx() {
+    let need = H_MIN;
+    for (const tl of document.querySelectorAll('#view .tl:not(.tl-zoom)')) {
+      if (!tl.offsetParent) continue;
+      const cs = getComputedStyle(tl);
+      need = Math.max(need, (tl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / 24);
+    }
+    return need;
+  }
   function zoomTo(h, tl, fy) {
     if (tl && tl.classList.contains('tl-zoom')) {
       const h0 = parseFloat(tl.style.getPropertyValue('--h')) || 200, hrs = clamp(tl.clientHeight / h, 1, 8), h1 = tl.clientHeight / hrs;
@@ -2836,7 +2853,7 @@ dialog::backdrop{background:transparent}
       return;
     }
     const h0 = hourPx();
-    h = clamp(h, H_MIN, H_MAX);
+    h = clamp(h, minHourPx(), H_MAX);
     if (!tl || Math.abs(h - h0) < 0.05) return;
     const r = tl.getBoundingClientRect(), y = clamp(fy - r.top, 0, r.height), at = (tl.scrollTop + y) / h0;
     document.documentElement.style.setProperty('--h', h.toFixed(2) + 'px');
@@ -3081,6 +3098,19 @@ dialog::backdrop{background:transparent}
   }
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   fsBtn.hidden = !fsOK;
+  // Some iPadOS 26 versions lay the status bar (and a blur) over the top of home-screen apps while telling the page
+  // there's nothing there. If the app fills the whole screen and isn't in full screen, keep clear of the bar.
+  function fitTop() {
+    const ipad = navigator.maxTouchPoints > 1 && /iPad|Macintosh/.test(navigator.userAgent);
+    const land = window.innerWidth > window.innerHeight;
+    const full = land ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    const under = standalone && ipad && !inFs() && window.innerHeight >= full - 1;
+    root.style.setProperty('--sb-under', under ? '24px' : '0px');
+  }
+  fitTop();
+  window.addEventListener('resize', fitTop);
+  document.addEventListener('fullscreenchange', fitTop);
+  document.addEventListener('webkitfullscreenchange', fitTop);
   const goFull = async () => { const r = root.requestFullscreen ? root.requestFullscreen() : root.webkitRequestFullscreen(); if (r && r.then) await r; };
   const wantFull = () => { try { return localStorage.getItem('pos.full') === '1'; } catch (e) { return false; } };
   fsBtn.addEventListener('click', async () => {
