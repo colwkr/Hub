@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008183208">
-<script src="finance.js?v=20261008183208"></script>
+<link rel="stylesheet" href="finance.css?v=20261008191458">
+<script src="finance.js?v=20261008191458"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -402,6 +402,77 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
   .cal-month{font-size:20px}
 }
 .cal-err{padding-inline:4px}
+/* tasks, events and meetings look different on the calendar */
+.blk.mtg{background:var(--panel-hi);box-shadow:var(--lift-sm),inset 3px 0 0 var(--ink-2),inset 0 0 0 1px var(--hair);padding-left:10px}
+.blk.mtg b svg.i,.achip svg.i,.achip2 .bmain svg.i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1.5px;stroke-width:1.8}
+.blk.lev{background:var(--well);box-shadow:inset 0 0 0 1px var(--hair)}
+.mi.mtg{box-shadow:inset 3px 0 0 var(--ink-2),inset 0 0 0 1px var(--hair)}
+.achip.mtg,.achip2.mtg{box-shadow:inset 3px 0 0 var(--ink-2),inset 0 0 0 1px var(--hair)}
+.list > .trow.live:not(.sw){display:flex}
+/* the sheet asks what something is before it saves */
+.kind-f .seg3 button{padding:10px 6px}
+.kind-note{font-size:12px;color:var(--ink-2);min-height:1.4em}
+#sheet[data-sheet-kind="none"] .kinds{box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+@media (prefers-reduced-motion:no-preference){
+  .kinds.nudge{animation:nudge-x .4s ease}
+  @keyframes nudge-x{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+}
+
+/* meetings: the list, and one meeting's talking points and notes */
+.mtg{flex:1;min-height:0;display:flex;flex-direction:column}
+.mt-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;display:flex;flex-direction:column;gap:22px;margin:-6px -18px 0;padding:6px 18px 24px}
+.mt-list::-webkit-scrollbar{display:none}
+.mt-new{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding-inline:14px 18px}
+.mt-new svg.i{width:16px;height:16px}
+.mrow{width:100%;display:flex;align-items:center;gap:4px;padding:6px 14px 6px 4px;border:0;background:none;text-align:left;color:inherit}
+.mrow .cal-ic{color:var(--ink-2)}
+.mrow > svg.i{width:16px;height:16px;color:var(--ink-3);flex:none}
+.mrow.on{background:var(--well)}
+.list > .mrow:first-child{border-radius:28px 28px 0 0}
+.list > .mrow:last-child{border-radius:0 0 28px 28px}
+.list > .mrow:only-child{border-radius:28px}
+.mt-pane{display:none;min-height:0}
+.mtg.has-sel .mt-list{display:none}
+.mtg.has-sel .mt-pane{display:flex;flex:1}
+.mt-detail{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.mt-top{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;box-shadow:inset 0 -1px 0 var(--hair)}
+.mt-title{flex:1;min-width:0;border:0;background:none;color:var(--ink);font-size:22px;font-weight:400;letter-spacing:-.01em;padding:6px 8px;border-radius:12px}
+.mt-title:focus{outline:none;background:var(--field);box-shadow:inset 0 0 0 1px var(--field-border)}
+.mt-del.armed{background:var(--bad);color:var(--on-bad)}
+.mt-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:16px 18px calc(var(--corner) + 80px);display:flex;flex-direction:column;gap:24px}
+.mt-scroll::-webkit-scrollbar{display:none}
+.mt-sec{display:flex;flex-direction:column;gap:10px}
+.mt-when-row{display:flex;flex-wrap:wrap;gap:8px}
+.mt-when-row input,.mt-add input,.mt-notes,.pt-text{border:0;background:var(--field);color:var(--ink);border-radius:14px;padding:10px 12px;min-height:44px;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);min-width:0}
+.mt-when-row input[type="date"]{flex:1 1 150px;-webkit-appearance:none;appearance:none}
+.mt-when-row input[type="time"]{flex:1 1 110px;-webkit-appearance:none;appearance:none}
+.mt-len{flex:0 1 120px}
+.mt-len input{width:100%}
+.mt-pts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.mt-pt{display:flex;align-items:center;gap:2px}
+.mt-pt .pt-text{flex:1;background:none;box-shadow:none;padding:8px 6px;border-radius:10px}
+.mt-pt .pt-text:focus{outline:none;background:var(--field);box-shadow:inset 0 0 0 1px var(--field-border)}
+.mt-pt.done .pt-text{text-decoration:line-through;color:var(--ink-3)}
+.pt-x{width:36px;height:36px;flex:none;border:0;background:none;color:var(--ink-3);display:grid;place-items:center;border-radius:50%;opacity:.6}
+.pt-x svg.i{width:14px;height:14px}
+.mt-pt:hover .pt-x,.pt-x:focus-visible{opacity:1}
+.mt-add{display:flex;align-items:center;gap:6px}
+.mt-add .add-ic{width:44px;height:44px;flex:none;display:grid;place-items:center;color:var(--ink-3)}
+.mt-add .add-ic svg.i{width:16px;height:16px}
+.mt-add input{flex:1}
+.mt-notes{width:100%;min-height:140px;resize:vertical;line-height:1.5}
+.mt-saved{min-height:1.4em;text-align:right}
+.mt-none{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:32px}
+.mt-none .cal-ic svg.i{width:28px;height:28px}
+.mt-none .btn{margin-top:8px}
+@media (min-width:760px) and (min-height:500px){
+  .mtg{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:18px}
+  .mtg .mt-list,.mtg.has-sel .mt-list{display:flex;margin:-6px -12px 0;padding:6px 12px 24px}
+  .mtg .mt-pane{display:flex}
+  .mt-back{display:none}
+  .mt-scroll{padding:18px 24px 28px}
+}
+
 /* phones: like Google Calendar's app, the calendar runs edge to edge and down to the bottom of the screen,
    with the corner buttons floating over it; the header above is as short as it can be */
 @media (max-width:759px){
@@ -792,6 +863,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="home" aria-label="Home" title="Home"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="tasks" aria-label="Tasks" title="Tasks"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg></span><span class="pip" id="railBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="calendar" aria-label="Calendar" title="Calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span></button>
+  <button type="button" class="r-btn" data-tab="meetings" aria-label="Meetings" title="Meetings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
   <i class="r-line"></i>
   <button type="button" class="r-btn dim" data-act="soon" data-what="Lights" aria-label="Lights, coming soon" title="Lights (coming soon)"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span></button>
@@ -813,6 +885,7 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg><span>Home</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="tasks"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg><span>Tasks</span><span class="badge" id="taskBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" data-tab="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
   </nav>
   <i class="d-line"></i>
@@ -833,12 +906,19 @@ dialog::backdrop{background:transparent}
     <div class="sheet-head" id="sheetHead">
       <div class="grab"></div>
       <div class="bar">
-        <h2 id="sheetTitle">New task</h2>
+        <h2 id="sheetTitle">New</h2>
         <button type="button" class="circle" id="sheetClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
       </div>
     </div>
     <div id="sheetBody" class="sheet-body">
-      <label class="f"><span class="f-h">Task</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What needs doing?"></label>
+      <div class="f kind-f">
+        <span class="f-h" id="h_kind">What is it?</span>
+        <div class="seg3 kinds" role="radiogroup" aria-labelledby="h_kind">
+          <button type="button" role="radio" data-kind="task" aria-checked="false">Task</button><button type="button" role="radio" data-kind="event" aria-checked="false">Event</button><button type="button" role="radio" data-kind="meeting" aria-checked="false">Meeting</button>
+        </div>
+        <p class="kind-note" id="f_kindNote"></p>
+      </div>
+      <label class="f"><span class="f-h" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
       <div class="f">
         <span class="f-h" id="h_date">Day</span>
         <div class="frow">
@@ -924,13 +1004,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008183208"></script>
+<script src="appearance.js?v=20261008191458"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008183208';
+  const VERSION = '20261008191458';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -977,6 +1057,10 @@ dialog::backdrop{background:transparent}
   }
 
   const ICON = {
+    people: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg>',
+    trash: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4.5h4V7M7 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h5.4a1.5 1.5 0 0 0 1.5-1.4L17 7"/></svg>',
+    plus: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>',
+    x: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg>',
     cal: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg>',
     arrow: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5"/></svg>',
     check: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6 7.4-8"/></svg>',
@@ -1008,7 +1092,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- state ---------- */
-  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', finance: 'Finance' };
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', meetings: 'Meetings', finance: 'Finance' };
   const CAL_VIEWS = [['day', 'Day'], ['3day', '3 Day'], ['week', 'Week'], ['next7', 'Next 7'], ['month', 'Month'], ['year', 'Year']];
   function savedCalView() {
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
@@ -1017,7 +1101,7 @@ dialog::backdrop{background:transparent}
   let mk = null, mv = null, renderLater = false; // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
-    tasks: [], weather: null,
+    all: [], tasks: [], items: [], weather: null, mtgId: null,
     tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     aim: {}, busy: new Set(),
     wakeWant: false, wakeOn: false, wakeNote: '',
@@ -1025,11 +1109,14 @@ dialog::backdrop{background:transparent}
   };
   let sb = null, FIN = null;
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0 });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [] });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
     if ('title' in o) r.title = o.title;
+    if ('kind' in o) r.kind = o.kind || 'task';
+    if ('notes' in o) r.notes = o.notes || null;
+    if ('agenda' in o) r.agenda = o.agenda || [];
     if ('date' in o) r.day = o.date || null;
     if ('time' in o) r.at_time = o.time || null;
     if ('mins' in o) r.mins = o.mins ?? null;
@@ -1040,22 +1127,28 @@ dialog::backdrop{background:transparent}
   }
   const must = ({ error }) => { if (error) throw error; };
   // writes show on screen at once, then reload from the database if the save fails
+  // tasks are the to-dos; events and meetings only live on the calendar (and meetings in their own tab)
+  function split() {
+    S.tasks = S.all.filter(x => x.kind === 'task');
+    S.items = S.all.filter(x => x.kind !== 'task');
+  }
   const store = {
     async add(o) { must(await sb.from('tasks').insert(toRow(o))); await reloadTasks(); },
-    async update(id, patch) {
-      const t = task(id); if (t) Object.assign(t, patch); render();
+    // quiet: save without rebuilding the page (used while typing in a meeting)
+    async update(id, patch, quiet) {
+      const t = task(id); if (t) Object.assign(t, patch); split(); if (!quiet) render();
       try { must(await sb.from('tasks').update(toRow(patch)).eq('id', id)); } catch (e) { await reloadTasks(); throw e; }
     },
     async remove(id) {
-      S.tasks = S.tasks.filter(t => t.id !== id); render();
+      S.all = S.all.filter(t => t.id !== id); split(); render();
       try { must(await sb.from('tasks').delete().eq('id', id)); } catch (e) { await reloadTasks(); throw e; }
     },
     async restore(o) { must(await sb.from('tasks').insert(toRow(o))); await reloadTasks(); },
   };
-  const task = id => S.tasks.find(t => t.id === id);
+  const task = id => S.all.find(t => t.id === id);
   // A task is on the calendar once it has a day and a time; a day alone puts it under Anytime; anything else is Unsorted.
   const kindOf = t => (t.date && t.time ? 'timed' : t.date ? 'anytime' : 'unsorted');
-  const effMins = t => t.mins || 15; // tasks with no estimate still need a footprint on the timeline
+  const effMins = t => t.mins || (t.kind === 'task' ? 15 : 30); // no estimate still needs a footprint on the timeline
   const isOverdue = t => !t.done && !!t.date && t.date < todayKey();
   const cmp = (a, b) => (a.date || '~').localeCompare(b.date || '~') || (a.time || '~').localeCompare(b.time || '~') || (a.createdAt || 0) - (b.createdAt || 0);
   const byNew = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
@@ -1176,15 +1269,16 @@ dialog::backdrop{background:transparent}
   function vNext(cls) {
     const tk = todayKey(), nm = nowMin();
     const liveT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && t.date === tk && toMin(t.time) < nm && nm < toMin(t.time) + effMins(t)).map(t => ({ t, date: t.date, time: t.time, live: true }));
-    const liveG = S.events.filter(g => !g.allDay && g.start && g.date === tk && toMin(g.start) < nm && nm < toMin(g.start) + (g.mins || 30)).map(g => ({ g, date: g.date, time: g.start, live: true }));
+    const mtgs = S.items.filter(m => m.kind === 'meeting' && kindOf(m) === 'timed');
+    const liveG = mtgs.filter(m => m.date === tk && toMin(m.time) <= nm && nm < toMin(m.time) + effMins(m)).map(m => ({ m, date: m.date, time: m.time, live: true }));
     const upT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && (t.date > tk || (t.date === tk && toMin(t.time) >= nm))).map(t => ({ t, date: t.date, time: t.time }));
-    const upG = S.events.filter(g => !g.allDay && g.start && (g.date > tk || (g.date === tk && toMin(g.start) >= nm))).map(g => ({ g, date: g.date, time: g.start }));
+    const upG = mtgs.filter(m => m.date > tk || (m.date === tk && toMin(m.time) > nm)).map(m => ({ m, date: m.date, time: m.time }));
     const byWhen = (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
     const up = [...liveT, ...liveG].sort(byWhen).concat([...upT, ...upG].sort(byWhen)).slice(0, 20);
     const firstUp = up.findIndex(x => !x.live);
     let inner;
     if (!S.loaded) inner = notReady();
-    else if (!up.length) inner = '<p class="empty">Nothing scheduled. Give a task a day and a time, or add it to Google Calendar, and it lines up here.</p>';
+    else if (!up.length) inner = '<p class="empty">Nothing scheduled. Give a task or a meeting a day and a time and it lines up here.</p>';
     else {
       let lastDay = tk;
       inner = up.map((x, i) => {
@@ -1192,10 +1286,11 @@ dialog::backdrop{background:transparent}
         const div = x.date !== lastDay ? `<div class="day-div">${esc(dayLabel(x.date))}</div>` : '';
         lastDay = x.date;
         const cls = x.live ? ' live' : i === firstUp ? ' first' : '';
-        if (x.g) {
-          const g = x.g, s0 = toMin(g.start);
-          if (x.live) return `${div}<div class="trow live"><span class="cal-ic" aria-hidden="true">${ICON.cal}</span><button type="button" class="tmain" data-act="event" data-ev="${esc(g.id)}"><span class="name">${esc(g.title)}<span class="tag">Google</span></span><span class="meta"><span class="live-dot" aria-hidden="true"></span><span>Now · ends ${esc(fmtTime(s0 + (g.mins || 30)))}</span></span></button></div>`;
-          return `${div}<div class="trow${cls}"><span class="cal-ic" aria-hidden="true">${ICON.cal}</span><button type="button" class="tmain" data-act="event" data-ev="${esc(g.id)}"><span class="name">${esc(g.title)}<span class="tag">Google</span></span><span class="meta"><span>${esc(fmtRange(s0, s0 + (g.mins || 30)))}</span></span></button></div>`;
+        if (x.m) {
+          const m = x.m, s0 = toMin(m.time), e0 = s0 + effMins(m);
+          const pts = m.agenda.filter(a => !a.done).length;
+          const when = x.live ? `Now · ends ${fmtTime(e0)}` : fmtRange(s0, e0);
+          return `${div}<div class="trow${x.live ? ' live' : cls}"><span class="cal-ic" aria-hidden="true">${ICON.people}</span><button type="button" class="tmain" data-act="meeting" data-id="${esc(m.id)}"><span class="name">${esc(m.title)}<span class="tag">Meeting</span></span><span class="meta">${x.live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}${pts ? ` · ${pts} to talk about` : ''}</span></span></button></div>`;
         }
         const t = x.t, s0 = toMin(t.time);
         const when = x.live ? (t.mins ? `Now · ends ${fmtTime(s0 + t.mins)}` : `Now · started ${fmtTime(s0)}`)
@@ -1261,6 +1356,72 @@ dialog::backdrop{background:transparent}
     return `<div class="cols"><div class="col" id="tcolA" data-keep>${left.join('')}</div><div class="col" id="tcolB" data-keep>${right.join('')}${exBar}</div></div>`;
   }
 
+  /* ---------- meetings: talking points and notes; a meeting can wait here without a day ---------- */
+  const typingInMeeting = () => { const a = document.activeElement; return !!(a && a.closest && a.matches('input,textarea') && a.closest('[data-hold-render]')); };
+  function mtgWhen(m) {
+    if (!m.date) return 'Not scheduled';
+    if (!m.time) return `${dayLabel(m.date)}, no set time`;
+    const s0 = toMin(m.time);
+    return `${dayLabel(m.date)}, ${fmtRange(s0, s0 + effMins(m))}`;
+  }
+  const mtgEnded = m => { const tk = todayKey(); return !!m.date && (m.date < tk || (m.date === tk && !!m.time && toMin(m.time) + effMins(m) <= nowMin())); };
+  const ptRow = a => `<li class="mt-pt${a.done ? ' done' : ''}" data-pt="${esc(a.id)}"><button type="button" class="chk" data-act="pt-done" aria-pressed="${a.done ? 'true' : 'false'}" aria-label="${a.done ? 'Not covered yet' : 'Covered'}">${ICON.check}</button><input class="pt-text" data-pt-text value="${esc(a.text)}" maxlength="300" aria-label="Talking point" enterkeyhint="next"><button type="button" class="pt-x" data-act="pt-del" aria-label="Remove talking point">${ICON.x}</button></li>`;
+  function whenNote(m) {
+    if (!m.date) return '<b>Not scheduled.</b> Add a day to put it on the calendar.';
+    return `<b>On the calendar</b> ${esc(mtgWhen(m))} <button type="button" class="link" data-act="mtg-unsched">Take off calendar</button>`;
+  }
+  function vMeetingDetail(m) {
+    return `<section class="float mt-detail" data-hold-render data-mtg="${esc(m.id)}" aria-label="Meeting">
+      <div class="mt-top">
+        <button type="button" class="circle mt-back" data-act="mtg-back" aria-label="All meetings">${ICON.left}</button>
+        <input class="mt-title" data-mf="title" value="${esc(m.title)}" maxlength="200" aria-label="Meeting name" placeholder="Meeting name" enterkeyhint="done" autocomplete="off">
+        <button type="button" class="circle mt-del" data-act="mtg-del" aria-label="Delete meeting" title="Delete meeting">${ICON.trash}</button>
+      </div>
+      <div class="mt-scroll" id="mtScroll" data-keep>
+        <div class="mt-sec">
+          <span class="lab">When</span>
+          <div class="mt-when-row">
+            <input type="date" data-mf="date" value="${esc(m.date || '')}" aria-label="Day">
+            <input type="time" data-mf="time" step="300" value="${esc(m.time || '')}" aria-label="Start time">
+            <div class="xin mt-len"><input type="number" data-mf="mins" min="5" max="1440" step="5" inputmode="numeric" value="${m.mins || ''}" placeholder="30" aria-label="Length in minutes"><span class="unit">min</span></div>
+          </div>
+          <p class="where" id="mtWhen">${whenNote(m)}</p>
+        </div>
+        <div class="mt-sec">
+          <span class="lab">Talking points</span>
+          <ul class="mt-pts" id="mtPts">${m.agenda.map(ptRow).join('')}</ul>
+          <label class="mt-add"><span class="add-ic">${ICON.plus}</span><input id="mtAdd" placeholder="Add a talking point" maxlength="300" enterkeyhint="enter" autocomplete="off"></label>
+        </div>
+        <div class="mt-sec">
+          <span class="lab">Notes</span>
+          <textarea class="mt-notes" data-mf="notes" placeholder="What was said, decisions, follow-ups…" rows="6">${esc(m.notes || '')}</textarea>
+        </div>
+        <p class="meta mt-saved" id="mtSaved" aria-live="polite"></p>
+      </div>
+    </section>`;
+  }
+  function vMeetings() {
+    if (!S.loaded) return notReady();
+    const all = S.items.filter(x => x.kind === 'meeting');
+    const sel = all.find(m => m.id === S.mtgId) || null;
+    if (!sel) S.mtgId = null;
+    const up = all.filter(m => m.date && !mtgEnded(m)).sort(cmp);
+    const plan = all.filter(m => !m.date).sort(byNew);
+    const past = all.filter(mtgEnded).sort((a, b) => cmp(b, a));
+    const rowM = m => {
+      const left = m.agenda.filter(a => !a.done).length;
+      return `<button type="button" class="mrow${sel && m.id === sel.id ? ' on' : ''}" data-act="meeting" data-id="${esc(m.id)}"${sel && m.id === sel.id ? ' aria-current="true"' : ''}><span class="cal-ic" aria-hidden="true">${ICON.people}</span><span class="tmain"><span class="name">${esc(m.title)}</span><span class="meta"><span>${esc(mtgWhen(m))}</span>${m.agenda.length ? `<span>${left ? `${left} to talk about` : 'All covered'}</span>` : ''}${m.notes ? '<span>Notes</span>' : ''}</span></span>${ICON.chev}</button>`;
+    };
+    const list = `<div class="mt-list" id="mtList" data-keep>
+        <button type="button" class="btn solid mt-new" data-act="mtg-new">${ICON.plus}<span>New meeting</span></button>
+        ${sec('Coming up', up.length ? up.map(rowM).join('') : '<p class="empty">No meetings on the calendar.</p>')}
+        ${sec('Not scheduled', plan.length ? plan.map(rowM).join('') : '<p class="empty">Plan a meeting here first: talking points and notes, no day needed.</p>')}
+        ${past.length ? sec('Past', past.slice(0, 40).map(rowM).join('')) : ''}
+      </div>`;
+    const pane = sel ? vMeetingDetail(sel) : `<div class="float mt-none"><span class="cal-ic">${ICON.people}</span><p class="name">Pick a meeting, or start a new one.</p><p class="meta">Meetings can be planned without a day, then scheduled when you're ready.</p><button type="button" class="btn" data-act="mtg-new">New meeting</button></div>`;
+    return `<div class="mtg${sel ? ' has-sel' : ''}">${list}<div class="mt-pane">${pane}</div></div>`;
+  }
+
   /* ---------- calendar ---------- */
   // the days a timeline view shows: Day, 3 Day and Next 7 start on the picked day; Week runs Sunday to Saturday
   function visibleDays() {
@@ -1296,7 +1457,7 @@ dialog::backdrop{background:transparent}
     const m = {};
     const put = (k, x) => (m[k] || (m[k] = [])).push(x);
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
-    for (const t of S.tasks) if (t.date && t.date >= from && t.date <= to) put(t.date, { t, s: t.time ? toMin(t.time) : -1 });
+    for (const t of S.all) if (t.date && t.date >= from && t.date <= to) put(t.date, { t, s: t.time ? toMin(t.time) : -1 });
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
   }
@@ -1329,7 +1490,7 @@ dialog::backdrop{background:transparent}
   function dayColumn(k, withCheck) {
     const tk = todayKey(), nm = nowMin();
     const items = layout([
-      ...S.tasks.filter(t => t.date === k && kindOf(t) === 'timed').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
+      ...S.all.filter(t => t.date === k && kindOf(t) === 'timed').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
       ...S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) })),
     ]);
     const blocks = items.map(x => {
@@ -1340,6 +1501,12 @@ dialog::backdrop{background:transparent}
         return `<button type="button" class="blk evt${len < 45 ? ' tight' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
       }
       const t = x.t;
+      const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
+      if (t.kind !== 'task') {
+        // events and meetings: no done circle; a meeting opens its notes
+        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.e);
+        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${len < 45 ? ' tight' : ''}" style="${style0}" ${grip0} data-act="${mtg ? 'meeting' : 'edit'}" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}"><b>${mtg ? ICON.people : ''}${esc(t.title)}</b><small>${esc(when)}</small>${edges0}</button>`;
+      }
       const live = k === tk && !t.done && x.s <= nm && nm < x.e;
       const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', len < 45 ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
       const when = t.mins ? fmtRange(x.s, x.e) : `${fmtTime(x.s)} · no estimate`;
@@ -1355,11 +1522,11 @@ dialog::backdrop{background:transparent}
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
   function vDayCal(cls) {
     const k = S.homeDay, tk = todayKey();
-    const any = S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp);
+    const any = S.all.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
     const allDay = S.events.filter(g => g.date === k && g.allDay);
-    const nEv = S.events.filter(g => g.date === k).length;
-    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    const nEv = S.events.filter(g => g.date === k).length + S.items.filter(x => x.date === k).length;
+    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
     return `<section class="float daycal ${cls}" aria-label="Day calendar">
       <div class="dc-head">
@@ -1384,15 +1551,15 @@ dialog::backdrop{background:transparent}
     const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
     const week = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = S.tasks.filter(t => t.date === k && !t.done).length;
+      const cnt = S.all.filter(t => t.date === k && !t.done).length;
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
     const heads = days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
-    const anyByDay = days.map(k => S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
+    const anyByDay = days.map(k => S.all.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
     const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
-      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
     const cols = days.map(k => dayColumn(k, false)).join('');
     return `${head}${err}
@@ -1413,8 +1580,8 @@ dialog::backdrop{background:transparent}
       const cls = ['mc', d.getMonth() !== g.month ? 'out' : '', k === tk ? 'today' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       const chips = items.slice(0, 3).map(x => {
         if (x.g) return `<button type="button" class="mi evt" data-act="event" data-ev="${esc(x.g.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(x.g.title)}</button>`;
-        const t = x.t;
-        return `<button type="button" class="mi${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(t.title)}</button>`;
+        const t = x.t, kc = t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : '';
+        return `<button type="button" class="mi${t.done ? ' done' : ''}${kc}" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(t.title)}</button>`;
       }).join('');
       const more = items.length > 3 ? `<button type="button" class="mi more" data-act="cal-open" data-day="${k}">+${items.length - 3} more</button>` : '';
       const dots = items.length ? `<i class="mdots">${'<u></u>'.repeat(Math.min(3, items.length))}</i>` : '';
@@ -1483,7 +1650,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, finance: () => (FIN ? FIN.view() : notReady()) };
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -1499,7 +1666,7 @@ dialog::backdrop{background:transparent}
     </form></div>`;
   }
   function render() {
-    if (mk || mv) { renderLater = true; return; }
+    if (mk || mv || typingInMeeting()) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -1581,9 +1748,9 @@ dialog::backdrop{background:transparent}
     const name = local ? local.replace(/\b\w/g, c => c.toUpperCase()) : 'You';
     return { name, email, init: (name[0] || '·').toUpperCase() };
   }
-  function toast(text, undo) {
+  function toast(text, undo, label = 'Undo') {
     const el = $('#toast');
-    el.innerHTML = `<span>${esc(text)}</span>${undo ? '<button type="button">Undo</button>' : ''}`;
+    el.innerHTML = `<span>${esc(text)}</span>${undo ? `<button type="button">${esc(label)}</button>` : ''}`;
     el.hidden = false;
     if (undo) el.querySelector('button').onclick = () => { el.hidden = true; undo(); };
     clearTimeout(toastT);
@@ -1640,12 +1807,12 @@ dialog::backdrop{background:transparent}
   /* ---------- task sheet ---------- */
   const sheet = $('#sheet');
   let F = null;
-  function openTask(id, preset = {}) {
+  // kind: what a new item starts as. Left empty (from the calendar or Home), the sheet asks: Task, Event or Meeting.
+  function openTask(id, preset = {}, kind = null) {
     if (!S.canSave) return;
     const t = id ? task(id) : null;
     if (id && !t) return;
-    F = { id: t ? t.id : null, armed: false };
-    $('#sheetTitle').textContent = t ? 'Edit task' : 'New task';
+    F = { id: t ? t.id : null, armed: false, kind: t ? t.kind : kind };
     const v = t || { title: '', date: preset.date || null, time: preset.time || null, mins: preset.mins ?? null };
     $('#f_title').value = v.title || '';
     $('#f_date').value = v.date || '';
@@ -1653,10 +1820,30 @@ dialog::backdrop{background:transparent}
     $('#f_mins').value = v.mins ? String(v.mins) : '';
     $('#sheetErr').hidden = true;
     const del = $('#sheetDel'); del.hidden = !t; del.classList.remove('armed'); del.textContent = 'Delete';
-    const dn = $('#sheetDone'); dn.hidden = !t; dn.textContent = t && t.done ? 'Mark not done' : 'Mark done';
-    refreshWhere();
+    const dn = $('#sheetDone'); dn.textContent = t && t.done ? 'Mark not done' : 'Mark done';
+    $('#sheetErr').hidden = true;
+    setKind(F.kind);
     sheet.showModal();
     if (!t) $('#f_title').focus();
+  }
+  const KIND_TXT = {
+    task: { name: 'Task', ph: 'What needs doing?', len: 'How long it takes', note: 'A to-do. It shows in Tasks and on Home, and you check it off.' },
+    event: { name: 'Event', ph: 'What is happening?', len: 'How long', note: 'Just on the calendar. Nothing to check off.' },
+    meeting: { name: 'Meeting', ph: 'What is the meeting?', len: 'How long', note: 'Has talking points and notes in Meetings. It can wait there without a day.' },
+  };
+  function setKind(k) {
+    if (!F) return;
+    F.kind = k || null;
+    for (const b of document.querySelectorAll('#sheetBody [data-kind]')) b.setAttribute('aria-checked', String(b.dataset.kind === F.kind));
+    const tx = KIND_TXT[F.kind];
+    $('#sheetTitle').textContent = F.id ? `Edit ${tx ? tx.name.toLowerCase() : 'item'}` : tx ? `New ${tx.name.toLowerCase()}` : 'New';
+    $('#h_title').textContent = tx ? tx.name : 'Name';
+    $('#f_title').placeholder = tx ? tx.ph : 'What is it?';
+    $('#h_mins').textContent = tx ? tx.len : 'How long';
+    $('#f_kindNote').textContent = tx ? tx.note : 'Pick one so it lands in the right place.';
+    $('#sheet').dataset.sheetKind = F.kind || 'none';
+    $('#sheetDone').hidden = !(F.id && F.kind === 'task');
+    refreshWhere();
   }
   function closeForm() { if (sheet.open) sheet.close(); F = null; }
   function fail(msg) { const e = $('#sheetErr'); e.textContent = msg; e.hidden = false; return false; }
@@ -1672,7 +1859,16 @@ dialog::backdrop{background:transparent}
     const tk = todayKey();
     for (const c of document.querySelectorAll('#sheetBody [data-set="date"]')) c.setAttribute('aria-pressed', String(date === addDays(tk, Number(c.dataset.rel))));
     for (const c of document.querySelectorAll('#sheetBody [data-set="mins"]')) c.setAttribute('aria-pressed', String(!m.bad && m.mins === Number(c.dataset.val)));
-    const el = $('#f_where');
+    const el = $('#f_where'), kind = F && F.kind;
+    if (!kind) { el.innerHTML = '<b>Pick Task, Event or Meeting</b> above'; return; }
+    if (kind !== 'task') {
+      const s = time ? toMin(time) : 0, len = m.mins || 30;
+      el.innerHTML = date && time ? `<b>On the calendar</b> ${esc(dayLabel(date))}, ${esc(fmtRange(s, s + len))}`
+        : date ? `<b>On ${esc(dayLabel(date))}</b> all day`
+        : kind === 'event' ? '<b>Needs a day</b> to go on the calendar'
+        : '<b>Not scheduled yet</b> It waits in Meetings until you give it a day.';
+      return;
+    }
     if (date && time) {
       const s = toMin(time);
       el.innerHTML = `<b>On the calendar</b> ${esc(dayLabel(date))}, ${esc(m.mins ? fmtRange(s, s + m.mins) : `${fmtTime(s)}, no estimate yet`)}`;
@@ -1687,6 +1883,8 @@ dialog::backdrop{background:transparent}
   $('#sheetBody').addEventListener('input', refreshWhere);
   $('#sheetBody').addEventListener('change', refreshWhere);
   $('#sheetBody').addEventListener('click', e => {
+    const kb = e.target.closest('#sheetBody [data-kind]');
+    if (kb) { setKind(kb.dataset.kind); $('#sheetErr').hidden = true; return; }
     const set = e.target.closest('[data-set]');
     if (set) {
       if (set.dataset.set === 'date') $('#f_date').value = addDays(todayKey(), Number(set.dataset.rel));
@@ -1703,21 +1901,28 @@ dialog::backdrop{background:transparent}
     e.preventDefault();
     if (!F || !S.canSave) return;
     $('#sheetErr').hidden = true;
+    const kind = F.kind;
+    if (!kind) { $('#sheetBody .kinds').classList.remove('nudge'); void $('#sheetBody .kinds').offsetWidth; $('#sheetBody .kinds').classList.add('nudge'); return fail('Pick Task, Event or Meeting first.'); }
     const title = $('#f_title').value.trim();
-    if (!title) return fail('Give the task a name.');
+    if (!title) return fail(`Give the ${kind} a name.`);
     const m = readMins();
     if (m.bad) return fail('Length is whole minutes, from 1 to 1440.');
-    const body = { title, date: $('#f_date').value || null, time: $('#f_time').value || null, mins: m.mins };
+    const body = { kind, title, date: $('#f_date').value || null, time: $('#f_time').value || null, mins: m.mins };
+    if (kind === 'event' && !body.date) return fail('An event needs a day to go on the calendar.');
+    if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const btn = $('#sheetSave');
     btn.disabled = true;
-    const id = F.id;
+    const id = F.id, newId = !id && kind === 'meeting' && window.crypto && crypto.randomUUID ? crypto.randomUUID() : null;
     const ok = id
       ? await save(store.update(id, body))
-      : await save(store.add({ ...body, done: false, doneAt: null }));
+      : await save(store.add({ ...body, ...(newId ? { id: newId } : {}), done: false, doneAt: null }));
     btn.disabled = false;
     if (ok) {
       closeForm();
-      if (!id) toast(body.date && body.time ? `Added to ${dayLabel(body.date)}` : body.date ? `Added to ${dayLabel(body.date)}, anytime` : 'Added to Unsorted');
+      const day = body.date ? dayLabel(body.date) : '';
+      if (kind === 'meeting' && !id) toast(body.date ? `Meeting added to ${day}` : 'Meeting saved, not scheduled yet', newId ? () => openMeeting(newId) : null, 'Open notes');
+      else if (kind === 'event' && !id) toast(`Event added to ${day}`);
+      else if (!id) toast(body.date && body.time ? `Added to ${day}` : body.date ? `Added to ${day}, anytime` : 'Added to Unsorted');
     }
   });
   $('#sheetDone').addEventListener('click', async () => {
@@ -1765,6 +1970,127 @@ dialog::backdrop{background:transparent}
   };
   sheet.addEventListener('touchend', endPull);
   sheet.addEventListener('touchcancel', endPull);
+
+  /* ---------- meetings: open, create, and save as you type ---------- */
+  function openMeeting(id) {
+    if (!task(id)) return;
+    S.mtgId = id;
+    if (S.tab !== 'meetings') setTab('meetings'); else render();
+  }
+  async function newMeeting() {
+    if (!S.canSave) return;
+    const id = window.crypto && crypto.randomUUID ? crypto.randomUUID() : null;
+    if (!id) { openTask(null, {}, 'meeting'); return; }
+    const ok = await save(store.add({ id, kind: 'meeting', title: 'New meeting', date: null, time: null, mins: null, done: false, doneAt: null, notes: '', agenda: [] }));
+    if (!ok) return;
+    S.mtgId = id;
+    if (S.tab !== 'meetings') setTab('meetings'); else render();
+    const ti = document.querySelector('.mt-title');
+    if (ti) { ti.focus(); ti.select(); }
+  }
+  // edits are saved quietly a moment after you stop typing, and right away when you leave a field
+  let mtPend = null, mtT = null;
+  const mtEl = () => document.querySelector('.mt-detail[data-mtg]');
+  function mtSaved(text) { const el = $('#mtSaved'); if (el) el.textContent = text; }
+  function mtQueue(id, patch, wait = 650) {
+    if (mtPend && mtPend.id !== id) mtFlush();
+    mtPend = { id, patch: { ...(mtPend ? mtPend.patch : {}), ...patch } };
+    const t = task(id); if (t) Object.assign(t, patch); // keep what's on screen and in memory together
+    mtSaved('Saving…');
+    clearTimeout(mtT);
+    mtT = setTimeout(mtFlush, wait);
+  }
+  async function mtFlush() {
+    clearTimeout(mtT);
+    const p = mtPend; mtPend = null;
+    if (!p) return;
+    const ok = await save(store.update(p.id, p.patch, true));
+    mtSaved(ok ? 'Saved' : 'Not saved');
+  }
+  window.addEventListener('pagehide', mtFlush);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) mtFlush(); });
+  const grow = ta => { ta.style.height = 'auto'; ta.style.height = Math.max(140, ta.scrollHeight + 2) + 'px'; };
+  const ptId = () => Math.random().toString(36).slice(2, 10);
+  function readWhen(box) {
+    const d = box.querySelector('[data-mf="date"]').value || null, tm = box.querySelector('[data-mf="time"]').value || null;
+    const raw = box.querySelector('[data-mf="mins"]').value.trim(), n = Number(raw);
+    return { date: d, time: d ? tm : null, mins: raw && Number.isInteger(n) && n >= 1 && n <= 1440 ? n : null };
+  }
+  document.addEventListener('input', e => {
+    const box = e.target.closest && e.target.closest('.mt-detail[data-mtg]');
+    if (!box) return;
+    const id = box.dataset.mtg, f = e.target.dataset.mf;
+    if (f === 'title') mtQueue(id, { title: e.target.value.trim() || 'Untitled meeting' });
+    else if (f === 'notes') { grow(e.target); mtQueue(id, { notes: e.target.value }); }
+    else if (e.target.matches('[data-pt-text]')) {
+      const t = task(id); if (!t) return;
+      const pid = e.target.closest('[data-pt]').dataset.pt;
+      mtQueue(id, { agenda: t.agenda.map(a => a.id === pid ? { ...a, text: e.target.value } : a) });
+    }
+  });
+  document.addEventListener('change', e => {
+    const box = e.target.closest && e.target.closest('.mt-detail[data-mtg]');
+    if (!box || !['date', 'time', 'mins'].includes(e.target.dataset.mf)) return;
+    const id = box.dataset.mtg, w = readWhen(box);
+    mtQueue(id, w, 0);
+    const t = task(id), note = $('#mtWhen'); if (t && note) note.innerHTML = whenNote(t);
+  });
+  document.addEventListener('keydown', e => {
+    const box = e.target.closest && e.target.closest('.mt-detail[data-mtg]');
+    if (!box) return;
+    const id = box.dataset.mtg, t = task(id);
+    if (!t) return;
+    if (e.target.id === 'mtAdd' && e.key === 'Enter') {
+      e.preventDefault();
+      const text = e.target.value.trim();
+      if (!text) return;
+      const a = { id: ptId(), text, done: false };
+      mtQueue(id, { agenda: [...t.agenda, a] }, 0);
+      $('#mtPts').insertAdjacentHTML('beforeend', ptRow(a));
+      e.target.value = '';
+    } else if (e.target.matches('[data-pt-text]') && e.key === 'Enter') {
+      e.preventDefault(); $('#mtAdd').focus();
+    } else if (e.target.matches('[data-pt-text]') && e.key === 'Backspace' && !e.target.value) {
+      e.preventDefault();
+      const li = e.target.closest('[data-pt]'), prev = li.previousElementSibling;
+      mtQueue(id, { agenda: t.agenda.filter(a => a.id !== li.dataset.pt) }, 0);
+      li.remove();
+      (prev ? prev.querySelector('[data-pt-text]') : $('#mtAdd')).focus();
+    } else if (e.target.matches('.mt-title') && e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  });
+  // leaving the meeting's fields: save now, then let any waiting refresh through
+  document.addEventListener('focusout', e => {
+    if (!(e.target.closest && e.target.closest('.mt-detail[data-mtg]'))) return;
+    if (e.target.dataset.mf === 'title' && !e.target.value.trim()) e.target.value = 'Untitled meeting';
+    setTimeout(() => { if (!typingInMeeting()) { mtFlush(); flushLater(); } }, 0);
+  });
+  function mtAct(act, b) {
+    const box = mtEl(), id = box ? box.dataset.mtg : null, t = id ? task(id) : null;
+    if (act === 'mtg-new') { newMeeting(); return true; }
+    if (act === 'mtg-back') { mtFlush(); S.mtgId = null; render(); return true; }
+    if (!t) return false;
+    if (act === 'mtg-unsched') {
+      mtQueue(id, { date: null, time: null }, 0);
+      for (const f of ['date', 'time']) box.querySelector(`[data-mf="${f}"]`).value = '';
+      $('#mtWhen').innerHTML = whenNote(t);
+    } else if (act === 'pt-done' || act === 'pt-del') {
+      const li = b.closest('[data-pt]'), pid = li.dataset.pt;
+      if (act === 'pt-del') { mtQueue(id, { agenda: t.agenda.filter(a => a.id !== pid) }, 0); li.remove(); }
+      else {
+        const done = b.getAttribute('aria-pressed') !== 'true';
+        mtQueue(id, { agenda: t.agenda.map(a => a.id === pid ? { ...a, done } : a) }, 0);
+        b.setAttribute('aria-pressed', String(done)); b.setAttribute('aria-label', done ? 'Not covered yet' : 'Covered');
+        li.classList.toggle('done', done);
+      }
+    } else if (act === 'mtg-del') {
+      if (!b.classList.contains('armed')) { b.classList.add('armed'); b.setAttribute('aria-label', 'Tap again to delete'); toast('Tap the bin again to delete this meeting'); setTimeout(() => b.classList.remove('armed'), 4000); return true; }
+      mtPend = null; clearTimeout(mtT);
+      const old = bodyOf(t);
+      S.mtgId = null;
+      save(store.remove(id)).then(ok => { if (ok) toast(`Deleted: ${t.title}`, () => save(store.restore({ ...old, id }))); });
+    } else return false;
+    return true;
+  }
 
   /* ---------- menu: drag the arrow (or anywhere along the bottom) to the right; swipe left to put it away ---------- */
   const drawer = $('#drawer'), scrim = $('#scrim'), menuBtn = $('#grab');
@@ -1958,7 +2284,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('contextmenu', e => { if (mk || mv) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
-  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv) render(); }, 0); }
+  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !typingInMeeting()) render(); }, 0); }
 
   // timeline: pick a task up and move it — hold it with a finger until it lifts, or press and drag with a mouse.
   // With a mouse, its top or bottom edge can also be dragged to change when it starts or ends. Everything snaps to 15 minutes.
@@ -2024,7 +2350,7 @@ dialog::backdrop{background:transparent}
       m.ns = clamp(snap15(minAt(col, m.y) - m.grab), 0, 1440 - 15);
       if (m.blk.parentElement !== col) col.appendChild(m.blk);
       m.blk.style.top = topAt(m.ns);
-      if (small) small.textContent = t.mins ? fmtRange(m.ns, m.ns + t.mins) : `${fmtTime(m.ns)} · no estimate`;
+      if (small) small.textContent = t.mins || t.kind !== 'task' ? fmtRange(m.ns, m.ns + effMins(t)) : `${fmtTime(m.ns)} · no estimate`;
     } else {
       const at = snap15(minAt(m.col, m.y));
       if (m.mode === 'top') { m.ns = clamp(at, 0, m.e0 - 15); m.nlen = m.e0 - m.ns; }
@@ -2140,6 +2466,8 @@ dialog::backdrop{background:transparent}
   /* ---------- events ---------- */
   function setTab(tab) {
     if (!views[tab]) return;
+    mtFlush();
+    if (typingInMeeting()) document.activeElement.blur();
     const was = S.tab;
     S.tab = tab;
     try { localStorage.setItem('hub.tab', tab); } catch (e) {}
@@ -2152,7 +2480,11 @@ dialog::backdrop{background:transparent}
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
-  $('#fab').addEventListener('click', () => { if (S.tab === 'finance') { if (FIN && S.canSave) FIN.add(); return; } openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}); });
+  $('#fab').addEventListener('click', () => {
+    if (S.tab === 'finance') { if (FIN && S.canSave) FIN.add(); return; }
+    if (S.tab === 'meetings') { newMeeting(); return; }
+    openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}, S.tab === 'tasks' ? 'task' : null);
+  });
 
   document.addEventListener('click', e => {
     const tabBtn = e.target.closest('[data-tab]');
@@ -2182,6 +2514,8 @@ dialog::backdrop{background:transparent}
     else if (act === 'm-cell') { if (window.innerWidth < 680) setCalView('day', b.dataset.day); else openTask(null, { date: b.dataset.day }); }
     else if (act === 'soon') toast(`${b.dataset.what} is coming in a later build`);
     else if (act === 'event') openEvent(b.dataset.ev);
+    else if (act === 'meeting') openMeeting(b.dataset.id);
+    else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
     else if (act === 'settings') openSettings();
     else if (act === 'auth-mode') { S.authMode = S.authMode === 'up' ? 'in' : 'up'; S.loginNote = ''; S.loginRedraw = true; render(); }
     else if (act === 'show-done') { S.showDone = !S.showDone; render(); }
@@ -2202,7 +2536,7 @@ dialog::backdrop{background:transparent}
     const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: true }).limit(5000);
     if (error) { S.failed = true; render(); return; }
     S.failed = false; S.loaded = true;
-    S.tasks = data.map(fromRow);
+    S.all = data.map(fromRow); split();
     render();
   }
   const scheduleReload = () => { clearTimeout(reloadT); reloadT = setTimeout(reloadTasks, 300); };
@@ -2221,7 +2555,7 @@ dialog::backdrop{background:transparent}
     if (!u) {
       if (FIN) FIN.stop();
       if (channel) { sb.removeChannel(channel); channel = null; }
-      S.tasks = []; S.loaded = false; S.events = []; S.evWin = null; S.gcal = null; S.loginRedraw = true;
+      S.all = []; split(); S.loaded = false; S.events = []; S.evWin = null; S.gcal = null; S.loginRedraw = true;
     }
     render();
   }
