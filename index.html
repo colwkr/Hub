@@ -1,0 +1,1601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hub">
+<meta name="theme-color" content="#E3E4E9">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Hub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+/* page frame: content stays clear of the iPad/iPhone system bars */
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Layout: the Split Ledger look, scaled up for an iPad on the wall. Near-white panels float over a faint grey gradient.
+   One column on a phone, two on a tablet; the calendar shows 1, 3 or 7 days depending on screen width.
+   One arrow at the bottom-left is the only chrome: drag it right and the menu slides in. Single light look by design. */
+:root{
+  color-scheme:light;
+  --bg-a:#FAFAFC; --bg-b:#E3E4E9;
+  --ink:#131416; --ink-2:rgba(19,20,22,.66); --ink-3:rgba(19,20,22,.5);
+  --panel:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.66)); --panel-hi:#FFFFFF; --edge:rgba(255,255,255,.95); --hair:rgba(19,20,22,.08); --well:rgba(19,20,22,.045);
+  --solid:#131416; --on-solid:#F6F6F8; --ring:#F8F8FA;
+  --sheet:rgba(247,247,250,.93); --scrim:rgba(30,32,40,.22);
+  --lift:0 26px 50px -26px rgba(40,44,62,.38),0 6px 16px -8px rgba(40,44,62,.14);
+  --lift-sm:0 10px 22px -12px rgba(40,44,62,.4);
+  --good:#0F6B3C; --warn:#7A4A00; --bad:#B3261E;
+  --font:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  --blur:blur(26px) saturate(150%);
+  --h:52px; /* one hour on the timeline */
+  --wrap:1180px;
+}
+@media (min-width:760px){ :root{ --h:60px } }
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{background:var(--bg-b);overscroll-behavior-x:none}
+body{margin:0;background:var(--bg-b);color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior-x:none}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,var(--bg-a) 0%,var(--bg-b) 100%)}
+h1,h2,p{margin:0;font-weight:400}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:1.5px solid var(--ink);outline-offset:2px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
+
+.app{max-width:var(--wrap);margin:0 auto;padding-inline:18px;padding-block:20px 116px;display:flex;flex-direction:column;gap:26px}
+@media (min-width:760px){ .app{padding-inline:32px;padding-block:28px 116px} }
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink-2);min-height:36px}
+.top .right{display:flex;align-items:center;gap:14px}
+.top h1{font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--ink)}
+.top .date{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.top .date i{width:18px;height:1px;background:var(--ink-3)}
+
+/* type */
+.lab{font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.meta{font-size:11.5px;color:var(--ink-2)}
+.name{font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.quiet{color:var(--ink-2);font-weight:400}
+.fig{font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;line-height:1.05}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);border:1px solid var(--hair);border-radius:999px;padding:1px 6px;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.empty{color:var(--ink-2);font-size:13px;max-width:40ch}
+
+/* a floating object */
+.float{background:var(--panel);border-radius:28px;box-shadow:inset 0 0 0 1px var(--edge),var(--lift)}
+
+.btn{border:0;background:var(--panel-hi);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:500;line-height:1.2;min-height:38px;box-shadow:inset 0 1px 0 var(--edge),var(--lift-sm);white-space:nowrap}
+.btn.solid{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:var(--on-solid)}
+.circle{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:0;background:var(--panel-hi);color:var(--ink-2);flex:none;box-shadow:var(--lift-sm)}
+.circle svg.i{width:16px;height:16px}
+.circle.lg{width:44px;height:44px;color:var(--ink)}
+.circle.lg svg.i{width:20px;height:20px}
+.circle:active,.btn:active{transform:scale(.96)}
+.link{border:0;background:none;padding:4px 0;color:var(--ink);font-size:12px;font-weight:500;text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px}
+
+.sec{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-inline:4px}
+.list > * + *{box-shadow:inset 0 1px 0 var(--hair)}
+.pad{padding:16px 18px}
+.pill{font-size:10px;font-weight:500;letter-spacing:.06em;border-radius:999px;padding:2px 8px;white-space:nowrap;background:var(--well);color:var(--ink-2)}
+.pill.warn{color:var(--warn)}
+.meter{display:block;height:3px;border-radius:2px;background:var(--hair);overflow:hidden}
+.meter span{display:block;height:100%;background:var(--ink)}
+
+/* two-column arrangement for tablet widths; on a phone the columns dissolve and `order` sets the sequence */
+.cols{display:flex;flex-direction:column;gap:22px}
+.cols > .col{display:contents}
+.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}
+@media (min-width:760px){
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+  .cols > .col{display:flex;flex-direction:column;gap:22px}
+}
+
+/* task row */
+.trow{display:flex;align-items:center;gap:4px;padding:6px 14px 6px 6px}
+.chk{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center;border:0;background:none;padding:0;color:transparent}
+.chk::before{content:"";position:absolute;inset:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.chk[aria-pressed="true"]{color:var(--on-solid)}
+.chk[aria-pressed="true"]::before{background:var(--solid);box-shadow:none}
+.chk svg.i{position:relative;width:14px;height:14px;stroke-width:2}
+.tmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:left;border:0;background:none;padding:8px 0}
+.tmain .meta{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.trow.done .name{text-decoration:line-through;text-decoration-color:var(--ink-3);color:var(--ink-3)}
+.list .empty{padding:16px 18px}
+
+/* home */
+.hero{display:flex;flex-direction:column;gap:6px;padding:8px 4px 4px}
+.clock{font-size:clamp(76px,17vw,136px);font-weight:200;letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock small{font-size:.2em;font-weight:300;letter-spacing:.06em;margin-left:.35em;color:var(--ink-2)}
+.hero .long{font-size:18px;font-weight:300;margin-top:10px}
+.nownext{display:grid;grid-template-columns:1fr 1fr}
+.nownext > * + *{box-shadow:inset 1px 0 0 var(--hair)}
+.nn{display:flex;flex-direction:column;gap:6px;padding:18px;text-align:left;border:0;background:none;min-width:0}
+.nn .meter{margin-top:4px}
+.note{width:100%;border:0;padding:14px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between;text-align:left}
+.note p{font-size:13px;min-width:0}
+.note p b{font-weight:500;color:var(--warn)}
+.note svg.i{width:16px;height:16px;color:var(--ink-3)}
+
+/* weather */
+.wx{padding:18px;display:flex;flex-direction:column;gap:16px}
+.wx-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.wx-top .meta.stale{color:var(--warn)}
+.wx-now{display:flex;align-items:center;gap:14px}
+.wx-now svg.i{width:44px;height:44px;stroke-width:1.2;flex:none}
+.wx-now .fig{font-size:56px;font-weight:200;letter-spacing:-.03em}
+.wx-now > div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.wx-hours{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-inline:-6px;padding-inline:6px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.wx-hours::-webkit-scrollbar{display:none}
+.hr{flex:none;width:52px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;border-radius:18px}
+.hr:first-child{background:var(--well)}
+.hr svg.i{width:20px;height:20px}
+.hr .pop{font-size:10px;color:var(--ink-2);min-height:12px}
+.wx-days{display:flex;flex-direction:column}
+.wd-row{display:grid;grid-template-columns:52px 22px 34px 34px minmax(40px,1fr) 34px;align-items:center;gap:8px;padding:7px 0;font-size:13px}
+.wd-row + .wd-row{box-shadow:inset 0 1px 0 var(--hair)}
+.wd-row svg.i{width:18px;height:18px}
+.wd-row .pop{font-size:11px;color:var(--ink-2)}
+.wd-row .lo{color:var(--ink-2);text-align:right}
+.rng{position:relative;height:4px;border-radius:2px;background:var(--hair)}
+.rng span{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--ink)}
+.wx-sun{display:flex;flex-wrap:wrap;gap:4px 16px}
+
+/* home: phone stacks in reading order; tablets place each piece in a fixed one-screen grid */
+.home{display:flex;flex-direction:column;gap:22px}
+.g-hero{grid-area:hero}.g-music{grid-area:music}.g-next{grid-area:next}
+.g-next{display:flex;flex-direction:column}
+.g-next .list{min-height:0}
+.day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.list > .day-div{box-shadow:none}
+.trow.first .name{font-size:16px}.g-wx{grid-area:wx}.g-now{grid-area:now}.g-od{grid-area:od}.g-cal{grid-area:cal}.g-uns{grid-area:uns}
+.daycal{display:flex;flex-direction:column;overflow:hidden}
+.dc-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 14px 12px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
+.dc-head > div:first-child{min-width:0;display:flex;flex-direction:column;gap:2px}
+.dc-any{display:flex;gap:10px;align-items:flex-start;padding:10px 14px 10px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
+.dc-any .lab{padding-top:9px;flex:none}
+.dc-chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.achip2{display:inline-flex;align-items:center;max-width:100%;min-width:0;height:32px;border-radius:999px;background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair)}
+.achip2 .bmain{padding:0 12px 0 0;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.achip2.done .bmain{text-decoration:line-through;color:var(--ink-3)}
+.daycal .tl{height:min(68vh,560px)}
+.tl-grid.one{grid-template-columns:52px minmax(0,1fr)}
+
+/* sign-in */
+.login{min-height:calc(100vh - 120px);display:grid;place-items:center;padding-block:24px}
+.login-card{width:min(400px,100%);padding:28px 24px 22px;display:flex;flex-direction:column;gap:14px}
+.login-card .r-mark{margin:0 auto}
+.login-title{font-size:28px;font-weight:300;text-align:center;letter-spacing:-.01em;text-wrap:balance}
+.login-card > .meta{text-align:center}
+.login-card .f input{font-size:16px}
+.login-card .btn.solid{min-height:46px}
+.login-card .link{align-self:center}
+body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #grab,body[data-auth="out"] .top{display:none!important}
+
+/* Google Calendar items: grey and read-only, so they never read as tasks */
+.blk.evt{background:var(--well);box-shadow:inset 0 0 0 1px var(--hair)}
+.blk.evt small{color:var(--ink-2)}
+.achip.evt,.achip2.evt{background:var(--well);box-shadow:inset 0 0 0 1px var(--hair)}
+.achip2.evt .bmain{padding-left:12px}
+.cal-ic{width:44px;height:44px;flex:none;display:grid;place-items:center;color:var(--ink-3)}
+.cal-ic svg.i{width:18px;height:18px}
+.ev-body{display:flex;flex-direction:column;gap:10px;padding:10px 20px 22px}
+#setForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
+
+/* music */
+.music{display:flex;align-items:center;gap:14px;padding:14px 16px}
+.mu-art{width:52px;height:52px;border-radius:16px;background:var(--well);display:grid;place-items:center;flex:none;color:var(--ink-2)}
+.mu-art svg.i{width:24px;height:24px}
+.music > div:last-child{min-width:0;display:flex;flex-direction:column;gap:2px;flex:1}
+a.music{text-decoration:none;color:inherit}
+.music.live .mu-art{background:var(--solid);color:var(--on-solid)}
+.music .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music .meta{overflow-wrap:anywhere}
+.music .mu-open{flex:none;color:var(--ink-3)}
+.music .mu-open svg.i{width:16px;height:16px}
+.music .btn{align-self:flex-start;margin-top:6px}
+.eq{display:flex;align-items:flex-end;gap:2px;height:16px}
+.eq i{width:3px;border-radius:1px;background:currentColor;height:40%}
+@media (prefers-reduced-motion:no-preference){
+  .eq i{animation:eq 1.1s ease-in-out infinite}
+  .eq i:nth-child(2){animation-delay:-.4s}.eq i:nth-child(3){animation-delay:-.8s}
+  @keyframes eq{0%,100%{height:30%}50%{height:100%}}
+}
+
+/* the one add button: bottom-right, mirroring the menu arrow at bottom-left */
+#fab{position:fixed;z-index:5;right:max(18px,calc((100% - var(--wrap)) / 2 + 24px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
+  background:var(--solid);color:var(--on-solid);box-shadow:var(--lift)}
+#fab svg.i{width:24px;height:24px}
+#fab:active{transform:scale(.96)}
+#fab:disabled{opacity:.4}
+
+/* calendar */
+.cal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-inline:4px}
+.cal-month{font-size:22px;font-weight:300;letter-spacing:-.01em}
+.cal-nav{display:flex;align-items:center;gap:8px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd{border:0;background:none;border-radius:20px;padding:8px 0 7px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-2)}
+.wd span{font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.wd b{font-size:17px;font-weight:400;color:var(--ink);width:32px;height:32px;display:grid;place-items:center;border-radius:50%;font-variant-numeric:tabular-nums}
+.wd.today b{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.wd.in{background:var(--well)}
+.wd.sel b{background:var(--solid);color:var(--on-solid);box-shadow:none}
+.wd i{display:flex;gap:3px;height:4px}
+.wd i u{width:4px;height:4px;border-radius:50%;background:var(--ink-3)}
+
+.cal{overflow:hidden}
+.cal-days,.cal-any,.tl-grid{display:grid;grid-template-columns:48px repeat(var(--n),minmax(0,1fr))}
+.cal-days{padding:12px 0 8px;box-shadow:inset 0 -1px 0 var(--hair)}
+.dh{display:flex;align-items:baseline;justify-content:center;gap:6px;color:var(--ink-2);font-size:11px;letter-spacing:.1em;text-transform:uppercase;min-width:0}
+.dh b{font-size:17px;font-weight:400;letter-spacing:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.dh.today b{background:var(--solid);color:var(--on-solid);border-radius:999px;padding:0 8px}
+.cal-any{box-shadow:inset 0 -1px 0 var(--hair)}
+.cal-any .lab{padding:9px 0 0 10px;font-size:9px;line-height:1.3}
+.any-cell{display:flex;flex-direction:column;gap:4px;padding:6px 3px;min-width:0;box-shadow:inset 1px 0 0 var(--hair)}
+.achip{border:0;background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);border-radius:10px;padding:5px 8px;font-size:12px;font-weight:500;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.achip.done{opacity:.5;text-decoration:line-through}
+.tl{position:relative;height:clamp(380px,calc(100vh - 330px),1500px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.tl-grid{position:relative}
+.tl-hours{position:relative;height:calc(var(--h) * 24)}
+.tl-hours span{position:absolute;right:8px;transform:translateY(-50%);font-size:10px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tl-col{position:relative;height:calc(var(--h) * 24);box-shadow:inset 1px 0 0 var(--hair);
+  background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));cursor:copy}
+.tl-col.today{background-color:rgba(255,255,255,.35)}
+.blk{position:absolute;z-index:1;border:0;padding:5px 8px;border-radius:12px;text-align:left;overflow:hidden;cursor:pointer;
+  background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);display:flex;flex-direction:column;gap:1px;min-width:0}
+.blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blk small{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.blk.tight{flex-direction:row;align-items:center;gap:6px;padding-block:0}
+.blk.now{background:var(--solid);color:var(--on-solid)}
+.blk.now small{color:var(--on-solid);opacity:.7}
+.blk.noest{background:rgba(255,255,255,.55);box-shadow:none;outline:1px dashed var(--ink-3);outline-offset:-1px}
+.blk.done{opacity:.45}
+.blk.done b{text-decoration:line-through}
+/* blocks with a done circle (Home's day calendar) */
+.blk.has-chk{padding:0;flex-direction:row;align-items:stretch;gap:0}
+.bchk{position:relative;flex:none;width:34px;border:0;background:none;padding:0;color:transparent}
+.bchk::before{content:"";position:absolute;left:8px;top:7px;width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.bchk svg.i{position:absolute;left:11px;top:10px;width:12px;height:12px;stroke-width:2.2}
+.blk.tight .bchk::before,.achip2 .bchk::before{top:calc(50% - 9px)}
+.blk.tight .bchk svg.i,.achip2 .bchk svg.i{top:calc(50% - 6px)}
+.achip2 .bchk{width:32px;height:32px}
+.achip2 .bchk::before{left:7px}.achip2 .bchk svg.i{left:10px}
+.bchk[aria-pressed="true"]{color:var(--on-solid)}
+.bchk[aria-pressed="true"]::before{background:var(--solid);box-shadow:none}
+.blk.now .bchk::before{box-shadow:inset 0 0 0 1.5px var(--on-solid)}
+.bmain{flex:1;min-width:0;border:0;background:none;color:inherit;text-align:left;padding:5px 8px 5px 0;display:flex;flex-direction:column;gap:1px;cursor:pointer}
+.blk.tight .bmain{flex-direction:row;align-items:center;gap:6px;padding-block:0}
+.nowline{position:absolute;left:0;right:0;height:0;border-top:1.5px solid var(--ink);z-index:0;pointer-events:none}
+.nowline::before{content:"";position:absolute;left:-4px;top:-4.75px;width:8px;height:8px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--ring)}
+.cal-hint{padding-inline:4px}
+
+.examples{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:11.5px;color:var(--ink-3);padding-inline:4px}
+
+/* the only chrome: an arrow at the bottom-left. Drag it right (or anywhere along the bottom) to open the menu */
+#grab{position:fixed;z-index:5;left:max(18px,calc((100% - var(--wrap)) / 2 + 24px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
+  background:var(--panel-hi);color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge),var(--lift);touch-action:none}
+#grab svg.i{width:22px;height:22px}
+.pip{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px;box-shadow:0 0 0 2px var(--ring)}
+@media (prefers-reduced-motion:no-preference){
+  #grab svg.i{animation:nudge 3.2s ease-in-out infinite}
+  @keyframes nudge{0%,70%,100%{transform:translateX(0)}80%{transform:translateX(4px)}90%{transform:translateX(0)}}
+}
+
+/* menu */
+#scrim{position:fixed;inset:0;z-index:7;background:var(--scrim);opacity:var(--p,0);pointer-events:none;transition:opacity .3s ease}
+#scrim.on{pointer-events:auto}
+#drawer{position:fixed;z-index:8;left:max(10px,calc((100% - var(--wrap)) / 2 + 16px));top:calc(10px + env(safe-area-inset-top, 0px));bottom:calc(10px + env(safe-area-inset-bottom, 0px));width:min(300px,calc(100% - 66px));border-radius:30px;
+  background:var(--sheet);box-shadow:inset 0 1px 0 var(--edge),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  padding:22px 12px 18px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;
+  transform:translateX(calc((var(--p,0) - 1) * 112%));transition:transform .36s cubic-bezier(.2,.85,.25,1)}
+#drawer.dragging,.dragging-scrim{transition:none !important}
+.d-head{display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;font-weight:500}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;background:none;border-radius:999px;padding:0 14px;height:46px;font-size:14px;color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
+.nav .badge{margin-left:auto;min-width:22px;height:22px;border-radius:11px;background:var(--solid);color:var(--on-solid);font-size:11px;font-weight:600;line-height:22px;text-align:center;padding:0 6px}
+.nav button[aria-current="page"] .badge{background:var(--on-solid);color:var(--solid)}
+.d-rule{height:1px;background:var(--hair);margin:0 12px;flex:none}
+.d-sec{display:flex;flex-direction:column;gap:2px;padding:0 2px}
+.d-sec > .lab{padding:0 12px 6px}
+.soon{display:flex;align-items:center;gap:14px;padding:8px 12px;border-radius:18px;text-decoration:none;color:var(--ink-2)}
+.soon > span{display:flex;flex-direction:column;gap:1px;min-width:0}
+.soon b{font-weight:500;color:var(--ink);font-size:13.5px}
+.soon small{font-size:11px}
+a.soon:hover{background:var(--well)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:8px 12px;border-radius:18px;text-align:left;font-size:13.5px}
+.switch .sw{position:relative;width:42px;height:26px;border-radius:13px;background:var(--hair);flex:none;transition:background .2s}
+.switch .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--panel-hi);box-shadow:var(--lift-sm);transition:transform .2s}
+.switch[aria-checked="true"] .sw{background:var(--solid)}
+.switch[aria-checked="true"] .sw::after{transform:translateX(16px)}
+.d-note{padding:0 12px;font-size:11px;color:var(--ink-3)}
+.d-foot{margin-top:auto;padding:0 14px;font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:7px}
+.d-foot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+.d-foot.ok::before{background:var(--good)}
+.d-foot.off::before{background:var(--bad)}
+
+/* tablet rail: a slim glass bar down the whole left side. Phones keep the arrow and slide-out menu. */
+#rail{display:none}
+.r-btn{position:relative;width:70px;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;padding:3px 0;border-radius:20px;color:var(--ink-2);font-size:10.5px;font-weight:500;letter-spacing:.02em;text-decoration:none;line-height:1.15;text-align:center}
+.r-btn .ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;transition:background .2s,color .2s}
+.r-btn svg.i{width:21px;height:21px}
+.r-btn:active .ic{transform:scale(.94)}
+.r-btn[aria-current="page"]{color:var(--ink)}
+.r-btn[aria-current="page"] .ic,.r-btn[aria-checked="true"] .ic{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
+.r-btn.dim{opacity:.42}
+.r-btn .pip{top:2px;right:8px}
+.r-mark{width:46px;height:46px;display:grid;place-items:center;color:var(--ink);flex:none}
+.r-mark svg.i{width:24px;height:24px}
+.r-rule{width:34px;height:1px;background:var(--hair);margin:4px 0;flex:none}
+.r-foot{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:6px}
+.r-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+.r-dot.ok{background:var(--good)}
+.r-dot.off{background:var(--bad)}
+@media (min-width:760px) and (min-height:500px){
+  :root{--rail:86px}
+  #rail{position:fixed;z-index:5;left:12px;top:calc(12px + env(safe-area-inset-top, 0px));bottom:calc(12px + env(safe-area-inset-bottom, 0px));width:var(--rail);
+    display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0 18px;border-radius:32px;overflow-y:auto;scrollbar-width:none;
+    background:var(--sheet);box-shadow:inset 0 1px 0 var(--edge),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+  #rail::-webkit-scrollbar{display:none}
+  #grab,#drawer,#scrim{display:none!important}
+  .app{max-width:none;margin:0;padding-left:calc(12px + var(--rail) + 10px);padding-right:12px}
+  .toast{left:calc(50% + var(--rail) / 2 + 6px);max-width:calc(100% - var(--rail) - 80px)}
+
+  /* one fixed screen, inset exactly like the rail: the page never scrolls; long content scrolls inside its own panel */
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  .app{height:100%;padding-block:12px;gap:16px}
+  .top{padding-top:8px}
+  body[data-view="home"] .top{display:none}
+  body[data-auth="out"] .app{padding-left:12px}
+  #view{flex:1;min-height:0;display:flex;flex-direction:column;gap:16px}
+  .cal{flex:1;min-height:0;display:flex;flex-direction:column}
+  .cal .tl,.daycal .tl{height:auto;flex:1 1 0;min-height:0}
+  .cal-hint{display:none}
+  .cols{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr)}
+  .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
+  .cols > .col::-webkit-scrollbar{display:none}
+  #fab{right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px))}
+
+  /* upright iPad: calendar down the left, everything else stacked on the right, weather last above the + button */
+  .home{flex:1;min-height:0;display:grid;gap:16px 18px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"cal hero" "cal next" "cal music" "cal wx"}
+  .g-next .list{overflow-y:auto;scrollbar-width:none}
+  .home > *{min-height:0}
+  .g-hero{align-items:flex-end;text-align:right;padding:6px 6px 0}
+  .clock{font-size:clamp(64px,10.5vw,118px)}
+  .g-music{align-self:start}
+  .g-wx{margin-bottom:68px;overflow-y:auto;scrollbar-width:none}
+  .g-uns{display:flex;flex-direction:column}
+  .g-uns .list{min-height:0;overflow-y:auto;scrollbar-width:none}
+}
+/* sideways iPad: calendar left, tasks in the middle, clock top-right, weather bottom-right */
+@media (min-width:1000px) and (min-height:500px){
+  .home{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr);
+    grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-areas:"cal next hero" "cal next music" "cal next wx"}
+  .clock{font-size:clamp(64px,7.4vw,112px)}
+}
+
+/* sheet: floats clear of every edge, flick it down to dismiss */
+dialog{border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:32px;margin:auto auto calc(10px + env(safe-area-inset-bottom, 0px));width:calc(100% - 20px);max-width:480px;max-height:calc(100% - 40px);
+  box-shadow:inset 0 1px 0 var(--edge),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);transition:transform .25s ease}
+@media (min-width:760px){ dialog{margin:auto} }
+dialog::backdrop{background:var(--scrim)}
+#sheetForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--ink-3);margin:0 auto 10px;opacity:.6}
+.sheet-head{display:flex;flex-direction:column;touch-action:none}
+.sheet-head .bar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sheet-head h2{font-size:17px;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.sheet-body{display:flex;flex-direction:column;gap:16px}
+.f{display:flex;flex-direction:column;gap:7px;min-width:0}
+.f-h{font-size:11px;color:var(--ink-2)}
+.f input{border:0;background:var(--panel-hi);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;min-width:0;font-size:16px;box-shadow:inset 0 0 0 1px var(--hair)}
+.f input[type="date"],.f input[type="time"]{display:block;-webkit-appearance:none;appearance:none;text-align:left}
+.frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.xin{display:flex;align-items:center;gap:8px;flex:1 1 180px;min-width:0}
+.xin input{flex:1}
+.xin .unit{font-size:13px;color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:0;background:var(--panel-hi);border-radius:999px;padding:8px 13px;min-height:36px;font-size:13px;font-weight:500;box-shadow:var(--lift-sm)}
+.chip[aria-pressed="true"]{background:var(--solid);color:var(--on-solid)}
+.chip:active{transform:scale(.96)}
+.where{font-size:12.5px;color:var(--ink-2);padding:12px 14px;border-radius:16px;background:var(--well)}
+.where b{font-weight:500;color:var(--ink)}
+.err{color:var(--bad);font-size:12.5px;font-weight:500}
+.sheet-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sheet-foot .btn{min-height:44px}
+.sheet-foot .btn.solid{margin-left:auto;min-width:112px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(30px + env(safe-area-inset-bottom, 0px));background:var(--solid);color:var(--on-solid);border-radius:999px;padding:10px 18px;display:flex;gap:14px;align-items:center;font-size:12.5px;max-width:calc(100% - 176px);z-index:6;box-shadow:var(--lift)}
+.toast span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast button{border:0;background:none;color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:0;flex:none}
+
+@media (prefers-reduced-motion:reduce){ #drawer,#scrim,dialog,.switch .sw,.switch .sw::after{transition:none} .circle:active,.btn:active,.chip:active,#grab:active{transform:none} }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <h1 id="title">Home</h1>
+    <div class="right">
+      <span class="date" id="today"></span>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<button id="grab" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+  <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 12 12l-5.5 5.5M12.5 6.5 18 12l-5.5 5.5"/></svg>
+  <span id="grabCount" class="pip" hidden></span>
+</button>
+
+<button id="fab" type="button" aria-label="Add a task"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
+
+<nav id="rail" aria-label="Sections">
+  <div class="r-mark" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
+  <div class="r-rule"></div>
+  <button type="button" class="r-btn" data-tab="home"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg></span>Home</button>
+  <button type="button" class="r-btn" data-tab="tasks"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg></span>Tasks<span class="pip" id="railBadge" hidden></span></button>
+  <button type="button" class="r-btn" data-tab="calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span>Calendar</button>
+  <div class="r-rule"></div>
+  <a class="r-btn" href="https://claude.ai/artifact/QjtT6vbKnS7vGGt8CHcnMs" target="_blank" rel="noopener" title="Split Ledger opens separately for now"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg></span>Finance</a>
+  <button type="button" class="r-btn dim" data-act="soon" data-what="Lights" aria-disabled="true"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span>Lights</button>
+  <button type="button" class="r-btn dim" data-act="soon" data-what="Notes" aria-disabled="true"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span>Notes</button>
+  <div class="r-foot">
+    <button type="button" class="r-btn" data-act="settings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg></span>Settings</button>
+    <button type="button" class="r-btn" id="fsBtn" hidden><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path id="fsPath" d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15"/></svg></span><span id="fsLabel">Full screen</span></button>
+    <button type="button" class="r-btn" data-wake role="switch" aria-checked="false"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="4.5" width="15" height="11" rx="2.5"/><path d="M9 19.5h6M12 15.5v4"/></svg></span>Stay on</button>
+    <span class="r-dot" id="railDot" role="img" aria-label="Connecting"></span>
+  </div>
+</nav>
+
+<div id="scrim"></div>
+<aside id="drawer" aria-label="Menu" inert>
+  <div class="d-head"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span>Hub</span></div>
+  <nav class="nav" aria-label="Sections">
+    <button type="button" data-tab="home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg><span>Home</span></button>
+    <button type="button" data-tab="tasks"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg><span>Tasks</span><span class="badge" id="taskBadge" hidden></span></button>
+    <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span></button>
+  </nav>
+  <div class="d-rule"></div>
+  <div class="d-sec">
+    <span class="lab">Coming next</span>
+    <a class="soon" href="https://claude.ai/artifact/QjtT6vbKnS7vGGt8CHcnMs" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg><span><b>Finance</b><small>Split Ledger, opens in Claude for now</small></span></a>
+    <div class="soon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg><span><b>Lights</b><small>Needs the Bluetooth bridge</small></span></div>
+    <div class="soon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg><span><b>Notes and spec sheets</b><small>Not started</small></span></div>
+  </div>
+  <div class="d-rule"></div>
+  <div class="d-sec">
+    <button type="button" class="switch" id="wakeBtn" data-wake role="switch" aria-checked="false"><span>Keep screen on</span><span class="sw" aria-hidden="true"></span></button>
+    <button type="button" class="switch" data-act="settings"><span>Settings</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <p class="d-note" id="wakeNote" hidden></p>
+  </div>
+  <div class="d-foot" id="drawerFoot"></div>
+</aside>
+
+<dialog id="sheet" aria-labelledby="sheetTitle">
+  <form id="sheetForm" novalidate>
+    <div class="sheet-head" id="sheetHead">
+      <div class="grab"></div>
+      <div class="bar">
+        <h2 id="sheetTitle">New task</h2>
+        <button type="button" class="circle" id="sheetClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+      </div>
+    </div>
+    <div id="sheetBody" class="sheet-body">
+      <label class="f"><span class="f-h">Task</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What needs doing?"></label>
+      <div class="f">
+        <span class="f-h" id="h_date">Day</span>
+        <div class="frow">
+          <div class="chips"><button type="button" class="chip" data-set="date" data-rel="0">Today</button><button type="button" class="chip" data-set="date" data-rel="1">Tomorrow</button></div>
+          <div class="xin"><input id="f_date" type="date" aria-labelledby="h_date"><button type="button" class="circle" data-clear="f_date" aria-label="Clear day"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
+        </div>
+      </div>
+      <div class="f">
+        <span class="f-h" id="h_time">Time</span>
+        <div class="xin"><input id="f_time" type="time" step="300" aria-labelledby="h_time"><button type="button" class="circle" data-clear="f_time" aria-label="Clear time"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
+      </div>
+      <div class="f">
+        <span class="f-h" id="h_mins">How long it takes</span>
+        <div class="chips">
+          <button type="button" class="chip" data-set="mins" data-val="15">15 min</button><button type="button" class="chip" data-set="mins" data-val="30">30 min</button><button type="button" class="chip" data-set="mins" data-val="45">45 min</button><button type="button" class="chip" data-set="mins" data-val="60">1 hr</button><button type="button" class="chip" data-set="mins" data-val="90">1½ hr</button><button type="button" class="chip" data-set="mins" data-val="120">2 hr</button>
+        </div>
+        <div class="xin"><input id="f_mins" type="number" inputmode="numeric" min="1" max="1440" step="1" placeholder="Other" aria-labelledby="h_mins"><span class="unit">min</span><button type="button" class="circle" data-clear="f_mins" aria-label="Clear length"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
+      </div>
+      <p class="where" id="f_where" aria-live="polite"></p>
+    </div>
+    <p id="sheetErr" class="err" hidden></p>
+    <div class="sheet-foot">
+      <button type="button" id="sheetDel" class="btn danger" hidden>Delete</button>
+      <button type="button" id="sheetDone" class="btn" hidden>Mark done</button>
+      <button type="submit" id="sheetSave" class="btn solid">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="evSheet" aria-labelledby="evTitle">
+  <div class="ev-body">
+    <div class="sheet-head" id="evHead"><div class="grab"></div><div class="bar"><h2 id="evTitle"></h2><button type="button" class="circle" id="evClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
+    <p class="name" id="evWhen"></p>
+    <p class="meta" id="evWhere" hidden></p>
+    <p class="where">From <b id="evCal">Google Calendar</b>. Change it there and the hub picks it up within a few minutes.</p>
+  </div>
+</dialog>
+
+<dialog id="setSheet" aria-labelledby="setTitle">
+  <form id="setForm" novalidate>
+    <div class="sheet-head"><div class="grab"></div><div class="bar"><h2 id="setTitle">Settings</h2><button type="button" class="circle" id="setClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
+    <div class="sheet-body">
+      <p class="meta" id="setWho"></p>
+      <label class="f"><span class="f-h">Google Calendar private address</span><input id="s_gcal" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"></label>
+      <p class="where">On a computer, open Google Calendar, then Settings. Pick your calendar on the left, scroll to <b>Integrate calendar</b>, and copy <b>Secret address in iCal format</b>. Paste it here. Keep it private: anyone with it can read that calendar.</p>
+      <p class="meta" id="setStatus" aria-live="polite"></p>
+    </div>
+    <p class="err" id="setErr" hidden></p>
+    <div class="sheet-foot">
+      <button type="button" class="btn" id="signOut">Sign out</button>
+      <button type="submit" class="btn solid" id="setSave">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  // Supabase project for the hub. The publishable key is meant to be public; every table is locked to its owner.
+  const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
+  const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
+  const VERSION = '20261008023242';
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const pad = n => String(n).padStart(2, '0');
+
+  /* ---------- dates: days are local 'YYYY-MM-DD' strings, times are 'HH:MM', lengths are minutes ---------- */
+  const dkey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (k, n) => { const d = fromKey(k); d.setDate(d.getDate() + n); return dkey(d); };
+  const todayKey = () => dkey(new Date());
+  const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+  const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+
+  const timeFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+  const hourFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric' });
+  const wdFmt = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
+  const shortFmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const longFmt = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  const monYrFmt = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+  const monFmt = new Intl.DateTimeFormat(undefined, { month: 'short' });
+  const atMin = m => new Date(2000, 0, 1, 0, m);
+  function timeParts(m) {
+    const p = timeFmt.formatToParts(atMin(m));
+    const per = p.find(x => x.type === 'dayPeriod');
+    return { bare: p.filter(x => x.type !== 'dayPeriod').map(x => x.value).join('').trim(), per: per ? per.value : '' };
+  }
+  const fmtTime = m => timeFmt.format(atMin(m));
+  function fmtRange(s, e) {
+    const a = timeParts(s), b = timeParts(e);
+    return a.per && a.per === b.per ? `${a.bare}–${fmtTime(e)}` : `${fmtTime(s)}–${fmtTime(e)}`;
+  }
+  function fmtDur(m) {
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60), r = m % 60;
+    return r ? `${h} hr ${r} min` : `${h} hr`;
+  }
+  function dayLabel(k) {
+    const t = todayKey();
+    if (k === t) return 'Today';
+    if (k === addDays(t, 1)) return 'Tomorrow';
+    if (k === addDays(t, -1)) return 'Yesterday';
+    return shortFmt.format(fromKey(k));
+  }
+
+  const ICON = {
+    cal: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg>',
+    check: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6 7.4-8"/></svg>',
+    chev: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
+    left: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>',
+    right: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
+  };
+  const CLOUD = 'M7.5 18.5h9a3.75 3.75 0 0 0 .5-7.47A5.25 5.25 0 0 0 6.9 12.1 3.2 3.2 0 0 0 7.5 18.5z';
+  const WXI = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    moon: '<path d="M18.5 14.5A7 7 0 0 1 9.5 5.5a7 7 0 1 0 9 9z"/>',
+    part: '<path d="M8.5 4.5v1.2M3.8 9.2H5M5.2 5.9l.85.85M12 6.4a3.4 3.4 0 0 0-5.9 3.1"/><path d="' + CLOUD + '"/>',
+    partn: '<path d="M11.8 6.2A3.6 3.6 0 0 1 7 4a3.8 3.8 0 0 0-.4 6"/><path d="' + CLOUD + '"/>',
+    cloud: '<path d="' + CLOUD + '"/>',
+    rain: '<path d="M7.5 15.5h9a3.75 3.75 0 0 0 .5-7.47A5.25 5.25 0 0 0 6.9 9.1 3.2 3.2 0 0 0 7.5 15.5z"/><path d="M9 18l-.8 2M12.5 18l-.8 2M16 18l-.8 2"/>',
+    storm: '<path d="M7.5 15.5h9a3.75 3.75 0 0 0 .5-7.47A5.25 5.25 0 0 0 6.9 9.1 3.2 3.2 0 0 0 7.5 15.5z"/><path d="M12.5 15.5 10.5 19h3l-2 3"/>',
+    snow: '<path d="M7.5 15.5h9a3.75 3.75 0 0 0 .5-7.47A5.25 5.25 0 0 0 6.9 9.1 3.2 3.2 0 0 0 7.5 15.5z"/><path d="M9 19h.01M12 20.5h.01M15 19h.01"/>',
+    fog: '<path d="M4.5 9.5h15M6.5 13h11M4.5 16.5h15"/>',
+  };
+  const wxIcon = name => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${WXI[name] || WXI.cloud}</svg>`;
+  function wx(code, isDay) {
+    const c = Number(code);
+    let r = c === 0 ? ['Clear', 'sun'] : c === 1 ? ['Mostly clear', 'part'] : c === 2 ? ['Partly cloudy', 'part'] : c === 3 ? ['Cloudy', 'cloud']
+      : c <= 48 ? ['Fog', 'fog'] : c <= 57 ? ['Drizzle', 'rain'] : c <= 67 ? ['Rain', 'rain'] : c <= 77 ? ['Snow', 'snow']
+      : c <= 82 ? ['Showers', 'rain'] : c <= 86 ? ['Snow showers', 'snow'] : ['Thunderstorms', 'storm'];
+    if (!isDay && r[1] === 'sun') r = [r[0], 'moon'];
+    if (!isDay && r[1] === 'part') r = [r[0], 'partn'];
+    return r;
+  }
+
+  /* ---------- state ---------- */
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar' };
+  const S = {
+    booted: false, canSave: false, failed: false, loaded: false,
+    tasks: [], weather: null,
+    tab: 'home', calDay: todayKey(), homeDay: todayKey(), showDone: false, confirmClear: false,
+    aim: {}, busy: new Set(),
+    wakeWant: false, wakeOn: false, wakeNote: '',
+    user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
+  };
+  let sb = null;
+  // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
+  const fromRow = r => ({ id: r.id, title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0 });
+  function toRow(o) {
+    const r = {};
+    if ('id' in o) r.id = o.id;
+    if ('title' in o) r.title = o.title;
+    if ('date' in o) r.day = o.date || null;
+    if ('time' in o) r.at_time = o.time || null;
+    if ('mins' in o) r.mins = o.mins ?? null;
+    if ('done' in o) r.done = !!o.done;
+    if ('doneAt' in o) r.done_at = o.doneAt ? new Date(o.doneAt).toISOString() : null;
+    if ('createdAt' in o && o.createdAt) r.created_at = new Date(o.createdAt).toISOString();
+    return r;
+  }
+  const must = ({ error }) => { if (error) throw error; };
+  // writes show on screen at once, then reload from the database if the save fails
+  const store = {
+    async add(o) { must(await sb.from('tasks').insert(toRow(o))); await reloadTasks(); },
+    async update(id, patch) {
+      const t = task(id); if (t) Object.assign(t, patch); render();
+      try { must(await sb.from('tasks').update(toRow(patch)).eq('id', id)); } catch (e) { await reloadTasks(); throw e; }
+    },
+    async remove(id) {
+      S.tasks = S.tasks.filter(t => t.id !== id); render();
+      try { must(await sb.from('tasks').delete().eq('id', id)); } catch (e) { await reloadTasks(); throw e; }
+    },
+    async restore(o) { must(await sb.from('tasks').insert(toRow(o))); await reloadTasks(); },
+  };
+  const task = id => S.tasks.find(t => t.id === id);
+  // A task is on the calendar once it has a day and a time; a day alone puts it under Anytime; anything else is Unsorted.
+  const kindOf = t => (t.date && t.time ? 'timed' : t.date ? 'anytime' : 'unsorted');
+  const effMins = t => t.mins || 15; // tasks with no estimate still need a footprint on the timeline
+  const isOverdue = t => !t.done && !!t.date && t.date < todayKey();
+  const cmp = (a, b) => (a.date || '~').localeCompare(b.date || '~') || (a.time || '~').localeCompare(b.time || '~') || (a.createdAt || 0) - (b.createdAt || 0);
+  const byNew = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
+
+  function meta(t, withDay) {
+    const bits = [], k = kindOf(t);
+    if (k !== 'unsorted' && withDay) bits.push(dayLabel(t.date));
+    if (k === 'timed') {
+      const s = toMin(t.time);
+      bits.push(t.mins ? fmtRange(s, s + t.mins) : fmtTime(s));
+      bits.push(t.mins ? fmtDur(t.mins) : 'No estimate');
+    } else if (k === 'anytime') {
+      bits.push('Anytime');
+      if (t.mins) bits.push(fmtDur(t.mins));
+    } else {
+      if (t.time) bits.push(fmtTime(toMin(t.time)));
+      if (t.mins) bits.push(fmtDur(t.mins));
+      if (!bits.length) bits.push('No day or time');
+    }
+    return bits.join(' · ');
+  }
+  function until(t) {
+    if (t.date === todayKey()) {
+      const d = toMin(t.time) - nowMin();
+      if (d < 60) return `In ${d} min`;
+      return `In ${Math.floor(d / 60)} hr${d % 60 ? ` ${d % 60} min` : ''}`;
+    }
+    return `${dayLabel(t.date)}, ${fmtTime(toMin(t.time))}`;
+  }
+
+  /* ---------- pieces ---------- */
+  function row(t, withDay) {
+    return `<div class="trow${t.done ? ' done' : ''}">
+      <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>
+      <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}">
+        <span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span>
+        <span class="meta">${isOverdue(t) ? '<span class="pill warn">Overdue</span>' : ''}<span>${esc(meta(t, withDay))}</span></span>
+      </button>
+    </div>`;
+  }
+  const sec = (title, inner, extra = '', cls = '') =>
+    `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">${title}</h2>${extra}</div><div class="float list">${inner}</div></section>`;
+  function notReady() {
+    if (!S.booted) return '<p class="empty">Loading your tasks…</p>';
+    if (S.failed) return '<p class="empty">Tasks could not load. Check the connection; the hub tries again when you come back to it.</p>';
+    return '<p class="empty">Loading your tasks…</p>';
+  }
+
+  /* ---------- weather ---------- */
+  function vWeather(order) {
+    const w = S.weather;
+    if (!w || !w.current) {
+      return `<section class="float wx ${order}"><div class="wx-top"><span class="lab">Weather</span></div><p class="empty">The forecast shows here once it loads.</p></section>`;
+    }
+    const tk = todayKey();
+    const dayOf = k => (w.daily || []).find(d => d.date === k);
+    const isDayAt = iso => { const d = dayOf(iso.slice(0, 10)); if (!d) return true; const hm = iso.slice(11, 16); return hm >= d.sunrise && hm < d.sunset; };
+    const c = w.current;
+    const [cLabel, cIcon] = wx(c.code, c.isDay);
+    const curHour = `${tk}T${pad(new Date().getHours())}:00`;
+    const ahead = (w.hourly || []).filter(h => h.t >= curHour);
+    // the rest of today; late in the evening, run a few hours past midnight so the strip is never nearly empty
+    const restOfDay = ahead.filter(h => h.t.slice(0, 10) === tk);
+    const hours = restOfDay.length >= 6 ? restOfDay : ahead.slice(0, 6);
+    const upd = new Date(w.updatedAt || 0);
+    const stale = Date.now() - (w.updatedAt || 0) > 3 * 3600e3;
+    const updTxt = dkey(upd) === tk ? `Updated ${timeFmt.format(upd)}` : `Updated ${shortFmt.format(upd)}`;
+    const td = dayOf(tk);
+    const r = n => Math.round(n);
+    const hourHtml = hours.map((h, i) => {
+      const [, ic] = wx(h.code, isDayAt(h.t));
+      return `<div class="hr"><span class="meta">${i === 0 ? 'Now' : esc(hourFmt.format(new Date(h.t)))}</span>${wxIcon(ic)}<span class="num">${r(h.temp)}°</span><span class="pop">${h.pop >= 20 ? h.pop + '%' : ''}</span></div>`;
+    }).join('');
+    return `<section class="float wx ${order}" id="wxcard" data-keep aria-label="Weather">
+      <div class="wx-top"><span class="lab">${esc(w.place || 'Weather')}</span><span class="meta${stale ? ' stale' : ''}">${updTxt}</span></div>
+      <div class="wx-now">${wxIcon(cIcon)}<p class="fig">${r(c.temp)}°</p><div><p class="name">${esc(cLabel)}</p><p class="meta">Feels ${r(c.feels)}°${td ? ` · High ${r(td.hi)}° · Low ${r(td.lo)}°` : ''}</p></div></div>
+      ${hours.length ? `<div class="wx-hours" aria-label="Rest of today">${hourHtml}</div>` : ''}
+    </section>`;
+  }
+
+  // Music: the Claude Spotify connection only works inside Claude; the hub gets its own Spotify connection next
+  const NOTE = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6.5l10-2v11"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
+  function vMusic(cls) {
+    return `<section class="float music ${cls}" aria-label="Music"><div class="mu-art">${NOTE}</div><div><span class="lab">Spotify</span><p class="name">Coming in the next setup step</p><p class="meta">With its own Spotify connection, the hub can show what's playing and play, pause, and skip.</p></div></section>`;
+  }
+
+  /* ---------- home ---------- */
+  function vNowNext() {
+    const tk = todayKey(), nm = nowMin();
+    const timed = S.tasks.filter(t => !t.done && kindOf(t) === 'timed');
+    const cur = timed.filter(t => t.date === tk && toMin(t.time) <= nm && nm < toMin(t.time) + effMins(t)).sort(cmp)[0];
+    const nxt = timed.filter(t => t !== cur && (t.date > tk || (t.date === tk && toMin(t.time) > nm))).sort(cmp)[0];
+    let a, b;
+    if (cur) {
+      const s = toMin(cur.time), e = s + effMins(cur), pct = clamp((nm - s) / (e - s) * 100, 0, 100);
+      a = `<button type="button" class="nn" data-act="edit" data-id="${esc(cur.id)}"><span class="lab">Now</span><span class="name">${esc(cur.title)}</span><span class="meter"><span style="width:${pct.toFixed(0)}%"></span></span><span class="meta">${cur.mins ? `${e - nm} min left · ends ${fmtTime(e)}` : `Started ${fmtTime(s)} · no estimate`}</span></button>`;
+    } else {
+      a = `<div class="nn"><span class="lab">Now</span><span class="name quiet">Nothing scheduled</span><span class="meta">${nxt && nxt.date === tk ? `Free until ${fmtTime(toMin(nxt.time))}` : 'Free for the rest of today'}</span></div>`;
+    }
+    if (nxt) b = `<button type="button" class="nn" data-act="edit" data-id="${esc(nxt.id)}"><span class="lab">Next</span><span class="name">${esc(nxt.title)}</span><span class="meta">${esc(until(nxt))}${nxt.mins ? ` · ${fmtDur(nxt.mins)}` : ''}</span></button>`;
+    else b = '<div class="nn"><span class="lab">Next</span><span class="name quiet">Nothing coming up</span><span class="meta">Give a task a day and time to see it here.</span></div>';
+    return `<section class="float nownext g-now">${a}${b}</section>`;
+  }
+
+  // Next: only tasks that are on the calendar (a day and a time) and haven't started yet, soonest first
+  function vNext(cls) {
+    const tk = todayKey(), nm = nowMin();
+    const upT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && (t.date > tk || (t.date === tk && toMin(t.time) >= nm))).map(t => ({ t, date: t.date, time: t.time }));
+    const upG = S.events.filter(g => !g.allDay && g.start && (g.date > tk || (g.date === tk && toMin(g.start) >= nm))).map(g => ({ g, date: g.date, time: g.start }));
+    const up = [...upT, ...upG].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).slice(0, 20);
+    let inner;
+    if (!S.loaded) inner = notReady();
+    else if (!up.length) inner = '<p class="empty">Nothing scheduled. Give a task a day and a time, or add it to Google Calendar, and it lines up here.</p>';
+    else {
+      let lastDay = tk;
+      inner = up.map((x, i) => {
+        // rows show only the time; a quiet divider marks where tomorrow (or a later day) begins
+        const div = x.date !== lastDay ? `<div class="day-div">${esc(dayLabel(x.date))}</div>` : '';
+        lastDay = x.date;
+        if (x.g) {
+          const g = x.g, s0 = toMin(g.start);
+          return `${div}<div class="trow${i === 0 ? ' first' : ''}"><span class="cal-ic" aria-hidden="true">${ICON.cal}</span><button type="button" class="tmain" data-act="event" data-ev="${esc(g.id)}"><span class="name">${esc(g.title)}<span class="tag">Google</span></span><span class="meta"><span>${esc(fmtRange(s0, s0 + (g.mins || 30)))}</span></span></button></div>`;
+        }
+        const t = x.t, s0 = toMin(t.time);
+        const when = t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
+        return `${div}<div class="trow${i === 0 ? ' first' : ''}">
+          <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="false" aria-label="Mark done: ${esc(t.title)}">${ICON.check}</button>
+          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span><span class="meta"><span>${esc(when)}</span></span></button>
+        </div>`;
+      }).join('');
+    }
+    return `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">Next</h2></div><div class="float list" id="nextlist" data-keep>${inner}</div></section>`;
+  }
+
+  function vHome() {
+    const tk = todayKey(), p = timeParts(nowMin());
+    const left = S.tasks.filter(t => t.date === tk && !t.done).length;
+    const summary = S.loaded ? (left ? `${left} ${left === 1 ? 'task' : 'tasks'} left today` : 'Nothing left today') : '';
+    return `<div class="home">
+      <section class="hero g-hero" aria-label="Clock">
+        <p class="clock"><span data-clock>${esc(p.bare)}</span><small data-ampm>${esc(p.per)}</small></p>
+        <p class="long" data-longdate>${esc(longFmt.format(new Date()))}</p>
+        <p class="meta">${esc(summary)}</p>
+      </section>
+      ${vWeather('g-wx')}
+      ${vNext('g-next')}
+      ${vDayCal('g-cal')}
+      ${vMusic('g-music')}
+    </div>`;
+  }
+
+  /* ---------- tasks ---------- */
+  function vTasks() {
+    if (!S.loaded) return notReady();
+    const tk = todayKey();
+    const open = S.tasks.filter(t => !t.done);
+    const overdue = open.filter(isOverdue).sort(cmp);
+    const today = S.tasks.filter(t => t.date === tk).sort(cmp);
+    const upcoming = open.filter(t => t.date && t.date > tk).sort(cmp);
+    const uns = open.filter(t => kindOf(t) === 'unsorted').sort(byNew);
+    const done = S.tasks.filter(t => t.done && t.date !== tk).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+    const groups = [];
+    for (const t of upcoming) {
+      const g = groups[groups.length - 1];
+      if (g && g.date === t.date) g.items.push(t); else groups.push({ date: t.date, items: [t] });
+    }
+    const left = [];
+    if (overdue.length) left.push(sec('Overdue', overdue.map(t => row(t, true)).join('')));
+    left.push(sec('Today', today.length ? today.map(t => row(t, false)).join('') : '<p class="empty">Nothing on today.</p>'));
+    for (const g of groups) left.push(sec(esc(dayLabel(g.date)), g.items.map(t => row(t, false)).join('')));
+    const right = [];
+    right.push(sec('Unsorted', uns.length ? uns.map(t => row(t, false)).join('') : '<p class="empty">Nothing unsorted. Tasks with no day, or a time but no day, land here.</p>'));
+    if (done.length) {
+      right.push(`<section class="sec"><div class="sec-head"><h2 class="lab">Done</h2><button type="button" class="link" data-act="show-done" aria-expanded="${S.showDone}">${S.showDone ? 'Hide' : `Show ${done.length}`}</button></div>${S.showDone ? `<div class="float list">${done.slice(0, 40).map(t => row(t, true)).join('')}</div>` : ''}</section>`);
+    }
+    const ex = S.tasks.some(t => t.example);
+    const exBar = !ex ? '' : S.confirmClear
+      ? '<div class="examples"><span>Delete every task tagged Example?</span><button type="button" class="link" data-act="clear-yes">Delete them</button><button type="button" class="link" data-act="clear-no">Keep</button></div>'
+      : '<div class="examples"><span>Tasks tagged Example are samples.</span><button type="button" class="link" data-act="clear-ask">Clear examples</button></div>';
+    return `<div class="cols"><div class="col" id="tcolA" data-keep>${left.join('')}</div><div class="col" id="tcolB" data-keep>${right.join('')}${exBar}</div></div>`;
+  }
+
+  /* ---------- calendar ---------- */
+  const calCount = () => (window.innerWidth >= 1100 ? 7 : window.innerWidth >= 680 ? 3 : 1);
+  function visibleDays() {
+    const n = calCount();
+    const start = n === 7 ? addDays(S.calDay, -fromKey(S.calDay).getDay()) : S.calDay;
+    return Array.from({ length: n }, (_, i) => addDays(start, i));
+  }
+  function monthLabel(a, b) {
+    const da = fromKey(a), db = fromKey(b);
+    if (da.getMonth() === db.getMonth()) return monYrFmt.format(da);
+    return `${monFmt.format(da)} – ${monFmt.format(db)} ${db.getFullYear()}`;
+  }
+  // Side-by-side lanes for tasks that overlap in time.
+  function layout(items) {
+    const ev = items.slice().sort((a, b) => a.s - b.s || b.e - a.e);
+    let cluster = [], lanes = [], end = -1;
+    const flush = () => { for (const x of cluster) x.n = lanes.length; cluster = []; lanes = []; };
+    for (const x of ev) {
+      if (x.s >= end) { flush(); end = -1; }
+      let li = lanes.findIndex(le => le <= x.s);
+      if (li < 0) { li = lanes.length; lanes.push(x.e); } else lanes[li] = x.e;
+      x.lane = li; cluster.push(x); end = Math.max(end, x.e);
+    }
+    flush();
+    return ev;
+  }
+  function hoursCol() {
+    let h = '';
+    for (let i = 1; i < 24; i++) h += `<span style="top:calc(var(--h) * ${i})">${esc(hourFmt.format(new Date(2000, 0, 1, i)))}</span>`;
+    return `<div class="tl-hours">${h}</div>`;
+  }
+  const chk = (t, cls) => `<button type="button" class="${cls}" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>`;
+  function dayColumn(k, withCheck) {
+    const tk = todayKey(), nm = nowMin();
+    const items = layout([
+      ...S.tasks.filter(t => t.date === k && kindOf(t) === 'timed').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
+      ...S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) })),
+    ]);
+    const blocks = items.map(x => {
+      const len = x.e - x.s;
+      const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), 25) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+      if (x.g) {
+        const when = fmtRange(x.s, x.s + (x.g.mins || 30));
+        return `<button type="button" class="blk evt${len < 45 ? ' tight' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
+      }
+      const t = x.t;
+      const live = k === tk && !t.done && x.s <= nm && nm < x.e;
+      const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', len < 45 ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
+      const when = t.mins ? fmtRange(x.s, x.e) : `${fmtTime(x.s)} · no estimate`;
+      const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), 25) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+      const inner = `<b>${esc(t.title)}</b><small>${esc(when)}</small>`;
+      if (!withCheck) return `<button type="button" class="${cls}" style="${style}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>`;
+      return `<div class="${cls}" style="${style}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button></div>`;
+    }).join('');
+    const line = k === tk ? `<div class="nowline" data-nowline style="top:calc(var(--h) * ${(nm / 60).toFixed(4)})"></div>` : '';
+    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))} timeline">${blocks}${line}</div>`;
+  }
+  // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
+  function vDayCal(cls) {
+    const k = S.homeDay, tk = todayKey();
+    const any = S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp);
+    const open = S.tasks.filter(t => t.date === k && !t.done).length;
+    const allDay = S.events.filter(g => g.date === k && g.allDay);
+    const nEv = S.events.filter(g => g.date === k).length;
+    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
+    return `<section class="float daycal ${cls}" aria-label="Day calendar">
+      <div class="dc-head">
+        <div><span class="lab">${esc(dayLabel(k))}</span><p class="name">${esc(longFmt.format(fromKey(k)))}</p><p class="meta">${S.loaded ? esc(counts) : ''}</p>${S.evErr ? `<p class="meta stale-note">Google Calendar: ${esc(S.evErr)}</p>` : ''}</div>
+        <div class="cal-nav"><button type="button" class="circle" data-act="hd-prev" aria-label="Previous day">${ICON.left}</button>${k !== tk ? '<button type="button" class="btn" data-act="hd-today">Today</button>' : ''}<button type="button" class="circle" data-act="hd-next" aria-label="Next day">${ICON.right}</button></div>
+      </div>
+      ${anyRow}
+      <div class="tl" id="hometl" data-keep><div class="tl-grid one">${hoursCol()}${dayColumn(k, true)}</div></div>
+    </section>`;
+  }
+
+  function vCalendar() {
+    const days = visibleDays(), n = days.length, tk = todayKey();
+    const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
+    const week = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+    const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
+      const cnt = S.tasks.filter(t => t.date === k && !t.done).length;
+      const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
+      return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
+    }).join('')}</div>`;
+    const heads = days.map(k => `<div class="dh${k === tk ? ' today' : ''}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></div>`).join('');
+    const anyByDay = days.map(k => S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
+    const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
+    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
+      : '';
+    const cols = days.map(k => dayColumn(k, false)).join('');
+    return `<div class="cal-head"><p class="cal-month">${esc(monthLabel(days[0], days[n - 1]))}</p>
+        <div class="cal-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Earlier">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Later">${ICON.right}</button></div></div>
+      ${strip}
+      <section class="float cal" style="--n:${n}">
+        <div class="cal-days"><span></span>${heads}</div>
+        ${anyRow}
+        <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
+      </section>
+      <p class="meta cal-hint">Tap an empty spot to add a task there. Swipe sideways to move between days.</p>`;
+  }
+  function hourPx() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--h')) || 52; }
+  function aimTimeline() {
+    const days = visibleDays();
+    const at = days.includes(todayKey()) ? Math.max(0, nowMin() / 60 - 1.5) : 7;
+    S.aim.tl = at * hourPx();
+  }
+  function aimHome() {
+    const at = S.homeDay === todayKey() ? Math.max(0, nowMin() / 60 - 1.5) : 7;
+    S.aim.hometl = at * hourPx();
+  }
+  function shiftHome(dir) {
+    S.homeDay = addDays(S.homeDay, dir);
+    aimHome();
+    render();
+    loadEvents(false);
+  }
+  function shiftCal(dir) {
+    const n = calCount();
+    S.calDay = addDays(S.calDay, dir * n);
+    aimTimeline();
+    render();
+    loadEvents(false);
+  }
+
+  /* ---------- render ---------- */
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar };
+  function vLogin() {
+    const up = S.authMode === 'up';
+    return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
+      <div class="r-mark" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <h1 class="login-title">Hub</h1>
+      <p class="meta">${up ? 'Create your account. You only do this once; every device then signs in with it.' : 'Sign in to see your tasks and calendar.'}</p>
+      <label class="f"><span class="f-h">Email</span><input id="l_email" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" required></label>
+      <label class="f"><span class="f-h">Password</span><input id="l_pass" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" minlength="8" required></label>
+      <p class="err" id="l_err" hidden></p>
+      <p class="where" id="l_note"${S.loginNote ? '' : ' hidden'}>${esc(S.loginNote || '')}</p>
+      <button type="submit" class="btn solid" id="l_go">${up ? 'Create account' : 'Sign in'}</button>
+      <button type="button" class="link" data-act="auth-mode">${up ? 'I already have an account' : 'Create an account'}</button>
+    </form></div>`;
+  }
+  function render() {
+    document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
+    if (S.booted && !S.user) {
+      // keep whatever is half-typed in the form; only rebuild when the screen changes
+      if (!$('#loginForm') || S.loginRedraw) { $('#view').innerHTML = vLogin(); S.loginRedraw = false; }
+      return;
+    }
+    const keep = {};
+    for (const el of document.querySelectorAll('#view [data-keep]')) keep[el.id] = el.scrollTop;
+    $('#title').textContent = TITLES[S.tab];
+    document.body.dataset.view = S.tab;
+    $('#today').innerHTML = S.tab === 'home' ? '' : `<i></i>${esc(shortFmt.format(new Date()))}`;
+    for (const b of document.querySelectorAll('.nav button, #rail [data-tab]')) {
+      if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    }
+    $('#view').innerHTML = views[S.tab]();
+    for (const el of document.querySelectorAll('#view [data-keep]')) {
+      if (S.aim[el.id] != null) { el.scrollTop = S.aim[el.id]; delete S.aim[el.id]; }
+      else if (keep[el.id] != null) el.scrollTop = keep[el.id];
+    }
+    const tk = todayKey();
+    const od = S.tasks.filter(isOverdue).length;
+    const todayLeft = S.tasks.filter(t => t.date === tk && !t.done).length;
+    for (const badge of [$('#taskBadge'), $('#railBadge')]) { badge.hidden = !(od + todayLeft); badge.textContent = od + todayLeft; }
+    const pip = $('#grabCount');
+    pip.hidden = !od; pip.textContent = od;
+    const foot = $('#drawerFoot');
+    foot.className = 'd-foot' + (S.failed ? ' off' : S.canSave ? ' ok' : '');
+    foot.textContent = S.failed ? 'Not connected. Changes may not save.' : S.canSave ? 'Saved to your account' : 'Connecting…';
+    const dot = $('#railDot');
+    dot.className = 'r-dot' + (S.failed ? ' off' : S.canSave ? ' ok' : '');
+    dot.setAttribute('aria-label', foot.textContent); dot.title = foot.textContent;
+    $('#fab').disabled = !S.canSave;
+    renderWake();
+  }
+
+  // keep the clock and the now-line moving without rebuilding the page every second
+  let lastMinute = nowMin(), lastDay = todayKey(), touching = false, pendingTick = false;
+  function tick() {
+    const m = nowMin(), d = todayKey();
+    if (m === lastMinute && d === lastDay) return;
+    if (d !== lastDay && S.calDay === lastDay) S.calDay = d;
+    if (d !== lastDay && S.homeDay === lastDay) S.homeDay = d;
+    lastMinute = m; lastDay = d;
+    if (!S.user) return;
+    if (touching || $('#sheet').open) { pendingTick = true; updateClockOnly(); return; }
+    pendingTick = false;
+    render();
+  }
+  function updateClockOnly() {
+    const p = timeParts(nowMin());
+    const c = document.querySelector('[data-clock]'); if (c) c.textContent = p.bare;
+    const a = document.querySelector('[data-ampm]'); if (a) a.textContent = p.per;
+    for (const nl of document.querySelectorAll('[data-nowline]')) nl.style.top = `calc(var(--h) * ${(nowMin() / 60).toFixed(4)})`;
+  }
+  setInterval(tick, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+  document.addEventListener('touchstart', () => { touching = true; }, { passive: true, capture: true });
+  const untouch = () => { touching = false; if (pendingTick && !$('#sheet').open) setTimeout(() => { if (!touching) { pendingTick = false; render(); } }, 400); };
+  document.addEventListener('touchend', untouch, { passive: true, capture: true });
+  document.addEventListener('touchcancel', untouch, { passive: true, capture: true });
+
+  let resizeT = null, lastCount = calCount();
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => { const c = calCount(); if (c !== lastCount) { lastCount = c; if (S.tab === 'calendar') aimTimeline(); } render(); }, 150);
+  });
+
+  /* ---------- toast ---------- */
+  let toastT = null;
+  function toast(text, undo) {
+    const el = $('#toast');
+    el.innerHTML = `<span>${esc(text)}</span>${undo ? '<button type="button">Undo</button>' : ''}`;
+    el.hidden = false;
+    if (undo) el.querySelector('button').onclick = () => { el.hidden = true; undo(); };
+    clearTimeout(toastT);
+    toastT = setTimeout(() => { el.hidden = true; }, undo ? 5000 : 3000);
+  }
+  async function save(promise) {
+    try { await promise; return true; }
+    catch (e) { toast(e && /JWT|auth/i.test(e.message || '') ? 'You were signed out. Sign in again and retry.' : 'That did not save. Check your connection and try again.'); return false; }
+  }
+  const bodyOf = t => { const { id, ...rest } = t; return { ...rest }; };
+
+  async function toggleDone(id) {
+    const t = task(id);
+    if (!t || !S.canSave || S.busy.has(id)) return;
+    S.busy.add(id);
+    const done = !t.done;
+    const ok = await save(store.update(id, { done, doneAt: done ? Date.now() : null }));
+    S.busy.delete(id);
+    if (ok && done) toast(`Done: ${t.title}`, () => save(store.update(id, { done: false, doneAt: null })));
+  }
+  async function clearExamples() {
+    const ex = S.tasks.filter(t => t.example);
+    for (const t of ex) { if (!(await save(store.remove(t.id)))) break; }
+    toast(`Cleared ${ex.length} example ${ex.length === 1 ? 'task' : 'tasks'}`);
+  }
+
+  /* ---------- task sheet ---------- */
+  const sheet = $('#sheet');
+  let F = null;
+  function openTask(id, preset = {}) {
+    if (!S.canSave) return;
+    const t = id ? task(id) : null;
+    if (id && !t) return;
+    F = { id: t ? t.id : null, armed: false };
+    $('#sheetTitle').textContent = t ? 'Edit task' : 'New task';
+    const v = t || { title: '', date: preset.date || null, time: preset.time || null, mins: preset.mins ?? null };
+    $('#f_title').value = v.title || '';
+    $('#f_date').value = v.date || '';
+    $('#f_time').value = v.time || '';
+    $('#f_mins').value = v.mins ? String(v.mins) : '';
+    $('#sheetErr').hidden = true;
+    const del = $('#sheetDel'); del.hidden = !t; del.classList.remove('armed'); del.textContent = 'Delete';
+    const dn = $('#sheetDone'); dn.hidden = !t; dn.textContent = t && t.done ? 'Mark not done' : 'Mark done';
+    refreshWhere();
+    sheet.showModal();
+    if (!t) $('#f_title').focus();
+  }
+  function closeForm() { if (sheet.open) sheet.close(); F = null; }
+  function fail(msg) { const e = $('#sheetErr'); e.textContent = msg; e.hidden = false; return false; }
+  function readMins() {
+    const raw = $('#f_mins').value.trim();
+    if (!raw) return { mins: null };
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 1 || n > 1440) return { bad: true };
+    return { mins: n };
+  }
+  function refreshWhere() {
+    const date = $('#f_date').value, time = $('#f_time').value, m = readMins();
+    const tk = todayKey();
+    for (const c of document.querySelectorAll('#sheetBody [data-set="date"]')) c.setAttribute('aria-pressed', String(date === addDays(tk, Number(c.dataset.rel))));
+    for (const c of document.querySelectorAll('#sheetBody [data-set="mins"]')) c.setAttribute('aria-pressed', String(!m.bad && m.mins === Number(c.dataset.val)));
+    const el = $('#f_where');
+    if (date && time) {
+      const s = toMin(time);
+      el.innerHTML = `<b>On the calendar</b> ${esc(dayLabel(date))}, ${esc(m.mins ? fmtRange(s, s + m.mins) : `${fmtTime(s)}, no estimate yet`)}`;
+    } else if (date) {
+      el.innerHTML = `<b>On ${esc(dayLabel(date))}</b> under Anytime, no set time`;
+    } else if (time) {
+      el.innerHTML = '<b>Goes to Unsorted</b> until it has a day. The time stays with it.';
+    } else {
+      el.innerHTML = '<b>Goes to Unsorted</b> until it has a day';
+    }
+  }
+  $('#sheetBody').addEventListener('input', refreshWhere);
+  $('#sheetBody').addEventListener('change', refreshWhere);
+  $('#sheetBody').addEventListener('click', e => {
+    const set = e.target.closest('[data-set]');
+    if (set) {
+      if (set.dataset.set === 'date') $('#f_date').value = addDays(todayKey(), Number(set.dataset.rel));
+      else $('#f_mins').value = set.dataset.val;
+      refreshWhere();
+      return;
+    }
+    const clr = e.target.closest('[data-clear]');
+    if (clr) { $('#' + clr.dataset.clear).value = ''; refreshWhere(); }
+  });
+  $('#sheetClose').addEventListener('click', closeForm);
+  sheet.addEventListener('close', () => { F = null; if (pendingTick) { pendingTick = false; render(); } });
+  $('#sheetForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!F || !S.canSave) return;
+    $('#sheetErr').hidden = true;
+    const title = $('#f_title').value.trim();
+    if (!title) return fail('Give the task a name.');
+    const m = readMins();
+    if (m.bad) return fail('Length is whole minutes, from 1 to 1440.');
+    const body = { title, date: $('#f_date').value || null, time: $('#f_time').value || null, mins: m.mins };
+    const btn = $('#sheetSave');
+    btn.disabled = true;
+    const id = F.id;
+    const ok = id
+      ? await save(store.update(id, body))
+      : await save(store.add({ ...body, done: false, doneAt: null }));
+    btn.disabled = false;
+    if (ok) {
+      closeForm();
+      if (!id) toast(body.date && body.time ? `Added to ${dayLabel(body.date)}` : body.date ? `Added to ${dayLabel(body.date)}, anytime` : 'Added to Unsorted');
+    }
+  });
+  $('#sheetDone').addEventListener('click', async () => {
+    if (!F || !F.id) return;
+    const id = F.id;
+    closeForm();
+    await toggleDone(id);
+  });
+  $('#sheetDel').addEventListener('click', async e => {
+    if (!F || !F.id) return;
+    const b = e.currentTarget;
+    if (!F.armed) { F.armed = true; b.classList.add('armed'); b.textContent = 'Tap again to delete'; return; }
+    const t = task(F.id);
+    if (!t) { closeForm(); return; }
+    b.disabled = true;
+    const ok = await save(store.remove(t.id));
+    b.disabled = false;
+    if (ok) {
+      closeForm();
+      const old = bodyOf(t);
+      toast(`Deleted: ${t.title}`, () => save(store.restore({ ...old, id: t.id })));
+    }
+  });
+  // pull the sheet down by its top edge to dismiss
+  let pull = null;
+  sheet.addEventListener('touchstart', e => {
+    pull = null;
+    if (e.touches.length !== 1 || !e.target.closest('#sheetHead') || e.target.closest('button')) return;
+    pull = { y0: e.touches[0].clientY, dy: 0, on: false };
+  }, { passive: true });
+  sheet.addEventListener('touchmove', e => {
+    if (!pull) return;
+    const dy = e.touches[0].clientY - pull.y0;
+    if (!pull.on) { if (Math.abs(dy) < 6) return; if (dy < 0) { pull = null; return; } pull.on = true; sheet.style.transition = 'none'; }
+    e.preventDefault();
+    pull.dy = Math.max(0, dy);
+    sheet.style.transform = `translateY(${pull.dy}px)`;
+  }, { passive: false });
+  const endPull = () => {
+    if (!pull) return;
+    const p = pull; pull = null;
+    sheet.style.transition = '';
+    if (p.on && p.dy > 90) closeForm();
+    sheet.style.transform = '';
+  };
+  sheet.addEventListener('touchend', endPull);
+  sheet.addEventListener('touchcancel', endPull);
+
+  /* ---------- menu: drag the arrow (or anywhere along the bottom) to the right; swipe left to put it away ---------- */
+  const drawer = $('#drawer'), scrim = $('#scrim'), menuBtn = $('#grab');
+  const railMQ = window.matchMedia('(min-width:760px) and (min-height:500px)');
+  const railMode = () => railMQ.matches;
+  railMQ.addEventListener && railMQ.addEventListener('change', () => { if (railMode() && drawerOpen) setDrawer(false); });
+  let drawerOpen = false, drag = null, quietUntil = 0;
+  function setP(p) { drawer.style.setProperty('--p', p); scrim.style.setProperty('--p', p); }
+  function setDrawer(open) {
+    drawerOpen = open;
+    drawer.classList.remove('dragging'); scrim.classList.remove('dragging-scrim');
+    setP(open ? 1 : 0);
+    drawer.inert = !open;
+    scrim.classList.toggle('on', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+  // a drag that ends on a button must not also count as a tap on it
+  document.addEventListener('click', e => { if (Date.now() < quietUntil) { e.stopPropagation(); e.preventDefault(); } }, true);
+  menuBtn.addEventListener('click', () => setDrawer(!drawerOpen));
+  scrim.addEventListener('click', () => setDrawer(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) setDrawer(false); });
+  document.addEventListener('touchstart', e => {
+    drag = null;
+    if (e.touches.length !== 1 || sheet.open || railMode()) return;
+    const t = e.touches[0];
+    if (!drawerOpen && !e.target.closest('#grab') && t.clientY < window.innerHeight - 120) return;
+    drag = { x0: t.clientX, y0: t.clientY, p0: drawerOpen ? 1 : 0, p: drawerOpen ? 1 : 0, on: false, lastX: t.clientX, lastT: e.timeStamp, v: 0 };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!drag) return;
+    const t = e.touches[0], dx = t.clientX - drag.x0, dy = t.clientY - drag.y0;
+    if (!drag.on) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
+      drag.on = true;
+      drawer.classList.add('dragging'); scrim.classList.add('dragging-scrim');
+    }
+    e.preventDefault();
+    drag.v = (t.clientX - drag.lastX) / Math.max(1, e.timeStamp - drag.lastT);
+    drag.lastX = t.clientX; drag.lastT = e.timeStamp;
+    drag.p = clamp(drag.p0 + dx / drawer.offsetWidth, 0, 1);
+    setP(drag.p);
+  }, { passive: false });
+  const endDrag = () => {
+    if (!drag) return;
+    if (drag.on) { quietUntil = Date.now() + 350; setDrawer(drag.v > 0.35 ? true : drag.v < -0.35 ? false : drag.p > 0.5); }
+    drag = null;
+  };
+  document.addEventListener('touchend', endDrag);
+  document.addEventListener('touchcancel', endDrag);
+
+  // calendar: swipe sideways across the days to move earlier or later
+  let sw = null;
+  const view = $('#view');
+  view.addEventListener('touchstart', e => {
+    sw = null;
+    if (e.touches.length !== 1 || drawerOpen) return;
+    const where = S.tab === 'calendar' && e.target.closest('.cal, .week') ? 'cal' : S.tab === 'home' && e.target.closest('.daycal') ? 'home' : null;
+    if (!where) return;
+    const t = e.touches[0];
+    if (!railMode() && t.clientY > window.innerHeight - 120) return;
+    sw = { x: t.clientX, y: t.clientY, where };
+  }, { passive: true });
+  view.addEventListener('touchend', e => {
+    if (!sw) return;
+    const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    const where = sw.where;
+    sw = null;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+      quietUntil = Date.now() + 350;
+      if (where === 'home') shiftHome(dx < 0 ? 1 : -1); else shiftCal(dx < 0 ? 1 : -1);
+    }
+  });
+
+  /* ---------- keep the screen on (for the wall iPad) ---------- */
+  let wakeLock = null;
+  async function lockScreen() {
+    if (!('wakeLock' in navigator)) { S.wakeNote = 'This device or browser does not allow it here. Turn off Auto-Lock in iPad Settings instead.'; S.wakeWant = false; renderWake(); return; }
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      S.wakeOn = true; S.wakeNote = '';
+      wakeLock.addEventListener('release', () => { wakeLock = null; S.wakeOn = false; renderWake(); });
+    } catch (e) {
+      S.wakeOn = false; S.wakeWant = false;
+      S.wakeNote = 'This device refused. Turn off Auto-Lock in iPad Settings instead.';
+    }
+    renderWake();
+  }
+  function renderWake() {
+    for (const b of document.querySelectorAll('[data-wake]')) b.setAttribute('aria-checked', String(S.wakeWant));
+    const n = $('#wakeNote'); n.hidden = !S.wakeNote; n.textContent = S.wakeNote;
+  }
+  for (const wb of document.querySelectorAll('[data-wake]')) wb.addEventListener('click', async () => {
+    S.wakeWant = !S.wakeWant; S.wakeNote = '';
+    try { localStorage.setItem('hub.wake', S.wakeWant ? '1' : ''); } catch (e) {}
+    if (S.wakeWant) { await lockScreen(); if (S.wakeNote && railMode()) toast(S.wakeNote); }
+    else { if (wakeLock) { try { await wakeLock.release(); } catch (e) {} } wakeLock = null; S.wakeOn = false; renderWake(); }
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.wakeWant && !wakeLock) lockScreen(); });
+  // a remembered "on" needs one tap somewhere before the browser allows it
+  document.addEventListener('pointerdown', () => { if (S.wakeWant && !wakeLock) lockScreen(); }, { once: false, passive: true });
+
+  /* ---------- full screen (iPad Safari supports it; phones and some app views don't, so the button hides there) ---------- */
+  const fsBtn = $('#fsBtn'), root = document.documentElement;
+  const fsOK = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  const inFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function updFs() {
+    const on = inFs();
+    $('#fsLabel').textContent = on ? 'Exit full' : 'Full screen';
+    $('#fsPath').setAttribute('d', on ? 'M9 4.5V9H4.5M15 4.5V9h4.5M19.5 15H15v4.5M4.5 15H9v4.5' : 'M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15');
+  }
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  fsBtn.hidden = !fsOK || standalone;
+  fsBtn.addEventListener('click', async () => {
+    try {
+      if (inFs()) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else { const r = root.requestFullscreen ? root.requestFullscreen() : root.webkitRequestFullscreen(); if (r && r.then) await r; }
+    } catch (e) { toast('Full screen is blocked here. Open the page in Safari instead.'); }
+  });
+  document.addEventListener('fullscreenchange', updFs);
+  document.addEventListener('webkitfullscreenchange', updFs);
+
+  /* ---------- events ---------- */
+  function setTab(tab) {
+    if (!views[tab]) return;
+    const was = S.tab;
+    S.tab = tab;
+    try { localStorage.setItem('hub.tab', tab); } catch (e) {}
+    try { history.replaceState(null, '', '#' + tab); } catch (e) {}
+    if (tab === 'calendar' && was !== 'calendar') aimTimeline();
+    if (tab === 'home' && was !== 'home') aimHome();
+    setTimeout(() => loadEvents(false), 0);
+    setDrawer(false);
+    render();
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
+  $('#fab').addEventListener('click', () => openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}));
+
+  document.addEventListener('click', e => {
+    const tabBtn = e.target.closest('[data-tab]');
+    if (tabBtn) { setTab(tabBtn.dataset.tab); return; }
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'edit') openTask(b.dataset.id);
+    else if (act === 'done') toggleDone(b.dataset.id);
+    else if (act === 'slot') {
+      const r = b.getBoundingClientRect();
+      const m = clamp(Math.floor((e.clientY - r.top) / (r.height / 24) * 4) * 15, 0, 1425);
+      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: 30 });
+    }
+    else if (act === 'hd-prev') shiftHome(-1);
+    else if (act === 'hd-next') shiftHome(1);
+    else if (act === 'hd-today') { S.homeDay = todayKey(); aimHome(); render(); }
+    else if (act === 'cal-prev') shiftCal(-1);
+    else if (act === 'cal-next') shiftCal(1);
+    else if (act === 'cal-today') { S.calDay = todayKey(); aimTimeline(); render(); }
+    else if (act === 'cal-day') { S.calDay = b.dataset.day; aimTimeline(); render(); }
+    else if (act === 'soon') toast(`${b.dataset.what} is coming in a later build`);
+    else if (act === 'event') openEvent(b.dataset.ev);
+    else if (act === 'settings') openSettings();
+    else if (act === 'auth-mode') { S.authMode = S.authMode === 'up' ? 'in' : 'up'; S.loginNote = ''; S.loginRedraw = true; render(); }
+    else if (act === 'show-done') { S.showDone = !S.showDone; render(); }
+    else if (act === 'clear-ask') { S.confirmClear = true; render(); }
+    else if (act === 'clear-no') { S.confirmClear = false; render(); }
+    else if (act === 'clear-yes') { S.confirmClear = false; render(); clearExamples(); }
+  });
+
+  /* ---------- start ---------- */
+  /* ---------- tasks: load, and stay in sync with other devices ---------- */
+  let channel = null, reloadT = null;
+  async function reloadTasks() {
+    if (!S.user) return;
+    const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: true }).limit(5000);
+    if (error) { S.failed = true; render(); return; }
+    S.failed = false; S.loaded = true;
+    S.tasks = data.map(fromRow);
+    render();
+  }
+  const scheduleReload = () => { clearTimeout(reloadT); reloadT = setTimeout(reloadTasks, 300); };
+  async function startData() {
+    await reloadTasks();
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('hub-tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, scheduleReload).subscribe();
+    const { data } = await sb.from('settings').select('gcal_ics_url').maybeSingle();
+    S.gcal = (data && data.gcal_ics_url) || null;
+    loadEvents(true);
+  }
+  function setUser(u) {
+    const was = S.user ? S.user.id : null;
+    S.user = u || null; S.canSave = !!u;
+    if (u && was !== u.id) startData();
+    if (!u) {
+      if (channel) { sb.removeChannel(channel); channel = null; }
+      S.tasks = []; S.loaded = false; S.events = []; S.evWin = null; S.gcal = null; S.loginRedraw = true;
+    }
+    render();
+  }
+
+  /* ---------- Google Calendar, through the hub's own Supabase function ---------- */
+  let evBusy = false;
+  async function loadEvents(force) {
+    if (!S.user || evBusy) return;
+    if (!S.gcal) { if (S.events.length || S.evErr) { S.events = []; S.evErr = ''; render(); } return; }
+    const center = S.tab === 'calendar' ? S.calDay : S.homeDay;
+    const span = S.tab === 'calendar' ? visibleDays() : [S.homeDay];
+    const w = S.evWin;
+    const inside = w && span[0] >= w.from && span[span.length - 1] <= w.to && todayKey() >= w.from;
+    if (!force && inside && Date.now() - w.at < 10 * 60e3) return;
+    const from = addDays(center, -10), to = addDays(center, 40);
+    evBusy = true;
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
+      const { data, error } = await sb.functions.invoke('gcal', { body: { from, to, tz } });
+      if (error) {
+        let msg = 'it did not load. The hub tries again in a few minutes.';
+        try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+        S.evErr = msg;
+      } else {
+        S.evErr = data.error || '';
+        S.events = data.events || [];
+        S.gcalName = data.calendar || 'Google Calendar';
+        S.evWin = { from, to, at: Date.now() };
+      }
+    } catch (e) { S.evErr = 'it did not load. The hub tries again in a few minutes.'; }
+    evBusy = false;
+    render();
+  }
+  function openEvent(id) {
+    const g = S.events.find(x => x.id === id);
+    if (!g) return;
+    $('#evTitle').textContent = g.title;
+    $('#evWhen').textContent = `${dayLabel(g.date)}, ${g.allDay ? 'all day' : fmtRange(toMin(g.start), toMin(g.start) + (g.mins || 30))}`;
+    const wh = $('#evWhere'); wh.hidden = !g.location; wh.textContent = g.location || '';
+    $('#evCal').textContent = g.calendar || 'Google Calendar';
+    $('#evSheet').showModal();
+  }
+  $('#evClose').addEventListener('click', () => $('#evSheet').close());
+
+  /* ---------- settings: Google Calendar address, sign out ---------- */
+  const setSheet = $('#setSheet');
+  function openSettings() {
+    if (!S.user) return;
+    setDrawer(false);
+    $('#setWho').textContent = `Signed in as ${S.user.email}`;
+    $('#s_gcal').value = S.gcal || '';
+    $('#setErr').hidden = true;
+    $('#setStatus').textContent = S.gcal ? (S.evErr ? `Google Calendar: ${S.evErr}` : `Connected: ${S.gcalName || 'Google Calendar'}. ${S.events.length} events loaded.`) : 'No calendar connected yet.';
+    setSheet.showModal();
+  }
+  $('#setClose').addEventListener('click', () => setSheet.close());
+  $('#setForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const v = $('#s_gcal').value.trim();
+    const err = $('#setErr'); err.hidden = true;
+    if (v && !/^https:\/\/calendar\.google\.com\/calendar\/ical\/.+/.test(v)) { err.textContent = 'That is not a Google Calendar private address. It starts with https://calendar.google.com/calendar/ical/'; err.hidden = false; return; }
+    const btn = $('#setSave'); btn.disabled = true;
+    const { error } = await sb.from('settings').upsert({ user_id: S.user.id, gcal_ics_url: v || null });
+    btn.disabled = false;
+    if (error) { err.textContent = 'That did not save. Check the address and your connection, then try again.'; err.hidden = false; return; }
+    S.gcal = v || null; S.evWin = null;
+    $('#setStatus').textContent = v ? 'Saved. Loading your calendar…' : 'Calendar removed.';
+    await loadEvents(true);
+    $('#setStatus').textContent = v ? (S.evErr ? `Google Calendar: ${S.evErr}` : `Connected: ${S.gcalName}. ${S.events.length} events loaded.`) : 'Calendar removed.';
+  });
+  $('#signOut').addEventListener('click', async () => { setSheet.close(); await sb.auth.signOut(); });
+
+  /* ---------- sign in / create account ---------- */
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'loginForm') return;
+    e.preventDefault();
+    const email = $('#l_email').value.trim(), password = $('#l_pass').value;
+    const err = $('#l_err'), go = $('#l_go');
+    err.hidden = true;
+    if (!email || !password) { err.textContent = 'Enter your email and a password.'; err.hidden = false; return; }
+    if (password.length < 8) { err.textContent = 'Use a password of at least 8 characters.'; err.hidden = false; return; }
+    go.disabled = true;
+    if (S.authMode === 'up') {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
+      go.disabled = false;
+      if (error) { err.textContent = error.message || 'The account could not be created.'; err.hidden = false; return; }
+      if (!data.session) {
+        S.authMode = 'in';
+        S.loginNote = 'Account created. Supabase sent a confirmation email: tap its link (if the page it opens does not load, that is fine), then sign in here. Or tell Claude and it can confirm the account for you.';
+        S.loginRedraw = true; render();
+        const em = $('#l_email'); if (em) em.value = email;
+      }
+      return;
+    }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    go.disabled = false;
+    if (error) {
+      err.textContent = /confirm/i.test(error.message) ? 'This account is not confirmed yet. Tap the link in the Supabase email, or ask Claude to confirm it.' : /invalid/i.test(error.message) ? 'That email and password do not match.' : (error.message || 'Sign-in did not work.');
+      err.hidden = false;
+    }
+  });
+
+  /* ---------- weather: straight from Open-Meteo for Simpsonville, SC ---------- */
+  const WXQ = new URLSearchParams({
+    latitude: '34.76', longitude: '-82.2',
+    current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
+    hourly: 'temperature_2m,weather_code,precipitation_probability', forecast_hours: '30',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset', forecast_days: '2',
+    temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', timezone: 'America/New_York',
+  });
+  async function loadWeather(force) {
+    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3) return;
+    try {
+      const r = await fetch('https://api.open-meteo.com/v1/forecast?' + WXQ, { cache: 'no-store' });
+      if (!r.ok) return;
+      const raw = await r.json(), c = raw.current, h = raw.hourly, d = raw.daily;
+      S.weather = {
+        place: 'Simpsonville', updatedAt: Date.now(),
+        current: { temp: c.temperature_2m, feels: c.apparent_temperature, code: c.weather_code, wind: c.wind_speed_10m, isDay: !!c.is_day },
+        hourly: h.time.map((t, i) => ({ t, temp: h.temperature_2m[i], code: h.weather_code[i], pop: h.precipitation_probability[i] || 0 })),
+        daily: d.time.map((t, i) => ({ date: t, hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i], code: d.weather_code[i], pop: d.precipitation_probability_max[i] || 0, sunrise: d.sunrise[i].slice(11, 16), sunset: d.sunset[i].slice(11, 16) })),
+      };
+      try { localStorage.setItem('hub.wx', JSON.stringify(S.weather)); } catch (e) {}
+      render();
+    } catch (e) {}
+  }
+
+  /* ---------- updates: when a new version is published, reload into it ---------- */
+  async function checkVersion() {
+    if (VERSION.startsWith('__')) return;
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      const typing = document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+      if (j.v && j.v !== VERSION && !$('#sheet').open && !setSheet.open && !typing) {
+        location.replace(location.pathname + '?v=' + encodeURIComponent(j.v) + location.hash);
+      }
+    } catch (e) {}
+  }
+
+  setInterval(() => { loadWeather(false); loadEvents(false); }, 5 * 60e3);
+  setInterval(checkVersion, 3 * 60e3);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    checkVersion(); loadWeather(false);
+    if (S.user) { reloadTasks(); loadEvents(false); }
+  });
+
+  async function boot() {
+    let tab = location.hash.slice(1);
+    if (!views[tab]) { try { tab = localStorage.getItem('hub.tab'); } catch (e) { tab = null; } }
+    if (views[tab]) S.tab = tab;
+    try { S.wakeWant = localStorage.getItem('hub.wake') === '1'; } catch (e) {}
+    try { const w = JSON.parse(localStorage.getItem('hub.wx') || 'null'); if (w && w.current) S.weather = w; } catch (e) {}
+    if (S.tab === 'calendar') aimTimeline();
+    aimHome();
+    render();
+    loadWeather(false);
+    checkVersion();
+    if (!window.supabase) {
+      S.booted = true; S.loginNote = 'The hub could not reach its sign-in service. Check the connection and reopen it.'; S.loginRedraw = true; render(); return;
+    }
+    sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
+    const { data } = await sb.auth.getSession();
+    S.booted = true;
+    setUser(data && data.session ? data.session.user : null);
+    sb.auth.onAuthStateChange((_ev, session) => { const u = session ? session.user : null; if ((u && u.id) !== (S.user && S.user.id)) setUser(u); });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
