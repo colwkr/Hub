@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008220920">
-<script src="finance.js?v=20261008220920"></script>
+<link rel="stylesheet" href="finance.css?v=20261008222501">
+<script src="finance.js?v=20261008222501"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -624,6 +624,24 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .tq-list > .day-div:first-child{padding-top:8px}
 .tq-list > .trow.live{display:flex;margin:6px 0}
 .tq-row .meta{font-variant-numeric:tabular-nums}
+/* the countdown: big on the next task, smaller on the rest */
+.sp-tasks{container-type:inline-size}
+.tq-cd{flex:none;display:flex;align-items:baseline;gap:5px;margin-left:6px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+.tq-cd b{font-weight:300;font-size:17px;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.tq-cd small{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--ink-3)}
+.tq-row.first .tq-cd{color:var(--ink);gap:6px}
+.tq-row.first .tq-cd b{font-size:clamp(32px,14.5cqi,48px);font-weight:200;letter-spacing:-.04em;text-shadow:var(--halo)}
+.tq-row.first .tq-cd.cd-h b{font-size:clamp(26px,10.5cqi,36px)}
+.tq-row.first .tq-cd small{font-size:13px;color:var(--ink-2)}
+.tq-row.first.live .tq-cd small{color:var(--ink)}
+/* narrow panel (iPad upright): the big countdown gets its own line under the name */
+@container (max-width: 240px){
+  .tq-row.has-cd{flex-wrap:wrap;row-gap:0}
+  .tq-row.has-cd .tmain{flex:1 1 0;padding-bottom:0}
+  .tq-row .tq-cd{flex-basis:100%;justify-content:flex-end;margin:0 0 6px}
+  .tq-row.first .tq-cd b{font-size:clamp(26px,17cqi,36px)}
+  .tq-row.first .tq-cd.cd-h b{font-size:clamp(24px,14cqi,32px)}
+}
 .tq-add{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;border-radius:16px;padding:12px 14px;margin-top:4px;color:var(--ink-2);font-size:13.5px;font-weight:500;text-align:left}
 .tq-add svg.i{width:16px;height:16px}
 .tq-add:hover{background:var(--well);color:var(--ink)}
@@ -1162,13 +1180,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008220920"></script>
+<script src="appearance.js?v=20261008222501"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008220920';
+  const VERSION = '20261008222501';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1181,6 +1199,13 @@ dialog::backdrop{background:transparent}
   const todayKey = () => dkey(new Date());
   const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
   const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  // a day key plus minutes into that day, as a moment in time
+  const atEpoch = (k, min) => { const d = fromKey(k); d.setMinutes(min); return d.getTime(); };
+  // 12:47 under an hour, 1:05:12 over
+  const cdText = ms => {
+    const s = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60, p = n => String(n).padStart(2, '0');
+    return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`;
+  };
   const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 
   const timeFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
@@ -1884,13 +1909,16 @@ dialog::backdrop{background:transparent}
     const ahead = timed.filter(t => !ended(t)), missed = timed.filter(ended);
     const anytime = open.filter(t => !t.time).sort(cmp);
     const doneN = all.length - open.length;
-    const inMins = d => (d < 60 ? `in ${d} min` : `in ${Math.floor(d / 60)} hr${d % 60 ? ` ${d % 60} min` : ''}`);
+    const inMins = d => (d < 60 ? `${d} min` : `${Math.floor(d / 60)} hr${d % 60 ? ` ${d % 60} min` : ''}`);
     const row = (t, cls) => {
       const s0 = t.time ? toMin(t.time) : null, live = today && s0 != null && s0 <= nm && nm < s0 + effMins(t);
-      const when = s0 == null ? (t.mins ? fmtDur(t.mins) : 'Anytime')
-        : live ? `Now · ${fmtTime(s0)}`
-        : today && s0 > nm ? `${fmtTime(s0)} · ${inMins(s0 - nm)}` : fmtTime(s0);
-      return `<div class="trow tq-row${live ? ' live' : ''}${cls ? ' ' + cls : ''}">${chk(t, 'chk')}<button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}</span></span></button></div>`;
+      const soon = today && s0 != null && s0 > nm;
+      const when = s0 == null ? (t.mins ? fmtDur(t.mins) : 'Anytime') : fmtTime(s0);
+      // today's coming and running tasks count down to the second on the right: to the start, or to the end while it's on
+      const cd = live || soon ? atEpoch(k, live ? s0 + effMins(t) : s0) : 0;
+      const sr = live ? `, ${inMins(s0 + effMins(t) - nm)} left` : soon ? `, in ${inMins(s0 - nm)}` : '';
+      const cdHtml = cd ? `<span class="tq-cd${cd - Date.now() >= 3600000 ? ' cd-h' : ''}" data-cd="${cd}" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true">${live ? '' : '<small>in</small>'}<b>${cdText(cd - Date.now())}</b>${live ? '<small>left</small>' : ''}</span>` : '';
+      return `<div class="trow tq-row${live ? ' live' : ''}${cd ? ' has-cd' : ''}${cls ? ' ' + cls : ''}">${chk(t, 'chk')}<button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}</span>${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>${cdHtml}</div>`;
     };
     const sec = (label, list, first) => list.length ? `<div class="day-div">${label}</div>${list.map((t, i) => row(t, first && i === 0 ? 'first' : '')).join('')}` : '';
     let body = '';
@@ -2120,7 +2148,15 @@ dialog::backdrop{background:transparent}
     const a = document.querySelector('[data-ampm]'); if (a) a.textContent = p.per;
     for (const nl of document.querySelectorAll('[data-nowline]')) nl.style.top = `calc(var(--h) * ${(nowMin() / 60).toFixed(4)})`;
   }
-  setInterval(tick, 5000);
+  // countdowns move every second by rewriting their digits only; the page itself still rebuilds once a minute
+  function tickCountdowns() {
+    const now = Date.now();
+    for (const el of document.querySelectorAll('[data-cd]')) {
+      const b = el.querySelector('b'), txt = cdText(+el.dataset.cd - now);
+      if (b && b.textContent !== txt) b.textContent = txt;
+    }
+  }
+  setInterval(() => { if (document.hidden) return; tickCountdowns(); tick(); }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   document.addEventListener('touchstart', () => { touching = true; }, { passive: true, capture: true });
   const untouch = () => { touching = false; if (pendingTick && !$('#sheet').open) setTimeout(() => { if (!touching) { pendingTick = false; render(); } }, 400); };
