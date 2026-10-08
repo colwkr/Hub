@@ -14,8 +14,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008025847">
-<script src="finance.js?v=20261008025847"></script>
+<link rel="stylesheet" href="finance.css?v=20261008030110">
+<script src="finance.js?v=20261008030110"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -119,6 +119,10 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stro
 .clock{font-size:clamp(76px,17vw,136px);font-weight:200;letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;white-space:nowrap}
 .clock small{font-size:.2em;font-weight:300;letter-spacing:.06em;margin-left:.35em;color:var(--ink-2)}
 .hero .long{font-size:18px;font-weight:300;margin-top:10px}
+/* phones: no big clock on Home (the phone's own status bar already shows the time) */
+.clock{display:none}
+.hero .long{margin-top:0}
+@media (min-width:760px) and (min-height:500px){ .clock{display:block} .hero .long{margin-top:10px} }
 .nownext{display:grid;grid-template-columns:1fr 1fr}
 .nownext > * + *{box-shadow:inset 1px 0 0 var(--hair)}
 .nn{display:flex;flex-direction:column;gap:6px;padding:18px;text-align:left;border:0;background:none;min-width:0}
@@ -560,7 +564,7 @@ dialog::backdrop{background:var(--scrim)}
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008025847';
+  const VERSION = '20261008030110';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
