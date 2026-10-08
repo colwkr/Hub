@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008191458">
-<script src="finance.js?v=20261008191458"></script>
+<link rel="stylesheet" href="finance.css?v=20261008191934">
+<script src="finance.js?v=20261008191934"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -410,7 +410,21 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .achip.mtg,.achip2.mtg{box-shadow:inset 3px 0 0 var(--ink-2),inset 0 0 0 1px var(--hair)}
 .list > .trow.live:not(.sw){display:flex}
 /* the sheet asks what something is before it saves */
-.kind-f .seg3 button{padding:10px 6px}
+.kind-f .seg3{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kind-f .seg3 button{padding:10px 4px}
+#sheet[data-sheet-kind="marker"] .f-len{display:none}
+/* a marker: a dashed line at one moment with its name; it takes no time, so blocks sit right against it */
+.mark{position:absolute;left:0;right:0;height:0;z-index:2;pointer-events:none}
+.mark::before{content:"";position:absolute;left:0;right:0;top:-.75px;border-top:1.5px dashed var(--ink-2)}
+.mark-chip{position:absolute;right:4px;top:0;transform:translateY(-50%);pointer-events:auto;display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 8px);height:20px;padding:0 8px;border:0;border-radius:999px;
+  background:var(--solid);color:var(--on-solid);font-size:11px;font-weight:600;line-height:1;white-space:nowrap;box-shadow:var(--lift-sm);cursor:grab}
+.mark-t{font-weight:400;opacity:.7;font-variant-numeric:tabular-nums;flex:none}
+.mark-n{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mark.lifted{z-index:7}
+.mark.lifted .mark-chip{transform:translateY(-50%) scale(1.08);box-shadow:0 10px 24px -8px rgba(0,0,0,.5)}
+.mark.lifted::before{border-top-style:solid}
+.mark.origin{opacity:.3}
+.mark.origin .mark-chip{pointer-events:none}
 .kind-note{font-size:12px;color:var(--ink-2);min-height:1.4em}
 #sheet[data-sheet-kind="none"] .kinds{box-shadow:inset 0 0 0 1.5px var(--ink-3)}
 @media (prefers-reduced-motion:no-preference){
@@ -914,7 +928,7 @@ dialog::backdrop{background:transparent}
       <div class="f kind-f">
         <span class="f-h" id="h_kind">What is it?</span>
         <div class="seg3 kinds" role="radiogroup" aria-labelledby="h_kind">
-          <button type="button" role="radio" data-kind="task" aria-checked="false">Task</button><button type="button" role="radio" data-kind="event" aria-checked="false">Event</button><button type="button" role="radio" data-kind="meeting" aria-checked="false">Meeting</button>
+          <button type="button" role="radio" data-kind="task" aria-checked="false">Task</button><button type="button" role="radio" data-kind="event" aria-checked="false">Event</button><button type="button" role="radio" data-kind="meeting" aria-checked="false">Meeting</button><button type="button" role="radio" data-kind="marker" aria-checked="false">Marker</button>
         </div>
         <p class="kind-note" id="f_kindNote"></p>
       </div>
@@ -930,7 +944,7 @@ dialog::backdrop{background:transparent}
         <span class="f-h" id="h_time">Time</span>
         <div class="xin"><input id="f_time" type="time" step="300" aria-labelledby="h_time"><button type="button" class="circle" data-clear="f_time" aria-label="Clear time"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
       </div>
-      <div class="f">
+      <div class="f f-len">
         <span class="f-h" id="h_mins">How long it takes</span>
         <div class="chips">
           <button type="button" class="chip" data-set="mins" data-val="15">15 min</button><button type="button" class="chip" data-set="mins" data-val="30">30 min</button><button type="button" class="chip" data-set="mins" data-val="45">45 min</button><button type="button" class="chip" data-set="mins" data-val="60">1 hr</button><button type="button" class="chip" data-set="mins" data-val="90">1½ hr</button><button type="button" class="chip" data-set="mins" data-val="120">2 hr</button>
@@ -1004,13 +1018,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008191458"></script>
+<script src="appearance.js?v=20261008191934"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008191458';
+  const VERSION = '20261008191934';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1457,7 +1471,7 @@ dialog::backdrop{background:transparent}
     const m = {};
     const put = (k, x) => (m[k] || (m[k] = [])).push(x);
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
-    for (const t of S.all) if (t.date && t.date >= from && t.date <= to) put(t.date, { t, s: t.time ? toMin(t.time) : -1 });
+    for (const t of S.all) if (t.date && t.date >= from && t.date <= to && t.kind !== 'marker') put(t.date, { t, s: t.time ? toMin(t.time) : -1 });
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
   }
@@ -1490,7 +1504,7 @@ dialog::backdrop{background:transparent}
   function dayColumn(k, withCheck) {
     const tk = todayKey(), nm = nowMin();
     const items = layout([
-      ...S.all.filter(t => t.date === k && kindOf(t) === 'timed').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
+      ...S.all.filter(t => t.date === k && kindOf(t) === 'timed' && t.kind !== 'marker').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
       ...S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) })),
     ]);
     const blocks = items.map(x => {
@@ -1517,7 +1531,12 @@ dialog::backdrop{background:transparent}
       return `<div class="${cls}" style="${style}" ${grip}>${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>`;
     }).join('');
     const line = k === tk ? `<div class="nowline" data-nowline style="top:calc(var(--h) * ${(nm / 60).toFixed(4)})"></div>` : '';
-    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))} timeline">${blocks}${line}</div>`;
+    // markers: a named moment (like waking up). A dashed line and a label, taking no time at all.
+    const marks = S.all.filter(t => t.kind === 'marker' && t.date === k && t.time).map(t => {
+      const s0 = toMin(t.time);
+      return `<div class="mark" style="top:calc(var(--h) * ${(s0 / 60).toFixed(4)})" data-task="${esc(t.id)}" data-s="${s0}" data-e="${s0}"><button type="button" class="mark-chip" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(fmtTime(s0))}, marker"><span class="mark-t">${esc(shortTime(s0))}</span><span class="mark-n">${esc(t.title)}</span></button></div>`;
+    }).join('');
+    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))} timeline">${blocks}${marks}${line}</div>`;
   }
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
   function vDayCal(cls) {
@@ -1525,7 +1544,7 @@ dialog::backdrop{background:transparent}
     const any = S.all.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
     const allDay = S.events.filter(g => g.date === k && g.allDay);
-    const nEv = S.events.filter(g => g.date === k).length + S.items.filter(x => x.date === k).length;
+    const nEv = S.events.filter(g => g.date === k).length + S.items.filter(x => x.date === k && x.kind !== 'marker').length;
     const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
     return `<section class="float daycal ${cls}" aria-label="Day calendar">
@@ -1551,7 +1570,7 @@ dialog::backdrop{background:transparent}
     const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
     const week = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = S.all.filter(t => t.date === k && !t.done).length;
+      const cnt = S.all.filter(t => t.date === k && !t.done && t.kind !== 'marker').length;
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
@@ -1830,6 +1849,7 @@ dialog::backdrop{background:transparent}
     task: { name: 'Task', ph: 'What needs doing?', len: 'How long it takes', note: 'A to-do. It shows in Tasks and on Home, and you check it off.' },
     event: { name: 'Event', ph: 'What is happening?', len: 'How long', note: 'Just on the calendar. Nothing to check off.' },
     meeting: { name: 'Meeting', ph: 'What is the meeting?', len: 'How long', note: 'Has talking points and notes in Meetings. It can wait there without a day.' },
+    marker: { name: 'Marker', ph: 'What happens then? Like Wake up', len: '', note: 'A line at one moment, like waking up. It takes no time, so things can sit right before and after it.' },
   };
   function setKind(k) {
     if (!F) return;
@@ -1860,7 +1880,11 @@ dialog::backdrop{background:transparent}
     for (const c of document.querySelectorAll('#sheetBody [data-set="date"]')) c.setAttribute('aria-pressed', String(date === addDays(tk, Number(c.dataset.rel))));
     for (const c of document.querySelectorAll('#sheetBody [data-set="mins"]')) c.setAttribute('aria-pressed', String(!m.bad && m.mins === Number(c.dataset.val)));
     const el = $('#f_where'), kind = F && F.kind;
-    if (!kind) { el.innerHTML = '<b>Pick Task, Event or Meeting</b> above'; return; }
+    if (!kind) { el.innerHTML = '<b>Pick Task, Event, Meeting or Marker</b> above'; return; }
+    if (kind === 'marker') {
+      el.innerHTML = date && time ? `<b>On the calendar</b> ${esc(dayLabel(date))} at ${esc(fmtTime(toMin(time)))}` : '<b>Needs a day and a time</b> to mark on the calendar';
+      return;
+    }
     if (kind !== 'task') {
       const s = time ? toMin(time) : 0, len = m.mins || 30;
       el.innerHTML = date && time ? `<b>On the calendar</b> ${esc(dayLabel(date))}, ${esc(fmtRange(s, s + len))}`
@@ -1902,13 +1926,14 @@ dialog::backdrop{background:transparent}
     if (!F || !S.canSave) return;
     $('#sheetErr').hidden = true;
     const kind = F.kind;
-    if (!kind) { $('#sheetBody .kinds').classList.remove('nudge'); void $('#sheetBody .kinds').offsetWidth; $('#sheetBody .kinds').classList.add('nudge'); return fail('Pick Task, Event or Meeting first.'); }
+    if (!kind) { $('#sheetBody .kinds').classList.remove('nudge'); void $('#sheetBody .kinds').offsetWidth; $('#sheetBody .kinds').classList.add('nudge'); return fail('Pick Task, Event, Meeting or Marker first.'); }
     const title = $('#f_title').value.trim();
     if (!title) return fail(`Give the ${kind} a name.`);
     const m = readMins();
     if (m.bad) return fail('Length is whole minutes, from 1 to 1440.');
     const body = { kind, title, date: $('#f_date').value || null, time: $('#f_time').value || null, mins: m.mins };
     if (kind === 'event' && !body.date) return fail('An event needs a day to go on the calendar.');
+    if (kind === 'marker') { if (!body.date || !body.time) return fail('A marker needs a day and a time.'); body.mins = null; }
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const btn = $('#sheetSave');
     btn.disabled = true;
@@ -1922,6 +1947,7 @@ dialog::backdrop{background:transparent}
       const day = body.date ? dayLabel(body.date) : '';
       if (kind === 'meeting' && !id) toast(body.date ? `Meeting added to ${day}` : 'Meeting saved, not scheduled yet', newId ? () => openMeeting(newId) : null, 'Open notes');
       else if (kind === 'event' && !id) toast(`Event added to ${day}`);
+      else if (kind === 'marker' && !id) toast(`Marker added to ${day}, ${fmtTime(toMin(body.time))}`);
       else if (!id) toast(body.date && body.time ? `Added to ${day}` : body.date ? `Added to ${day}, anytime` : 'Added to Unsorted');
     }
   });
@@ -2321,7 +2347,7 @@ dialog::backdrop{background:transparent}
       m.origin.classList.add('origin'); m.origin.classList.remove('now');
       m.origin.removeAttribute('data-task'); m.origin.setAttribute('aria-hidden', 'true');
       m.col.insertBefore(m.origin, m.blk);
-      m.blk.style.left = '3px'; m.blk.style.width = 'calc(100% - 6px)';
+      if (!m.marker) { m.blk.style.left = '3px'; m.blk.style.width = 'calc(100% - 6px)'; }
       m.blk.classList.add('lifted');
     } else m.blk.classList.add('resizing');
     document.body.classList.add(m.mode === 'move' ? 'moving' : 'sizing');
@@ -2349,6 +2375,11 @@ dialog::backdrop{background:transparent}
       m.nd = col.dataset.day;
       m.ns = clamp(snap15(minAt(col, m.y) - m.grab), 0, 1440 - 15);
       if (m.blk.parentElement !== col) col.appendChild(m.blk);
+      if (m.marker) {
+        m.blk.style.top = `calc(var(--h) * ${(m.ns / 60).toFixed(4)})`;
+        const mt = m.blk.querySelector('.mark-t'); if (mt) mt.textContent = shortTime(m.ns);
+        return;
+      }
       m.blk.style.top = topAt(m.ns);
       if (small) small.textContent = t.mins || t.kind !== 'task' ? fmtRange(m.ns, m.ns + effMins(t)) : `${fmtTime(m.ns)} · no estimate`;
     } else {
@@ -2389,7 +2420,7 @@ dialog::backdrop{background:transparent}
   }
   document.addEventListener('pointerdown', e => {
     if (mv) endMove(false);
-    const blk = e.target.closest && e.target.closest('.tl-col .blk');
+    const blk = e.target.closest && e.target.closest('.tl-col .blk, .tl-col .mark');
     if (!blk || blk.classList.contains('origin') || blk.classList.contains('ghost') || !e.isPrimary || !S.canSave) return;
     if (e.target.closest('.bchk')) return; // the done circle stays a plain button
     const mouse = e.pointerType === 'mouse';
@@ -2398,7 +2429,7 @@ dialog::backdrop{background:transparent}
     if (!id && !blk.dataset.ev) return;
     const col = blk.closest('.tl-col'), rz = mouse && id ? e.target.closest('.rz') : null;
     const s0 = id ? +blk.dataset.s : 0, e0 = id ? +blk.dataset.e : 0;
-    mv = { blk, col, cols: [...col.parentElement.querySelectorAll('.tl-col')], tl: col.closest('.tl'), id, ev: !id, pid: e.pointerId,
+    mv = { blk, col, cols: [...col.parentElement.querySelectorAll('.tl-col')], tl: col.closest('.tl'), id, ev: !id, marker: blk.classList.contains('mark'), pid: e.pointerId,
       x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, mouse, on: false, mode: rz ? (rz.classList.contains('rz-t') ? 'top' : 'bot') : 'move',
       s0, e0, grab: minAt(col, e.clientY) - s0, ns: s0, nd: col.dataset.day, nlen: e0 - s0 };
     // a finger holds still to pick it up; a mouse picks it up by moving, or by holding a moment
