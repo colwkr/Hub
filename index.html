@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008155920">
-<script src="finance.js?v=20261008155920"></script>
+<link rel="stylesheet" href="finance.css?v=20261008172654">
+<script src="finance.js?v=20261008172654"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -249,7 +249,7 @@ body[data-auth="out"] #view{overflow-y:auto}
 .hero .long{font-size:18px;font-weight:300;margin-top:10px}
 /* phones: Home is just the date, a small floating weather line, and what's next.
    The clock, summary line, weather card, day calendar and music only appear on tablets and computers. */
-.clock,.hero .sum,.home > .g-wx,.home > .g-cal,.home > .g-music{display:none}
+.clock,.hero .sum,.home > .g-wx,.home > .g-cal{display:none}
 .hero .long{margin-top:0}
 body[data-view="home"] .top{display:none}
 .wxm{display:flex;flex-direction:column;gap:8px;margin-top:10px}
@@ -262,7 +262,7 @@ body[data-view="home"] .top{display:none}
 .wxm-h.now small{color:var(--ink);font-weight:500}
 @media (min-width:760px) and (min-height:500px){
   .clock,.hero .sum{display:block}
-  .home > .g-wx,.home > .g-cal,.home > .g-music{display:flex}
+  .home > .g-wx,.home > .g-cal{display:flex}
   .hero .long{margin-top:10px}
   .wxm{display:none}
   .list > .trow.live{display:none}
@@ -308,33 +308,34 @@ body[data-view="home"] .top{display:none}
 .note p b{font-weight:500;color:var(--warn)}
 .note svg.i{width:16px;height:16px;color:var(--ink-3)}
 
-/* weather */
+/* weather (tablets and computers): now, the next hours in an even row, and the days ahead */
 .wx{padding:18px;display:flex;flex-direction:column;gap:16px}
 .wx-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .wx-top .meta.stale{color:var(--warn)}
-.wx-now{display:flex;align-items:center;gap:14px}
-.wx-now svg.i{width:44px;height:44px;stroke-width:1.2;flex:none}
-.wx-now .fig{font-size:56px;font-weight:200;letter-spacing:-.03em}
-.wx-now > div{min-width:0;display:flex;flex-direction:column;gap:2px}
-.wx-hours{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-inline:-6px;padding-inline:6px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
-.wx-hours::-webkit-scrollbar{display:none}
-.hr{flex:none;width:52px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;border-radius:18px}
+.wx-now{display:flex;align-items:center;gap:16px;min-width:0}
+.wx-now .fig{font-size:62px;font-weight:200;letter-spacing:-.035em;line-height:.95}
+.wx-desc{min-width:0;display:flex;flex-direction:column;gap:2px}
+.wx-desc svg.i{width:26px;height:26px;stroke-width:1.3;margin-bottom:4px}
+.wx-desc p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx-hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px}
+.hr{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;border-radius:16px}
 .hr:first-child{background:var(--well)}
+.hr .meta{font-size:11px;white-space:nowrap}
 .hr svg.i{width:20px;height:20px}
 .hr .pop{font-size:10px;color:var(--ink-2);min-height:12px}
 .wx-days{display:flex;flex-direction:column}
-.wd-row{display:grid;grid-template-columns:52px 22px 34px 34px minmax(40px,1fr) 34px;align-items:center;gap:8px;padding:7px 0;font-size:13px}
+.wd-row{display:grid;grid-template-columns:44px 20px 30px 30px minmax(30px,1fr) 30px;align-items:center;gap:6px;padding:8px 0;font-size:13px}
 .wd-row + .wd-row{box-shadow:inset 0 1px 0 var(--hair)}
 .wd-row svg.i{width:18px;height:18px}
 .wd-row .pop{font-size:11px;color:var(--ink-2)}
 .wd-row .lo{color:var(--ink-2);text-align:right}
+.wd-row .hi{text-align:right}
 .rng{position:relative;height:4px;border-radius:2px;background:var(--hair)}
 .rng span{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--ink)}
-.wx-sun{display:flex;flex-wrap:wrap;gap:4px 16px}
 
 /* home: phone stacks in reading order; tablets place each piece in a fixed one-screen grid */
 .home{display:flex;flex-direction:column;gap:22px}
-.g-hero{grid-area:hero}.g-music{grid-area:music}.g-next{grid-area:next}
+.g-hero{grid-area:hero}.g-next{grid-area:next}
 .g-next{display:flex;flex-direction:column}
 .g-next .list{min-height:0}
 .day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
@@ -372,26 +373,6 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .cal-ic svg.i{width:18px;height:18px}
 .ev-body{display:flex;flex-direction:column;gap:10px;padding:10px 20px 22px}
 
-/* music */
-.music{display:flex;align-items:center;gap:14px;padding:14px 16px}
-.mu-art{width:52px;height:52px;border-radius:16px;background:var(--well);display:grid;place-items:center;flex:none;color:var(--ink-2)}
-.mu-art svg.i{width:24px;height:24px}
-.music > div:last-child{min-width:0;display:flex;flex-direction:column;gap:2px;flex:1}
-a.music{text-decoration:none;color:inherit}
-.music.live .mu-art{background:var(--solid);color:var(--on-solid)}
-.music .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.music .meta{overflow-wrap:anywhere}
-.music .mu-open{flex:none;color:var(--ink-3)}
-.music .mu-open svg.i{width:16px;height:16px}
-.music .btn{align-self:flex-start;margin-top:6px}
-.eq{display:flex;align-items:flex-end;gap:2px;height:16px}
-.eq i{width:3px;border-radius:1px;background:currentColor;height:40%}
-@media (prefers-reduced-motion:no-preference){
-  .eq i{animation:eq 1.1s ease-in-out infinite}
-  .eq i:nth-child(2){animation-delay:-.4s}.eq i:nth-child(3){animation-delay:-.8s}
-  @keyframes eq{0%,100%{height:30%}50%{height:100%}}
-}
-
 /* the one add button: bottom-right, mirroring the menu arrow at bottom-left */
 #fab{position:fixed;z-index:5;right:max(var(--corner),calc((100% - var(--wrap)) / 2 + 24px));bottom:var(--corner);width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
   background:var(--solid);color:var(--on-solid);box-shadow:var(--fab-glow),var(--lift)}
@@ -400,9 +381,39 @@ a.music{text-decoration:none;color:inherit}
 #fab:disabled{opacity:.4}
 
 /* calendar */
-.cal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-inline:4px}
-.cal-month{font-size:22px;font-weight:300;letter-spacing:-.01em}
+.cal-head{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"t v n";align-items:center;gap:12px;padding-inline:4px}
+.cal-month{grid-area:t;font-size:22px;font-weight:300;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cal-nav{display:flex;align-items:center;gap:8px}
+.cal-head .cal-nav{grid-area:n;justify-self:end}
+/* Day / 3 Day / Week / Next 7 / Month / Year */
+.cal-views{grid-area:v;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--well);text-shadow:none}
+:root[data-wall] .cal-views{background:var(--control);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);box-shadow:inset 0 0 0 1px var(--glass-border)}
+.cal-views button{border:0;background:none;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.cal-views button[aria-pressed="true"]{background:var(--solid);color:var(--on-solid);box-shadow:var(--sel-glow),var(--lift-sm)}
+@media (max-width:999px){
+  .cal-head{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t n" "v v"}
+  .cal-views{justify-self:start}
+}
+@media (max-width:540px){
+  .cal-views{justify-self:stretch;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+  .cal-views button{padding:7px 0;font-size:12px}
+  .cal-month{font-size:20px}
+}
+.cal-err{padding-inline:4px}
+/* a whole week on a phone: stacked day headings, blocks show just their names */
+@media (max-width:679px){
+  .cal.n7 .cal-days,.cal.n7 .cal-any,.cal.n7 .tl-grid{grid-template-columns:38px repeat(7,minmax(0,1fr))}
+  .cal.n7 .dh{flex-direction:column;align-items:center;gap:2px;font-size:9px;letter-spacing:.06em}
+  .cal.n7 .dh b{font-size:15px}
+  .cal.n7 .dh.today b{padding:0 6px}
+  .cal.n7 .tl-hours span{right:5px;font-size:9px}
+  .cal.n7 .blk{padding:3px 4px;border-radius:8px}
+  .cal.n7 .blk.tight{padding-block:0}
+  .cal.n7 .blk b{font-size:10.5px;white-space:normal;line-height:1.15;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
+  .cal.n7 .blk small{display:none}
+  .cal.n7 .achip{padding:4px 5px;font-size:10.5px;border-radius:8px}
+  .cal.n7 .cal-any .lab{padding-left:4px;font-size:8px}
+}
 .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .wd{border:0;background:none;border-radius:20px;padding:8px 0 7px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-2)}
 .wd span{font-size:10px;letter-spacing:.12em;text-transform:uppercase}
@@ -417,7 +428,7 @@ a.music{text-decoration:none;color:inherit}
 .cal{overflow:hidden}
 .cal-days,.cal-any,.tl-grid{display:grid;grid-template-columns:48px repeat(var(--n),minmax(0,1fr))}
 .cal-days{padding:12px 0 8px;box-shadow:inset 0 -1px 0 var(--hair)}
-.dh{display:flex;align-items:baseline;justify-content:center;gap:6px;color:var(--ink-2);font-size:11px;letter-spacing:.1em;text-transform:uppercase;min-width:0}
+.dh{display:flex;align-items:baseline;justify-content:center;gap:6px;color:var(--ink-2);font-size:11px;letter-spacing:.1em;text-transform:uppercase;min-width:0;border:0;background:none;padding:0}
 .dh b{font-size:17px;font-weight:400;letter-spacing:0;color:var(--ink);font-variant-numeric:tabular-nums}
 .dh.today b{background:var(--solid);color:var(--on-solid);border-radius:999px;padding:0 8px}
 .cal-any{box-shadow:inset 0 -1px 0 var(--hair)}
@@ -430,7 +441,13 @@ a.music{text-decoration:none;color:inherit}
 .tl-hours{position:relative;height:calc(var(--h) * 24)}
 .tl-hours span{position:absolute;right:8px;transform:translateY(-50%);font-size:10px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
 .tl-col{position:relative;height:calc(var(--h) * 24);box-shadow:inset 1px 0 0 var(--hair);
-  background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));cursor:copy}
+  background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));cursor:copy;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* the block you draw by dragging across empty time */
+.blk.ghost{background:var(--solid);color:var(--on-solid);opacity:.92;pointer-events:none;z-index:3;box-shadow:var(--sel-glow),var(--lift-sm)}
+.blk.ghost small{color:var(--on-solid);opacity:.75}
+body.marking{-webkit-user-select:none;user-select:none}
+body.marking,body.marking *{cursor:ns-resize!important}
 .tl-col.today{background-color:var(--today-col)}
 .blk{position:absolute;z-index:1;border:0;padding:5px 8px;border-radius:12px;text-align:left;overflow:hidden;cursor:pointer;
   background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);display:flex;flex-direction:column;gap:1px;min-width:0}
@@ -459,6 +476,57 @@ a.music{text-decoration:none;color:inherit}
 .nowline{position:absolute;left:0;right:0;height:0;border-top:1.5px solid var(--ink);z-index:0;pointer-events:none}
 .nowline::before{content:"";position:absolute;left:-4px;top:-4.75px;width:8px;height:8px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--ring)}
 .cal-hint{padding-inline:4px}
+
+/* month */
+.mon{display:flex;flex-direction:column}
+.mhead{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:12px 0 9px;box-shadow:inset 0 -1px 0 var(--hair)}
+.mhead span{text-align:center;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.mgrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(var(--weeks),minmax(0,1fr))}
+.mc{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;gap:3px;padding:6px 5px 5px;overflow:hidden;cursor:copy;
+  box-shadow:inset 1px 0 0 var(--hair),inset 0 1px 0 var(--hair)}
+.mc:nth-child(7n+1){box-shadow:inset 0 1px 0 var(--hair)}
+.mc:nth-child(-n+7){box-shadow:inset 1px 0 0 var(--hair)}
+.mc:first-child{box-shadow:none}
+.md{align-self:flex-start;flex:none;border:0;background:none;min-width:26px;height:26px;padding:0 7px;border-radius:999px;font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.md:hover{background:var(--well)}
+.mc.out .md{color:var(--ink-3);font-weight:400}
+.mc.today .md{background:var(--solid);color:var(--on-solid);box-shadow:var(--sel-glow)}
+.mis{display:flex;flex-direction:column;gap:2px;min-height:0;overflow:hidden}
+.mi{flex:none;display:block;min-width:0;border:0;border-radius:7px;padding:2px 7px;background:var(--panel-hi);box-shadow:inset 0 0 0 1px var(--hair);
+  font-size:11.5px;font-weight:500;line-height:1.4;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.mi small{font-size:10.5px;font-weight:400;color:var(--ink-2);margin-right:5px;font-variant-numeric:tabular-nums}
+.mi.evt{background:var(--well)}
+.mi.done{opacity:.5;text-decoration:line-through}
+.mi.more{background:none;box-shadow:none;color:var(--ink-2);font-weight:400}
+.mc.out .mi{opacity:.55}
+.mdots{display:none}
+@media (max-width:679px){
+  .mc{align-items:center;padding:5px 2px}
+  .md{align-self:center;pointer-events:none;padding:0 5px}
+  .mis{display:none}
+  .mdots{display:flex;gap:3px;margin-top:auto;padding-bottom:3px}
+  .mdots u{width:4px;height:4px;border-radius:50%;background:var(--ink-3)}
+}
+
+/* year */
+.yr{display:flex;flex-direction:column}
+.yscroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:18px 20px}
+.yscroll::-webkit-scrollbar{display:none}
+.ygrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 28px}
+@media (max-width:1099px){ .ygrid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:679px){ .ygrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px} .yscroll{padding:14px} }
+.ym{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ym-t{align-self:flex-start;border:0;background:none;padding:2px 0 4px;font-size:14px;font-weight:500;color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.ym.cur .ym-t::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--ink)}
+.ywk,.ydays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));justify-items:center}
+.ywk span{font-size:9.5px;color:var(--ink-3);letter-spacing:.06em;padding-bottom:2px}
+.yd{position:relative;border:0;background:none;padding:0;width:100%;max-width:28px;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;
+  font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.yd:hover{background:var(--well)}
+.yd.has{color:var(--ink);font-weight:600}
+.yd.has::after{content:"";position:absolute;bottom:9%;left:50%;width:3px;height:3px;margin-left:-1.5px;border-radius:50%;background:var(--ink-2)}
+.yd.today{background:var(--solid);color:var(--on-solid);font-weight:600}
+.yd.today::after{background:var(--on-solid)}
 
 .examples{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:11.5px;color:var(--ink-3);padding-inline:4px}
 
@@ -567,27 +635,33 @@ a.music{text-decoration:none;color:inherit}
   .cols > .col::-webkit-scrollbar{display:none}
   #fab{right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px))}
 
-  /* upright iPad: calendar down the left, everything else stacked on the right, weather last above the + button */
+  /* upright iPad: calendar down the left; on the right the clock, what's next (filling the middle), then the weather */
   .home > .g-next{display:flex}
   .home{flex:1;min-height:0;display:grid;gap:16px 18px;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    grid-template-rows:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"cal hero" "cal next" "cal music" "cal wx"}
-  .g-next .list{overflow-y:auto;scrollbar-width:none}
+    grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-areas:"cal hero" "cal next" "cal wx"}
+  .g-next .list{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
+  .g-next .list > .empty:only-child{margin:auto;padding:28px;text-align:center}
   .home > *{min-height:0}
-  .g-hero{align-items:flex-end;text-align:right;padding:6px 6px 0}
+  .g-hero{align-items:center;text-align:center;padding:6px 6px 0}
   .clock{font-size:clamp(64px,10.5vw,118px)}
-  .g-music{align-self:start}
   .g-wx{margin-bottom:68px;overflow-y:auto;scrollbar-width:none}
+  .g-wx .wx-days{display:none}
   .g-uns{display:flex;flex-direction:column}
   .g-uns .list{min-height:0;overflow-y:auto;scrollbar-width:none}
 }
 /* sideways iPad: calendar left, tasks in the middle, clock top-right, weather bottom-right */
 @media (min-width:1000px) and (min-height:500px){
   .home{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr);
-    grid-template-rows:auto minmax(0,1fr) auto;
-    grid-template-areas:"cal next hero" "cal next music" "cal next wx"}
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:"cal next hero" "cal next wx"}
   .clock{font-size:clamp(64px,7.4vw,112px)}
+  .g-wx{justify-content:flex-start;gap:18px}
+  /* the days ahead share whatever height is left, so the card fills its column without empty bands */
+  .g-wx .wx-days{display:flex;flex:1;min-height:0}
+  .g-wx .wd-row{flex:1 1 0;min-height:34px;max-height:64px}
+  .g-wx .wx-now .fig{font-size:72px}
 }
 
 /* sheet: a glass panel that floats clear of every edge, flick it down to dismiss */
@@ -813,13 +887,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008155920"></script>
+<script src="appearance.js?v=20261008172654"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008155920';
+  const VERSION = '20261008172654';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -898,10 +972,16 @@ dialog::backdrop{background:transparent}
 
   /* ---------- state ---------- */
   const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', finance: 'Finance' };
+  const CAL_VIEWS = [['day', 'Day'], ['3day', '3 Day'], ['week', 'Week'], ['next7', 'Next 7'], ['month', 'Month'], ['year', 'Year']];
+  function savedCalView() {
+    try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
+    return window.innerWidth >= 1100 ? 'week' : window.innerWidth >= 680 ? '3day' : 'day';
+  }
+  let mk = null, renderLater = false; // a drag on the timeline in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
     tasks: [], weather: null,
-    tab: 'home', calDay: todayKey(), homeDay: todayKey(), showDone: false, confirmClear: false,
+    tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     aim: {}, busy: new Set(),
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
@@ -999,23 +1079,26 @@ dialog::backdrop{background:transparent}
     const c = w.current;
     const [cLabel, cIcon] = wx(c.code, c.isDay);
     const curHour = `${tk}T${pad(new Date().getHours())}:00`;
-    const ahead = (w.hourly || []).filter(h => h.t >= curHour);
-    // the rest of today; late in the evening, run a few hours past midnight so the strip is never nearly empty
-    const restOfDay = ahead.filter(h => h.t.slice(0, 10) === tk);
-    const hours = restOfDay.length >= 6 ? restOfDay : ahead.slice(0, 6);
-    const upd = new Date(w.updatedAt || 0);
+    const hours = (w.hourly || []).filter(h => h.t > curHour).slice(0, 5);
     const stale = Date.now() - (w.updatedAt || 0) > 3 * 3600e3;
-    const updTxt = dkey(upd) === tk ? `Updated ${timeFmt.format(upd)}` : `Updated ${shortFmt.format(upd)}`;
+    const upd = new Date(w.updatedAt || 0);
     const td = dayOf(tk);
     const r = n => Math.round(n);
-    const hourHtml = hours.map((h, i) => {
-      const [, ic] = wx(h.code, isDayAt(h.t));
-      return `<div class="hr"><span class="meta">${i === 0 ? 'Now' : esc(hourFmt.format(new Date(h.t)))}</span>${wxIcon(ic)}<span class="num">${r(h.temp)}°</span><span class="pop">${h.pop >= 20 ? h.pop + '%' : ''}</span></div>`;
+    const days = (w.daily || []).filter(d => d.date >= tk).slice(0, 6);
+    let lo = Infinity, hi = -Infinity;
+    for (const d of days) { lo = Math.min(lo, d.lo); hi = Math.max(hi, d.hi); }
+    const span = Math.max(1, hi - lo);
+    const hr = (label, ic, temp, pop) => `<div class="hr"><span class="meta">${label}</span>${wxIcon(ic)}<span class="num">${r(temp)}°</span><span class="pop">${pop >= 20 ? pop + '%' : ''}</span></div>`;
+    const hourHtml = hr('Now', cIcon, c.temp, 0) + hours.map(h => hr(esc(hourFmt.format(new Date(h.t))), wx(h.code, isDayAt(h.t))[1], h.temp, h.pop)).join('');
+    const dayHtml = days.map((d, i) => {
+      const [label, ic] = wx(d.code, true);
+      return `<div class="wd-row" title="${esc(label)}"><span>${i === 0 ? 'Today' : esc(wdFmt.format(fromKey(d.date)))}</span>${wxIcon(ic)}<span class="pop">${d.pop >= 20 ? d.pop + '%' : ''}</span><span class="num lo">${r(d.lo)}°</span><span class="rng"><span style="left:${((d.lo - lo) / span * 100).toFixed(1)}%;right:${((hi - d.hi) / span * 100).toFixed(1)}%"></span></span><span class="num hi">${r(d.hi)}°</span></div>`;
     }).join('');
-    return `<section class="float wx ${order}" id="wxcard" data-keep aria-label="Weather">
-      <div class="wx-top"><span class="lab">${esc(w.place || 'Weather')}</span><span class="meta${stale ? ' stale' : ''}">${updTxt}</span></div>
-      <div class="wx-now">${wxIcon(cIcon)}<p class="fig">${r(c.temp)}°</p><div><p class="name">${esc(cLabel)}</p><p class="meta">Feels ${r(c.feels)}°${td ? ` · High ${r(td.hi)}° · Low ${r(td.lo)}°` : ''}</p></div></div>
-      ${hours.length ? `<div class="wx-hours" aria-label="Rest of today">${hourHtml}</div>` : ''}
+    return `<section class="float wx ${order}" aria-label="Weather">
+      <div class="wx-top"><span class="lab">${esc(w.place || 'Weather')}</span>${stale ? `<span class="meta stale">Updated ${esc(dkey(upd) === tk ? timeFmt.format(upd) : shortFmt.format(upd))}</span>` : ''}</div>
+      <div class="wx-now"><p class="fig">${r(c.temp)}°</p><div class="wx-desc">${wxIcon(cIcon)}<p class="name">${esc(cLabel)}</p><p class="meta">Feels like ${r(c.feels)}°</p>${td ? `<p class="meta">High ${r(td.hi)}° · Low ${r(td.lo)}°</p>` : ''}</div></div>
+      <div class="wx-hours" aria-label="Next hours">${hourHtml}</div>
+      ${days.length > 1 ? `<div class="wx-days" aria-label="Days ahead">${dayHtml}</div>` : ''}
     </section>`;
   }
 
@@ -1032,12 +1115,6 @@ dialog::backdrop{background:transparent}
     const items = [`<span class="wxm-h now">${wxIcon(wx(c.code, c.isDay)[1])}<b>${Math.round(c.temp)}°</b><small>Now</small></span>`]
       .concat(ahead.map(h => `<span class="wxm-h">${wxIcon(wx(h.code, isDayAt(h.t))[1])}<b>${Math.round(h.temp)}°</b><small>${esc(hourFmt.format(new Date(h.t)))}</small></span>`));
     return `<div class="wxm" aria-label="Weather in ${esc(w.place || 'your area')}: now ${Math.round(c.temp)} degrees"><span class="lab">${esc(w.place || 'Weather')}</span><div class="wxm-row">${items.join('')}</div></div>`;
-  }
-
-  // Music: the Claude Spotify connection only works inside Claude; the hub gets its own Spotify connection next
-  const NOTE = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6.5l10-2v11"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
-  function vMusic(cls) {
-    return `<section class="float music ${cls}" aria-label="Music"><div class="mu-art">${NOTE}</div><div><span class="lab">Spotify</span><p class="name">Coming in the next setup step</p><p class="meta">With its own Spotify connection, POS can show what's playing and play, pause, and skip.</p></div></section>`;
   }
 
   /* ---------- home ---------- */
@@ -1113,7 +1190,6 @@ dialog::backdrop{background:transparent}
       ${vWeather('g-wx')}
       ${vNext('g-next')}
       ${vDayCal('g-cal')}
-      ${vMusic('g-music')}
     </div>`;
   }
 
@@ -1149,12 +1225,45 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- calendar ---------- */
-  const calCount = () => (window.innerWidth >= 1100 ? 7 : window.innerWidth >= 680 ? 3 : 1);
+  // the days a timeline view shows: Day, 3 Day and Next 7 start on the picked day; Week runs Sunday to Saturday
   function visibleDays() {
-    const n = calCount();
-    const start = n === 7 ? addDays(S.calDay, -fromKey(S.calDay).getDay()) : S.calDay;
+    const k = S.calDay, v = S.calView;
+    const n = v === 'day' ? 1 : v === '3day' ? 3 : 7;
+    const start = v === 'week' || v === 'month' || v === 'year' ? addDays(k, -fromKey(k).getDay()) : k;
     return Array.from({ length: n }, (_, i) => addDays(start, i));
   }
+  // Month: the weeks that touch the month. Year: January 1 to December 31.
+  function monthGrid() {
+    const d = fromKey(S.calDay), first = new Date(d.getFullYear(), d.getMonth(), 1);
+    const weeks = Math.ceil((first.getDay() + new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()) / 7);
+    const start = addDays(dkey(first), -first.getDay());
+    return { start, weeks, end: addDays(start, weeks * 7 - 1), month: d.getMonth() };
+  }
+  function calSpan() {
+    const v = S.calView, y = fromKey(S.calDay).getFullYear();
+    if (v === 'month') { const g = monthGrid(); return [g.start, g.end]; }
+    if (v === 'year') return [`${y}-01-01`, `${y}-12-31`];
+    const days = visibleDays();
+    return [days[0], days[days.length - 1]];
+  }
+  function calTitle() {
+    const v = S.calView, d = fromKey(S.calDay);
+    if (v === 'year') return String(d.getFullYear());
+    if (v === 'month') return monYrFmt.format(d);
+    if (v === 'day') return (window.innerWidth < 540 ? shortFmt : longFmt).format(d);
+    const days = visibleDays();
+    return monthLabel(days[0], days[days.length - 1]);
+  }
+  // tasks and events per day, in the order a day reads: all-day, anytime, then by time
+  function itemsByDay(from, to) {
+    const m = {};
+    const put = (k, x) => (m[k] || (m[k] = [])).push(x);
+    for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
+    for (const t of S.tasks) if (t.date && t.date >= from && t.date <= to) put(t.date, { t, s: t.time ? toMin(t.time) : -1 });
+    for (const k in m) m[k].sort((a, b) => a.s - b.s);
+    return m;
+  }
+  const shortTime = m => { const p = timeParts(m); return p.bare.replace(/:00$/, '') + (p.per ? p.per.slice(0, 1).toLowerCase() : ''); };
   function monthLabel(a, b) {
     const da = fromKey(a), db = fromKey(b);
     if (da.getMonth() === db.getMonth()) return monYrFmt.format(da);
@@ -1225,7 +1334,15 @@ dialog::backdrop{background:transparent}
   }
 
   function vCalendar() {
-    const days = visibleDays(), n = days.length, tk = todayKey();
+    const v = S.calView, tk = todayKey();
+    const pick = `<div class="cal-views" role="group" aria-label="Calendar view">${CAL_VIEWS.map(([id, name]) => `<button type="button" data-act="cal-view" data-view-id="${id}" aria-pressed="${v === id}">${name}</button>`).join('')}</div>`;
+    const unit = v === 'year' ? 'year' : v === 'month' ? 'month' : v === 'day' ? 'day' : v === '3day' ? '3 days' : 'week';
+    const head = `<div class="cal-head"><p class="cal-month">${esc(calTitle())}</p>${pick}
+        <div class="cal-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Previous ${unit}">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Next ${unit}">${ICON.right}</button></div></div>`;
+    const err = S.evErr ? `<p class="meta stale-note cal-err">Google Calendar: ${esc(S.evErr)}</p>` : '';
+    if (v === 'month') return head + err + vMonth();
+    if (v === 'year') return head + err + vYear();
+    const days = visibleDays(), n = days.length;
     const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
     const week = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
@@ -1233,22 +1350,62 @@ dialog::backdrop{background:transparent}
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
-    const heads = days.map(k => `<div class="dh${k === tk ? ' today' : ''}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></div>`).join('');
+    const heads = days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
     const anyByDay = days.map(k => S.tasks.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
     const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
       ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
     const cols = days.map(k => dayColumn(k, false)).join('');
-    return `<div class="cal-head"><p class="cal-month">${esc(monthLabel(days[0], days[n - 1]))}</p>
-        <div class="cal-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Earlier">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Later">${ICON.right}</button></div></div>
+    return `${head}${err}
       ${strip}
-      <section class="float cal" style="--n:${n}">
+      <section class="float cal${n === 7 ? ' n7' : ''}" style="--n:${n}">
         <div class="cal-days"><span></span>${heads}</div>
         ${anyRow}
         <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
-      </section>
-      <p class="meta cal-hint">Tap an empty spot to add a task there. Swipe sideways to move between days.</p>`;
+      </section>`;
+  }
+  // Month: every day of the month with what's on it. Click a day's number to open that day; click empty space to add a task on it.
+  function vMonth() {
+    const g = monthGrid(), tk = todayKey(), by = itemsByDay(g.start, g.end);
+    const heads = Array.from({ length: 7 }, (_, i) => `<span>${esc(wdFmt.format(fromKey(addDays(g.start, i))))}</span>`).join('');
+    let cells = '';
+    for (let i = 0; i < g.weeks * 7; i++) {
+      const k = addDays(g.start, i), d = fromKey(k), items = by[k] || [];
+      const cls = ['mc', d.getMonth() !== g.month ? 'out' : '', k === tk ? 'today' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
+      const chips = items.slice(0, 3).map(x => {
+        if (x.g) return `<button type="button" class="mi evt" data-act="event" data-ev="${esc(x.g.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(x.g.title)}</button>`;
+        const t = x.t;
+        return `<button type="button" class="mi${t.done ? ' done' : ''}" data-act="edit" data-id="${esc(t.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(t.title)}</button>`;
+      }).join('');
+      const more = items.length > 3 ? `<button type="button" class="mi more" data-act="cal-open" data-day="${k}">+${items.length - 3} more</button>` : '';
+      const dots = items.length ? `<i class="mdots">${'<u></u>'.repeat(Math.min(3, items.length))}</i>` : '';
+      cells += `<div class="${cls}" data-act="m-cell" data-day="${k}"><button type="button" class="md" data-act="cal-open" data-day="${k}" aria-label="${esc(longFmt.format(d))}${items.length ? `, ${items.length} ${items.length === 1 ? 'item' : 'items'}` : ''}">${d.getDate()}</button><div class="mis">${chips}${more}</div>${dots}</div>`;
+    }
+    return `<section class="float cal mon">
+        <div class="mhead">${heads}</div>
+        <div class="mgrid" style="--weeks:${g.weeks}">${cells}</div>
+      </section>`;
+  }
+  // Year: twelve small months. A month's name opens it; a day opens that day.
+  function vYear() {
+    const y = fromKey(S.calDay).getFullYear(), tk = todayKey();
+    const by = itemsByDay(`${y}-01-01`, `${y}-12-31`);
+    const ini = Array.from({ length: 7 }, (_, i) => `<span>${esc(wdFmt.format(new Date(2023, 0, 1 + i)).slice(0, 1))}</span>`).join('');
+    let months = '';
+    for (let mo = 0; mo < 12; mo++) {
+      const first = new Date(y, mo, 1), n = new Date(y, mo + 1, 0).getDate();
+      let days = '<span></span>'.repeat(first.getDay());
+      for (let dd = 1; dd <= n; dd++) {
+        const k = dkey(new Date(y, mo, dd)), items = by[k] || [];
+        const open = items.filter(x => x.g || !x.t.done).length;
+        const cls = ['yd', k === tk ? 'today' : '', open ? 'has' : ''].filter(Boolean).join(' ');
+        days += `<button type="button" class="${cls}" data-act="cal-open" data-day="${k}" aria-label="${esc(longFmt.format(fromKey(k)))}${open ? `, ${open} ${open === 1 ? 'item' : 'items'}` : ''}">${dd}</button>`;
+      }
+      const cur = y === new Date().getFullYear() && mo === new Date().getMonth();
+      months += `<div class="ym${cur ? ' cur' : ''}"><button type="button" class="ym-t" data-act="cal-month" data-day="${dkey(first)}">${esc(new Intl.DateTimeFormat(undefined, { month: 'long' }).format(first))}</button><div class="ywk">${ini}</div><div class="ydays">${days}</div></div>`;
+    }
+    return `<section class="float cal yr"><div class="yscroll" id="yscroll" data-keep><div class="ygrid">${months}</div></div></section>`;
   }
   function hourPx() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--h')) || 52; }
   function aimTimeline() {
@@ -1267,8 +1424,21 @@ dialog::backdrop{background:transparent}
     loadEvents(false);
   }
   function shiftCal(dir) {
-    const n = calCount();
-    S.calDay = addDays(S.calDay, dir * n);
+    const v = S.calView;
+    if (v === 'month' || v === 'year') {
+      const d = fromKey(S.calDay);
+      const y = d.getFullYear() + (v === 'year' ? dir : 0), m = d.getMonth() + (v === 'month' ? dir : 0);
+      S.calDay = dkey(new Date(y, m, Math.min(d.getDate(), new Date(y, m + 1, 0).getDate())));
+    } else S.calDay = addDays(S.calDay, dir * (v === 'day' ? 1 : v === '3day' ? 3 : 7));
+    aimTimeline();
+    render();
+    loadEvents(false);
+  }
+  function setCalView(v, day) {
+    if (!CAL_VIEWS.some(x => x[0] === v)) return;
+    S.calView = v;
+    if (day) S.calDay = day;
+    try { localStorage.setItem('pos.calView', v); } catch (e) {}
     aimTimeline();
     render();
     loadEvents(false);
@@ -1291,6 +1461,8 @@ dialog::backdrop{background:transparent}
     </form></div>`;
   }
   function render() {
+    if (mk) { renderLater = true; return; }
+    renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
       // keep whatever is half-typed in the form; only rebuild when the screen changes
@@ -1356,10 +1528,10 @@ dialog::backdrop{background:transparent}
   document.addEventListener('touchend', untouch, { passive: true, capture: true });
   document.addEventListener('touchcancel', untouch, { passive: true, capture: true });
 
-  let resizeT = null, lastCount = calCount();
+  let resizeT = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeT);
-    resizeT = setTimeout(() => { const c = calCount(); if (c !== lastCount) { lastCount = c; if (S.tab === 'calendar') aimTimeline(); } render(); }, 150);
+    resizeT = setTimeout(render, 150);
   });
 
   /* ---------- toast ---------- */
@@ -1675,6 +1847,79 @@ dialog::backdrop{background:transparent}
     }
   });
 
+  // timeline: press a time and drag to another to block out a new task, in 15-minute steps.
+  // A mouse starts drawing as soon as it moves; a finger holds still for a moment first, so a normal swipe still scrolls.
+  const SNAP = 15;
+  const slotAt = (col, y) => { const r = col.getBoundingClientRect(); return clamp(Math.floor((y - r.top) / r.height * 1440 / SNAP) * SNAP, 0, 1440 - SNAP); };
+  function markRange() { const c = slotAt(mk.col, mk.y); return { lo: Math.min(mk.a, c), hi: Math.max(mk.a, c) + SNAP }; }
+  function drawMark() {
+    const { lo, hi } = markRange();
+    if (lo === mk.lo && hi === mk.hi) return;
+    mk.lo = lo; mk.hi = hi;
+    const g = mk.ghost;
+    g.style.top = `calc(var(--h) * ${(lo / 60).toFixed(4)} + 1px)`;
+    g.style.height = `calc(var(--h) * ${((hi - lo) / 60).toFixed(4)} - 2px)`;
+    g.classList.toggle('tight', hi - lo < 45);
+    g.innerHTML = `<b>New task</b><small>${esc(fmtRange(lo, hi))} · ${esc(fmtDur(hi - lo))}</small>`;
+  }
+  function startMark() {
+    if (!mk || mk.on || !mk.col.isConnected) { endMark(false); return; }
+    mk.on = true; sw = null; drag = null;
+    clearTimeout(mk.hold);
+    mk.ghost = document.createElement('div');
+    mk.ghost.className = 'blk ghost';
+    mk.ghost.style.cssText = 'left:3px;right:3px';
+    mk.col.appendChild(mk.ghost);
+    document.body.classList.add('marking');
+    if (mk.touch && navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+    drawMark();
+    const loop = () => {
+      if (!mk || !mk.on) return;
+      const tl = mk.tl;
+      if (tl) {
+        const r = tl.getBoundingClientRect(), edge = 44;
+        const v = mk.y < r.top + edge ? -(r.top + edge - mk.y) / 3 : mk.y > r.bottom - edge ? (mk.y - (r.bottom - edge)) / 3 : 0;
+        if (v) { tl.scrollTop += Math.max(-24, Math.min(24, v)); drawMark(); }
+      }
+      mk.raf = requestAnimationFrame(loop);
+    };
+    mk.raf = requestAnimationFrame(loop);
+  }
+  function endMark(open) {
+    const m = mk; mk = null;
+    if (!m) return;
+    clearTimeout(m.hold);
+    cancelAnimationFrame(m.raf);
+    document.body.classList.remove('marking');
+    if (m.ghost) m.ghost.remove();
+    if (m.on) quietUntil = Date.now() + 400;
+    if (renderLater) render();
+    if (open && m.on) openTask(null, { date: m.day, time: hhmm(m.lo), mins: m.hi - m.lo });
+  }
+  document.addEventListener('pointerdown', e => {
+    if (mk) endMark(false);
+    const col = e.target.closest && e.target.closest('.tl-col');
+    if (!col || e.target.closest('.blk, button') || !S.canSave || !e.isPrimary) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const touch = e.pointerType !== 'mouse';
+    mk = { col, tl: col.closest('.tl'), day: col.dataset.day, pid: e.pointerId, x0: e.clientX, y0: e.clientY, y: e.clientY, a: slotAt(col, e.clientY), on: false, touch, lo: -1, hi: -1 };
+    if (touch) mk.hold = setTimeout(startMark, 320);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!mk || e.pointerId !== mk.pid) return;
+    mk.y = e.clientY;
+    if (mk.on) { drawMark(); return; }
+    const moved = Math.hypot(e.clientX - mk.x0, e.clientY - mk.y0);
+    if (mk.touch) { if (moved > 8) endMark(false); } // the finger is scrolling, not drawing
+    else if (moved > 4) startMark();
+  });
+  document.addEventListener('pointerup', e => { if (mk && e.pointerId === mk.pid) endMark(true); });
+  document.addEventListener('pointercancel', e => { if (mk && e.pointerId === mk.pid) endMark(false); });
+  // while drawing with a finger, the timeline must not scroll under it
+  document.addEventListener('touchmove', e => { if (mk && mk.on) e.preventDefault(); }, { passive: false });
+  document.addEventListener('contextmenu', e => { if (mk) e.preventDefault(); });
+  window.addEventListener('blur', () => endMark(false));
+
   /* ---------- keep the screen on (for the wall iPad) ---------- */
   let wakeLock = null;
   async function lockScreen() {
@@ -1762,6 +2007,10 @@ dialog::backdrop{background:transparent}
     else if (act === 'cal-next') shiftCal(1);
     else if (act === 'cal-today') { S.calDay = todayKey(); aimTimeline(); render(); }
     else if (act === 'cal-day') { S.calDay = b.dataset.day; aimTimeline(); render(); }
+    else if (act === 'cal-view') setCalView(b.dataset.viewId);
+    else if (act === 'cal-open') setCalView('day', b.dataset.day);
+    else if (act === 'cal-month') setCalView('month', b.dataset.day);
+    else if (act === 'm-cell') { if (window.innerWidth < 680) setCalView('day', b.dataset.day); else openTask(null, { date: b.dataset.day }); }
     else if (act === 'soon') toast(`${b.dataset.what} is coming in a later build`);
     else if (act === 'event') openEvent(b.dataset.ev);
     else if (act === 'settings') openSettings();
@@ -1813,12 +2062,15 @@ dialog::backdrop{background:transparent}
   async function loadEvents(force) {
     if (!S.user || evBusy) return;
     if (!S.gcal) { if (S.events.length || S.evErr) { S.events = []; S.evErr = ''; render(); } return; }
-    const center = S.tab === 'calendar' ? S.calDay : S.homeDay;
-    const span = S.tab === 'calendar' ? visibleDays() : [S.homeDay];
+    // what's on screen (on Home, also today, for what's next), plus a margin so stepping around doesn't refetch
+    const tk = todayKey();
+    const far = Math.abs(fromKey(S.homeDay) - fromKey(tk)) > 300 * 864e5;
+    const [a, b] = S.tab === 'calendar' ? calSpan() : far ? [S.homeDay, S.homeDay] : [S.homeDay < tk ? S.homeDay : tk, S.homeDay > tk ? S.homeDay : tk];
     const w = S.evWin;
-    const inside = w && span[0] >= w.from && span[span.length - 1] <= w.to && todayKey() >= w.from;
+    const inside = w && a >= w.from && b <= w.to;
     if (!force && inside && Date.now() - w.at < 10 * 60e3) return;
-    const from = addDays(center, -10), to = addDays(center, 40);
+    const big = S.tab === 'calendar' && S.calView === 'year';
+    const from = addDays(a, big ? 0 : -10), to = addDays(b, big ? 0 : 40);
     evBusy = true;
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
@@ -1913,11 +2165,11 @@ dialog::backdrop{background:transparent}
     latitude: '34.76', longitude: '-82.2',
     current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
     hourly: 'temperature_2m,weather_code,precipitation_probability', forecast_hours: '30',
-    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset', forecast_days: '2',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset', forecast_days: '6',
     temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', timezone: 'America/New_York',
   });
   async function loadWeather(force) {
-    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3) return;
+    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3 && (S.weather.daily || []).length >= 6) return;
     try {
       const r = await fetch('https://api.open-meteo.com/v1/forecast?' + WXQ, { cache: 'no-store' });
       if (!r.ok) return;

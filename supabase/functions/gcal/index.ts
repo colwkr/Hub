@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
     const tz = typeof body.tz === "string" && body.tz.length < 64 ? body.tz : "America/New_York";
     const from = isDay(body.from) ? body.from : new Date().toISOString().slice(0, 10);
     const to = isDay(body.to) ? body.to : from;
-    if (Date.parse(to) < Date.parse(from) || Date.parse(to) - Date.parse(from) > 62 * DAY) {
-      return json({ error: "Ask for at most 62 days at a time." }, 400);
+    if (Date.parse(to) < Date.parse(from) || Date.parse(to) - Date.parse(from) > 400 * DAY) {
+      return json({ error: "Ask for at most 400 days at a time." }, 400);
     }
 
     // The caller's own settings row; row-level security means nobody can read anyone else's.
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
         const first = start.toString().slice(0, 10);
         const last = end ? end.toString().slice(0, 10) : null;
         let d = first;
-        for (let i = 0; i < 62; i++) {
+        for (let i = 0; i < 400; i++) {
           if (last ? d >= last : i > 0) break;
           if (d >= from && d <= to) {
             const key = `${item.uid}|${d}|all`;
