@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008213052">
-<script src="finance.js?v=20261008213052"></script>
+<link rel="stylesheet" href="finance.css?v=20261008214416">
+<script src="finance.js?v=20261008214416"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -69,6 +69,7 @@
   --glass:linear-gradient(180deg,rgba(40,41,46,.62),rgba(15,16,19,.66));
   --sheet:linear-gradient(180deg,rgba(34,35,40,.88),rgba(15,16,19,.92));
   --lift-bg:#2B2C32;
+  --dim:rgba(0,0,0,.45);
   --control:rgba(255,255,255,.07);
   --glass-border:rgba(255,255,255,.14); --glass-hi:rgba(255,255,255,.6); --glass-lo:rgba(255,255,255,.22); --sheen:rgba(255,255,255,.07);
   --lift:0 24px 50px -22px rgba(0,0,0,.9),0 6px 16px -8px rgba(0,0,0,.6);
@@ -100,6 +101,7 @@
   --glass:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));
   --sheet:linear-gradient(180deg,rgba(253,253,254,.92),rgba(244,244,247,.88));
   --lift-bg:#FFFFFF;
+  --dim:rgba(20,22,40,.09);
   --control:rgba(255,255,255,.7);
   --glass-border:rgba(255,255,255,.85); --glass-hi:rgba(255,255,255,1); --glass-lo:rgba(255,255,255,.75); --sheen:rgba(255,255,255,.4);
   --lift:0 22px 44px -24px rgba(30,34,50,.38),0 6px 14px -8px rgba(30,34,50,.12);
@@ -450,6 +452,11 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .mark.lifted .mark-chip{transform:translateY(-50%) scale(1.08);box-shadow:0 10px 24px -8px rgba(0,0,0,.5)}
 .mark.lifted::before{border-top-style:solid}
 .mark.origin{opacity:.3}
+.mark-chip svg.i{width:11px;height:11px;stroke-width:1.8;flex:none}
+/* the hours between Sleep and Wake up: a quiet dim behind everything */
+.dim{position:absolute;left:0;right:0;z-index:0;pointer-events:none;background:var(--dim)}
+#sheet[data-sheet-kind]:not([data-sheet-kind="marker"]) .f-mtype{display:none}
+#sheet[data-mtype="sleep"] .f-until,#sheet[data-mtype="wake"] .f-until{display:none}
 /* a stretch of time: a short line in from the right at the start, down the right edge, and back in at the end */
 .mark-span::before{display:none}
 .span-lines{position:absolute;top:-.75px;right:3px;width:min(150px,55%);height:calc(var(--h) * var(--len) + 1.5px);border:1.5px dashed var(--ink-2);border-left:0;border-radius:0 12px 12px 0;pointer-events:none}
@@ -1020,6 +1027,13 @@ dialog::backdrop{background:transparent}
         </div>
         <p class="kind-note" id="f_kindNote"></p>
       </div>
+      <div class="f f-mtype">
+        <span class="f-h" id="h_mtype">Marker type</span>
+        <div class="seg3 mtypes" role="radiogroup" aria-labelledby="h_mtype">
+          <button type="button" role="radio" data-mtype="sleep" aria-checked="false">Sleep</button><button type="button" role="radio" data-mtype="wake" aria-checked="false">Wake up</button><button type="button" role="radio" data-mtype="" aria-checked="false">Other</button>
+        </div>
+        <p class="kind-note" id="f_mtypeNote"></p>
+      </div>
       <label class="f"><span class="f-h" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
       <div class="f">
         <span class="f-h" id="h_date">Day</span>
@@ -1132,13 +1146,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008213052"></script>
+<script src="appearance.js?v=20261008214416"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008213052';
+  const VERSION = '20261008214416';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1241,7 +1255,7 @@ dialog::backdrop{background:transparent}
   };
   let sb = null, FIN = null;
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
@@ -1252,6 +1266,7 @@ dialog::backdrop{background:transparent}
     if ('repeat' in o) r.repeat = o.repeat || null;
     if ('seriesId' in o) r.series_id = o.seriesId || null;
     if ('origDay' in o) r.orig_day = o.origDay || null;
+    if ('mtype' in o) r.subtype = o.mtype || null;
     if ('date' in o) r.day = o.date || null;
     if ('time' in o) r.at_time = o.time || null;
     if ('mins' in o) r.mins = o.mins ?? null;
@@ -1687,6 +1702,25 @@ dialog::backdrop{background:transparent}
     return `<div class="tl-hours">${h}</div>`;
   }
   const chk = (t, cls) => `<button type="button" class="${cls}" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>`;
+  // the dimmed hours on day k: each Wake up pairs with the latest Sleep before it (within a day). One alone dims nothing.
+  function sleepDims(k) {
+    const pts = [];
+    for (let d = -1; d <= 1; d++) {
+      for (const t of dayItems(addDays(k, d))) if (t.kind === 'marker' && t.time && (t.mtype === 'sleep' || t.mtype === 'wake')) pts.push({ at: d * 1440 + toMin(t.time), type: t.mtype });
+    }
+    pts.sort((a, b) => a.at - b.at || (a.type === 'wake' ? -1 : 1));
+    const out = [];
+    let sl = null;
+    for (const p of pts) {
+      if (p.type === 'sleep') sl = p;
+      else if (sl && p.at - sl.at < 1440) {
+        const a = Math.max(0, sl.at), b = Math.min(1440, p.at);
+        if (b > a) out.push([a, b]);
+        sl = null;
+      }
+    }
+    return out;
+  }
   const inLane = (t, lane) => (lane === 'cal' ? t.kind !== 'task' : lane === 'tasks' ? t.kind === 'task' : true);
   function dayColumn(k, withCheck, lane) {
     const tk = todayKey(), nm = nowMin();
@@ -1724,9 +1758,10 @@ dialog::backdrop{background:transparent}
     const marks = dayItems(k).filter(t => t.kind === 'marker' && t.time).map(t => {
       const s0 = toMin(t.time), len = t.mins ? Math.min(t.mins, 1440 - s0) : 0;
       const label = len ? `${shortTime(s0)}–${shortTime(s0 + len)}` : shortTime(s0);
-      return `<div class="mark${len ? ' mark-span' : ''}" style="top:calc(var(--h) * ${(s0 / 60).toFixed(4)});--len:${(len / 60).toFixed(4)}" data-task="${esc(t.id)}" data-s="${s0}" data-e="${s0 + len}">${len ? '<i class="span-lines" aria-hidden="true"></i>' : ''}<button type="button" class="mark-chip" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(len ? fmtRange(s0, s0 + len) : fmtTime(s0))}, marker${t.repeat ? ', repeats' : ''}"><span class="mark-t">${esc(label)}</span><span class="mark-n">${esc(t.title)}</span>${t.repeat ? ICON.rep : ''}</button></div>`;
+      return `<div class="mark${len ? ' mark-span' : ''}" style="top:calc(var(--h) * ${(s0 / 60).toFixed(4)});--len:${(len / 60).toFixed(4)}" data-task="${esc(t.id)}" data-s="${s0}" data-e="${s0 + len}">${len ? '<i class="span-lines" aria-hidden="true"></i>' : ''}<button type="button" class="mark-chip" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(len ? fmtRange(s0, s0 + len) : fmtTime(s0))}, marker${t.repeat ? ', repeats' : ''}">${t.mtype === 'sleep' ? wxIcon('moon') : t.mtype === 'wake' ? wxIcon('sun') : ''}<span class="mark-t">${esc(label)}</span><span class="mark-n">${esc(t.title)}</span>${t.repeat ? ICON.rep : ''}</button></div>`;
     }).join('');
-    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}"${lane ? ` data-lane="${lane}"` : ''} aria-label="${esc(shortFmt.format(fromKey(k)))}${lane === 'tasks' ? ' tasks' : ''} timeline">${blocks}${marks}${line}</div>`;
+    const dims = sleepDims(k).map(([a, b]) => `<div class="dim" style="top:calc(var(--h) * ${(a / 60).toFixed(4)});height:calc(var(--h) * ${((b - a) / 60).toFixed(4)})" aria-hidden="true"></div>`).join('');
+    return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}"${lane ? ` data-lane="${lane}"` : ''} aria-label="${esc(shortFmt.format(fromKey(k)))}${lane === 'tasks' ? ' tasks' : ''} timeline">${dims}${blocks}${marks}${line}</div>`;
   }
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
   function vDayCal(cls) {
@@ -2134,7 +2169,9 @@ dialog::backdrop{background:transparent}
     const del = $('#sheetDel'); del.hidden = !t; del.classList.remove('armed'); del.textContent = 'Delete';
     const dn = $('#sheetDone'); dn.textContent = t && t.done ? 'Mark not done' : 'Mark done';
     $('#sheetErr').hidden = true;
+    F.mtype = t ? t.mtype || null : null;
     setKind(F.kind);
+    setMtype(F.mtype, true);
     sheet.showModal();
     if (!t) $('#f_title').focus();
   }
@@ -2157,6 +2194,25 @@ dialog::backdrop{background:transparent}
     $('#sheet').dataset.sheetKind = F.kind || 'none';
     $('#sheetDone').hidden = !(F.id && F.kind === 'task');
     $('#sheetNotes').hidden = !(F.id && F.kind === 'meeting');
+    refreshWhere();
+  }
+  // Sleep and Wake up markers pair up: the hours from one to the next are dimmed on the calendar
+  const MTYPE_NAME = { sleep: 'Sleep', wake: 'Wake up' };
+  function setMtype(v, quiet) {
+    if (!F) return;
+    F.mtype = v || null;
+    for (const b of document.querySelectorAll('#sheetBody [data-mtype]')) b.setAttribute('aria-checked', String((b.dataset.mtype || null) === F.mtype));
+    $('#sheet').dataset.mtype = F.mtype || 'none';
+    $('#f_mtypeNote').textContent = F.mtype === 'sleep' ? 'With a Wake up marker after it, the hours in between are dimmed on the calendar. Just a visual cue: you can still schedule there.'
+      : F.mtype === 'wake' ? 'Ends the dimmed hours that start at your Sleep marker.' : '';
+    if (!quiet) {
+      const ti = $('#f_title'), cur = ti.value.trim();
+      if (F.mtype && (!cur || /^(sleep|wake ?up)$/i.test(cur))) ti.value = MTYPE_NAME[F.mtype];
+      if (!F.mtype && /^(sleep|wake ?up)$/i.test(cur)) ti.value = '';
+      if (F.mtype) $('#f_until').value = '';
+      // sleeping and waking happen every day, so a new one starts out repeating daily
+      if (F.mtype && !F.id && !$('#f_repeat').value && $('#f_date').value) $('#f_repeat').value = 'daily';
+    }
     refreshWhere();
   }
   function closeForm() { if (sheet.open) sheet.close(); F = null; }
@@ -2216,6 +2272,8 @@ dialog::backdrop{background:transparent}
   $('#sheetBody').addEventListener('click', e => {
     const kb = e.target.closest('#sheetBody [data-kind]');
     if (kb) { setKind(kb.dataset.kind); $('#sheetErr').hidden = true; return; }
+    const mb = e.target.closest('#sheetBody [data-mtype]');
+    if (mb) { setMtype(mb.dataset.mtype); return; }
     const set = e.target.closest('[data-set]');
     if (set) {
       if (set.dataset.set === 'date') $('#f_date').value = addDays(todayKey(), Number(set.dataset.rel));
@@ -2242,10 +2300,11 @@ dialog::backdrop{background:transparent}
     if (kind === 'event' && !body.date) return fail('An event needs a day to go on the calendar.');
     if (kind === 'marker') {
       if (!body.date || !body.time) return fail('A marker needs a day and a time.');
-      const until = $('#f_until').value;
+      const until = F.mtype ? '' : $('#f_until').value;
       if (until && toMin(until) <= toMin(body.time)) return fail('Until has to be after the start time.');
       body.mins = until ? toMin(until) - toMin(body.time) : null;
     }
+    body.mtype = kind === 'marker' ? F.mtype || null : null;
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const freq = kind !== 'task' && body.date ? ($('#f_repeat').value || null) : null;
     if (F.occ) {
