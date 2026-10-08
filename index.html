@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008191934">
-<script src="finance.js?v=20261008191934"></script>
+<link rel="stylesheet" href="finance.css?v=20261008193419">
+<script src="finance.js?v=20261008193419"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -413,6 +413,28 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .kind-f .seg3{grid-template-columns:repeat(4,minmax(0,1fr))}
 .kind-f .seg3 button{padding:10px 4px}
 #sheet[data-sheet-kind="marker"] .f-len{display:none}
+#sheet[data-sheet-kind="task"] .f-rep,#sheet[data-sheet-kind="none"] .f-rep{display:none}
+#sheet .f select,.mt-when-row select{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);-webkit-appearance:none;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+#sheet .f select:disabled,.mt-when-row select:disabled{opacity:.5}
+.mt-when-row select{flex:1 1 100%;border-radius:14px}
+/* the repeat symbol after a name */
+svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical-align:-1px;stroke-width:1.8;opacity:.7;flex:none}
+.mark-chip svg.i.rep-i{margin-left:0}
+/* anything happening right now glows, whatever kind it is */
+.blk.now.evt,.blk.now.lev,.blk.now.mtg{background:var(--solid);color:var(--on-solid);box-shadow:var(--sel-glow),var(--lift-sm)}
+.blk.now.evt small,.blk.now.mtg small{color:var(--on-solid);opacity:.7}
+.blk.now.mtg{box-shadow:var(--sel-glow),var(--lift-sm),inset 3px 0 0 var(--on-solid)}
+/* which ones? (repeating items) */
+#scopeSheet{max-width:380px}
+.scope-body{display:flex;flex-direction:column;gap:16px;padding:22px 20px 20px}
+.scope-body h2{font-size:17px;font-weight:500}
+.scope-opts{display:flex;flex-direction:column;gap:4px}
+.scope-opts label{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;font-size:15px;cursor:pointer}
+.scope-opts label:has(input:checked){background:var(--well)}
+.scope-opts label[hidden]{display:none}
+.scope-opts input{width:20px;height:20px;margin:0;accent-color:var(--ink)}
+.btn.danger-solid{background:var(--bad);color:var(--on-bad);box-shadow:var(--lift-sm)}
 /* a marker: a dashed line at one moment with its name; it takes no time, so blocks sit right against it */
 .mark{position:absolute;left:0;right:0;height:0;z-index:2;pointer-events:none}
 .mark::before{content:"";position:absolute;left:0;right:0;top:-.75px;border-top:1.5px dashed var(--ink-2)}
@@ -951,12 +973,18 @@ dialog::backdrop{background:transparent}
         </div>
         <div class="xin"><input id="f_mins" type="number" inputmode="numeric" min="1" max="1440" step="1" placeholder="Other" aria-labelledby="h_mins"><span class="unit">min</span><button type="button" class="circle" data-clear="f_mins" aria-label="Clear length"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
       </div>
+      <div class="f f-rep">
+        <span class="f-h" id="h_rep">Repeat</span>
+        <select id="f_repeat" aria-labelledby="h_rep"></select>
+        <p class="kind-note" id="f_repNote"></p>
+      </div>
       <p class="where" id="f_where" aria-live="polite"></p>
     </div>
     <p id="sheetErr" class="err" hidden></p>
     <div class="sheet-foot">
       <button type="button" id="sheetDel" class="btn danger" hidden>Delete</button>
       <button type="button" id="sheetDone" class="btn" hidden>Mark done</button>
+      <button type="button" id="sheetNotes" class="btn" hidden>Open notes</button>
       <button type="submit" id="sheetSave" class="btn solid">Save</button>
     </div>
   </form>
@@ -1008,6 +1036,21 @@ dialog::backdrop{background:transparent}
   </div>
 </dialog>
 
+<dialog id="scopeSheet" aria-labelledby="scopeTitle">
+  <form method="dialog" class="scope-body" id="scopeForm">
+    <h2 id="scopeTitle">Change repeating event</h2>
+    <div class="scope-opts" role="radiogroup" aria-labelledby="scopeTitle">
+      <label data-scope-opt="one"><input type="radio" name="scope" value="one"><span id="scopeOne">This event</span></label>
+      <label data-scope-opt="following"><input type="radio" name="scope" value="following"><span id="scopeFol">This and following events</span></label>
+      <label data-scope-opt="all"><input type="radio" name="scope" value="all"><span id="scopeAll">All events</span></label>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" class="btn" id="scopeCancel">Cancel</button>
+      <button type="submit" class="btn solid" id="scopeOk">OK</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="cfSheet" aria-labelledby="cfTitle">
   <div class="cf-body">
     <h2 class="name" id="cfTitle" style="font-size:17px">Complete this task?</h2>
@@ -1018,13 +1061,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008191934"></script>
+<script src="appearance.js?v=20261008193419"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008191934';
+  const VERSION = '20261008193419';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1071,6 +1114,7 @@ dialog::backdrop{background:transparent}
   }
 
   const ICON = {
+    rep: '<svg class="i rep-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 4.5l2.5 2.5L17 9.5"/><path d="M5 11V9.5A2.5 2.5 0 0 1 7.5 7h12M7 19.5 4.5 17 7 14.5"/><path d="M19 13v1.5a2.5 2.5 0 0 1-2.5 2.5h-12"/></svg>',
     people: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg>',
     trash: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4.5h4V7M7 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h5.4a1.5 1.5 0 0 0 1.5-1.4L17 7"/></svg>',
     plus: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>',
@@ -1112,7 +1156,7 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 1100 ? 'week' : window.innerWidth >= 680 ? '3day' : 'day';
   }
-  let mk = null, mv = null, renderLater = false; // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
+  let mk = null, mv = null, renderLater = false, scopeOpen = false; // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
     all: [], tasks: [], items: [], weather: null, mtgId: null,
@@ -1123,7 +1167,7 @@ dialog::backdrop{background:transparent}
   };
   let sb = null, FIN = null;
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [] });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
@@ -1131,6 +1175,9 @@ dialog::backdrop{background:transparent}
     if ('kind' in o) r.kind = o.kind || 'task';
     if ('notes' in o) r.notes = o.notes || null;
     if ('agenda' in o) r.agenda = o.agenda || [];
+    if ('repeat' in o) r.repeat = o.repeat || null;
+    if ('seriesId' in o) r.series_id = o.seriesId || null;
+    if ('origDay' in o) r.orig_day = o.origDay || null;
     if ('date' in o) r.day = o.date || null;
     if ('time' in o) r.at_time = o.time || null;
     if ('mins' in o) r.mins = o.mins ?? null;
@@ -1159,7 +1206,48 @@ dialog::backdrop{background:transparent}
     },
     async restore(o) { must(await sb.from('tasks').insert(toRow(o))); await reloadTasks(); },
   };
-  const task = id => S.all.find(t => t.id === id);
+  // an occurrence of a repeating item has the id "seriesId@day"; it is built on the fly, never stored
+  const occ = (r, k) => ({ ...r, id: `${r.id}@${k}`, date: k, occ: true, sid: r.id });
+  const task = id => {
+    if (id && id.includes('@')) { const [sid, k] = id.split('@'); const r = S.all.find(x => x.id === sid); return r && r.repeat ? occ(r, k) : null; }
+    return S.all.find(t => t.id === id);
+  };
+  function occursOn(r, k) {
+    const rp = r.repeat;
+    if (!rp || !r.date || k < r.date || (rp.until && k > rp.until) || rp.skip.includes(k)) return false;
+    const a = fromKey(r.date), d = fromKey(k);
+    switch (rp.freq) {
+      case 'daily': return true;
+      case 'weekdays': return d.getDay() >= 1 && d.getDay() <= 5;
+      case 'weekly': return d.getDay() === a.getDay();
+      case 'monthly': return d.getDate() === a.getDate();
+      case 'yearly': return d.getDate() === a.getDate() && d.getMonth() === a.getMonth();
+    }
+    return false;
+  }
+  // everything of yours on a day: single items, plus each repeating item that falls on it
+  function dayItems(k) {
+    const out = [];
+    for (const x of S.all) {
+      if (x.repeat) { if (occursOn(x, k)) out.push(occ(x, k)); }
+      else if (x.date === k) out.push(x);
+    }
+    return out;
+  }
+  function nextOcc(r, from) {
+    let k = r.date > from ? r.date : from;
+    for (let i = 0; i < 800; i++, k = addDays(k, 1)) { if (r.repeat.until && k > r.repeat.until) return null; if (occursOn(r, k)) return k; }
+    return null;
+  }
+  const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+  const wdLong = new Intl.DateTimeFormat(undefined, { weekday: 'long' }), mdFmt = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric' });
+  function repeatChoices(k) {
+    const d = k ? fromKey(k) : null;
+    return [['', 'Does not repeat'], ['daily', 'Every day'], ['weekdays', 'Every weekday (Mon–Fri)'],
+      ['weekly', d ? `Every week on ${wdLong.format(d)}` : 'Every week'], ['monthly', d ? `Every month on the ${ordinal(d.getDate())}` : 'Every month'],
+      ['yearly', d ? `Every year on ${mdFmt.format(d)}` : 'Every year']];
+  }
+  const repeatText = r => r && r.repeat ? (repeatChoices(r.date).find(c => c[0] === r.repeat.freq) || ['', ''])[1] + (r.repeat.until ? ` until ${shortFmt.format(fromKey(r.repeat.until))}` : '') : '';
   // A task is on the calendar once it has a day and a time; a day alone puts it under Anytime; anything else is Unsorted.
   const kindOf = t => (t.date && t.time ? 'timed' : t.date ? 'anytime' : 'unsorted');
   const effMins = t => t.mins || (t.kind === 'task' ? 15 : 30); // no estimate still needs a footprint on the timeline
@@ -1283,7 +1371,8 @@ dialog::backdrop{background:transparent}
   function vNext(cls) {
     const tk = todayKey(), nm = nowMin();
     const liveT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && t.date === tk && toMin(t.time) < nm && nm < toMin(t.time) + effMins(t)).map(t => ({ t, date: t.date, time: t.time, live: true }));
-    const mtgs = S.items.filter(m => m.kind === 'meeting' && kindOf(m) === 'timed');
+    const mtgs = [];
+    for (let i = 0, k = tk; i < 21; i++, k = addDays(k, 1)) for (const m of dayItems(k)) if (m.kind === 'meeting' && m.time) mtgs.push(m);
     const liveG = mtgs.filter(m => m.date === tk && toMin(m.time) <= nm && nm < toMin(m.time) + effMins(m)).map(m => ({ m, date: m.date, time: m.time, live: true }));
     const upT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && (t.date > tk || (t.date === tk && toMin(t.time) >= nm))).map(t => ({ t, date: t.date, time: t.time }));
     const upG = mtgs.filter(m => m.date > tk || (m.date === tk && toMin(m.time) > nm)).map(m => ({ m, date: m.date, time: m.time }));
@@ -1304,7 +1393,7 @@ dialog::backdrop{background:transparent}
           const m = x.m, s0 = toMin(m.time), e0 = s0 + effMins(m);
           const pts = m.agenda.filter(a => !a.done).length;
           const when = x.live ? `Now · ends ${fmtTime(e0)}` : fmtRange(s0, e0);
-          return `${div}<div class="trow${x.live ? ' live' : cls}"><span class="cal-ic" aria-hidden="true">${ICON.people}</span><button type="button" class="tmain" data-act="meeting" data-id="${esc(m.id)}"><span class="name">${esc(m.title)}<span class="tag">Meeting</span></span><span class="meta">${x.live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}${pts ? ` · ${pts} to talk about` : ''}</span></span></button></div>`;
+          return `${div}<div class="trow${x.live ? ' live' : cls}"><span class="cal-ic" aria-hidden="true">${ICON.people}</span><button type="button" class="tmain" data-act="edit" data-id="${esc(m.id)}"><span class="name">${esc(m.title)}<span class="tag">Meeting</span></span><span class="meta">${x.live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}${pts ? ` · ${pts} to talk about` : ''}</span></span></button></div>`;
         }
         const t = x.t, s0 = toMin(t.time);
         const when = x.live ? (t.mins ? `Now · ends ${fmtTime(s0 + t.mins)}` : `Now · started ${fmtTime(s0)}`)
@@ -1374,15 +1463,27 @@ dialog::backdrop{background:transparent}
   const typingInMeeting = () => { const a = document.activeElement; return !!(a && a.closest && a.matches('input,textarea') && a.closest('[data-hold-render]')); };
   function mtgWhen(m) {
     if (!m.date) return 'Not scheduled';
+    if (m.repeat) {
+      const n = nextMeet(m), tk = todayKey();
+      const at = m.time ? `, ${fmtRange(toMin(m.time), toMin(m.time) + effMins(m))}` : '';
+      const when = !n ? '' : n === tk ? 'today' : n === addDays(tk, 1) ? 'tomorrow' : `next ${dayLabel(n)}`;
+      return n ? `${repeatText(m)} · ${when}${at}` : `${repeatText(m)} · ended`;
+    }
     if (!m.time) return `${dayLabel(m.date)}, no set time`;
     const s0 = toMin(m.time);
     return `${dayLabel(m.date)}, ${fmtRange(s0, s0 + effMins(m))}`;
   }
-  const mtgEnded = m => { const tk = todayKey(); return !!m.date && (m.date < tk || (m.date === tk && !!m.time && toMin(m.time) + effMins(m) <= nowMin())); };
+  // the next time a repeating meeting happens (today's counts until it's over)
+  function nextMeet(m) {
+    const tk = todayKey(), n = nextOcc(m, tk);
+    if (n === tk && m.time && toMin(m.time) + effMins(m) <= nowMin()) return nextOcc(m, addDays(tk, 1));
+    return n;
+  }
+  const mtgEnded = m => { const tk = todayKey(); if (m.repeat) return !nextMeet(m); return !!m.date && (m.date < tk || (m.date === tk && !!m.time && toMin(m.time) + effMins(m) <= nowMin())); };
   const ptRow = a => `<li class="mt-pt${a.done ? ' done' : ''}" data-pt="${esc(a.id)}"><button type="button" class="chk" data-act="pt-done" aria-pressed="${a.done ? 'true' : 'false'}" aria-label="${a.done ? 'Not covered yet' : 'Covered'}">${ICON.check}</button><input class="pt-text" data-pt-text value="${esc(a.text)}" maxlength="300" aria-label="Talking point" enterkeyhint="next"><button type="button" class="pt-x" data-act="pt-del" aria-label="Remove talking point">${ICON.x}</button></li>`;
   function whenNote(m) {
     if (!m.date) return '<b>Not scheduled.</b> Add a day to put it on the calendar.';
-    return `<b>On the calendar</b> ${esc(mtgWhen(m))} <button type="button" class="link" data-act="mtg-unsched">Take off calendar</button>`;
+    return `<b>${m.repeat ? 'Repeats' : 'On the calendar'}</b> ${esc(mtgWhen(m))} <button type="button" class="link" data-act="mtg-unsched">Take off calendar</button>`;
   }
   function vMeetingDetail(m) {
     return `<section class="float mt-detail" data-hold-render data-mtg="${esc(m.id)}" aria-label="Meeting">
@@ -1398,6 +1499,7 @@ dialog::backdrop{background:transparent}
             <input type="date" data-mf="date" value="${esc(m.date || '')}" aria-label="Day">
             <input type="time" data-mf="time" step="300" value="${esc(m.time || '')}" aria-label="Start time">
             <div class="xin mt-len"><input type="number" data-mf="mins" min="5" max="1440" step="5" inputmode="numeric" value="${m.mins || ''}" placeholder="30" aria-label="Length in minutes"><span class="unit">min</span></div>
+            <select data-mf="repeat" aria-label="Repeat"${m.date && !m.seriesId ? '' : ' disabled'}>${repeatChoices(m.date).map(([v, l]) => `<option value="${v}"${(m.repeat ? m.repeat.freq : '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
           </div>
           <p class="where" id="mtWhen">${whenNote(m)}</p>
         </div>
@@ -1471,7 +1573,7 @@ dialog::backdrop{background:transparent}
     const m = {};
     const put = (k, x) => (m[k] || (m[k] = [])).push(x);
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
-    for (const t of S.all) if (t.date && t.date >= from && t.date <= to && t.kind !== 'marker') put(t.date, { t, s: t.time ? toMin(t.time) : -1 });
+    for (let k = from; k <= to; k = addDays(k, 1)) for (const t of dayItems(k)) if (t.kind !== 'marker') put(k, { t, s: t.time ? toMin(t.time) : -1 });
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
   }
@@ -1504,7 +1606,7 @@ dialog::backdrop{background:transparent}
   function dayColumn(k, withCheck) {
     const tk = todayKey(), nm = nowMin();
     const items = layout([
-      ...S.all.filter(t => t.date === k && kindOf(t) === 'timed' && t.kind !== 'marker').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
+      ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker').map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
       ...S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) })),
     ]);
     const blocks = items.map(x => {
@@ -1512,14 +1614,14 @@ dialog::backdrop{background:transparent}
       const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), 25) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       if (x.g) {
         const when = fmtRange(x.s, x.s + (x.g.mins || 30));
-        return `<button type="button" class="blk evt${len < 45 ? ' tight' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
+        return `<button type="button" class="blk evt${len < 45 ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
       }
       const t = x.t;
       const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (t.kind !== 'task') {
-        // events and meetings: no done circle; a meeting opens its notes
-        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.e);
-        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${len < 45 ? ' tight' : ''}" style="${style0}" ${grip0} data-act="${mtg ? 'meeting' : 'edit'}" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}"><b>${mtg ? ICON.people : ''}${esc(t.title)}</b><small>${esc(when)}</small>${edges0}</button>`;
+        // events and meetings: no done circle; tapping opens the edit sheet
+        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.e), live = k === tk && x.s <= nm && nm < x.e;
+        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${len < 45 ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
       }
       const live = k === tk && !t.done && x.s <= nm && nm < x.e;
       const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', len < 45 ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
@@ -1532,20 +1634,20 @@ dialog::backdrop{background:transparent}
     }).join('');
     const line = k === tk ? `<div class="nowline" data-nowline style="top:calc(var(--h) * ${(nm / 60).toFixed(4)})"></div>` : '';
     // markers: a named moment (like waking up). A dashed line and a label, taking no time at all.
-    const marks = S.all.filter(t => t.kind === 'marker' && t.date === k && t.time).map(t => {
+    const marks = dayItems(k).filter(t => t.kind === 'marker' && t.time).map(t => {
       const s0 = toMin(t.time);
-      return `<div class="mark" style="top:calc(var(--h) * ${(s0 / 60).toFixed(4)})" data-task="${esc(t.id)}" data-s="${s0}" data-e="${s0}"><button type="button" class="mark-chip" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(fmtTime(s0))}, marker"><span class="mark-t">${esc(shortTime(s0))}</span><span class="mark-n">${esc(t.title)}</span></button></div>`;
+      return `<div class="mark" style="top:calc(var(--h) * ${(s0 / 60).toFixed(4)})" data-task="${esc(t.id)}" data-s="${s0}" data-e="${s0}"><button type="button" class="mark-chip" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(fmtTime(s0))}, marker${t.repeat ? ', repeats' : ''}"><span class="mark-t">${esc(shortTime(s0))}</span><span class="mark-n">${esc(t.title)}</span>${t.repeat ? ICON.rep : ''}</button></div>`;
     }).join('');
     return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))} timeline">${blocks}${marks}${line}</div>`;
   }
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
   function vDayCal(cls) {
     const k = S.homeDay, tk = todayKey();
-    const any = S.all.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp);
+    const any = dayItems(k).filter(t => kindOf(t) === 'anytime').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
     const allDay = S.events.filter(g => g.date === k && g.allDay);
-    const nEv = S.events.filter(g => g.date === k).length + S.items.filter(x => x.date === k && x.kind !== 'marker').length;
-    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    const nEv = S.events.filter(g => g.date === k).length + dayItems(k).filter(x => x.kind !== 'task' && x.kind !== 'marker').length;
+    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
     return `<section class="float daycal ${cls}" aria-label="Day calendar">
       <div class="dc-head">
@@ -1570,15 +1672,15 @@ dialog::backdrop{background:transparent}
     const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
     const week = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = S.all.filter(t => t.date === k && !t.done && t.kind !== 'marker').length;
+      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
     const heads = days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
-    const anyByDay = days.map(k => S.all.filter(t => t.date === k && kindOf(t) === 'anytime').sort(cmp));
+    const anyByDay = days.map(k => dayItems(k).filter(t => kindOf(t) === 'anytime').sort(cmp));
     const allByDay = days.map(k => S.events.filter(g => g.date === k && g.allDay));
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
-      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
     const cols = days.map(k => dayColumn(k, false)).join('');
     return `${head}${err}
@@ -1600,7 +1702,7 @@ dialog::backdrop{background:transparent}
       const chips = items.slice(0, 3).map(x => {
         if (x.g) return `<button type="button" class="mi evt" data-act="event" data-ev="${esc(x.g.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(x.g.title)}</button>`;
         const t = x.t, kc = t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : '';
-        return `<button type="button" class="mi${t.done ? ' done' : ''}${kc}" data-act="${t.kind === 'meeting' ? 'meeting' : 'edit'}" data-id="${esc(t.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(t.title)}</button>`;
+        return `<button type="button" class="mi${t.done ? ' done' : ''}${kc}" data-act="edit" data-id="${esc(t.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(t.title)}</button>`;
       }).join('');
       const more = items.length > 3 ? `<button type="button" class="mi more" data-act="cal-open" data-day="${k}">+${items.length - 3} more</button>` : '';
       const dots = items.length ? `<i class="mdots">${'<u></u>'.repeat(Math.min(3, items.length))}</i>` : '';
@@ -1685,7 +1787,7 @@ dialog::backdrop{background:transparent}
     </form></div>`;
   }
   function render() {
-    if (mk || mv || typingInMeeting()) { renderLater = true; return; }
+    if (mk || mv || scopeOpen || typingInMeeting()) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -1831,8 +1933,11 @@ dialog::backdrop{background:transparent}
     if (!S.canSave) return;
     const t = id ? task(id) : null;
     if (id && !t) return;
-    F = { id: t ? t.id : null, armed: false, kind: t ? t.kind : kind };
+    F = { id: t ? t.id : null, armed: false, kind: t ? t.kind : kind, occ: !!(t && t.occ), sid: t && t.occ ? t.sid : null, day: t ? t.date : null,
+      locked: !!(t && t.seriesId), repeat0: t && t.repeat ? t.repeat.freq : '' };
     const v = t || { title: '', date: preset.date || null, time: preset.time || null, mins: preset.mins ?? null };
+    $('#f_repeat').innerHTML = repeatChoices(v.date).map(([rv, rl]) => `<option value="${rv}">${esc(rl)}</option>`).join('');
+    $('#f_repeat').value = F.repeat0;
     $('#f_title').value = v.title || '';
     $('#f_date').value = v.date || '';
     $('#f_time').value = v.time || '';
@@ -1863,6 +1968,7 @@ dialog::backdrop{background:transparent}
     $('#f_kindNote').textContent = tx ? tx.note : 'Pick one so it lands in the right place.';
     $('#sheet').dataset.sheetKind = F.kind || 'none';
     $('#sheetDone').hidden = !(F.id && F.kind === 'task');
+    $('#sheetNotes').hidden = !(F.id && F.kind === 'meeting');
     refreshWhere();
   }
   function closeForm() { if (sheet.open) sheet.close(); F = null; }
@@ -1874,7 +1980,16 @@ dialog::backdrop{background:transparent}
     if (!Number.isInteger(n) || n < 1 || n > 1440) return { bad: true };
     return { mins: n };
   }
+  // the repeat choices name the day ("Every week on Friday"), so they follow the day field
+  function fillRepeat() {
+    const sel = $('#f_repeat'), date = $('#f_date').value, cur = sel.value;
+    sel.innerHTML = repeatChoices(date).map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
+    sel.value = date ? cur : '';
+    sel.disabled = !date || !!(F && F.locked);
+    $('#f_repNote').textContent = F && F.locked ? 'This one was changed on its own, apart from its repeating series.' : !date ? 'Pick a day first.' : sel.value ? 'Repeats with no end date.' : '';
+  }
   function refreshWhere() {
+    fillRepeat();
     const date = $('#f_date').value, time = $('#f_time').value, m = readMins();
     const tk = todayKey();
     for (const c of document.querySelectorAll('#sheetBody [data-set="date"]')) c.setAttribute('aria-pressed', String(date === addDays(tk, Number(c.dataset.rel))));
@@ -1935,8 +2050,21 @@ dialog::backdrop{background:transparent}
     if (kind === 'event' && !body.date) return fail('An event needs a day to go on the calendar.');
     if (kind === 'marker') { if (!body.date || !body.time) return fail('A marker needs a day and a time.'); body.mins = null; }
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
+    const freq = kind !== 'task' && body.date ? ($('#f_repeat').value || null) : null;
+    if (F.occ) {
+      // one time out of a repeating series: this one, this and following, or all of them
+      const f = { ...F };
+      const scope = await askScope('change', kind, (freq || '') === (f.repeat0 || ''));
+      if (!scope) return;
+      const ok = await applySeriesEdit(f.sid, f.day, body, freq, scope);
+      if (ok) { closeForm(); toast(scope === 'one' ? 'Changed this one' : scope === 'all' ? 'Changed all of them' : 'Changed this and the ones after it'); }
+      return;
+    }
+    if (!F.locked) body.repeat = freq ? { freq, until: null, skip: [] } : null;
+    if (F.id && body.repeat) { const t0 = task(F.id); if (t0 && t0.repeat) body.repeat = { ...t0.repeat, freq }; }
     const btn = $('#sheetSave');
     btn.disabled = true;
+    const F0repeat = F.repeat0;
     const id = F.id, newId = !id && kind === 'meeting' && window.crypto && crypto.randomUUID ? crypto.randomUUID() : null;
     const ok = id
       ? await save(store.update(id, body))
@@ -1947,7 +2075,8 @@ dialog::backdrop{background:transparent}
       const day = body.date ? dayLabel(body.date) : '';
       if (kind === 'meeting' && !id) toast(body.date ? `Meeting added to ${day}` : 'Meeting saved, not scheduled yet', newId ? () => openMeeting(newId) : null, 'Open notes');
       else if (kind === 'event' && !id) toast(`Event added to ${day}`);
-      else if (kind === 'marker' && !id) toast(`Marker added to ${day}, ${fmtTime(toMin(body.time))}`);
+      else if (kind === 'marker' && !id) toast(`Marker added to ${day}, ${fmtTime(toMin(body.time))}${freq ? ', repeating' : ''}`);
+      else if (id && freq && !F0repeat) toast(`Repeats ${repeatText({ date: body.date, repeat: { freq } }).replace(/^Every/, 'every')}`);
       else if (!id) toast(body.date && body.time ? `Added to ${day}` : body.date ? `Added to ${day}, anytime` : 'Added to Unsorted');
     }
   });
@@ -1960,6 +2089,17 @@ dialog::backdrop{background:transparent}
   $('#sheetDel').addEventListener('click', async e => {
     if (!F || !F.id) return;
     const b = e.currentTarget;
+    if (F.occ || F.locked) {
+      const f = { ...F }, t = task(f.id);
+      const scope = await askScope('delete', f.kind, true);
+      if (!scope || !t) return;
+      let ok;
+      if (f.occ) ok = await applySeriesDelete(f.sid, f.day, scope);
+      else if (scope === 'one') ok = await run(async () => must(await sb.from('tasks').delete().eq('id', t.id)));
+      else ok = await applySeriesDelete(t.seriesId, t.origDay, scope, t.id);
+      if (ok) { closeForm(); toast(scope === 'one' ? `Deleted this ${f.kind}` : scope === 'all' ? `Deleted every ${f.kind} in the series` : `Deleted this ${f.kind} and the ones after it`); }
+      return;
+    }
     if (!F.armed) { F.armed = true; b.classList.add('armed'); b.textContent = 'Tap again to delete'; return; }
     const t = task(F.id);
     if (!t) { closeForm(); return; }
@@ -1972,6 +2112,67 @@ dialog::backdrop{background:transparent}
       toast(`Deleted: ${t.title}`, () => save(store.restore({ ...old, id: t.id })));
     }
   });
+  $('#sheetNotes').addEventListener('click', () => { if (!F || !F.id) return; const id = F.occ ? F.sid : F.id; closeForm(); openMeeting(id); });
+
+  /* ---------- repeating items: which ones does a change or delete apply to? ---------- */
+  const scopeSheet = $('#scopeSheet');
+  let scopeDone = null;
+  function askScope(verb, kind, allowOne) {
+    const noun = kind === 'meeting' ? 'meeting' : kind === 'marker' ? 'marker' : 'event';
+    $('#scopeTitle').textContent = `${verb === 'delete' ? 'Delete' : 'Change'} repeating ${noun}`;
+    $('#scopeOne').textContent = `This ${noun}`;
+    $('#scopeFol').textContent = `This and following ${noun}s`;
+    $('#scopeAll').textContent = `All ${noun}s`;
+    scopeSheet.querySelector('[data-scope-opt="one"]').hidden = !allowOne;
+    for (const r of scopeSheet.querySelectorAll('input[name="scope"]')) r.checked = r.value === (allowOne ? 'one' : 'following');
+    $('#scopeOk').textContent = verb === 'delete' ? 'Delete' : 'OK';
+    $('#scopeOk').classList.toggle('danger-solid', verb === 'delete');
+    return new Promise(res => { scopeDone = res; scopeOpen = true; scopeSheet.showModal(); });
+  }
+  function endScope(v) { const d = scopeDone; scopeDone = null; scopeOpen = false; if (scopeSheet.open) scopeSheet.close(); if (d) d(v); flushLater(); }
+  $('#scopeForm').addEventListener('submit', e => { e.preventDefault(); const c = scopeSheet.querySelector('input[name="scope"]:checked'); endScope(c ? c.value : null); });
+  $('#scopeCancel').addEventListener('click', () => endScope(null));
+  scopeSheet.addEventListener('close', () => { if (scopeDone) endScope(null); });
+  async function run(fn) { const ok = await save(fn()); await reloadTasks(); return ok; }
+  const newUid = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : null);
+  async function applySeriesEdit(sid, k, body, freq, scope) {
+    const r = S.all.find(x => x.id === sid);
+    if (!r || !r.repeat) return false;
+    const rp = r.repeat, base = { kind: r.kind, title: r.title, time: r.time, mins: r.mins, notes: r.notes, agenda: r.agenda };
+    if (scope === 'following' && k <= r.date) scope = 'all';
+    if (scope === 'one') return run(async () => {
+      // this time only: its own row, and the series skips this day
+      must(await sb.from('tasks').insert(toRow({ ...base, ...body, repeat: null, seriesId: sid, origDay: k, done: false, doneAt: null })));
+      must(await sb.from('tasks').update(toRow({ repeat: { ...rp, skip: [...new Set([...rp.skip, k])] } })).eq('id', sid));
+    });
+    if (scope === 'all') {
+      // the whole series; moving one to another day moves them all by the same number of days
+      const shift = body.date && body.date !== k ? Math.round((fromKey(body.date) - fromKey(k)) / 864e5) : 0;
+      const patch = { ...body, date: addDays(r.date, shift), repeat: freq ? { ...rp, freq, skip: rp.skip.map(d => addDays(d, shift)) } : null };
+      return run(async () => must(await sb.from('tasks').update(toRow(patch)).eq('id', sid)));
+    }
+    // this and following: the old series ends the day before; a new one starts here
+    const id2 = newUid();
+    if (!id2) return false;
+    return run(async () => {
+      must(await sb.from('tasks').insert(toRow({ ...base, ...body, id: id2, repeat: freq ? { freq, until: rp.until, skip: rp.skip.filter(d => d >= k) } : null, done: false, doneAt: null })));
+      must(await sb.from('tasks').update(toRow({ repeat: { ...rp, until: addDays(k, -1), skip: rp.skip.filter(d => d < k) } })).eq('id', sid));
+      must(await sb.from('tasks').update({ series_id: id2 }).eq('series_id', sid).gte('orig_day', k));
+    });
+  }
+  async function applySeriesDelete(sid, k, scope, selfId) {
+    const r = S.all.find(x => x.id === sid);
+    if (!r || !r.repeat) return selfId ? run(async () => must(await sb.from('tasks').delete().eq('id', selfId))) : false;
+    const rp = r.repeat;
+    if (scope === 'following' && k <= r.date) scope = 'all';
+    if (scope === 'all') return run(async () => must(await sb.from('tasks').delete().eq('id', sid))); // its changed ones go with it
+    if (scope === 'one') return run(async () => must(await sb.from('tasks').update(toRow({ repeat: { ...rp, skip: [...new Set([...rp.skip, k])] } })).eq('id', sid)));
+    return run(async () => {
+      must(await sb.from('tasks').update(toRow({ repeat: { ...rp, until: addDays(k, -1), skip: rp.skip.filter(d => d < k) } })).eq('id', sid));
+      must(await sb.from('tasks').delete().eq('series_id', sid).gte('orig_day', k));
+    });
+  }
+
   // pull the sheet down by its top edge to dismiss
   let pull = null;
   sheet.addEventListener('touchstart', e => {
@@ -2056,9 +2257,17 @@ dialog::backdrop{background:transparent}
   });
   document.addEventListener('change', e => {
     const box = e.target.closest && e.target.closest('.mt-detail[data-mtg]');
-    if (!box || !['date', 'time', 'mins'].includes(e.target.dataset.mf)) return;
-    const id = box.dataset.mtg, w = readWhen(box);
+    if (!box || !['date', 'time', 'mins', 'repeat'].includes(e.target.dataset.mf)) return;
+    const id = box.dataset.mtg, w = readWhen(box), t0 = task(id);
+    const v = box.querySelector('[data-mf="repeat"]').value;
+    w.repeat = w.date && v ? { ...(t0 && t0.repeat ? t0.repeat : { until: null, skip: [] }), freq: v } : null;
     mtQueue(id, w, 0);
+    if (e.target.dataset.mf === 'date') {
+      // the repeat choices name the day, so rebuild them for the new one
+      const sel = box.querySelector('[data-mf="repeat"]');
+      sel.innerHTML = repeatChoices(w.date).map(([cv, cl]) => `<option value="${cv}"${(w.repeat ? w.repeat.freq : '') === cv ? ' selected' : ''}>${esc(cl)}</option>`).join('');
+      sel.disabled = !w.date;
+    }
     const t = task(id), note = $('#mtWhen'); if (t && note) note.innerHTML = whenNote(t);
   });
   document.addEventListener('keydown', e => {
@@ -2096,7 +2305,8 @@ dialog::backdrop{background:transparent}
     if (act === 'mtg-back') { mtFlush(); S.mtgId = null; render(); return true; }
     if (!t) return false;
     if (act === 'mtg-unsched') {
-      mtQueue(id, { date: null, time: null }, 0);
+      mtQueue(id, { date: null, time: null, repeat: null }, 0);
+      const rs = box.querySelector('[data-mf="repeat"]'); rs.value = ''; rs.disabled = true;
       for (const f of ['date', 'time']) box.querySelector(`[data-mf="${f}"]`).value = '';
       $('#mtWhen').innerHTML = whenNote(t);
     } else if (act === 'pt-done' || act === 'pt-del') {
@@ -2109,7 +2319,7 @@ dialog::backdrop{background:transparent}
         li.classList.toggle('done', done);
       }
     } else if (act === 'mtg-del') {
-      if (!b.classList.contains('armed')) { b.classList.add('armed'); b.setAttribute('aria-label', 'Tap again to delete'); toast('Tap the bin again to delete this meeting'); setTimeout(() => b.classList.remove('armed'), 4000); return true; }
+      if (!b.classList.contains('armed')) { b.classList.add('armed'); b.setAttribute('aria-label', 'Tap again to delete'); toast(t.repeat ? 'Tap the bin again to delete every time this meeting repeats' : 'Tap the bin again to delete this meeting'); setTimeout(() => b.classList.remove('armed'), 4000); return true; }
       mtPend = null; clearTimeout(mtT);
       const old = bodyOf(t);
       S.mtgId = null;
@@ -2310,7 +2520,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('contextmenu', e => { if (mk || mv) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
-  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !typingInMeeting()) render(); }, 0); }
+  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !scopeOpen && !typingInMeeting()) render(); }, 0); }
 
   // timeline: pick a task up and move it — hold it with a finger until it lifts, or press and drag with a mouse.
   // With a mouse, its top or bottom edge can also be dragged to change when it starts or ends. Everything snaps to 15 minutes.
@@ -2415,6 +2625,13 @@ dialog::backdrop{background:transparent}
     }
     renderLater = false;
     if (!patch) { render(); return; } // put it back
+    if (t.occ) {
+      m.blk.classList.remove('lifted', 'resizing');
+      const scope = await askScope('change', t.kind, true);
+      if (!scope) { render(); return; }
+      if (await applySeriesEdit(t.sid, t.date, patch, t.repeat.freq, scope)) toast(msg);
+      return;
+    }
     const before = { date: t.date, time: t.time, mins: t.mins };
     if (await save(store.update(m.id, patch))) toast(msg, () => save(store.update(m.id, before)));
   }
