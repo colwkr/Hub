@@ -6,14 +6,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Hub">
+<meta name="apple-mobile-web-app-title" content="POS">
 <meta name="theme-color" content="#E3E4E9">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<title>Hub</title>
+<title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="finance.css?v=20261008025847">
+<script src="finance.js?v=20261008025847"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -450,7 +452,7 @@ dialog::backdrop{background:var(--scrim)}
   <button type="button" class="r-btn" data-tab="tasks"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg></span>Tasks<span class="pip" id="railBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span>Calendar</button>
   <div class="r-rule"></div>
-  <a class="r-btn" href="https://claude.ai/artifact/QjtT6vbKnS7vGGt8CHcnMs" target="_blank" rel="noopener" title="Split Ledger opens separately for now"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg></span>Finance</a>
+  <button type="button" class="r-btn" data-tab="finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg></span>Finance<span class="pip" id="railFinBadge" hidden></span></button>
   <button type="button" class="r-btn dim" data-act="soon" data-what="Lights" aria-disabled="true"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span>Lights</button>
   <button type="button" class="r-btn dim" data-act="soon" data-what="Notes" aria-disabled="true"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span>Notes</button>
   <div class="r-foot">
@@ -463,16 +465,16 @@ dialog::backdrop{background:var(--scrim)}
 
 <div id="scrim"></div>
 <aside id="drawer" aria-label="Menu" inert>
-  <div class="d-head"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span>Hub</span></div>
+  <div class="d-head"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span>POS</span></div>
   <nav class="nav" aria-label="Sections">
     <button type="button" data-tab="home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg><span>Home</span></button>
     <button type="button" data-tab="tasks"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg><span>Tasks</span><span class="badge" id="taskBadge" hidden></span></button>
     <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span></button>
+    <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span></button>
   </nav>
   <div class="d-rule"></div>
   <div class="d-sec">
     <span class="lab">Coming next</span>
-    <a class="soon" href="https://claude.ai/artifact/QjtT6vbKnS7vGGt8CHcnMs" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg><span><b>Finance</b><small>Split Ledger, opens in Claude for now</small></span></a>
     <div class="soon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg><span><b>Lights</b><small>Needs the Bluetooth bridge</small></span></div>
     <div class="soon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg><span><b>Notes and spec sheets</b><small>Not started</small></span></div>
   </div>
@@ -530,7 +532,7 @@ dialog::backdrop{background:var(--scrim)}
     <div class="sheet-head" id="evHead"><div class="grab"></div><div class="bar"><h2 id="evTitle"></h2><button type="button" class="circle" id="evClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
     <p class="name" id="evWhen"></p>
     <p class="meta" id="evWhere" hidden></p>
-    <p class="where">From <b id="evCal">Google Calendar</b>. Change it there and the hub picks it up within a few minutes.</p>
+    <p class="where">From <b id="evCal">Google Calendar</b>. Change it there and POS picks it up within a few minutes.</p>
   </div>
 </dialog>
 
@@ -555,10 +557,10 @@ dialog::backdrop{background:var(--scrim)}
 
 <script>
 (() => {
-  // Supabase project for the hub. The publishable key is meant to be public; every table is locked to its owner.
+  // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008023242';
+  const VERSION = '20261008025847';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -635,7 +637,7 @@ dialog::backdrop{background:var(--scrim)}
   }
 
   /* ---------- state ---------- */
-  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar' };
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', finance: 'Finance' };
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
     tasks: [], weather: null,
@@ -644,7 +646,7 @@ dialog::backdrop{background:var(--scrim)}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null;
+  let sb = null, FIN = null;
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
   const fromRow = r => ({ id: r.id, title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0 });
   function toRow(o) {
@@ -721,7 +723,7 @@ dialog::backdrop{background:var(--scrim)}
     `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">${title}</h2>${extra}</div><div class="float list">${inner}</div></section>`;
   function notReady() {
     if (!S.booted) return '<p class="empty">Loading your tasks…</p>';
-    if (S.failed) return '<p class="empty">Tasks could not load. Check the connection; the hub tries again when you come back to it.</p>';
+    if (S.failed) return '<p class="empty">Tasks could not load. Check the connection; POS tries again when you come back to it.</p>';
     return '<p class="empty">Loading your tasks…</p>';
   }
 
@@ -760,7 +762,7 @@ dialog::backdrop{background:var(--scrim)}
   // Music: the Claude Spotify connection only works inside Claude; the hub gets its own Spotify connection next
   const NOTE = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6.5l10-2v11"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
   function vMusic(cls) {
-    return `<section class="float music ${cls}" aria-label="Music"><div class="mu-art">${NOTE}</div><div><span class="lab">Spotify</span><p class="name">Coming in the next setup step</p><p class="meta">With its own Spotify connection, the hub can show what's playing and play, pause, and skip.</p></div></section>`;
+    return `<section class="float music ${cls}" aria-label="Music"><div class="mu-art">${NOTE}</div><div><span class="lab">Spotify</span><p class="name">Coming in the next setup step</p><p class="meta">With its own Spotify connection, POS can show what's playing and play, pause, and skip.</p></div></section>`;
   }
 
   /* ---------- home ---------- */
@@ -986,12 +988,12 @@ dialog::backdrop{background:var(--scrim)}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar };
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, finance: () => (FIN ? FIN.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
       <div class="r-mark" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
-      <h1 class="login-title">Hub</h1>
+      <h1 class="login-title">Personal Operating System</h1>
       <p class="meta">${up ? 'Create your account. You only do this once; every device then signs in with it.' : 'Sign in to see your tasks and calendar.'}</p>
       <label class="f"><span class="f-h">Email</span><input id="l_email" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" required></label>
       <label class="f"><span class="f-h">Password</span><input id="l_pass" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" minlength="8" required></label>
@@ -1025,6 +1027,8 @@ dialog::backdrop{background:var(--scrim)}
     const od = S.tasks.filter(isOverdue).length;
     const todayLeft = S.tasks.filter(t => t.date === tk && !t.done).length;
     for (const badge of [$('#taskBadge'), $('#railBadge')]) { badge.hidden = !(od + todayLeft); badge.textContent = od + todayLeft; }
+    const nFin = FIN ? FIN.badge() : 0;
+    for (const badge of [$('#finBadge'), $('#railFinBadge')]) { badge.hidden = !nFin; badge.textContent = nFin; }
     const pip = $('#grabCount');
     pip.hidden = !od; pip.textContent = od;
     const foot = $('#drawerFoot');
@@ -1046,7 +1050,7 @@ dialog::backdrop{background:var(--scrim)}
     if (d !== lastDay && S.homeDay === lastDay) S.homeDay = d;
     lastMinute = m; lastDay = d;
     if (!S.user) return;
-    if (touching || $('#sheet').open) { pendingTick = true; updateClockOnly(); return; }
+    if (touching || $('#sheet').open || (FIN && FIN.sheetOpen())) { pendingTick = true; updateClockOnly(); return; }
     pendingTick = false;
     render();
   }
@@ -1366,7 +1370,7 @@ dialog::backdrop{background:var(--scrim)}
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
-  $('#fab').addEventListener('click', () => openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}));
+  $('#fab').addEventListener('click', () => { if (S.tab === 'finance') { if (FIN && S.canSave) FIN.add(); return; } openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}); });
 
   document.addEventListener('click', e => {
     const tabBtn = e.target.closest('[data-tab]');
@@ -1374,6 +1378,7 @@ dialog::backdrop{background:var(--scrim)}
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const act = b.dataset.act;
+    if (act.startsWith('fin-')) { if (FIN) FIN.act(act, b, e); return; }
     if (act === 'edit') openTask(b.dataset.id);
     else if (act === 'done') toggleDone(b.dataset.id);
     else if (act === 'slot') {
@@ -1421,8 +1426,9 @@ dialog::backdrop{background:var(--scrim)}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) startData();
+    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); }
     if (!u) {
+      if (FIN) FIN.stop();
       if (channel) { sb.removeChannel(channel); channel = null; }
       S.tasks = []; S.loaded = false; S.events = []; S.evWin = null; S.gcal = null; S.loginRedraw = true;
     }
@@ -1445,7 +1451,7 @@ dialog::backdrop{background:var(--scrim)}
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
       const { data, error } = await sb.functions.invoke('gcal', { body: { from, to, tz } });
       if (error) {
-        let msg = 'it did not load. The hub tries again in a few minutes.';
+        let msg = 'it did not load. POS tries again in a few minutes.';
         try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
         S.evErr = msg;
       } else {
@@ -1454,7 +1460,7 @@ dialog::backdrop{background:var(--scrim)}
         S.gcalName = data.calendar || 'Google Calendar';
         S.evWin = { from, to, at: Date.now() };
       }
-    } catch (e) { S.evErr = 'it did not load. The hub tries again in a few minutes.'; }
+    } catch (e) { S.evErr = 'it did not load. POS tries again in a few minutes.'; }
     evBusy = false;
     render();
   }
@@ -1560,7 +1566,7 @@ dialog::backdrop{background:var(--scrim)}
       if (!r.ok) return;
       const j = await r.json();
       const typing = document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName);
-      if (j.v && j.v !== VERSION && !$('#sheet').open && !setSheet.open && !typing) {
+      if (j.v && j.v !== VERSION && !$('#sheet').open && !setSheet.open && !(FIN && FIN.sheetOpen()) && !typing) {
         location.replace(location.pathname + '?v=' + encodeURIComponent(j.v) + location.hash);
       }
     } catch (e) {}
@@ -1571,7 +1577,7 @@ dialog::backdrop{background:var(--scrim)}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { reloadTasks(); loadEvents(false); }
+    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); }
   });
 
   async function boot() {
@@ -1586,9 +1592,10 @@ dialog::backdrop{background:var(--scrim)}
     loadWeather(false);
     checkVersion();
     if (!window.supabase) {
-      S.booted = true; S.loginNote = 'The hub could not reach its sign-in service. Check the connection and reopen it.'; S.loginRedraw = true; render(); return;
+      S.booted = true; S.loginNote = 'POS could not reach its sign-in service. Check the connection and reopen it.'; S.loginRedraw = true; render(); return;
     }
     sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
+    if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
     const { data } = await sb.auth.getSession();
     S.booted = true;
     setUser(data && data.session ? data.session.user : null);

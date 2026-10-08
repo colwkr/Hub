@@ -1,0 +1,109 @@
+/* POS Finance: the Split Ledger look, scoped under .fin (page) and #finSheet (its form sheet). */
+.fin{display:flex;flex-direction:column;gap:18px}
+.fin-tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--well);align-self:flex-start;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.fin-tabs::-webkit-scrollbar{display:none}
+.fin-tabs button{position:relative;border:0;background:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.fin-tabs button[aria-current="page"]{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
+.fin-tabs .badge{min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px}
+.fin-tabs button[aria-current="page"] .badge{background:var(--on-solid);color:var(--solid)}
+.fin-scroll{display:flex;flex-direction:column;gap:26px;min-width:0}
+.fin-page{display:flex;flex-direction:column;gap:26px;width:100%;max-width:640px}
+.fin-two{display:flex;flex-direction:column;gap:26px}
+@media (min-width:900px){
+  .fin-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+  .fin-two > div{display:flex;flex-direction:column;gap:26px;min-width:0}
+}
+@media (max-width:899px){ .fin-two > div{display:contents} }
+
+.fin .totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fin .totals > div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+
+.fin .fig.xl{font-size:54px;font-weight:200;letter-spacing:-.02em;white-space:normal;overflow-wrap:anywhere}
+.fin .fig.lg,#finSheet .fig.lg{font-size:28px}
+.fin .fig.md,#finSheet .fig.md{font-size:19px}
+.fin .stack{display:flex;flex-direction:column;gap:18px}
+.fin .dot,#finSheet .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;background:var(--ink)}
+
+/* charge waiting for approval */
+.fin .charge{padding:18px;display:flex;flex-direction:column;gap:14px}
+.fin .c-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.fin .c-top > div:first-child{min-width:0;display:flex;flex-direction:column;gap:2px}
+.fin .chips{display:flex;flex-wrap:wrap;gap:8px}
+.fin .chip{display:inline-flex;align-items:baseline;gap:7px;border:0;background:var(--panel-hi);border-radius:999px;padding:8px 14px;min-height:36px;max-width:100%;font-size:13px;font-weight:500;box-shadow:var(--lift-sm)}
+.fin .chip:active{transform:scale(.96)}
+.fin .chip span{font-size:11px;font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .chip.quiet{background:none;box-shadow:inset 0 0 0 1px var(--hair);color:var(--ink-2)}
+
+.fin .note{padding:16px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+.fin .note p{font-size:13px;min-width:0}
+.fin .note p b{font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.fin .note.bad p b{color:var(--bad)}
+
+/* account tile */
+.fin .acct{padding:18px;display:flex;flex-direction:column;gap:14px}
+.fin .a-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.fin .a-head > div:first-child{min-width:0;display:flex;flex-direction:column;gap:6px}
+.fin .chart{position:relative;height:60px;touch-action:pan-y}
+.fin .chart svg{display:block;width:100%;height:100%;overflow:visible}
+.fin .chart .line{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.fin .chart .end{position:absolute;right:-4px;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--ring)}
+.fin .chart .xh{position:absolute;top:0;bottom:0;width:1px;background:var(--ink-3);pointer-events:none}
+.fin .chart .tip{position:absolute;top:-4px;transform:translate(-50%,-100%);background:var(--solid);color:var(--on-solid);border-radius:999px;padding:4px 10px;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+.fin .axis{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;color:var(--ink-3);margin-top:-6px}
+
+/* savings */
+.fin .hero{display:flex;flex-direction:column;gap:18px}
+.fin .split{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:3px}
+.fin .seg{display:block;min-width:3px;height:100%;border-radius:4px;background:var(--ink)}
+.fin .seg.free{background:repeating-linear-gradient(135deg,var(--ink-3) 0 1.5px,transparent 1.5px 5px)}
+.fin .row{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.fin .cat{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px 10px;align-items:center}
+.fin .cat .track,.fin .cat .meta{grid-column:1/-1}
+.fin .track{height:3px;border-radius:2px;background:var(--hair);overflow:hidden}
+.fin .track span{display:block;height:100%;background:var(--ink)}
+.fin .add-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:14px 26px 14px 18px;font-size:13px;color:var(--ink-2);text-align:left}
+.fin .add-row svg.i{width:16px;height:16px}
+
+/* limits */
+.fin .l-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.fin .l-head > div:first-child{min-width:0;display:flex;flex-direction:column;gap:3px}
+.fin .limit.near .meter span{background:var(--warn)}
+.fin .limit.over .meter span{background:var(--bad)}
+.fin .pill.near{color:var(--warn)}
+.fin .pill.over{color:var(--bad)}
+.fin .pill.todo{background:var(--solid);color:var(--on-solid)}
+.fin .l-foot{display:flex;gap:2px 16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink-2)}
+.fin .mini{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-2)}
+.fin .mini div{display:flex;justify-content:space-between;gap:12px}
+.fin .mini div span:first-child{min-width:0;overflow-wrap:anywhere}
+
+/* activity */
+.fin .tx{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:13px 18px}
+.fin .tx .t-amt.in{color:var(--good)}
+.fin .tx .t-sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;grid-column:1/-1}
+
+/* the finance form sheet */
+#finForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
+#finSheet .f select{border:0;background:var(--panel-hi);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font-size:16px;box-shadow:inset 0 0 0 1px var(--hair)}
+#finSheet .f input.amount{font-size:22px;font-weight:300;font-variant-numeric:tabular-nums}
+#finSheet .f > .lab{color:var(--ink-2)}
+#finSheet .seg-ctl{display:grid;grid-template-columns:1fr 1fr;background:var(--well);border-radius:999px;padding:3px;gap:3px}
+#finSheet .seg-ctl label{display:block;position:relative}
+#finSheet .seg-ctl input{position:absolute;opacity:0;inset:0}
+#finSheet .seg-ctl span{display:block;text-align:center;padding:8px;font-size:13px;font-weight:500;color:var(--ink-2);border-radius:999px}
+#finSheet .seg-ctl input:checked + span{background:var(--solid);color:var(--on-solid)}
+#finSheet .seg-ctl input:focus-visible + span{outline:1.5px solid var(--ink);outline-offset:2px}
+#finSheet .alloc{display:grid;grid-template-columns:minmax(0,1fr) 104px auto;gap:8px;align-items:center}
+#finSheet .alloc .who{min-width:0;display:flex;flex-direction:column;gap:1px}
+#finSheet .alloc .who b{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;overflow-wrap:anywhere}
+#finSheet .alloc .who small{color:var(--ink-2);font-size:11px;font-variant-numeric:tabular-nums;padding-left:16px}
+#finSheet .alloc input{border:0;background:var(--panel-hi);border-radius:16px;padding:10px 12px;min-height:44px;width:100%;font-size:17px;font-weight:300;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 1px var(--hair)}
+#finSheet .leftline{display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;box-shadow:inset 0 1px 0 var(--hair)}
+
+/* tablet: the page stays put; Finance scrolls inside its own area */
+@media (min-width:760px) and (min-height:500px){
+  .fin{flex:1;min-height:0}
+  .fin-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
+  .fin-scroll::-webkit-scrollbar{display:none}
+}
+@media (prefers-reduced-motion:no-preference){ .fin .meter span,.fin .track span,.fin .seg{transition:width .25s ease} }
