@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008204405">
-<script src="finance.js?v=20261008204405"></script>
+<link rel="stylesheet" href="finance.css?v=20261008210548">
+<script src="finance.js?v=20261008210548"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -523,6 +523,8 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
   .wd b{width:30px;height:30px;font-size:16px}
   .calx-main > .cal{margin:0 -18px calc(-1 * env(safe-area-inset-bottom, 0px));border-radius:0;box-shadow:inset 0 1px 0 var(--glass-border)}
   .calx-main > .cal .cal-days{padding:8px 0 6px}
+  /* Day view: the strip above already says which day it is */
+  .calx-main > .cal.n1 .cal-days{display:none}
   /* room to scroll the last hours (and the last weeks) clear of the corner buttons */
   .calx-main > .cal .tl,.calx-main > .cal .yscroll{padding-bottom:calc(var(--corner) + 70px + env(safe-area-inset-bottom, 0px))}
   .calx-main > .cal.mon{padding-bottom:calc(var(--corner) + 62px + env(safe-area-inset-bottom, 0px))}
@@ -1106,13 +1108,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008204405"></script>
+<script src="appearance.js?v=20261008210548"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008204405';
+  const VERSION = '20261008210548';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1752,12 +1754,14 @@ dialog::backdrop{background:transparent}
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
-    const split = v === 'day', k0 = days[0];
+    // tablets and computers split Day into Calendar | Tasks; phones keep one column with everything in it
+    const wide = !!(window.matchMedia && matchMedia('(min-width:760px) and (min-height:500px)').matches);
+    const split = v === 'day' && wide, k0 = days[0];
     const openTasks = S.tasks.filter(t => t.date === k0 && !t.done).length;
     const heads = split
       ? `<div class="dh lane-h"><span>Calendar</span></div><div class="dh lane-h"><span>Tasks</span>${openTasks ? `<em>${openTasks}</em>` : ''}</div>`
       : days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
-    const lanes = split ? [[k0, 'cal'], [k0, 'tasks']] : days.map(k => [k, 'cal']);
+    const lanes = split ? [[k0, 'cal'], [k0, 'tasks']] : days.map(k => [k, v === 'day' ? undefined : 'cal']);
     const anyByDay = lanes.map(([k, lane]) => dayItems(k).filter(t => kindOf(t) === 'anytime' && inLane(t, lane)).sort(cmp));
     const allByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : S.events.filter(g => g.date === k && g.allDay));
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
@@ -1766,7 +1770,7 @@ dialog::backdrop{background:transparent}
     const cols = lanes.map(([k, lane]) => dayColumn(k, lane === 'tasks', lane)).join('');
     return wrap(`${head}${err}
       ${strip}
-      <section class="float cal${split ? ' split' : n === 7 ? ' n7' : ''}" style="--n:${split ? 2 : n}">
+      <section class="float cal${split ? ' split' : n === 7 ? ' n7' : n === 1 ? ' n1' : ''}" style="--n:${split ? 2 : n}">
         <div class="cal-days"><span></span>${heads}</div>
         ${anyRow}
         <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
