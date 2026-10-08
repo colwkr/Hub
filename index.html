@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Solid status bar on purpose: in black-translucent mode iOS 26+ lays a Liquid Glass blur over the top of the app. The bar takes theme-color, which always equals the app's top edge (--chrome). -->
 <meta name="apple-mobile-web-app-title" content="POS">
 <meta name="theme-color" content="#0B0C0E" id="themeColor">
 <link rel="manifest" href="manifest.webmanifest">
@@ -14,8 +14,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008033240">
-<script src="finance.js?v=20261008033240"></script>
+<link rel="stylesheet" href="finance.css?v=20261008033901">
+<script src="finance.js?v=20261008033901"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -25,7 +25,7 @@
 :root{
   color-scheme:dark;
   --bg-a:#1B1C20; --bg-b:#050506;
-  --chrome:#0B0C0E; /* the app's base color; the app draws under the status bar, so this only tints other browsers' title bars */
+  --chrome:#0B0C0E; /* the exact color of the app's top edge; the status bar is filled with it, so the two meet with no seam */
   --ink:#F2F2F4; --ink-2:rgba(242,242,244,.66); --ink-3:rgba(242,242,244,.42);
   --panel-hi:rgba(255,255,255,.07); --edge:rgba(255,255,255,.16); --hair:rgba(255,255,255,.085); --well:rgba(255,255,255,.055);
   --solid:#EDEDF0; --on-solid:#0B0C0E; --ring:#0B0C0E;
@@ -44,6 +44,7 @@
   --font:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
   --blur:blur(24px) saturate(140%);
   --h:52px; /* one hour on the timeline */
+  --corner:26px; /* corner buttons sit this far from both the side and the bottom edge */
   --wrap:1180px;
 }
 @media (min-width:760px){ :root{ --h:60px } }
@@ -62,7 +63,7 @@ dialog{background:var(--g-top),var(--g-bottom),var(--g-sheen),rgba(20,21,24,.94)
 [hidden]{display:none!important}
 html{background:var(--chrome);overscroll-behavior:none}
 body{margin:0;min-height:100vh;min-height:100dvh;background:transparent;color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior:none}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 70% at 50% -8%,var(--bg-a) 0%,#0D0E10 48%,var(--bg-b) 100%)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,var(--chrome) 0,var(--chrome) 8px,rgba(11,12,14,0) 150px),radial-gradient(120% 70% at 50% -8%,var(--bg-a) 0%,#0D0E10 48%,var(--bg-b) 100%)}
 h1,h2,p{margin:0;font-weight:400}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -70,7 +71,7 @@ a{color:inherit}
 :focus-visible{outline:1.5px solid var(--ink);outline-offset:2px}
 svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
 
-.app{max-width:var(--wrap);margin:0 auto;padding-inline:18px;padding-block:20px 96px;display:flex;flex-direction:column;gap:22px}
+.app{max-width:var(--wrap);margin:0 auto;padding-inline:18px;padding-top:20px;padding-bottom:max(20px,calc(var(--corner) + 68px - env(safe-area-inset-bottom, 0px)));display:flex;flex-direction:column;gap:22px}
 /* behind the menu or a sheet the page recedes, so no tinted layer ever reaches the status bar */
 .app{transform-origin:50% 35%;transition:transform .36s cubic-bezier(.2,.85,.25,1),filter .36s ease;
   transform:scale(calc(1 - .04 * max(var(--rp,0), var(--dp,0))));filter:brightness(calc(1 - .08 * max(var(--rp,0), var(--dp,0)))) saturate(calc(1 - .12 * max(var(--rp,0), var(--dp,0))))}
@@ -79,6 +80,7 @@ body.menu-open .app{pointer-events:none}
 @media (prefers-reduced-motion:reduce){ .app{transform:none;transition:filter .2s ease} }
 /* the page itself never scrolls or bounces, on any device */
 html,body{height:100%;overflow:hidden}
+html{touch-action:pan-x pan-y} /* panning only: no pinch or double-tap zoom */
 .app{height:100%}
 #view{flex:1;min-height:0;display:flex;flex-direction:column;gap:16px}
 body[data-auth="out"] #view{overflow-y:auto}
@@ -306,7 +308,7 @@ a.music{text-decoration:none;color:inherit}
 }
 
 /* the one add button: bottom-right, mirroring the menu arrow at bottom-left */
-#fab{position:fixed;z-index:5;right:max(18px,calc((100% - var(--wrap)) / 2 + 24px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
+#fab{position:fixed;z-index:5;right:max(var(--corner),calc((100% - var(--wrap)) / 2 + 24px));bottom:var(--corner);width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
   background:var(--solid);color:var(--on-solid);box-shadow:var(--lift)}
 #fab svg.i{width:24px;height:24px}
 #fab:active{transform:scale(.96)}
@@ -375,7 +377,7 @@ a.music{text-decoration:none;color:inherit}
 .examples{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:11.5px;color:var(--ink-3);padding-inline:4px}
 
 /* the only chrome: an arrow at the bottom-left. Drag it right (or anywhere along the bottom) to open the menu */
-#grab{position:fixed;z-index:5;left:max(18px,calc((100% - var(--wrap)) / 2 + 24px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
+#grab{position:fixed;z-index:5;left:max(var(--corner),calc((100% - var(--wrap)) / 2 + 24px));bottom:var(--corner);width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
   background:var(--panel-hi);color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge),var(--lift);touch-action:none}
 #grab svg.i{width:22px;height:22px}
 .pip{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px;box-shadow:0 0 0 2px var(--ring)}
@@ -517,7 +519,7 @@ dialog::backdrop{background:transparent}
 .sheet-foot .btn{min-height:44px}
 .sheet-foot .btn.solid{margin-left:auto;min-width:112px}
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(30px + env(safe-area-inset-bottom, 0px));background:var(--solid);color:var(--on-solid);border-radius:999px;padding:10px 18px;display:flex;gap:14px;align-items:center;font-size:12.5px;max-width:calc(100% - 176px);z-index:6;box-shadow:var(--lift)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--corner) + 8px);background:var(--solid);color:var(--on-solid);border-radius:999px;padding:10px 18px;display:flex;gap:14px;align-items:center;font-size:12.5px;max-width:calc(100% - 2 * (var(--corner) + 66px));z-index:6;box-shadow:var(--lift)}
 .toast span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .toast button{border:0;background:none;color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:0;flex:none}
 
@@ -666,7 +668,7 @@ dialog::backdrop{background:transparent}
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008033240';
+  const VERSION = '20261008033901';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1615,6 +1617,10 @@ dialog::backdrop{background:transparent}
   });
 
   /* ---------- start ---------- */
+  /* ---------- no zooming: iOS ignores the viewport setting, so its pinch gestures are blocked directly ---------- */
+  for (const t of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(t, e => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false, capture: true });
+
   /* ---------- tasks: load, and stay in sync with other devices ---------- */
   let channel = null, reloadT = null;
   async function reloadTasks() {
