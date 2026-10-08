@@ -7,15 +7,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="POS">
-<meta name="theme-color" content="#E3E4E9">
+<meta name="theme-color" content="#FAFAFC" id="themeColor">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008030110">
-<script src="finance.js?v=20261008030110"></script>
+<link rel="stylesheet" href="finance.css?v=20261008031418">
+<script src="finance.js?v=20261008031418"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -33,6 +33,7 @@
   --lift:0 26px 50px -26px rgba(40,44,62,.38),0 6px 16px -8px rgba(40,44,62,.14);
   --lift-sm:0 10px 22px -12px rgba(40,44,62,.4);
   --good:#0F6B3C; --warn:#7A4A00; --bad:#B3261E;
+  --live:#E39A2E; --live-edge:rgba(227,154,46,.7); --live-glow:rgba(227,154,46,.38); --live-soft:rgba(227,154,46,.2);
   --font:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
   --blur:blur(26px) saturate(150%);
   --h:52px; /* one hour on the timeline */
@@ -42,8 +43,8 @@
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-html{background:var(--bg-b);overscroll-behavior-x:none}
-body{margin:0;background:var(--bg-b);color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior-x:none}
+html{background:var(--bg-a);overscroll-behavior:none}
+body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg-b);color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,var(--bg-a) 0%,var(--bg-b) 100%)}
 h1,h2,p{margin:0;font-weight:400}
 button,input,select{font:inherit;color:inherit}
@@ -119,10 +120,36 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stro
 .clock{font-size:clamp(76px,17vw,136px);font-weight:200;letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;white-space:nowrap}
 .clock small{font-size:.2em;font-weight:300;letter-spacing:.06em;margin-left:.35em;color:var(--ink-2)}
 .hero .long{font-size:18px;font-weight:300;margin-top:10px}
-/* phones: no big clock on Home (the phone's own status bar already shows the time) */
-.clock{display:none}
+/* phones: Home is just the date, a small floating weather line, and what's next.
+   The clock, summary line, weather card, day calendar and music only appear on tablets and computers. */
+.clock,.hero .sum,.home > .g-wx,.home > .g-cal,.home > .g-music{display:none}
 .hero .long{margin-top:0}
-@media (min-width:760px) and (min-height:500px){ .clock{display:block} .hero .long{margin-top:10px} }
+body[data-view="home"] .top{display:none}
+.wxm{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.wxm-row{display:flex;flex-wrap:wrap;gap:0 4px;height:58px;overflow:hidden}
+.wxm-h{width:46px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.wxm-h small{font-size:10px;color:var(--ink-3);white-space:nowrap}
+.wxm-h svg.i{width:16px;height:16px;color:var(--ink-2)}
+.wxm-h b{font-size:15px;font-weight:400;font-variant-numeric:tabular-nums}
+.wxm-h.now small{color:var(--ink);font-weight:500}
+@media (min-width:760px) and (min-height:500px){
+  .clock,.hero .sum{display:block}
+  .home > .g-wx,.home > .g-cal,.home > .g-music{display:flex}
+  .hero .long{margin-top:10px}
+  .wxm{display:none}
+  .list > .trow.live{display:none}
+}
+
+/* a task happening right now glows, like a light that's on */
+.list > .trow.live{margin:6px;border-radius:20px;background:linear-gradient(180deg,rgba(255,251,243,.98),rgba(255,244,226,.92));box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
+.list > .trow.live + *{box-shadow:none}
+.trow.live .name{font-size:16px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 3px var(--live-soft);flex:none}
+.trow.live .meta{color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){
+  .list > .trow.live{animation:live-glow 2.8s ease-in-out infinite}
+  @keyframes live-glow{0%,100%{box-shadow:0 0 0 1px var(--live-edge),0 0 12px -2px var(--live-glow)}50%{box-shadow:0 0 0 1.5px var(--live-edge),0 0 26px 4px var(--live-glow)}}
+}
 .nownext{display:grid;grid-template-columns:1fr 1fr}
 .nownext > * + *{box-shadow:inset 1px 0 0 var(--hair)}
 .nn{display:flex;flex-direction:column;gap:6px;padding:18px;text-align:left;border:0;background:none;min-width:0}
@@ -564,7 +591,7 @@ dialog::backdrop{background:var(--scrim)}
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008030110';
+  const VERSION = '20261008031418';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -763,6 +790,21 @@ dialog::backdrop{background:var(--scrim)}
     </section>`;
   }
 
+  // phones: a small floating weather line under the date
+  function vWeatherMini() {
+    const w = S.weather;
+    if (!w || !w.current) return '';
+    const tk = todayKey();
+    const dayOf = k => (w.daily || []).find(d => d.date === k);
+    const isDayAt = iso => { const d = dayOf(iso.slice(0, 10)); if (!d) return true; const hm = iso.slice(11, 16); return hm >= d.sunrise && hm < d.sunset; };
+    const curHour = `${tk}T${pad(new Date().getHours())}:00`;
+    const ahead = (w.hourly || []).filter(h => h.t >= curHour).slice(1, 10);
+    const c = w.current;
+    const items = [`<span class="wxm-h now">${wxIcon(wx(c.code, c.isDay)[1])}<b>${Math.round(c.temp)}°</b><small>Now</small></span>`]
+      .concat(ahead.map(h => `<span class="wxm-h">${wxIcon(wx(h.code, isDayAt(h.t))[1])}<b>${Math.round(h.temp)}°</b><small>${esc(hourFmt.format(new Date(h.t)))}</small></span>`));
+    return `<div class="wxm" aria-label="Weather in ${esc(w.place || 'your area')}: now ${Math.round(c.temp)} degrees"><span class="lab">${esc(w.place || 'Weather')}</span><div class="wxm-row">${items.join('')}</div></div>`;
+  }
+
   // Music: the Claude Spotify connection only works inside Claude; the hub gets its own Spotify connection next
   const NOTE = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6.5l10-2v11"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
   function vMusic(cls) {
@@ -790,9 +832,13 @@ dialog::backdrop{background:var(--scrim)}
   // Next: only tasks that are on the calendar (a day and a time) and haven't started yet, soonest first
   function vNext(cls) {
     const tk = todayKey(), nm = nowMin();
+    const liveT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && t.date === tk && toMin(t.time) < nm && nm < toMin(t.time) + effMins(t)).map(t => ({ t, date: t.date, time: t.time, live: true }));
+    const liveG = S.events.filter(g => !g.allDay && g.start && g.date === tk && toMin(g.start) < nm && nm < toMin(g.start) + (g.mins || 30)).map(g => ({ g, date: g.date, time: g.start, live: true }));
     const upT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && (t.date > tk || (t.date === tk && toMin(t.time) >= nm))).map(t => ({ t, date: t.date, time: t.time }));
     const upG = S.events.filter(g => !g.allDay && g.start && (g.date > tk || (g.date === tk && toMin(g.start) >= nm))).map(g => ({ g, date: g.date, time: g.start }));
-    const up = [...upT, ...upG].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).slice(0, 20);
+    const byWhen = (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
+    const up = [...liveT, ...liveG].sort(byWhen).concat([...upT, ...upG].sort(byWhen)).slice(0, 20);
+    const firstUp = up.findIndex(x => !x.live);
     let inner;
     if (!S.loaded) inner = notReady();
     else if (!up.length) inner = '<p class="empty">Nothing scheduled. Give a task a day and a time, or add it to Google Calendar, and it lines up here.</p>';
@@ -802,15 +848,18 @@ dialog::backdrop{background:var(--scrim)}
         // rows show only the time; a quiet divider marks where tomorrow (or a later day) begins
         const div = x.date !== lastDay ? `<div class="day-div">${esc(dayLabel(x.date))}</div>` : '';
         lastDay = x.date;
+        const cls = x.live ? ' live' : i === firstUp ? ' first' : '';
         if (x.g) {
           const g = x.g, s0 = toMin(g.start);
-          return `${div}<div class="trow${i === 0 ? ' first' : ''}"><span class="cal-ic" aria-hidden="true">${ICON.cal}</span><button type="button" class="tmain" data-act="event" data-ev="${esc(g.id)}"><span class="name">${esc(g.title)}<span class="tag">Google</span></span><span class="meta"><span>${esc(fmtRange(s0, s0 + (g.mins || 30)))}</span></span></button></div>`;
+          if (x.live) return `${div}<div class="trow live"><span class="cal-ic" aria-hidden="true">${ICON.cal}</span><button type="button" class="tmain" data-act="event" data-ev="${esc(g.id)}"><span class="name">${esc(g.title)}<span class="tag">Google</span></span><span class="meta"><span class="live-dot" aria-hidden="true"></span><span>Now · ends ${esc(fmtTime(s0 + (g.mins || 30)))}</span></span></button></div>`;
+          return `${div}<div class="trow${cls}"><span class="cal-ic" aria-hidden="true">${ICON.cal}</span><button type="button" class="tmain" data-act="event" data-ev="${esc(g.id)}"><span class="name">${esc(g.title)}<span class="tag">Google</span></span><span class="meta"><span>${esc(fmtRange(s0, s0 + (g.mins || 30)))}</span></span></button></div>`;
         }
         const t = x.t, s0 = toMin(t.time);
-        const when = t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
-        return `${div}<div class="trow${i === 0 ? ' first' : ''}">
+        const when = x.live ? (t.mins ? `Now · ends ${fmtTime(s0 + t.mins)}` : `Now · started ${fmtTime(s0)}`)
+          : t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
+        return `${div}<div class="trow${cls}">
           <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="false" aria-label="Mark done: ${esc(t.title)}">${ICON.check}</button>
-          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span><span class="meta"><span>${esc(when)}</span></span></button>
+          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span><span class="meta">${x.live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}</span></span></button>
         </div>`;
       }).join('');
     }
@@ -825,7 +874,8 @@ dialog::backdrop{background:var(--scrim)}
       <section class="hero g-hero" aria-label="Clock">
         <p class="clock"><span data-clock>${esc(p.bare)}</span><small data-ampm>${esc(p.per)}</small></p>
         <p class="long" data-longdate>${esc(longFmt.format(new Date()))}</p>
-        <p class="meta">${esc(summary)}</p>
+        <p class="meta sum">${esc(summary)}</p>
+        ${vWeatherMini()}
       </section>
       ${vWeather('g-wx')}
       ${vNext('g-next')}
@@ -1244,8 +1294,16 @@ dialog::backdrop{background:var(--scrim)}
   railMQ.addEventListener && railMQ.addEventListener('change', () => { if (railMode() && drawerOpen) setDrawer(false); });
   let drawerOpen = false, drag = null, quietUntil = 0;
   function setP(p) { drawer.style.setProperty('--p', p); scrim.style.setProperty('--p', p); }
+  // the status bar strip takes this color: page top normally, dimmed while the menu or a sheet covers the page
+  const themeMeta = $('#themeColor');
+  function syncChrome() {
+    const dim = drawerOpen || !!document.querySelector('dialog[open]');
+    if (themeMeta) themeMeta.setAttribute('content', dim ? '#CACACD' : '#FAFAFC');
+  }
+  new MutationObserver(syncChrome).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
   function setDrawer(open) {
     drawerOpen = open;
+    setTimeout(syncChrome, 0);
     drawer.classList.remove('dragging'); scrim.classList.remove('dragging-scrim');
     setP(open ? 1 : 0);
     drawer.inert = !open;
