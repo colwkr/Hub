@@ -14,8 +14,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008031418">
-<script src="finance.js?v=20261008031418"></script>
+<link rel="stylesheet" href="finance.css?v=20261008032153">
+<script src="finance.js?v=20261008032153"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -53,7 +53,23 @@ a{color:inherit}
 :focus-visible{outline:1.5px solid var(--ink);outline-offset:2px}
 svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
 
-.app{max-width:var(--wrap);margin:0 auto;padding-inline:18px;padding-block:20px 116px;display:flex;flex-direction:column;gap:26px}
+.app{max-width:var(--wrap);margin:0 auto;padding-inline:18px;padding-block:20px 96px;display:flex;flex-direction:column;gap:22px}
+/* the page itself never scrolls or bounces, on any device */
+html,body{height:100%;overflow:hidden}
+.app{height:100%}
+#view{flex:1;min-height:0;display:flex;flex-direction:column;gap:16px}
+body[data-auth="out"] #view{overflow-y:auto}
+/* phones: each view's long part scrolls in place, reaching to the screen edges so shadows aren't clipped */
+.home{flex:1;min-height:0}
+.home > .g-next{flex:1;min-height:0;display:flex;flex-direction:column}
+.home > .g-next .list{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.cols{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.cal{flex:1;min-height:0;display:flex;flex-direction:column}
+.cal .tl{height:auto;flex:1 1 0;min-height:0}
+.cal-hint{display:none}
+.fin{flex:1;min-height:0}
+.fin-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.home > .g-next .list::-webkit-scrollbar{display:none}
 @media (min-width:760px){ .app{padding-inline:32px;padding-block:28px 116px} }
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink-2);min-height:36px}
 .top .right{display:flex;align-items:center;gap:14px}
@@ -140,8 +156,30 @@ body[data-view="home"] .top{display:none}
   .list > .trow.live{display:none}
 }
 
+/* Next rows: swipe the arrow to the right to complete (a confirmation always follows) */
+.trow.sw{position:relative;display:block;padding:0;overflow:hidden}
+.sw-track{position:absolute;inset:0;display:flex;align-items:center;gap:10px;padding-left:20px;background:var(--solid);color:var(--on-solid);font-size:13px;font-weight:500;opacity:0;transition:opacity .15s}
+.sw-track svg.i{width:16px;height:16px;stroke-width:2}
+.trow.sw.dragging .sw-track,.trow.sw.armed .sw-track{opacity:1}
+.sw-face{position:relative;display:flex;align-items:center;gap:4px;padding:6px 14px 6px 6px;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .28s cubic-bezier(.2,.85,.25,1)}
+.trow.sw.dragging .sw-face{transition:none}
+.trow.sw.dragging .sw-face,.trow.sw.armed .sw-face{background:var(--panel-hi);box-shadow:var(--lift-sm)}
+.trow.live.dragging .sw-face,.trow.live.armed .sw-face{background:linear-gradient(180deg,#FFFBF3,#FFF4E2)}
+.sw-handle{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center;color:var(--ink-2);border:0;background:none;padding:0}
+.sw-handle::before{content:"";position:absolute;inset:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.sw-handle svg.i{position:relative;width:15px;height:15px;stroke-width:1.8}
+.trow.live .sw-handle{color:var(--ink)}
+.trow.live .sw-handle::before{box-shadow:inset 0 0 0 1.5px var(--live-edge);background:rgba(255,255,255,.7)}
+@media (prefers-reduced-motion:no-preference){
+  .trow.live .sw-handle svg.i{animation:sw-nudge 2.6s ease-in-out infinite}
+  @keyframes sw-nudge{0%,62%,100%{transform:translateX(0)}74%{transform:translateX(4px)}86%{transform:translateX(0)}}
+}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#cfSheet .cf-body{display:flex;flex-direction:column;gap:14px;padding:22px 20px 20px}
+#cfSheet .cf-task{padding:14px 16px;border-radius:18px;background:var(--well);display:flex;flex-direction:column;gap:3px}
+
 /* a task happening right now glows, like a light that's on */
-.list > .trow.live{margin:6px;border-radius:20px;background:linear-gradient(180deg,rgba(255,251,243,.98),rgba(255,244,226,.92));box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
+.list > .trow.live{display:block;margin:6px;border-radius:20px;background:linear-gradient(180deg,rgba(255,251,243,.98),rgba(255,244,226,.92));box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
 .list > .trow.live + *{box-shadow:none}
 .trow.live .name{font-size:16px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 3px var(--live-soft);flex:none}
@@ -324,12 +362,15 @@ a.music{text-decoration:none;color:inherit}
 }
 
 /* menu */
-#scrim{position:fixed;inset:0;z-index:7;background:var(--scrim);opacity:var(--p,0);pointer-events:none;transition:opacity .3s ease}
+#scrim{position:fixed;inset:0;z-index:7;background:var(--scrim);opacity:var(--p,0);pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s}
+#scrim.on,#scrim.dragging-scrim{visibility:visible;transition:opacity .3s ease,visibility 0s}
 #scrim.on{pointer-events:auto}
 #drawer{position:fixed;z-index:8;left:max(10px,calc((100% - var(--wrap)) / 2 + 16px));top:calc(10px + env(safe-area-inset-top, 0px));bottom:calc(10px + env(safe-area-inset-bottom, 0px));width:min(300px,calc(100% - 66px));border-radius:30px;
   background:var(--sheet);box-shadow:inset 0 1px 0 var(--edge),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   padding:22px 12px 18px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;
-  transform:translateX(calc((var(--p,0) - 1) * 112%));transition:transform .36s cubic-bezier(.2,.85,.25,1)}
+  transform:translateX(calc((var(--p,0) - 1) * 112%));visibility:hidden;transition:transform .36s cubic-bezier(.2,.85,.25,1),visibility 0s linear .36s}
+#drawer.open{visibility:visible;transition:transform .36s cubic-bezier(.2,.85,.25,1),visibility 0s}
+#drawer.dragging{visibility:visible}
 #drawer.dragging,.dragging-scrim{transition:none !important}
 .d-head{display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;font-weight:500}
 .nav{display:flex;flex-direction:column;gap:4px}
@@ -393,12 +434,14 @@ a.soon:hover{background:var(--well)}
   .cal{flex:1;min-height:0;display:flex;flex-direction:column}
   .cal .tl,.daycal .tl{height:auto;flex:1 1 0;min-height:0}
   .cal-hint{display:none}
-  .cols{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr)}
+  .cols{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr);overflow:visible;margin:0;padding:0}
+  .fin-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col::-webkit-scrollbar{display:none}
   #fab{right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px))}
 
   /* upright iPad: calendar down the left, everything else stacked on the right, weather last above the + button */
+  .home > .g-next{display:flex}
   .home{flex:1;min-height:0;display:grid;gap:16px 18px;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
     grid-template-rows:auto minmax(0,1fr) auto auto;
@@ -421,7 +464,7 @@ a.soon:hover{background:var(--well)}
 }
 
 /* sheet: floats clear of every edge, flick it down to dismiss */
-dialog{border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:32px;margin:auto auto calc(10px + env(safe-area-inset-bottom, 0px));width:calc(100% - 20px);max-width:480px;max-height:calc(100% - 40px);
+dialog{overflow-y:auto;overscroll-behavior:contain;border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:32px;margin:auto auto calc(10px + env(safe-area-inset-bottom, 0px));width:calc(100% - 20px);max-width:480px;max-height:calc(100% - 40px);
   box-shadow:inset 0 1px 0 var(--edge),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);transition:transform .25s ease}
 @media (min-width:760px){ dialog{margin:auto} }
 dialog::backdrop{background:var(--scrim)}
@@ -584,6 +627,14 @@ dialog::backdrop{background:var(--scrim)}
   </form>
 </dialog>
 
+<dialog id="cfSheet" aria-labelledby="cfTitle">
+  <div class="cf-body">
+    <h2 class="name" id="cfTitle" style="font-size:17px">Complete this task?</h2>
+    <div class="cf-task"><span class="name" id="cfTask"></span><span class="meta" id="cfWhen"></span></div>
+    <div class="sheet-foot"><button type="button" class="btn" id="cfNo">Not yet</button><button type="button" class="btn solid" id="cfYes">Complete</button></div>
+  </div>
+</dialog>
+
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>
@@ -591,7 +642,7 @@ dialog::backdrop{background:var(--scrim)}
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008031418';
+  const VERSION = '20261008032153';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -639,6 +690,7 @@ dialog::backdrop{background:var(--scrim)}
 
   const ICON = {
     cal: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg>',
+    arrow: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5"/></svg>',
     check: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6 7.4-8"/></svg>',
     chev: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
     left: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>',
@@ -857,9 +909,13 @@ dialog::backdrop{background:var(--scrim)}
         const t = x.t, s0 = toMin(t.time);
         const when = x.live ? (t.mins ? `Now · ends ${fmtTime(s0 + t.mins)}` : `Now · started ${fmtTime(s0)}`)
           : t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
-        return `${div}<div class="trow${cls}">
-          <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="false" aria-label="Mark done: ${esc(t.title)}">${ICON.check}</button>
+        return `${div}<div class="trow sw${cls}" data-swipe="${esc(t.id)}">
+          <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
+          <div class="sw-face">
+          <button type="button" class="sw-handle" data-act="swipe-hint" aria-hidden="true" tabindex="-1">${ICON.arrow}</button>
           <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span><span class="meta">${x.live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}</span></span></button>
+          <button type="button" class="sr-only" data-act="done" data-id="${esc(t.id)}">Complete ${esc(t.title)}</button>
+          </div>
         </div>`;
       }).join('');
     }
@@ -1104,7 +1160,7 @@ dialog::backdrop{background:var(--scrim)}
     if (d !== lastDay && S.homeDay === lastDay) S.homeDay = d;
     lastMinute = m; lastDay = d;
     if (!S.user) return;
-    if (touching || $('#sheet').open || (FIN && FIN.sheetOpen())) { pendingTick = true; updateClockOnly(); return; }
+    if (touching || $('#sheet').open || $('#cfSheet').open || (FIN && FIN.sheetOpen())) { pendingTick = true; updateClockOnly(); return; }
     pendingTick = false;
     render();
   }
@@ -1152,6 +1208,33 @@ dialog::backdrop{background:var(--scrim)}
     S.busy.delete(id);
     if (ok && done) toast(`Done: ${t.title}`, () => save(store.update(id, { done: false, doneAt: null })));
   }
+  // completing always asks first; a swiped row waits, pushed aside, until the answer
+  const cfSheet = $('#cfSheet');
+  let cfId = null, cfRow = null;
+  function askDone(id, row) {
+    const t = task(id);
+    if (!t) return;
+    if (t.done) { toggleDone(id); return; }
+    cfId = id; cfRow = row || null;
+    $('#cfTask').textContent = t.title;
+    $('#cfWhen').textContent = meta(t, true);
+    setDrawer(false);
+    cfSheet.showModal();
+  }
+  function settleRow() {
+    if (!cfRow) return;
+    cfRow.classList.remove('armed');
+    const face = cfRow.querySelector('.sw-face'); if (face) face.style.transform = '';
+    cfRow = null;
+  }
+  $('#cfNo').addEventListener('click', () => cfSheet.close());
+  $('#cfYes').addEventListener('click', async () => {
+    const id = cfId; cfId = null;
+    cfSheet.close();
+    if (id) await toggleDone(id);
+  });
+  cfSheet.addEventListener('close', () => { cfId = null; settleRow(); });
+
   async function clearExamples() {
     const ex = S.tasks.filter(t => t.example);
     for (const t of ex) { if (!(await save(store.remove(t.id)))) break; }
@@ -1245,7 +1328,7 @@ dialog::backdrop{background:var(--scrim)}
     if (!F || !F.id) return;
     const id = F.id;
     closeForm();
-    await toggleDone(id);
+    askDone(id);
   });
   $('#sheetDel').addEventListener('click', async e => {
     if (!F || !F.id) return;
@@ -1294,16 +1377,10 @@ dialog::backdrop{background:var(--scrim)}
   railMQ.addEventListener && railMQ.addEventListener('change', () => { if (railMode() && drawerOpen) setDrawer(false); });
   let drawerOpen = false, drag = null, quietUntil = 0;
   function setP(p) { drawer.style.setProperty('--p', p); scrim.style.setProperty('--p', p); }
-  // the status bar strip takes this color: page top normally, dimmed while the menu or a sheet covers the page
-  const themeMeta = $('#themeColor');
-  function syncChrome() {
-    const dim = drawerOpen || !!document.querySelector('dialog[open]');
-    if (themeMeta) themeMeta.setAttribute('content', dim ? '#CACACD' : '#FAFAFC');
-  }
-  new MutationObserver(syncChrome).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
+  // when closed, the menu and its dimmed layer are fully hidden, so iOS never tints the status bar from them
   function setDrawer(open) {
     drawerOpen = open;
-    setTimeout(syncChrome, 0);
+    drawer.classList.toggle('open', open);
     drawer.classList.remove('dragging'); scrim.classList.remove('dragging-scrim');
     setP(open ? 1 : 0);
     drawer.inert = !open;
@@ -1312,7 +1389,7 @@ dialog::backdrop{background:var(--scrim)}
     menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
   }
   // a drag that ends on a button must not also count as a tap on it
-  document.addEventListener('click', e => { if (Date.now() < quietUntil) { e.stopPropagation(); e.preventDefault(); } }, true);
+  document.addEventListener('click', e => { if (Date.now() < quietUntil && !(e.target.closest && e.target.closest('dialog'))) { e.stopPropagation(); e.preventDefault(); } }, true);
   menuBtn.addEventListener('click', () => setDrawer(!drawerOpen));
   scrim.addEventListener('click', () => setDrawer(false));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) setDrawer(false); });
@@ -1321,6 +1398,7 @@ dialog::backdrop{background:var(--scrim)}
     if (e.touches.length !== 1 || sheet.open || railMode()) return;
     const t = e.touches[0];
     if (!drawerOpen && !e.target.closest('#grab') && t.clientY < window.innerHeight - 120) return;
+    if (!drawerOpen && e.target.closest('.trow.sw')) return;
     drag = { x0: t.clientX, y0: t.clientY, p0: drawerOpen ? 1 : 0, p: drawerOpen ? 1 : 0, on: false, lastX: t.clientX, lastT: e.timeStamp, v: 0 };
   }, { passive: true });
   document.addEventListener('touchmove', e => {
@@ -1345,6 +1423,42 @@ dialog::backdrop{background:var(--scrim)}
   };
   document.addEventListener('touchend', endDrag);
   document.addEventListener('touchcancel', endDrag);
+
+  // Next rows: drag the row to the right; past 40% of its width it asks to complete
+  let sd = null;
+  document.addEventListener('pointerdown', e => {
+    const face = e.target.closest && e.target.closest('.trow.sw .sw-face');
+    if (!face || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const row = face.parentElement;
+    sd = { row, face, id: row.dataset.swipe, x0: e.clientX, y0: e.clientY, dx: 0, on: false, pid: e.pointerId, w: row.offsetWidth || 300 };
+  });
+  document.addEventListener('pointermove', e => {
+    if (!sd || e.pointerId !== sd.pid) return;
+    const dx = e.clientX - sd.x0, dy = e.clientY - sd.y0;
+    if (!sd.on) {
+      if (Math.abs(dx) < 10) { if (Math.abs(dy) > 10) sd = null; return; }
+      if (dx < 0 || Math.abs(dy) > Math.abs(dx)) { sd = null; return; }
+      sd.on = true;
+      sd.row.classList.add('dragging');
+      try { sd.face.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    sd.dx = clamp(dx, 0, sd.w * 0.85);
+    sd.face.style.transform = `translateX(${sd.dx}px)`;
+  });
+  const endSwipe = e => {
+    if (!sd || (e && e.pointerId !== sd.pid)) return;
+    const s = sd; sd = null;
+    if (!s.on) return;
+    quietUntil = Date.now() + 400;
+    s.row.classList.remove('dragging');
+    if (s.dx > s.w * 0.4) {
+      s.row.classList.add('armed');
+      s.face.style.transform = `translateX(${Math.round(s.w * 0.62)}px)`;
+      askDone(s.id, s.row);
+    } else s.face.style.transform = '';
+  };
+  document.addEventListener('pointerup', endSwipe);
+  document.addEventListener('pointercancel', endSwipe);
 
   // calendar: swipe sideways across the days to move earlier or later
   let sw = null;
@@ -1442,7 +1556,8 @@ dialog::backdrop{background:var(--scrim)}
     const act = b.dataset.act;
     if (act.startsWith('fin-')) { if (FIN) FIN.act(act, b, e); return; }
     if (act === 'edit') openTask(b.dataset.id);
-    else if (act === 'done') toggleDone(b.dataset.id);
+    else if (act === 'done') askDone(b.dataset.id);
+    else if (act === 'swipe-hint') toast('Swipe the arrow to the right to complete');
     else if (act === 'slot') {
       const r = b.getBoundingClientRect();
       const m = clamp(Math.floor((e.clientY - r.top) / (r.height / 24) * 4) * 15, 0, 1425);
