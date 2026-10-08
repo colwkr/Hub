@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008215554">
-<script src="finance.js?v=20261008215554"></script>
+<link rel="stylesheet" href="finance.css?v=20261008220048">
+<script src="finance.js?v=20261008220048"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -842,7 +842,8 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .r-dot.ok{background:var(--good)}
 .r-dot.off{background:var(--bad)}
 @media (min-width:760px) and (min-height:500px){
-  #rail{position:fixed;z-index:5;left:12px;top:calc(12px + env(safe-area-inset-top, 0px));bottom:calc(12px + env(safe-area-inset-bottom, 0px));width:var(--rail);
+  :root{padding-bottom:0}
+  #rail{position:fixed;z-index:5;left:12px;top:calc(12px + env(safe-area-inset-top, 0px));bottom:12px;width:var(--rail);
     display:flex;flex-direction:column;align-items:center;padding:20px 0 16px;border-radius:30px;overflow-y:auto;scrollbar-width:none;
     background:var(--g-lines),var(--g-sheen),var(--sheet);box-shadow:inset 0 0 0 1px var(--glass-border),var(--glow),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
   #rail::-webkit-scrollbar{display:none}
@@ -864,7 +865,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .fin-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col::-webkit-scrollbar{display:none}
-  #fab{right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px))}
+  #fab{right:12px;bottom:12px}
 
   /* upright iPad: calendar down the left; on the right the clock, what's next (filling the middle), then the weather */
   .home > .g-next{display:flex}
@@ -1159,13 +1160,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008215554"></script>
+<script src="appearance.js?v=20261008220048"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008215554';
+  const VERSION = '20261008220048';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -3079,13 +3080,17 @@ dialog::backdrop{background:transparent}
     $('#fsPath').setAttribute('d', on ? 'M9 4.5V9H4.5M15 4.5V9h4.5M19.5 15H15v4.5M4.5 15H9v4.5' : 'M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15');
   }
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-  fsBtn.hidden = !fsOK || standalone;
+  fsBtn.hidden = !fsOK;
+  const goFull = async () => { const r = root.requestFullscreen ? root.requestFullscreen() : root.webkitRequestFullscreen(); if (r && r.then) await r; };
+  const wantFull = () => { try { return localStorage.getItem('pos.full') === '1'; } catch (e) { return false; } };
   fsBtn.addEventListener('click', async () => {
     try {
-      if (inFs()) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-      else { const r = root.requestFullscreen ? root.requestFullscreen() : root.webkitRequestFullscreen(); if (r && r.then) await r; }
+      if (inFs()) { try { localStorage.removeItem('pos.full'); } catch (e) {} await (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+      else { try { localStorage.setItem('pos.full', '1'); } catch (e) {} await goFull(); }
     } catch (e) { toast('Full screen is blocked here. Open the page in Safari instead.'); }
   });
+  // chose full screen before? The first touch after opening the app goes back into it (browsers need a tap to allow it)
+  if (fsOK) for (const t of ['touchend', 'mousedown']) document.addEventListener(t, () => { if (wantFull() && !inFs()) goFull().catch(() => {}); }, { passive: true });
   document.addEventListener('fullscreenchange', updFs);
   document.addEventListener('webkitfullscreenchange', updFs);
   // full screen on a computer: the pointer hides after 30 seconds without moving, and comes back as soon as it moves
