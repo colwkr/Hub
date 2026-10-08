@@ -107,3 +107,4 @@
   .fin-scroll::-webkit-scrollbar{display:none}
 }
 @media (prefers-reduced-motion:no-preference){ .fin .meter span,.fin .track span,.fin .seg{transition:width .25s ease} }
+@media (max-width:520px){ .fin-tabs{gap:2px} .fin-tabs button{padding:8px 11px;font-size:12.5px;gap:6px} }

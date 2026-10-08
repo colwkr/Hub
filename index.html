@@ -5,48 +5,64 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="POS">
-<meta name="theme-color" content="#E3E4E9" id="themeColor">
+<meta name="theme-color" content="#0B0C0E" id="themeColor">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008032558">
-<script src="finance.js?v=20261008032558"></script>
+<link rel="stylesheet" href="finance.css?v=20261008033240">
+<script src="finance.js?v=20261008033240"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 
-/* Layout: the Split Ledger look, scaled up for an iPad on the wall. Near-white panels float over a faint grey gradient.
-   One column on a phone, two on a tablet; the calendar shows 1, 3 or 7 days depending on screen width.
-   One arrow at the bottom-left is the only chrome: drag it right and the menu slides in. Single light look by design. */
+/* Layout and look: dark glass. Near-black ground lit softly from the top; panels are smoked glass with a thin
+   light border, glowing highlight lines along their top and bottom edges, and a diagonal sheen. Single dark look by design. */
 :root{
-  color-scheme:light;
-  --bg-a:#FAFAFC; --bg-b:#E3E4E9;
-  --chrome:#E3E4E9; /* the color along the top edge of the app; the status bar strip is set from it */
-  --ink:#131416; --ink-2:rgba(19,20,22,.66); --ink-3:rgba(19,20,22,.5);
-  --panel:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.66)); --panel-hi:#FFFFFF; --edge:rgba(255,255,255,.95); --hair:rgba(19,20,22,.08); --well:rgba(19,20,22,.045);
-  --solid:#131416; --on-solid:#F6F6F8; --ring:#F8F8FA;
-  --sheet:rgba(247,247,250,.93); --scrim:rgba(30,32,40,.22);
-  --lift:0 26px 50px -26px rgba(40,44,62,.38),0 6px 16px -8px rgba(40,44,62,.14);
-  --lift-sm:0 10px 22px -12px rgba(40,44,62,.4);
-  --good:#0F6B3C; --warn:#7A4A00; --bad:#B3261E;
-  --live:#E39A2E; --live-edge:rgba(227,154,46,.7); --live-glow:rgba(227,154,46,.38); --live-soft:rgba(227,154,46,.2);
+  color-scheme:dark;
+  --bg-a:#1B1C20; --bg-b:#050506;
+  --chrome:#0B0C0E; /* the app's base color; the app draws under the status bar, so this only tints other browsers' title bars */
+  --ink:#F2F2F4; --ink-2:rgba(242,242,244,.66); --ink-3:rgba(242,242,244,.42);
+  --panel-hi:rgba(255,255,255,.07); --edge:rgba(255,255,255,.16); --hair:rgba(255,255,255,.085); --well:rgba(255,255,255,.055);
+  --solid:#EDEDF0; --on-solid:#0B0C0E; --ring:#0B0C0E;
+  --sheet:rgba(17,18,21,.86); --scrim:transparent;
+  --lift:0 24px 50px -22px rgba(0,0,0,.9),0 6px 16px -8px rgba(0,0,0,.6);
+  --lift-sm:0 10px 22px -12px rgba(0,0,0,.95);
+  --good:#62D394; --warn:#F2B85E; --bad:#FF6B61;
+  --live:#F0A23A; --live-edge:rgba(240,162,58,.75); --live-glow:rgba(240,162,58,.42); --live-soft:rgba(240,162,58,.22);
+  /* glass: highlight lines on the top and bottom edges, a diagonal sheen, and the smoked fill */
+  --g-top:linear-gradient(90deg,rgba(255,255,255,0) 6%,rgba(255,255,255,.62) 50%,rgba(255,255,255,0) 94%) top / 100% 1px no-repeat;
+  --g-bottom:linear-gradient(90deg,rgba(255,255,255,0) 12%,rgba(255,255,255,.34) 50%,rgba(255,255,255,0) 88%) bottom / 100% 1px no-repeat;
+  --g-sheen:linear-gradient(118deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.03) 46%,rgba(255,255,255,0) 46.2%,rgba(255,255,255,0) 100%);
+  --g-fill:linear-gradient(180deg,rgba(42,43,48,.62),rgba(16,17,20,.66));
+  --g-border:rgba(255,255,255,.15);
+  --g-glow:0 0 26px -12px rgba(255,255,255,.22);
   --font:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
-  --blur:blur(26px) saturate(150%);
+  --blur:blur(24px) saturate(140%);
   --h:52px; /* one hour on the timeline */
   --wrap:1180px;
 }
 @media (min-width:760px){ :root{ --h:60px } }
+/* glass for the floating chrome: menu, rail, sheets, toast, round buttons */
+#drawer,#rail{background:var(--g-top),var(--g-bottom),var(--g-sheen),var(--sheet) !important;box-shadow:inset 0 0 0 1px var(--g-border),var(--g-glow),var(--lift) !important}
+dialog{background:var(--g-top),var(--g-bottom),var(--g-sheen),rgba(20,21,24,.94) !important;box-shadow:inset 0 0 0 1px var(--g-border),var(--g-glow),var(--lift) !important}
+.toast{background:var(--g-top),rgba(26,27,31,.96) !important;color:var(--ink) !important;box-shadow:inset 0 0 0 1px var(--g-border),var(--lift) !important}
+#grab{background:var(--g-top),var(--g-sheen),rgba(30,31,35,.86) !important;box-shadow:inset 0 0 0 1px var(--g-border),var(--g-glow),var(--lift) !important;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+#fab{box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 28px -4px rgba(255,255,255,.35),var(--lift) !important}
+.f input,#finSheet .f select,#finSheet .alloc input{background:rgba(255,255,255,.05) !important;color:var(--ink);box-shadow:inset 0 0 0 1px var(--g-border) !important}
+.f input::placeholder{color:var(--ink-3)}
+.chip{color:var(--ink)}
+.nav button[aria-current="page"],.r-btn[aria-current="page"] .ic,.r-btn[aria-checked="true"] .ic,.fin-tabs button[aria-current="page"]{box-shadow:0 0 22px -6px rgba(255,255,255,.4) !important}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html{background:var(--chrome);overscroll-behavior:none}
-body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg-b);color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior:none}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,var(--bg-a) 0%,var(--bg-b) 100%)}
+body{margin:0;min-height:100vh;min-height:100dvh;background:transparent;color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 70% at 50% -8%,var(--bg-a) 0%,#0D0E10 48%,var(--bg-b) 100%)}
 h1,h2,p{margin:0;font-weight:400}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -95,13 +111,13 @@ body[data-auth="out"] #view{overflow-y:auto}
 .empty{color:var(--ink-2);font-size:13px;max-width:40ch}
 
 /* a floating object */
-.float{background:var(--panel);border-radius:28px;box-shadow:inset 0 0 0 1px var(--edge),var(--lift)}
+.float{background:var(--g-top),var(--g-bottom),var(--g-sheen),var(--g-fill);border-radius:28px;box-shadow:inset 0 0 0 1px var(--g-border),var(--g-glow),var(--lift)}
 
-.btn{border:0;background:var(--panel-hi);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:500;line-height:1.2;min-height:38px;box-shadow:inset 0 1px 0 var(--edge),var(--lift-sm);white-space:nowrap}
+.btn{border:0;color:var(--ink);background:var(--g-top),var(--panel-hi);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:500;line-height:1.2;min-height:38px;box-shadow:inset 0 1px 0 var(--edge),var(--lift-sm);white-space:nowrap}
 .btn.solid{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
 .btn.danger{color:var(--bad)}
-.btn.danger.armed{background:var(--bad);color:var(--on-solid)}
-.circle{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:0;background:var(--panel-hi);color:var(--ink-2);flex:none;box-shadow:var(--lift-sm)}
+.btn.danger.armed{background:var(--bad);color:#120706}
+.circle{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:0;background:var(--panel-hi);color:var(--ink-2);flex:none;box-shadow:inset 0 0 0 1px var(--g-border),var(--lift-sm)}
 .circle svg.i{width:16px;height:16px}
 .circle.lg{width:44px;height:44px;color:var(--ink)}
 .circle.lg svg.i{width:20px;height:20px}
@@ -140,7 +156,7 @@ body[data-auth="out"] #view{overflow-y:auto}
 
 /* home */
 .hero{display:flex;flex-direction:column;gap:6px;padding:8px 4px 4px}
-.clock{font-size:clamp(76px,17vw,136px);font-weight:200;letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock{text-shadow:0 0 34px rgba(255,255,255,.14);font-size:clamp(76px,17vw,136px);font-weight:200;letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;white-space:nowrap}
 .clock small{font-size:.2em;font-weight:300;letter-spacing:.06em;margin-left:.35em;color:var(--ink-2)}
 .hero .long{font-size:18px;font-weight:300;margin-top:10px}
 /* phones: Home is just the date, a small floating weather line, and what's next.
@@ -171,12 +187,12 @@ body[data-view="home"] .top{display:none}
 .sw-face{position:relative;display:flex;align-items:center;gap:4px;padding:6px 14px 6px 6px;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .28s cubic-bezier(.2,.85,.25,1)}
 .trow.sw.dragging .sw-face{transition:none}
 .trow.sw.dragging .sw-face,.trow.sw.armed .sw-face{background:var(--panel-hi);box-shadow:var(--lift-sm)}
-.trow.live.dragging .sw-face,.trow.live.armed .sw-face{background:linear-gradient(180deg,#FFFBF3,#FFF4E2)}
+.trow.live.dragging .sw-face,.trow.live.armed .sw-face{background:linear-gradient(180deg,#2B2216,#1D1710)}
 .sw-handle{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center;color:var(--ink-2);border:0;background:none;padding:0}
 .sw-handle::before{content:"";position:absolute;inset:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
 .sw-handle svg.i{position:relative;width:15px;height:15px;stroke-width:1.8}
 .trow.live .sw-handle{color:var(--ink)}
-.trow.live .sw-handle::before{box-shadow:inset 0 0 0 1.5px var(--live-edge);background:rgba(255,255,255,.7)}
+.trow.live .sw-handle::before{box-shadow:inset 0 0 0 1.5px var(--live-edge);background:rgba(240,162,58,.12)}
 @media (prefers-reduced-motion:no-preference){
   .trow.live .sw-handle svg.i{animation:sw-nudge 2.6s ease-in-out infinite}
   @keyframes sw-nudge{0%,62%,100%{transform:translateX(0)}74%{transform:translateX(4px)}86%{transform:translateX(0)}}
@@ -186,7 +202,7 @@ body[data-view="home"] .top{display:none}
 #cfSheet .cf-task{padding:14px 16px;border-radius:18px;background:var(--well);display:flex;flex-direction:column;gap:3px}
 
 /* a task happening right now glows, like a light that's on */
-.list > .trow.live{display:block;margin:6px;border-radius:20px;background:linear-gradient(180deg,rgba(255,251,243,.98),rgba(255,244,226,.92));box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
+.list > .trow.live{display:block;margin:6px;border-radius:20px;background:linear-gradient(180deg,rgba(240,162,58,.18),rgba(240,162,58,.06));box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
 .list > .trow.live + *{box-shadow:none}
 .trow.live .name{font-size:16px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 3px var(--live-soft);flex:none}
@@ -327,7 +343,7 @@ a.music{text-decoration:none;color:inherit}
 .tl-hours span{position:absolute;right:8px;transform:translateY(-50%);font-size:10px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
 .tl-col{position:relative;height:calc(var(--h) * 24);box-shadow:inset 1px 0 0 var(--hair);
   background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));cursor:copy}
-.tl-col.today{background-color:rgba(255,255,255,.35)}
+.tl-col.today{background-color:rgba(255,255,255,.025)}
 .blk{position:absolute;z-index:1;border:0;padding:5px 8px;border-radius:12px;text-align:left;overflow:hidden;cursor:pointer;
   background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);display:flex;flex-direction:column;gap:1px;min-width:0}
 .blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -335,7 +351,7 @@ a.music{text-decoration:none;color:inherit}
 .blk.tight{flex-direction:row;align-items:center;gap:6px;padding-block:0}
 .blk.now{background:var(--solid);color:var(--on-solid)}
 .blk.now small{color:var(--on-solid);opacity:.7}
-.blk.noest{background:rgba(255,255,255,.55);box-shadow:none;outline:1px dashed var(--ink-3);outline-offset:-1px}
+.blk.noest{background:rgba(255,255,255,.03);box-shadow:none;outline:1px dashed var(--ink-3);outline-offset:-1px}
 .blk.done{opacity:.45}
 .blk.done b{text-decoration:line-through}
 /* blocks with a done circle (Home's day calendar) */
@@ -394,8 +410,8 @@ a.music{text-decoration:none;color:inherit}
 .soon small{font-size:11px}
 a.soon:hover{background:var(--well)}
 .switch{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:8px 12px;border-radius:18px;text-align:left;font-size:13.5px}
-.switch .sw{position:relative;width:42px;height:26px;border-radius:13px;background:var(--hair);flex:none;transition:background .2s}
-.switch .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--panel-hi);box-shadow:var(--lift-sm);transition:transform .2s}
+.switch .sw{position:relative;width:42px;height:26px;border-radius:13px;background:rgba(255,255,255,.12);flex:none;transition:background .2s}
+.switch .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#C9CACF;box-shadow:var(--lift-sm);transition:transform .2s}
 .switch[aria-checked="true"] .sw{background:var(--solid)}
 .switch[aria-checked="true"] .sw::after{transform:translateX(16px)}
 .d-note{padding:0 12px;font-size:11px;color:var(--ink-3)}
@@ -489,6 +505,7 @@ dialog::backdrop{background:transparent}
 .xin{display:flex;align-items:center;gap:8px;flex:1 1 180px;min-width:0}
 .xin input{flex:1}
 .xin .unit{font-size:13px;color:var(--ink-2)}
+.f > .xin{flex:none} /* in a stacked field the input row keeps its own height */
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:0;background:var(--panel-hi);border-radius:999px;padding:8px 13px;min-height:36px;font-size:13px;font-weight:500;box-shadow:var(--lift-sm)}
 .chip[aria-pressed="true"]{background:var(--solid);color:var(--on-solid)}
@@ -649,7 +666,7 @@ dialog::backdrop{background:transparent}
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008032558';
+  const VERSION = '20261008033240';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
