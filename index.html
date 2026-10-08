@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008211049">
-<script src="finance.js?v=20261008211049"></script>
+<link rel="stylesheet" href="finance.css?v=20261008211934">
+<script src="finance.js?v=20261008211934"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -603,7 +603,15 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 /* Day view: Calendar on the left, Tasks on the right */
 .dh.lane-h{gap:8px;align-items:center}
 .dh.lane-h em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px;letter-spacing:0}
-.cal.split .tl-col[data-lane="tasks"]{box-shadow:inset 1px 0 0 var(--hair),inset 2px 0 0 var(--hair)}
+.cal.split2{flex-direction:row}
+.cal.split2 .sp{flex:1 1 0;min-width:0;min-height:0;display:flex;flex-direction:column}
+.cal.split2 .sp-tasks{box-shadow:inset 1px 0 0 var(--hair),inset 2px 0 0 var(--hair)}
+.cal.split2 .sp .tl{flex:1 1 0;min-height:0;height:auto}
+/* the magnified Tasks timeline: quarter-hour labels and lines */
+.tl-zoom .tl-hours span.q{font-size:9px;color:var(--ink-3);opacity:.75}
+.tl-zoom .tl-col{background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h)),repeating-linear-gradient(to bottom,var(--well) 0 1px,transparent 1px calc(var(--h) / 4))}
+/* on the Calendar: which hours the Tasks side is showing */
+.lens{position:absolute;left:0;right:0;z-index:0;pointer-events:none;background:var(--well);box-shadow:inset 3px 0 0 var(--ink-3)}
 /* the days sliding away when you step to the next ones */
 .slide-old{position:absolute!important;inset:0;margin:0!important;padding:0!important;background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important;pointer-events:none;z-index:4;flex:none!important}
 .slide-old .dc-head,.slide-old .mhead{visibility:hidden}
@@ -1120,13 +1128,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008211049"></script>
+<script src="appearance.js?v=20261008211934"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008211049';
+  const VERSION = '20261008211934';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1668,22 +1676,24 @@ dialog::backdrop{background:transparent}
     flush();
     return ev;
   }
-  function hoursCol() {
+  function hoursCol(fine) {
     let h = '';
     for (let i = 1; i < 24; i++) h += `<span style="top:calc(var(--h) * ${i})">${esc(hourFmt.format(new Date(2000, 0, 1, i)))}</span>`;
+    if (fine) for (let q = 1; q < 96; q++) if (q % 4) h += `<span class="q" style="top:calc(var(--h) * ${(q / 4).toFixed(2)})">:${pad((q % 4) * 15)}</span>`;
     return `<div class="tl-hours">${h}</div>`;
   }
   const chk = (t, cls) => `<button type="button" class="${cls}" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>`;
   const inLane = (t, lane) => (lane === 'cal' ? t.kind !== 'task' : lane === 'tasks' ? t.kind === 'task' : true);
   function dayColumn(k, withCheck, lane) {
     const tk = todayKey(), nm = nowMin();
+    const minLen = lane === 'tasks' ? 5 : 25, tightLen = lane === 'tasks' ? 12 : 45; // the Tasks timeline is magnified
     const items = layout([
       ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane)).map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) }))),
     ]);
     const blocks = items.map(x => {
       const len = x.e - x.s;
-      const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), 25) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+      const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       if (x.g) {
         const when = fmtRange(x.s, x.s + (x.g.mins || 30));
         return `<button type="button" class="blk evt${len < 45 ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
@@ -1696,9 +1706,9 @@ dialog::backdrop{background:transparent}
         return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${len < 45 ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
       }
       const live = k === tk && !t.done && x.s <= nm && nm < x.e;
-      const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', len < 45 ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
+      const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', len < tightLen ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
       const when = t.mins ? fmtRange(x.s, x.e) : `${fmtTime(x.s)} · no estimate`;
-      const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), 25) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+      const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       const inner = `<b>${esc(t.title)}</b><small>${esc(when)}</small>`;
       const grip = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>`;
@@ -1781,6 +1791,25 @@ dialog::backdrop{background:transparent}
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
       ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
+    if (split) {
+      // Calendar on the left at the normal scale; Tasks on the right magnified to a few hours, scrolling in step
+      const anyFor = i => anyByDay[i].length || allByDay[i].length
+        ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
+      return wrap(`${head}${err}
+      ${strip}
+      <section class="float cal split2">
+        <div class="sp sp-cal" style="--n:1">
+          <div class="cal-days"><span></span><div class="dh lane-h"><span>Calendar</span></div></div>
+          ${anyFor(0)}
+          <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${dayColumn(k0, false, 'cal')}</div></div>
+        </div>
+        <div class="sp sp-tasks" style="--n:1">
+          <div class="cal-days"><span></span><div class="dh lane-h"><span>Tasks</span>${openTasks ? `<em>${openTasks}</em>` : ''}</div></div>
+          ${anyFor(1)}
+          <div class="tl tl-zoom" id="tlTasks"><div class="tl-grid">${hoursCol(true)}${dayColumn(k0, true, 'tasks')}</div></div>
+        </div>
+      </section>`);
+    }
     const cols = lanes.map(([k, lane]) => dayColumn(k, lane === 'tasks', lane)).join('');
     return wrap(`${head}${err}
       ${strip}
@@ -1852,7 +1881,7 @@ dialog::backdrop{background:transparent}
     const sel = S.tab === 'home' ? '#view .daycal' : '#view .cal';
     const old = document.querySelector(sel);
     const snap = old && dir && !reduceMotion() && old.animate ? old.cloneNode(true) : null;
-    const tl0 = old && old.querySelector('.tl, .yscroll'), st = tl0 ? tl0.scrollTop : 0;
+    const sts = old ? [...old.querySelectorAll('.tl, .yscroll')].map(e => e.scrollTop) : [];
     fn();
     const neu = document.querySelector(sel);
     if (!snap || !neu || neu === old) return;
@@ -1861,7 +1890,7 @@ dialog::backdrop{background:transparent}
     snap.setAttribute('aria-hidden', 'true');
     snap.inert = true;
     neu.appendChild(snap);
-    const tl1 = snap.querySelector('.tl, .yscroll'); if (tl1) tl1.scrollTop = st;
+    snap.querySelectorAll('.tl, .yscroll').forEach((e, i) => { e.scrollTop = sts[i] || 0; });
     const W = neu.clientWidth, opts = { duration: 340, easing: 'cubic-bezier(.22,.8,.24,1)' };
     for (const c of neu.children) {
       if (c === snap || c.classList.contains('dc-head') || c.classList.contains('mhead')) continue;
@@ -1907,6 +1936,33 @@ dialog::backdrop{background:transparent}
       <button type="button" class="link" data-act="auth-mode">${up ? 'I already have an account' : 'Create an account'}</button>
     </form></div>`;
   }
+  // The split Day view: the Tasks timeline shows a few hours at a time (3 unless you've zoomed it) and follows the
+  // Calendar's scroll proportionally, so the whole day is reachable on both. A shaded band on the Calendar shows
+  // which hours the Tasks side is looking at. Scrolling either side moves the other.
+  const taskHours = () => { try { const v = Number(localStorage.getItem('pos.taskHours')); if (v >= 1 && v <= 8) return v; } catch (e) {} return 3; };
+  function wireTaskLens() {
+    const L = document.getElementById('tl'), R = document.getElementById('tlTasks');
+    if (!L || !R) return;
+    R.style.setProperty('--h', (R.clientHeight / taskHours()).toFixed(2) + 'px');
+    const col = L.querySelector('.tl-col');
+    let lens = col.querySelector('.lens');
+    if (!lens) { lens = document.createElement('div'); lens.className = 'lens'; lens.setAttribute('aria-hidden', 'true'); col.appendChild(lens); }
+    const span = el => Math.max(1, el.scrollHeight - el.clientHeight);
+    const drawLens = () => {
+      const hR = parseFloat(R.style.getPropertyValue('--h')) || 1;
+      lens.style.top = `calc(var(--h) * ${(R.scrollTop / hR).toFixed(4)})`;
+      lens.style.height = `calc(var(--h) * ${(R.clientHeight / hR).toFixed(4)})`;
+    };
+    const follow = (from, to) => { const v = from.scrollTop / span(from) * span(to); to._sync = Math.round(v); to.scrollTop = v; drawLens(); };
+    const onScroll = (me, other) => () => {
+      if (me._sync != null && Math.abs(me.scrollTop - me._sync) <= 1) { me._sync = null; drawLens(); return; }
+      me._sync = null;
+      follow(me, other);
+    };
+    L.addEventListener('scroll', onScroll(L, R), { passive: true });
+    R.addEventListener('scroll', onScroll(R, L), { passive: true });
+    follow(L, R);
+  }
   function render() {
     if (mk || mv || scopeOpen || typingInMeeting()) { renderLater = true; return; }
     renderLater = false;
@@ -1929,6 +1985,7 @@ dialog::backdrop{background:transparent}
       if (S.aim[el.id] != null) { el.scrollTop = S.aim[el.id]; delete S.aim[el.id]; }
       else if (keep[el.id] != null) el.scrollTop = keep[el.id];
     }
+    wireTaskLens();
     const tk = todayKey();
     const od = S.tasks.filter(isOverdue).length;
     const todayLeft = S.tasks.filter(t => t.date === tk && !t.done).length;
@@ -2581,9 +2638,9 @@ dialog::backdrop{background:transparent}
 
   // timeline: press a time and drag to another to block out a new task, in 15-minute steps.
   // A mouse starts drawing as soon as it moves; a finger holds still for a moment first, so a normal swipe still scrolls.
-  const SNAP = 15;
-  const slotAt = (col, y) => { const r = col.getBoundingClientRect(); return clamp(Math.floor((y - r.top) / r.height * 1440 / SNAP) * SNAP, 0, 1440 - SNAP); };
-  function markRange() { const c = slotAt(mk.col, mk.y); return { lo: Math.min(mk.a, c), hi: Math.max(mk.a, c) + SNAP }; }
+  const stepOf = col => (col && col.closest('.tl-zoom') ? 5 : 15); // the magnified Tasks timeline works in 5-minute steps
+  const slotAt = (col, y) => { const st = stepOf(col), r = col.getBoundingClientRect(); return clamp(Math.floor((y - r.top) / r.height * 1440 / st) * st, 0, 1440 - st); };
+  function markRange() { const st = stepOf(mk.col), c = slotAt(mk.col, mk.y); return { lo: Math.min(mk.a, c), hi: Math.max(mk.a, c) + st }; }
   function drawMark() {
     const { lo, hi } = markRange();
     if (lo === mk.lo && hi === mk.hi) return;
@@ -2657,6 +2714,15 @@ dialog::backdrop{background:transparent}
   // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
   let zoomSaveT = null;
   function zoomTo(h, tl, fy) {
+    if (tl && tl.classList.contains('tl-zoom')) {
+      const h0 = parseFloat(tl.style.getPropertyValue('--h')) || 200, hrs = clamp(tl.clientHeight / h, 1, 8), h1 = tl.clientHeight / hrs;
+      if (Math.abs(h1 - h0) < 0.05) return;
+      const r = tl.getBoundingClientRect(), y = clamp(fy - r.top, 0, r.height), at = (tl.scrollTop + y) / h0;
+      tl.style.setProperty('--h', h1.toFixed(2) + 'px');
+      tl.scrollTop = at * h1 - y;
+      try { localStorage.setItem('pos.taskHours', hrs.toFixed(2)); } catch (e) {}
+      return;
+    }
     const h0 = hourPx();
     h = clamp(h, H_MIN, H_MAX);
     if (!tl || Math.abs(h - h0) < 0.05) return;
@@ -2676,7 +2742,7 @@ dialog::backdrop{background:transparent}
     if (mk) endMark(false);
     if (mv) endMove(false);
     sw = null; drag = null;
-    pz = { tl, d0: Math.max(24, span(a, b)), h0: hourPx() };
+    pz = { tl, d0: Math.max(24, span(a, b)), h0: tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx() };
   }, { passive: true, capture: true });
   document.addEventListener('touchmove', e => {
     if (!pz || e.touches.length !== 2) return;
@@ -2695,7 +2761,7 @@ dialog::backdrop{background:transparent}
     const tl = e.target.closest && e.target.closest('.tl');
     if (!tl) return;
     e.preventDefault();
-    mz = { tl, y0: e.clientY, fy: e.clientY, h0: hourPx(), pid: e.pointerId };
+    mz = { tl, y0: e.clientY, fy: e.clientY, h0: tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx(), pid: e.pointerId };
     try { tl.setPointerCapture(e.pointerId); } catch (err) {}
     document.body.classList.add('zooming');
   });
@@ -2709,7 +2775,7 @@ dialog::backdrop{background:transparent}
     const tl = e.target.closest && e.target.closest('.tl');
     if (!tl) return;
     e.preventDefault();
-    zoomTo(hourPx() * Math.exp(-e.deltaY * 0.01), tl, e.clientY);
+    zoomTo((tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx()) * Math.exp(-e.deltaY * 0.01), tl, e.clientY);
   }, { passive: false });
   // Safari on a Mac reports trackpad pinches as gestures (iPhone and iPad use the touch path above)
   let gz = null;
@@ -2782,7 +2848,8 @@ dialog::backdrop{background:transparent}
       let col = m.cols[0];
       for (const c of m.cols) { const r = c.getBoundingClientRect(); if (m.x >= r.left) col = c; }
       m.nd = col.dataset.day;
-      m.ns = clamp(snap15(minAt(col, m.y) - m.grab), 0, 1440 - 15);
+      const st = stepOf(col);
+      m.ns = clamp(Math.round((minAt(col, m.y) - m.grab) / st) * st, 0, 1440 - st);
       if (m.blk.parentElement !== col) col.appendChild(m.blk);
       if (m.marker) {
         m.blk.style.top = `calc(var(--h) * ${(m.ns / 60).toFixed(4)})`;
@@ -2793,12 +2860,12 @@ dialog::backdrop{background:transparent}
       m.blk.style.top = topAt(m.ns);
       if (small) small.textContent = t.mins || t.kind !== 'task' ? fmtRange(m.ns, m.ns + effMins(t)) : `${fmtTime(m.ns)} · no estimate`;
     } else {
-      const at = snap15(minAt(m.col, m.y));
-      if (m.mode === 'top') { m.ns = clamp(at, 0, m.e0 - 15); m.nlen = m.e0 - m.ns; }
-      else { m.ns = m.s0; m.nlen = clamp(at, m.s0 + 15, 1440) - m.s0; }
+      const st = stepOf(m.col), zoomed = st === 5, at = Math.round(minAt(m.col, m.y) / st) * st;
+      if (m.mode === 'top') { m.ns = clamp(at, 0, m.e0 - st); m.nlen = m.e0 - m.ns; }
+      else { m.ns = m.s0; m.nlen = clamp(at, m.s0 + st, 1440) - m.s0; }
       m.blk.style.top = topAt(m.ns);
-      m.blk.style.height = hgt(m.nlen);
-      m.blk.classList.toggle('tight', m.nlen < 45);
+      m.blk.style.height = `calc(var(--h) * ${(Math.max(m.nlen, zoomed ? 5 : 25) / 60).toFixed(4)} - 2px)`;
+      m.blk.classList.toggle('tight', m.nlen < (zoomed ? 12 : 45));
       m.blk.classList.remove('noest');
       if (small) small.textContent = `${fmtRange(m.ns, m.ns + m.nlen)} · ${fmtDur(m.nlen)}`;
     }
@@ -2962,8 +3029,8 @@ dialog::backdrop{background:transparent}
     else if (act === 'swipe-hint') toast('Swipe the arrow to the right to complete');
     else if (act === 'slot') {
       const r = b.getBoundingClientRect();
-      const m = clamp(Math.floor((e.clientY - r.top) / (r.height / 24) * 4) * 15, 0, 1425);
-      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: 30 }, b.dataset.lane === 'tasks' ? 'task' : null);
+      const st = stepOf(b), m = clamp(Math.floor((e.clientY - r.top) / r.height * 1440 / st) * st, 0, 1440 - st);
+      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: st === 5 ? 10 : 30 }, b.dataset.lane === 'tasks' ? 'task' : null);
     }
     else if (act === 'hd-prev') shiftHome(-1);
     else if (act === 'hd-next') shiftHome(1);
