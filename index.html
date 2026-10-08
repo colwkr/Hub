@@ -7,15 +7,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="POS">
-<meta name="theme-color" content="#FAFAFC" id="themeColor">
+<meta name="theme-color" content="#E3E4E9" id="themeColor">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008032153">
-<script src="finance.js?v=20261008032153"></script>
+<link rel="stylesheet" href="finance.css?v=20261008032558">
+<script src="finance.js?v=20261008032558"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -26,6 +26,7 @@
 :root{
   color-scheme:light;
   --bg-a:#FAFAFC; --bg-b:#E3E4E9;
+  --chrome:#E3E4E9; /* the color along the top edge of the app; the status bar strip is set from it */
   --ink:#131416; --ink-2:rgba(19,20,22,.66); --ink-3:rgba(19,20,22,.5);
   --panel:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.66)); --panel-hi:#FFFFFF; --edge:rgba(255,255,255,.95); --hair:rgba(19,20,22,.08); --well:rgba(19,20,22,.045);
   --solid:#131416; --on-solid:#F6F6F8; --ring:#F8F8FA;
@@ -43,7 +44,7 @@
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-html{background:var(--bg-a);overscroll-behavior:none}
+html{background:var(--chrome);overscroll-behavior:none}
 body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg-b);color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,var(--bg-a) 0%,var(--bg-b) 100%)}
 h1,h2,p{margin:0;font-weight:400}
@@ -54,6 +55,12 @@ a{color:inherit}
 svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
 
 .app{max-width:var(--wrap);margin:0 auto;padding-inline:18px;padding-block:20px 96px;display:flex;flex-direction:column;gap:22px}
+/* behind the menu or a sheet the page recedes, so no tinted layer ever reaches the status bar */
+.app{transform-origin:50% 35%;transition:transform .36s cubic-bezier(.2,.85,.25,1),filter .36s ease;
+  transform:scale(calc(1 - .04 * max(var(--rp,0), var(--dp,0))));filter:brightness(calc(1 - .08 * max(var(--rp,0), var(--dp,0)))) saturate(calc(1 - .12 * max(var(--rp,0), var(--dp,0))))}
+body.menu-drag .app{transition:none}
+body.menu-open .app{pointer-events:none}
+@media (prefers-reduced-motion:reduce){ .app{transform:none;transition:filter .2s ease} }
 /* the page itself never scrolls or bounces, on any device */
 html,body{height:100%;overflow:hidden}
 .app{height:100%}
@@ -362,7 +369,7 @@ a.music{text-decoration:none;color:inherit}
 }
 
 /* menu */
-#scrim{position:fixed;inset:0;z-index:7;background:var(--scrim);opacity:var(--p,0);pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s}
+#scrim{position:fixed;inset:0;z-index:7;background:transparent;opacity:var(--p,0);pointer-events:none;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s}
 #scrim.on,#scrim.dragging-scrim{visibility:visible;transition:opacity .3s ease,visibility 0s}
 #scrim.on{pointer-events:auto}
 #drawer{position:fixed;z-index:8;left:max(10px,calc((100% - var(--wrap)) / 2 + 16px));top:calc(10px + env(safe-area-inset-top, 0px));bottom:calc(10px + env(safe-area-inset-bottom, 0px));width:min(300px,calc(100% - 66px));border-radius:30px;
@@ -467,7 +474,7 @@ a.soon:hover{background:var(--well)}
 dialog{overflow-y:auto;overscroll-behavior:contain;border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:32px;margin:auto auto calc(10px + env(safe-area-inset-bottom, 0px));width:calc(100% - 20px);max-width:480px;max-height:calc(100% - 40px);
   box-shadow:inset 0 1px 0 var(--edge),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);transition:transform .25s ease}
 @media (min-width:760px){ dialog{margin:auto} }
-dialog::backdrop{background:var(--scrim)}
+dialog::backdrop{background:transparent}
 #sheetForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
 .grab{width:36px;height:4px;border-radius:2px;background:var(--ink-3);margin:0 auto 10px;opacity:.6}
 .sheet-head{display:flex;flex-direction:column;touch-action:none}
@@ -642,7 +649,7 @@ dialog::backdrop{background:var(--scrim)}
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008032153';
+  const VERSION = '20261008032558';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1376,11 +1383,20 @@ dialog::backdrop{background:var(--scrim)}
   const railMode = () => railMQ.matches;
   railMQ.addEventListener && railMQ.addEventListener('change', () => { if (railMode() && drawerOpen) setDrawer(false); });
   let drawerOpen = false, drag = null, quietUntil = 0;
-  function setP(p) { drawer.style.setProperty('--p', p); scrim.style.setProperty('--p', p); }
+  function setP(p) { drawer.style.setProperty('--p', p); scrim.style.setProperty('--p', p); document.body.style.setProperty('--rp', p); }
+  // the status bar strip always takes the app's own top-edge color (from the --chrome token), never a fixed guess
+  const themeMeta = $('#themeColor');
+  const syncChrome = () => { const c = getComputedStyle(document.documentElement).getPropertyValue('--chrome').trim(); if (themeMeta && c && themeMeta.content !== c) themeMeta.content = c; };
+  syncChrome();
+  // any open sheet (task, finance, confirm, settings, event) makes the page recede the same way
+  const syncSheets = () => document.body.style.setProperty('--dp', document.querySelector('dialog[open]') ? 1 : 0);
+  new MutationObserver(syncSheets).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });
   // when closed, the menu and its dimmed layer are fully hidden, so iOS never tints the status bar from them
   function setDrawer(open) {
     drawerOpen = open;
     drawer.classList.toggle('open', open);
+    document.body.classList.toggle('menu-open', open);
+    document.body.classList.remove('menu-drag');
     drawer.classList.remove('dragging'); scrim.classList.remove('dragging-scrim');
     setP(open ? 1 : 0);
     drawer.inert = !open;
@@ -1409,6 +1425,7 @@ dialog::backdrop{background:var(--scrim)}
       if (Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
       drag.on = true;
       drawer.classList.add('dragging'); scrim.classList.add('dragging-scrim');
+      document.body.classList.add('menu-drag');
     }
     e.preventDefault();
     drag.v = (t.clientX - drag.lastX) / Math.max(1, e.timeStamp - drag.lastT);
