@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008214416">
-<script src="finance.js?v=20261008214416"></script>
+<link rel="stylesheet" href="finance.css?v=20261008215554">
+<script src="finance.js?v=20261008215554"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -616,6 +616,19 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .dh.lane-h em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px;letter-spacing:0}
 .cal-split{flex:1;min-height:0;display:flex;gap:10px}
 .cal-split > .cal{flex:1 1 0;min-width:0;min-height:0}
+.cal-split > .sp-cal{flex:7 1 0}
+.cal-split > .sp-tasks{flex:3 1 0}
+.tq-head{grid-template-columns:1fr}
+.tq{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:6px 8px 16px;display:flex;flex-direction:column;gap:4px}
+.tq::-webkit-scrollbar{display:none}
+.tq-list > .day-div:first-child{padding-top:8px}
+.tq-list > .trow.live{display:flex;margin:6px 0}
+.tq-row .meta{font-variant-numeric:tabular-nums}
+.tq-add{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;border-radius:16px;padding:12px 14px;margin-top:4px;color:var(--ink-2);font-size:13.5px;font-weight:500;text-align:left}
+.tq-add svg.i{width:16px;height:16px}
+.tq-add:hover{background:var(--well);color:var(--ink)}
+.tq-empty{padding:18px 14px 6px}
+.tq-done{padding:4px 14px}
 .cal-split .tl{flex:1 1 0;min-height:0;height:auto}
 /* the magnified Tasks timeline: quarter-hour labels and lines */
 .tl-zoom .tl-hours span.q{font-size:9px;color:var(--ink-3);opacity:.75}
@@ -1146,13 +1159,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008214416"></script>
+<script src="appearance.js?v=20261008215554"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008214416';
+  const VERSION = '20261008215554';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1842,10 +1855,7 @@ dialog::backdrop{background:transparent}
           ${anyFor(0)}
           <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${dayColumn(k0, false, 'cal')}</div></div>
         </section>
-        <section class="float cal sp-pane sp-tasks" style="--n:1" aria-label="Tasks">
-          <div class="cal-days"><span></span><div class="dh lane-h"><span>Tasks</span>${openTasks ? `<em>${openTasks}</em>` : ''}</div></div>
-          ${anyFor(1)}
-          <div class="tl tl-zoom" id="tlTasks"><div class="tl-grid">${hoursCol(true)}${dayColumn(k0, true, 'tasks')}</div></div>
+        <section class="float cal sp-pane sp-tasks" aria-label="Tasks">${vTaskQueue(k0)}
         </section>
       </div>`);
     }
@@ -1857,6 +1867,40 @@ dialog::backdrop{background:transparent}
         ${anyRow}
         <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
       </section>`);
+  }
+  // Tasks beside the Day calendar: not a timeline, just the day's tasks in the order they come, starting with what's next
+  function vTaskQueue(k) {
+    const tk = todayKey(), nm = nowMin(), today = k === tk;
+    const all = S.tasks.filter(t => t.date === k);
+    const open = all.filter(t => !t.done);
+    const timed = open.filter(t => t.time).sort(cmp);
+    const ended = t => today && toMin(t.time) + effMins(t) <= nm;
+    const ahead = timed.filter(t => !ended(t)), missed = timed.filter(ended);
+    const anytime = open.filter(t => !t.time).sort(cmp);
+    const doneN = all.length - open.length;
+    const inMins = d => (d < 60 ? `in ${d} min` : `in ${Math.floor(d / 60)} hr${d % 60 ? ` ${d % 60} min` : ''}`);
+    const row = (t, cls) => {
+      const s0 = t.time ? toMin(t.time) : null, live = today && s0 != null && s0 <= nm && nm < s0 + effMins(t);
+      const when = s0 == null ? (t.mins ? fmtDur(t.mins) : 'Anytime')
+        : live ? `Now · ${fmtTime(s0)}`
+        : today && s0 > nm ? `${fmtTime(s0)} · ${inMins(s0 - nm)}` : fmtTime(s0);
+      return `<div class="trow tq-row${live ? ' live' : ''}${cls ? ' ' + cls : ''}">${chk(t, 'chk')}<button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}</span></span></button></div>`;
+    };
+    const sec = (label, list, first) => list.length ? `<div class="day-div">${label}</div>${list.map((t, i) => row(t, first && i === 0 ? 'first' : '')).join('')}` : '';
+    let body = '';
+    if (today) {
+      body += sec(ahead.length && today && toMin(ahead[0].time) <= nm ? 'Now' : 'Next', ahead.slice(0, 1), true);
+      body += sec('Later today', ahead.slice(1));
+    } else body += sec('Scheduled', ahead);
+    body += sec('Anytime', anytime);
+    body += sec('Earlier, not done', missed);
+    if (!body) body = `<p class="empty tq-empty">${today ? 'Nothing left today.' : `Nothing on ${esc(dayLabel(k))}.`}</p>`;
+    return `<div class="cal-days tq-head"><div class="dh lane-h"><span>Tasks</span>${open.length ? `<em>${open.length}</em>` : ''}</div></div>
+      <div class="tq" id="tqList" data-keep>
+        <div class="list tq-list">${body}</div>
+        <button type="button" class="tq-add" data-act="tq-add" data-day="${k}">${ICON.plus}<span>Add task</span></button>
+        ${doneN ? `<p class="meta tq-done">${doneN} done ${today ? 'today' : 'that day'}</p>` : ''}
+      </div>`;
   }
   // Month: every day of the month with what's on it. Click a day's number to open that day; click empty space to add a task on it.
   function vMonth() {
@@ -3108,6 +3152,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'cal-day') { const k = b.dataset.day, d = k > S.calDay ? 1 : k < S.calDay ? -1 : 0; slideNav(d, () => { S.calDay = k; render(); }); }
     else if (act === 'cal-view') setCalView(b.dataset.viewId);
     else if (act === 'cal-add') openTask(null, { date: S.calDay }, null);
+    else if (act === 'tq-add') openTask(null, { date: b.dataset.day }, 'task');
     else if (act === 'cal-open') setCalView('day', b.dataset.day);
     else if (act === 'cal-month') setCalView('month', b.dataset.day);
     else if (act === 'm-cell') { if (window.innerWidth < 680) setCalView('day', b.dataset.day); else openTask(null, { date: b.dataset.day }); }
