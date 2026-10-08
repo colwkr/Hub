@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008211934">
-<script src="finance.js?v=20261008211934"></script>
+<link rel="stylesheet" href="finance.css?v=20261008212058">
+<script src="finance.js?v=20261008212058"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -52,6 +52,7 @@
   --corner:26px; /* corner buttons sit this far from both the side and the bottom edge */
   --wrap:1180px;
   --rail:72px;
+  --cur:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4.6 3.4 19.2 11.1 12.2 12.9 9.2 19.8z' fill='%23F4F4F6' stroke='%230B0C0E' stroke-width='1.35' stroke-linejoin='round'/%3E%3C/svg%3E") 5 4, default; /* the pointer: a slim dart */
 }
 :root,:root[data-theme="dark"]{
   color-scheme:dark;
@@ -84,6 +85,7 @@
   --scrim:rgba(6,6,8,.34); --halo:none;
 }
 :root[data-theme="light"]{
+  --cur:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4.6 3.4 19.2 11.1 12.2 12.9 9.2 19.8z' fill='%2315161A' stroke='%23FFFFFF' stroke-width='1.35' stroke-linejoin='round'/%3E%3C/svg%3E") 5 4, default;
   color-scheme:light;
   --chrome:#F4F4F7;
   --ground:radial-gradient(120% 70% at 50% -8%,#FFFFFF 0%,#EEEEF2 45%,#D8D9DF 100%);
@@ -141,7 +143,9 @@ html{background:var(--chrome);overscroll-behavior:none}
 body{margin:0;background:transparent;color:var(--ink);font:400 14px/1.4 var(--font);-webkit-text-size-adjust:100%;overscroll-behavior:none}
 h1,h2,p{margin:0;font-weight:400}
 button,input,select{font:inherit;color:inherit}
-button{cursor:pointer}
+html{cursor:var(--cur)}
+button,select,label,a,summary,input[type="checkbox"],input[type="radio"]{cursor:var(--cur)}
+input:not([type="checkbox"]):not([type="radio"]),textarea{cursor:text}
 a{color:inherit}
 :focus-visible{outline:1.5px solid var(--ink);outline-offset:2px}
 svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
@@ -430,7 +434,7 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .scope-body{display:flex;flex-direction:column;gap:16px;padding:22px 20px 20px}
 .scope-body h2{font-size:17px;font-weight:500}
 .scope-opts{display:flex;flex-direction:column;gap:4px}
-.scope-opts label{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;font-size:15px;cursor:pointer}
+.scope-opts label{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;font-size:15px}
 .scope-opts label:has(input:checked){background:var(--well)}
 .scope-opts label[hidden]{display:none}
 .scope-opts input{width:20px;height:20px;margin:0;accent-color:var(--ink)}
@@ -439,7 +443,7 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .mark{position:absolute;left:0;right:0;height:0;z-index:2;pointer-events:none}
 .mark::before{content:"";position:absolute;left:0;right:0;top:-.75px;border-top:1.5px dashed var(--ink-2)}
 .mark-chip{position:absolute;right:4px;top:0;transform:translateY(-50%);pointer-events:auto;display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 8px);height:20px;padding:0 8px;border:0;border-radius:999px;
-  background:var(--solid);color:var(--on-solid);font-size:11px;font-weight:600;line-height:1;white-space:nowrap;box-shadow:var(--lift-sm);cursor:grab}
+  background:var(--solid);color:var(--on-solid);font-size:11px;font-weight:600;line-height:1;white-space:nowrap;box-shadow:var(--lift-sm)}
 .mark-t{font-weight:400;opacity:.7;font-variant-numeric:tabular-nums;flex:none}
 .mark-n{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .mark.lifted{z-index:7}
@@ -632,7 +636,7 @@ html.idle-cursor,html.idle-cursor *{cursor:none!important}
 .tl-hours{position:relative;height:calc(var(--h) * 24)}
 .tl-hours span{position:absolute;right:8px;transform:translateY(-50%);font-size:10px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
 .tl-col{position:relative;height:calc(var(--h) * 24);box-shadow:inset 1px 0 0 var(--hair);
-  background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));cursor:copy;
+  background:repeating-linear-gradient(to bottom,var(--hair) 0 1px,transparent 1px var(--h));
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* the block you draw by dragging across empty time */
 .blk.ghost{background:var(--solid);color:var(--on-solid);opacity:.92;pointer-events:none;z-index:3;box-shadow:var(--sel-glow),var(--lift-sm)}
@@ -655,7 +659,7 @@ body.moving,body.sizing{-webkit-user-select:none;user-select:none}
 body.marking{-webkit-user-select:none;user-select:none}
 body.marking,body.marking *{cursor:ns-resize!important}
 .tl-col.today{background-color:var(--today-col)}
-.blk{position:absolute;z-index:1;border:0;padding:5px 8px;border-radius:12px;text-align:left;overflow:hidden;cursor:pointer;
+.blk{position:absolute;z-index:1;border:0;padding:5px 8px;border-radius:12px;text-align:left;overflow:hidden;
   background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);display:flex;flex-direction:column;gap:1px;min-width:0}
 .blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .blk small{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
@@ -677,7 +681,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .bchk[aria-pressed="true"]{color:var(--on-solid)}
 .bchk[aria-pressed="true"]::before{background:var(--solid);box-shadow:none}
 .blk.now .bchk::before{box-shadow:inset 0 0 0 1.5px var(--on-solid)}
-.bmain{flex:1;min-width:0;border:0;background:none;color:inherit;text-align:left;padding:5px 8px 5px 0;display:flex;flex-direction:column;gap:1px;cursor:pointer}
+.bmain{flex:1;min-width:0;border:0;background:none;color:inherit;text-align:left;padding:5px 8px 5px 0;display:flex;flex-direction:column;gap:1px}
 .blk.tight .bmain{flex-direction:row;align-items:center;gap:6px;padding-block:0}
 .nowline{position:absolute;left:0;right:0;height:0;border-top:1.5px solid var(--ink);z-index:0;pointer-events:none}
 .nowline::before{content:"";position:absolute;left:-4px;top:-4.75px;width:8px;height:8px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--ring)}
@@ -688,7 +692,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .mhead{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:12px 0 9px;box-shadow:inset 0 -1px 0 var(--hair)}
 .mhead span{text-align:center;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .mgrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(var(--weeks),minmax(0,1fr))}
-.mc{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;gap:3px;padding:6px 5px 5px;overflow:hidden;cursor:copy;
+.mc{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;gap:3px;padding:6px 5px 5px;overflow:hidden;
   box-shadow:inset 1px 0 0 var(--hair),inset 0 1px 0 var(--hair)}
 .mc:nth-child(7n+1){box-shadow:inset 0 1px 0 var(--hair)}
 .mc:nth-child(-n+7){box-shadow:inset 1px 0 0 var(--hair)}
@@ -811,8 +815,9 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .r-mark svg.i{width:26px;height:26px}
 .r-line{display:block;flex:none;width:40px;height:1px;margin:10px 0;background:linear-gradient(90deg,transparent,var(--line),transparent)}
 .r-foot{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%}
-.r-me{position:relative;border:0;background:none;padding:6px 0 0;display:grid;place-items:center}
-.r-me .avatar{width:40px;height:40px;font-size:15px}
+.r-set{position:relative}
+.r-set .r-dot{right:calc(50% - 21px);bottom:3px}
+.avatar.gear svg.i{width:20px;height:20px;color:var(--ink-2)}
 .r-dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--ink-3);box-shadow:0 0 0 2px var(--ring)}
 .r-dot.ok{background:var(--good)}
 .r-dot.off{background:var(--bad)}
@@ -968,9 +973,8 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn dim" data-act="soon" data-what="Notes" aria-label="Notes, coming soon" title="Notes (coming soon)"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span></button>
   <div class="r-foot">
     <i class="r-line"></i>
-    <button type="button" class="r-btn" data-act="settings" aria-label="Settings" title="Settings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg></span></button>
     <button type="button" class="r-btn" id="fsBtn" title="Full screen" hidden><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path id="fsPath" d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15"/></svg></span><span class="sr-only" id="fsLabel">Full screen</span></button>
-    <button type="button" class="r-me" data-act="settings" aria-label="Account and settings" title="Account and settings"><span class="avatar" id="railInit" aria-hidden="true"></span><span class="r-dot" id="railDot" role="img" aria-label="Connecting"></span></button>
+    <button type="button" class="r-btn r-set" data-act="settings" aria-label="Settings" title="Settings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg></span><span class="r-dot" id="railDot" role="img" aria-label="Connecting"></span></button>
   </div>
 </nav>
 
@@ -996,7 +1000,7 @@ dialog::backdrop{background:transparent}
   <div class="nav"><button type="button" data-act="settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg><span>Settings</span></button></div>
   <div class="d-grow"></div>
   <i class="d-line"></i>
-  <button type="button" class="d-me" data-act="settings"><span class="avatar" id="meInit" aria-hidden="true"></span><span><b id="meName">You</b><small class="d-foot" id="drawerFoot"></small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+  <button type="button" class="d-me" data-act="settings"><span class="avatar gear" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg></span><span><b id="meName">You</b><small class="d-foot" id="drawerFoot"></small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
 </aside>
 
 <dialog id="sheet" aria-labelledby="sheetTitle">
@@ -1128,13 +1132,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008211934"></script>
+<script src="appearance.js?v=20261008212058"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008211934';
+  const VERSION = '20261008212058';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2001,7 +2005,7 @@ dialog::backdrop{background:transparent}
     dot.className = 'r-dot' + (S.failed ? ' off' : S.canSave ? ' ok' : '');
     dot.setAttribute('aria-label', foot.textContent); dot.title = foot.textContent;
     const me = whoAmI();
-    $('#meInit').textContent = me.init; $('#railInit').textContent = me.init; $('#meName').textContent = me.name;
+    $('#meName').textContent = me.name;
     $('#fab').disabled = !S.canSave;
     renderWake();
   }
