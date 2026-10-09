@@ -18,6 +18,7 @@ window.POSFinance = function (ctx) {
     plus: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>',
     check: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6 7.4-8"/></svg>',
     warn: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 20.8 19.3H3.2z"/><path d="M12 10v4.2M12 16.8v.2"/></svg>',
+    clock: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 8v4.3l2.8 1.7"/></svg>',
   };
   const canSave = () => ctx.canSave();
 
@@ -70,7 +71,11 @@ window.POSFinance = function (ctx) {
   let loadT = null, channel = null;
   const scheduleLoad = () => { clearTimeout(loadT); loadT = setTimeout(load, 300); };
   async function load() {
-    const { data, error } = await sb.from('fin_docs').select('id,kind,data').limit(20000);
+    const [{ data, error }, mail] = await Promise.all([
+      sb.from('fin_docs').select('id,kind,data').limit(20000),
+      sb.from('bank_mail').select('received_at,status').order('received_at', { ascending: false }).limit(1),
+    ]);
+    S.mail = mail && !mail.error && mail.data && mail.data[0] ? { at: Date.parse(mail.data[0].received_at) } : null;
     if (error) { S.failed = true; rerender(); return; }
     S.failed = false; S.loaded = true;
     for (const k of KINDS) S[k] = [];
@@ -81,7 +86,8 @@ window.POSFinance = function (ctx) {
   function start() {
     load();
     if (channel) sb.removeChannel(channel);
-    channel = sb.channel('pos-finance').on('postgres_changes', { event: '*', schema: 'public', table: 'fin_docs' }, scheduleLoad).subscribe();
+    channel = sb.channel('pos-finance').on('postgres_changes', { event: '*', schema: 'public', table: 'fin_docs' }, scheduleLoad)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bank_mail' }, scheduleLoad).subscribe();
   }
   function stop() {
     if (channel) { sb.removeChannel(channel); channel = null; }
@@ -155,23 +161,26 @@ window.POSFinance = function (ctx) {
   // a month counts once the bill was in here by its day (one added on the 9th starts with next month's 7th)
   const appliesIn = (b, y, m) => { const d = dueOn(b, y, m); return d != null && d >= startOfDay(b.createdAt || 0); };
   const createdMonth = b => { const d = new Date(b.createdAt || 0); return monthKeyOf(d.getFullYear(), d.getMonth()); };
+  // From its day, a bill is waiting on its charge; banks post a day or three late, so it only asks for a look after that.
+  const GRACE = 3;
+  const confirmedBy = p => !!(p && (p.txnId || p.confirmed));
   function billState(b, now = Date.now()) {
     const n = new Date(now), y = n.getFullYear(), m = n.getMonth(), today = startOfDay(now);
     const p = paidIn(b, monthKeyOf(y, m));
-    if (p) return { st: 'paid', at: p.at || null };
+    if (p) return { st: 'paid', at: p.at || null, confirmed: confirmedBy(p) };
     if (!b.day) return { st: 'noday' };
     if (!appliesIn(b, y, m)) return { st: 'next', due: dueOn(b, y, m + 1) };
     const due = dueOn(b, y, m), days = Math.round((due - today) / DAY);
-    if (days === 0) return { st: 'today', due };
+    if (days <= 0 && days >= -GRACE) return { st: 'waiting', due, days: -days };
     if (days < 0) return { st: 'late', due, days: -days };
     return { st: 'soon', due, days };
   }
-  // what needs a look: due today, or past its day this month and not checked off
-  const billAlerts = () => S.bills.map(b => ({ b, s: billState(b) })).filter(x => x.s.st === 'today' || x.s.st === 'late').sort((x, y) => x.s.due - y.s.due);
+  // what needs a look: no charge seen a few days after its day
+  const billAlerts = () => S.bills.map(b => ({ b, s: billState(b) })).filter(x => x.s.st === 'late').sort((x, y) => x.s.due - y.s.due);
   function statusPill(s) {
-    if (s.st === 'paid') return `<span class="pill ok">${ICON.check}Paid${s.at ? ' ' + esc(shortDay.format(s.at)) : ''}</span>`;
-    if (s.st === 'today') return `<span class="pill due">${ICON.warn}Due today</span>`;
-    if (s.st === 'late') return `<span class="pill late">${ICON.warn}Past due</span>`;
+    if (s.st === 'paid') return `<span class="pill ok">${ICON.check}${s.confirmed ? 'Charge confirmed' : 'Marked paid'}${s.at ? ' ' + esc(shortDay.format(s.at)) : ''}</span>`;
+    if (s.st === 'waiting') return `<span class="pill wait">${ICON.clock}Waiting on charge</span>`;
+    if (s.st === 'late') return `<span class="pill late">${ICON.warn}No charge seen</span>`;
     if (s.st === 'noday') return '<span class="pill">Set a day</span>';
     if (s.st === 'soon' && s.days === 1) return '<span class="pill">Tomorrow</span>';
     if (s.st === 'soon' && s.days < 7) return `<span class="pill">In ${s.days} days</span>`;
@@ -191,16 +200,21 @@ window.POSFinance = function (ctx) {
   // A charge checks a bill off when its name (or a word you gave it) shows in the charge, at about the amount,
   // a few days either side of the day. A bill of $20 or more also matches on the exact amount alone.
   const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  function billMatches(b, t) {
+  const namedIn = (b, t) => {
     const m = ' ' + norm(t.merchant) + ' ', squashed = m.replace(/ /g, '');
-    const phrases = [b.name, ...String(b.match || '').split(',')].map(norm).filter(x => x.length >= 3);
-    const named = phrases.some(x => m.includes(' ' + x + ' ') || squashed.includes(x.replace(/ /g, '')));
+    return [b.name, ...String(b.match || '').split(',')].map(norm).filter(x => x.length >= 3)
+      .some(x => m.includes(' ' + x + ' ') || squashed.includes(x.replace(/ /g, '')));
+  };
+  const sameAcct = (b, t) => !b.accountId || !t.accountId || b.accountId === t.accountId;
+  // named: about the price (prices drift, taxes get added), from any account. Unnamed: the exact price, from its account.
+  function billMatches(b, t) {
+    const named = namedIn(b, t);
     if (!b.amount) return named;
     const diff = Math.abs(t.amount - b.amount);
-    return (named && diff <= Math.max(200, Math.round(b.amount * 0.15))) || (diff <= 1 && b.amount >= 2000);
+    return (named && diff <= Math.max(200, Math.round(b.amount * 0.35))) || (diff <= 1 && b.amount >= 2000 && sameAcct(b, t));
   }
   function matchMonth(b, t) {
-    if (!b.day || (b.accountId && t.accountId && b.accountId !== t.accountId)) return null;
+    if (!b.day) return null;
     const d = new Date(t.at);
     for (const off of [0, -1, 1]) {
       const due = dueOn(b, d.getFullYear(), d.getMonth() + off), mk = monthKeyOf(d.getFullYear(), d.getMonth() + off);
@@ -211,10 +225,8 @@ window.POSFinance = function (ctx) {
   }
   // unpaid bills a charge could be (its name shows, or about its price), nearest first: offered when you approve it
   function billsNear(t) {
-    const m = norm(t.merchant).replace(/ /g, '');
-    const could = b => [b.name, ...String(b.match || '').split(',')].map(norm).some(x => x.length >= 3 && m.includes(x.replace(/ /g, '')))
-      || (b.amount && Math.abs(t.amount - b.amount) <= Math.max(150, Math.round(b.amount * 0.1)));
-    return S.bills.filter(b => b.day && could(b) && (!b.accountId || !t.accountId || b.accountId === t.accountId))
+    const could = b => namedIn(b, t) || (b.amount && sameAcct(b, t) && Math.abs(t.amount - b.amount) <= Math.max(150, Math.round(b.amount * 0.1)));
+    return S.bills.filter(b => b.day && could(b))
       .map(b => ({ b, mk: nearestMonth(b, t.at) }))
       .map(x => ({ ...x, due: dueOn(x.b, +x.mk.slice(0, 4), +x.mk.slice(5) - 1) }))
       .filter(x => !paidIn(x.b, x.mk) && Math.abs(x.due - t.at) <= 10 * DAY)
@@ -344,14 +356,21 @@ window.POSFinance = function (ctx) {
       + (canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : '') + '</div>';
     right += accounts.length ? `<div class="stack">${accounts.map(accountCard).join('')}</div>`
       : '<p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p>';
-    right += '</section>';
+    right += mailLine() + '</section>';
     return `${totals}<div class="fin-two"><div>${left}</div><div>${right}</div></div>${examplesBar()}`;
   }
 
-  // "SimpleFIN, $1.59, is due today."
+  // whether the Regions alert emails are reaching POS
+  function mailLine() {
+    if (!S.mail) return '<p class="meta mail-line"><i class="mdot off"></i>Regions alerts: none received yet</p>';
+    const mins = Math.round((Date.now() - S.mail.at) / 60000);
+    const ago = mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : mins < 1440 ? `${Math.round(mins / 60)} hr ago` : dayFmt.format(S.mail.at);
+    return `<p class="meta mail-line"><i class="mdot"></i>Regions alerts connected · last one ${esc(ago)}</p>`;
+  }
+  // "Progressive, $357.66, was due Oct 4 and no charge has shown up."
   function billNote({ b, s }) {
     const what = `<b>${esc(b.name)}</b>${b.amount ? `, ${fmt(b.amount)},` : ''}`;
-    return `<div class="float note bill-note ${s.st}"><p>${ICON.warn}<span>${what} ${s.st === 'today' ? 'is due today.' : `was due ${esc(shortDay.format(s.due))} and isn’t checked off.`}</span></p>${canSave() ? `<button type="button" class="btn solid" data-act="fin-bill-paid" data-id="${esc(b.id)}">Paid</button>` : ''}</div>`;
+    return `<div class="float note bill-note ${s.st}"><p>${ICON.warn}<span>${what} was due ${esc(shortDay.format(s.due))} and no charge has shown up. If you paid it another way, check it off.</span></p>${canSave() ? `<button type="button" class="btn solid" data-act="fin-bill-paid" data-id="${esc(b.id)}">Paid</button>` : ''}</div>`;
   }
 
   function billRow(b) {
@@ -373,7 +392,7 @@ window.POSFinance = function (ctx) {
     const per = l => l.reduce((t, b) => t + (b.amount || 0), 0);
     const bills = list('bill'), subs = list('sub');
     // still to go out this month: not checked off, and due this month
-    const toGo = S.bills.filter(b => b.amount && ['today', 'late', 'soon'].includes(billState(b).st)).reduce((t, b) => t + b.amount, 0);
+    const toGo = S.bills.filter(b => b.amount && ['waiting', 'late', 'soon'].includes(billState(b).st)).reduce((t, b) => t + b.amount, 0);
     const alerts = billAlerts();
     const sec = (g, label, l) => `<section class="sec"><div class="sec-head"><span class="lab">${label}${l.length ? ' · ' + fmt(per(l)) + ' a month' : ''}</span></div>
       <div class="float list">${l.map(billRow).join('')}${canSave() ? `<button type="button" class="add-row" data-act="fin-form" data-form="bill" data-group="${g}"><span>${g === 'sub' ? 'New subscription' : 'New bill'}</span>${ICON.plus}</button>` : ''}</div></section>`;
@@ -502,17 +521,22 @@ window.POSFinance = function (ctx) {
     const prev = t.bucketId || null, bid = billIdOf(bucketId);
     const name = bucketId === '_none' ? 'Not spending' : bid ? (billById(bid) || {}).name : (bucket(bucketId) || {}).name;
     if (!(await save(refs.txns.doc(id).update({ bucketId })))) return;
-    if (bid) await linkBill(bid, t, false);
-    toast(bid ? `${name} checked off` : 'Approved to ' + name, async () => {
+    const learned = bid ? await linkBill(bid, t, false) : null;
+    toast(bid ? `${name}: charge confirmed${learned && learned.length ? `. Now ${learned.join(', ')}` : ''}` : 'Approved to ' + name, async () => {
       if (await save(refs.txns.doc(id).update({ bucketId: prev }))) { if (bid) await unlinkBill(bid, id); }
     });
   }
   // a payment checks off the month whose due date it's nearest to
+  // and what the charge says becomes the bill's: its day, its price, its account. Returns what changed, or false.
   async function linkBill(billId, t, auto) {
     const b = billById(billId);
     if (!b) return false;
-    const mk = nearestMonth(b, t.at);
-    return save(refs.bills.doc(billId).update({ paid: { ...(b.paid || {}), [mk]: { at: t.at, txnId: t.id, auto: !!auto } } }));
+    const mk = nearestMonth(b, t.at), day = new Date(t.at).getDate(), learned = [];
+    const patch = { paid: { ...(b.paid || {}), [mk]: { at: t.at, txnId: t.id, auto: !!auto } } };
+    if (b.day !== day) { patch.day = day; learned.push(`the ${ordinal(day)}`); }
+    if (t.amount && b.amount !== t.amount) { patch.amount = t.amount; learned.push(fmt(t.amount)); }
+    if (t.accountId && acct(t.accountId) && b.accountId !== t.accountId) { patch.accountId = t.accountId; learned.push(acctLabel(acct(t.accountId))); }
+    return (await save(refs.bills.doc(billId).update(patch))) ? learned : false;
   }
   async function unlinkBill(billId, txnId) {
     const b = billById(billId);
@@ -545,8 +569,8 @@ window.POSFinance = function (ctx) {
         if (hits.length !== 1) continue;
         const b = hits[0];
         if (!(await save(refs.txns.doc(t.id).update({ bucketId: 'bill:' + b.id })))) break;
-        await linkBill(b.id, t, true);
-        toast(`${b.name} checked off: ${fmt(t.amount)} from ${t.merchant}`);
+        const learned = await linkBill(b.id, t, true);
+        toast(`${b.name}: charge confirmed, ${fmt(t.amount)}${learned && learned.length ? `. Now ${learned.join(', ')}` : ''}`);
       }
     } finally { autoBusy = false; }
   }
@@ -570,7 +594,7 @@ window.POSFinance = function (ctx) {
       if (due == null || new Date(due).getDate() !== dd || mk < createdMonth(b)) continue;
       const p = paidIn(b, mk);
       let st = p ? 'paid' : '';
-      if (!p && isCur && appliesIn(b, y, m)) st = due === today ? 'today' : due < today ? 'late' : '';
+      if (!p && isCur && appliesIn(b, y, m) && due <= today) st = Math.round((today - due) / DAY) <= GRACE ? 'waiting' : 'late';
       out.push({ id: b.id, name: b.name, amount: b.amount || 0, short: b.amount ? fmtShort(b.amount) : '', group: groupOf(b), st });
     }
     return out;

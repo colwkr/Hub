@@ -94,18 +94,20 @@
 .fin .b-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .fin .b-none{font-size:12px;font-weight:400;color:var(--ink-3)}
 .fin .bill-row.st-paid .name,.fin .bill-row.st-paid .fig{color:var(--ink-2)}
-.fin .bill-row.st-today{background:linear-gradient(90deg,color-mix(in srgb,var(--warn) 16%,transparent),transparent 80%)}
+.fin .bill-row.st-late{background:linear-gradient(90deg,color-mix(in srgb,var(--warn) 14%,transparent),transparent 80%)}
 .fin .list > .bill-row:first-child{border-radius:28px 28px 0 0}
 .fin .pill{display:inline-flex;align-items:center;gap:4px}
 .fin .pill svg.i{width:11px;height:11px;stroke-width:2.2}
 .fin .pill.ok{color:var(--good)}
-.fin .pill.due{background:var(--warn);color:var(--on-solid);font-weight:600}
-.fin .pill.late{color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad);background:none}
+.fin .pill.wait{color:var(--ink)}
+.fin .pill.late{color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn);background:none}
 .fin .note.bill-note p{display:flex;align-items:center;gap:12px}
 .fin .note.bill-note p svg.i{width:20px;height:20px;flex:none;color:var(--warn);stroke-width:1.8}
-.fin .note.bill-note.late p svg.i{color:var(--bad)}
-.fin .note.bill-note.today{box-shadow:inset 0 0 0 1.5px var(--warn),var(--glow),var(--lift)}
+.fin .note.bill-note.late{box-shadow:inset 0 0 0 1.5px var(--warn),var(--glow),var(--lift)}
 .fin .chip.bill{box-shadow:var(--lift-sm),inset 0 0 0 1px var(--ink-3)}
+.fin .mail-line{display:flex;align-items:center;gap:8px;padding:2px 6px}
+.fin .mdot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+.fin .mdot.off{background:var(--ink-3)}
 #finSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
 #finSheet .f-check input{width:22px;height:22px;margin:0;accent-color:var(--ink)}
 
