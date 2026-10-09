@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261009202624">
-<script src="finance.js?v=20261009202624"></script>
+<link rel="stylesheet" href="finance.css?v=20261009203039">
+<script src="finance.js?v=20261009203039"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -348,6 +348,13 @@ body[data-view="home"] .top{display:none}
 .g-next .list{min-height:0}
 .day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .list > .day-div{box-shadow:none}
+/* lists in Tasks (To buy, Sell or give away...): one line of names until opened */
+.list-h{display:flex;align-items:center;gap:8px;border:0;background:none;padding:6px 0;color:var(--ink-3);min-height:36px}
+.list-h em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--well);color:var(--ink-2);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px}
+.list-h svg.i{width:14px;height:14px;transition:transform .2s ease}
+.tlist.open .list-h svg.i{transform:rotate(90deg)}
+.list-peek{display:flex;flex-wrap:wrap;gap:6px 8px;width:100%;border:0;text-align:left;padding:14px 18px;color:var(--ink)}
+.list-peek span{font-size:13px;font-weight:500;background:var(--well);border-radius:999px;padding:5px 11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .trow.first .name{font-size:16px}.g-wx{grid-area:wx}.g-now{grid-area:now}.g-od{grid-area:od}.g-cal{grid-area:cal}.g-uns{grid-area:uns}
 .daycal{display:flex;flex-direction:column;overflow:hidden;position:relative}
 .dc-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 14px 12px 18px;box-shadow:inset 0 -1px 0 var(--hair)}
@@ -420,6 +427,7 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .kind-f .seg3 button{padding:10px 4px}
 #sheet[data-sheet-kind="marker"] .f-len{display:none}
 #sheet[data-sheet-kind="task"] .f-rep,#sheet[data-sheet-kind="none"] .f-rep{display:none}
+#sheet:not([data-sheet-kind="task"]) .f-list{display:none}
 #sheet .f select,.mt-when-row select{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);-webkit-appearance:none;appearance:none;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
 #sheet .f select:disabled,.mt-when-row select:disabled{opacity:.5}
@@ -1091,6 +1099,11 @@ dialog::backdrop{background:transparent}
         <p class="kind-note" id="f_mtypeNote"></p>
       </div>
       <label class="f"><span class="f-h" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
+      <div class="f f-list">
+        <span class="f-h" id="h_list">List <i class="opt">optional</i></span>
+        <div class="chips" id="f_listChips"></div>
+        <div class="xin"><input id="f_list" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Like To buy, or To sell" aria-labelledby="h_list"><button type="button" class="circle" data-clear="f_list" aria-label="Clear list"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
+      </div>
       <div class="f">
         <span class="f-h" id="h_date">Day</span>
         <div class="frow">
@@ -1202,13 +1215,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261009202624"></script>
+<script src="appearance.js?v=20261009203039"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261009202624';
+  const VERSION = '20261009203039';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1319,8 +1332,10 @@ dialog::backdrop{background:transparent}
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
   let sb = null, FIN = null;
+  // which lists in Tasks are opened up (they start folded to one line)
+  const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
@@ -1332,6 +1347,7 @@ dialog::backdrop{background:transparent}
     if ('seriesId' in o) r.series_id = o.seriesId || null;
     if ('origDay' in o) r.orig_day = o.origDay || null;
     if ('mtype' in o) r.subtype = o.mtype || null;
+    if ('list' in o) r.list = o.list || null;
     if ('date' in o) r.day = o.date || null;
     if ('time' in o) r.at_time = o.time || null;
     if ('mins' in o) r.mins = o.mins ?? null;
@@ -1422,7 +1438,7 @@ dialog::backdrop{background:transparent}
     } else {
       if (t.time) bits.push(fmtTime(toMin(t.time)));
       if (t.mins) bits.push(fmtDur(t.mins));
-      if (!bits.length) bits.push('No day or time');
+      if (!bits.length && !t.list) bits.push('No day or time');
     }
     return bits.join(' · ');
   }
@@ -1437,11 +1453,12 @@ dialog::backdrop{background:transparent}
 
   /* ---------- pieces ---------- */
   function row(t, withDay) {
+    const mt = meta(t, withDay);
     return `<div class="trow${t.done ? ' done' : ''}">
       <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>
       <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}">
         <span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span>
-        <span class="meta">${isOverdue(t) ? '<span class="pill warn">Overdue</span>' : ''}<span>${esc(meta(t, withDay))}</span></span>
+        ${mt || isOverdue(t) ? `<span class="meta">${isOverdue(t) ? '<span class="pill warn">Overdue</span>' : ''}<span>${esc(mt)}</span></span>` : ''}
       </button>
     </div>`;
   }
@@ -1590,7 +1607,7 @@ dialog::backdrop{background:transparent}
     const overdue = open.filter(isOverdue).sort(cmp);
     const today = S.tasks.filter(t => t.date === tk).sort(cmp);
     const upcoming = open.filter(t => t.date && t.date > tk).sort(cmp);
-    const uns = open.filter(t => kindOf(t) === 'unsorted').sort(byNew);
+    const uns = open.filter(t => kindOf(t) === 'unsorted' && !t.list).sort(byNew);
     const done = S.tasks.filter(t => t.done && t.date !== tk).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
     const groups = [];
     for (const t of upcoming) {
@@ -1602,7 +1619,22 @@ dialog::backdrop{background:transparent}
     left.push(sec('Today', today.length ? today.map(t => row(t, false)).join('') : '<p class="empty">Nothing on today.</p>'));
     for (const g of groups) left.push(sec(esc(dayLabel(g.date)), g.items.map(t => row(t, false)).join('')));
     const right = [];
-    right.push(sec('Unsorted', uns.length ? uns.map(t => row(t, false)).join('') : '<p class="empty">Nothing unsorted. Tasks with no day, or a time but no day, land here.</p>'));
+    // lists: things to keep in mind (to buy, to sell...). Folded to one line each until you open one.
+    const lists = new Map();
+    for (const t of open.filter(x => x.list).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))) {
+      const k = t.list.toLowerCase();
+      if (!lists.has(k)) lists.set(k, { name: t.list, items: [] });
+      lists.get(k).items.push(t);
+    }
+    for (const [k, l] of lists) {
+      const on = listOpen.has(k);
+      const head = `<button type="button" class="list-h" data-act="list-toggle" data-list="${esc(k)}" aria-expanded="${on}"><h2 class="lab">${esc(l.name)}</h2><em>${l.items.length}</em>${ICON.chev}</button>`
+        + (S.canSave ? `<button type="button" class="circle" data-act="list-add" data-list="${esc(l.name)}" aria-label="Add to ${esc(l.name)}">${ICON.plus}</button>` : '');
+      right.push(`<section class="sec tlist${on ? ' open' : ''}"><div class="sec-head">${head}</div>${on
+        ? `<div class="float list">${l.items.map(t => row(t, true)).join('')}</div>`
+        : `<button type="button" class="float list-peek" data-act="list-toggle" data-list="${esc(k)}">${l.items.map(t => `<span>${esc(t.title)}</span>`).join('')}</button>`}</section>`);
+    }
+    right.push(sec('Unsorted', uns.length ? uns.map(t => row(t, false)).join('') : `<p class="empty">Nothing unsorted. Tasks with no day, or a time but no day, land here${lists.size ? '' : '. Give a task a list, like To buy, to keep it in its own group'}.</p>`));
     if (done.length) {
       right.push(`<section class="sec"><div class="sec-head"><h2 class="lab">Done</h2><button type="button" class="link" data-act="show-done" aria-expanded="${S.showDone}">${S.showDone ? 'Hide' : `Show ${done.length}`}</button></div>${S.showDone ? `<div class="float list">${done.slice(0, 40).map(t => row(t, true)).join('')}</div>` : ''}</section>`);
     }
@@ -2307,6 +2339,10 @@ dialog::backdrop{background:transparent}
     $('#f_date').value = v.date || '';
     $('#f_time').value = v.time || '';
     $('#f_mins').value = v.mins ? String(v.mins) : '';
+    $('#f_list').value = (t ? t.list : preset.list) || '';
+    // your lists so far, plus the two everyone starts with, as one-tap choices
+    const names = [...new Set(['To buy', 'Sell or give away', ...S.tasks.map(x => x.list).filter(Boolean)].map(n => n.trim()))].slice(0, 8);
+    $('#f_listChips').innerHTML = names.map(n => `<button type="button" class="chip" data-set="list" data-val="${esc(n)}">${esc(n)}</button>`).join('');
     // a marker's end: shown for one that already has a length, or when you dragged out a stretch of time
     $('#f_until').value = v.time && v.mins && ((t && t.kind === 'marker') || preset.ranged) ? hhmm((toMin(v.time) + v.mins) % 1440) : '';
     $('#sheetErr').hidden = true;
@@ -2382,6 +2418,8 @@ dialog::backdrop{background:transparent}
     const tk = todayKey();
     for (const c of document.querySelectorAll('#sheetBody [data-set="date"]')) c.setAttribute('aria-pressed', String(date === addDays(tk, Number(c.dataset.rel))));
     for (const c of document.querySelectorAll('#sheetBody [data-set="mins"]')) c.setAttribute('aria-pressed', String(!m.bad && m.mins === Number(c.dataset.val)));
+    const ls = $('#f_list').value.trim();
+    for (const c of document.querySelectorAll('#sheetBody [data-set="list"]')) c.setAttribute('aria-pressed', String(ls.toLowerCase() === c.dataset.val.toLowerCase()));
     const el = $('#f_where'), kind = F && F.kind;
     if (!kind) { el.innerHTML = '<b>Pick Task, Event, Meeting or Marker</b> above'; return; }
     if (kind === 'marker') {
@@ -2405,6 +2443,8 @@ dialog::backdrop{background:transparent}
       el.innerHTML = `<b>On the calendar</b> ${esc(dayLabel(date))}, ${esc(m.mins ? fmtRange(s, s + m.mins) : `${fmtTime(s)}, no estimate yet`)}`;
     } else if (date) {
       el.innerHTML = `<b>On ${esc(dayLabel(date))}</b> under Anytime, no set time`;
+    } else if (ls) {
+      el.innerHTML = `<b>Goes in ${esc(ls)}</b> in Tasks. Give it a day when it has a deadline.`;
     } else if (time) {
       el.innerHTML = '<b>Goes to Unsorted</b> until it has a day. The time stays with it.';
     } else {
@@ -2421,6 +2461,7 @@ dialog::backdrop{background:transparent}
     const set = e.target.closest('[data-set]');
     if (set) {
       if (set.dataset.set === 'date') $('#f_date').value = addDays(todayKey(), Number(set.dataset.rel));
+      else if (set.dataset.set === 'list') $('#f_list').value = $('#f_list').value === set.dataset.val ? '' : set.dataset.val;
       else $('#f_mins').value = set.dataset.val;
       refreshWhere();
       return;
@@ -2449,6 +2490,9 @@ dialog::backdrop{background:transparent}
       body.mins = until ? toMin(until) - toMin(body.time) : null;
     }
     body.mtype = kind === 'marker' ? F.mtype || null : null;
+    // a list keeps the name the way it was first written ("to buy" joins "To buy")
+    const lt = kind === 'task' ? $('#f_list').value.trim().replace(/\s+/g, ' ').slice(0, 40) : '';
+    body.list = lt ? (S.tasks.map(x => x.list).find(n => n && n.toLowerCase() === lt.toLowerCase()) || lt) : null;
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const freq = kind !== 'task' && body.date ? ($('#f_repeat').value || null) : null;
     if (F.occ) {
@@ -2477,7 +2521,7 @@ dialog::backdrop{background:transparent}
       else if (kind === 'event' && !id) toast(`Event added to ${day}`);
       else if (kind === 'marker' && !id) toast(`Marker added to ${day}, ${fmtTime(toMin(body.time))}${freq ? ', repeating' : ''}`);
       else if (id && freq && !F0repeat) toast(`Repeats ${repeatText({ date: body.date, repeat: { freq } }).replace(/^Every/, 'every')}`);
-      else if (!id) toast(body.date && body.time ? `Added to ${day}` : body.date ? `Added to ${day}, anytime` : 'Added to Unsorted');
+      else if (!id) toast(body.date && body.time ? `Added to ${day}` : body.date ? `Added to ${day}, anytime` : body.list ? `Added to ${body.list}` : 'Added to Unsorted');
     }
   });
   $('#sheetDone').addEventListener('click', async () => {
@@ -3363,6 +3407,13 @@ dialog::backdrop{background:transparent}
     else if (act === 'settings') openSettings();
     else if (act === 'auth-mode') { S.authMode = S.authMode === 'up' ? 'in' : 'up'; S.loginNote = ''; S.loginRedraw = true; render(); }
     else if (act === 'show-done') { S.showDone = !S.showDone; render(); }
+    else if (act === 'list-toggle') {
+      const k = b.dataset.list;
+      listOpen.has(k) ? listOpen.delete(k) : listOpen.add(k);
+      try { localStorage.setItem('pos.listOpen', JSON.stringify([...listOpen])); } catch (err) {}
+      render();
+    }
+    else if (act === 'list-add') openTask(null, { list: b.dataset.list }, 'task');
     else if (act === 'clear-ask') { S.confirmClear = true; render(); }
     else if (act === 'clear-no') { S.confirmClear = false; render(); }
     else if (act === 'clear-yes') { S.confirmClear = false; render(); clearExamples(); }
