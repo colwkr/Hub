@@ -1,0 +1,95 @@
+/* POS Car: scoped under .car (page) and #carSheet (its form sheet). */
+.car{display:flex;flex-direction:column;gap:18px}
+.car-scroll{display:flex;flex-direction:column;min-width:0}
+.car-grid{display:flex;flex-direction:column;gap:26px;width:100%}
+.car-col{display:flex;flex-direction:column;gap:26px;min-width:0}
+@media (min-width:900px){
+  .car-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start;max-width:1100px}
+}
+.car .a-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.car .a-head > div:first-child{min-width:0;display:flex;flex-direction:column;gap:4px}
+.car .fig.lg{font-size:28px}
+.car .fig.md{font-size:19px}
+
+/* the car itself */
+.car-hero{padding:20px;display:flex;flex-direction:column;gap:16px}
+.car-name{font-size:26px;font-weight:300;letter-spacing:-.01em;line-height:1.1}
+.car-art{display:block;width:100%;max-width:440px;height:auto;margin:4px auto 0;overflow:visible}
+.car-art path,.car-art circle{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.car-art .ground{stroke:var(--hair);stroke-width:1.2}
+.car-art .win{stroke:var(--ink-2);fill:color-mix(in srgb,var(--ink) 6%,transparent)}
+.car-art .trim{stroke:var(--ink-3);stroke-width:1.2}
+.car-art .body{fill:color-mix(in srgb,var(--ink) 3%,transparent)}
+.car-art .wh circle:first-child{fill:var(--glass,transparent);stroke-width:2}
+.car-art .wh.flag circle{stroke:var(--warn)}
+.car-art .wh.flag circle:first-child{stroke-width:2.4;fill:color-mix(in srgb,var(--warn) 10%,transparent)}
+.car-flag{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--warn);margin-top:-6px;justify-content:center}
+.car-flag svg.i{width:15px;height:15px;stroke-width:2}
+.car .odo{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;padding-top:14px;box-shadow:inset 0 1px 0 var(--hair);flex-wrap:wrap}
+.car .odo > div{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1 1 220px}
+.car .odo .fig small{font-size:14px;color:var(--ink-2);font-weight:400}
+
+/* next oil change */
+.car-oil{padding:20px;display:flex;flex-direction:column;gap:12px}
+.car-oil .oil-big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.car-oil .fig.xl{font-size:56px;font-weight:200;letter-spacing:-.02em}
+.car-oil .unit{font-size:15px;color:var(--ink-2)}
+.car-oil .track{height:4px;border-radius:2px;background:var(--hair);overflow:hidden}
+.car-oil .track span{display:block;height:100%;background:var(--ink);border-radius:2px}
+.car-oil.st-soon .track span{background:var(--warn)}
+.car-oil.st-due .track span{background:var(--bad)}
+.car-oil.st-due{box-shadow:inset 0 0 0 1.5px var(--bad),var(--glow),var(--lift)}
+.car-oil .axis{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.04em;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.car-oil .meta{font-size:12.5px;line-height:1.45}
+.car-oil .meta b{color:var(--ink);font-weight:500}
+.car .pill{display:inline-flex;align-items:center;gap:4px}
+.car .pill svg.i{width:11px;height:11px;stroke-width:2.2}
+.car .pill.okp{color:var(--good)}
+.car .pill.soonp{color:var(--warn)}
+.car .pill.late{color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad);background:none}
+.car-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* lists */
+.car .rec-row{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px}
+.car .rec-ic{color:var(--warn);display:grid;place-items:center;flex:none}
+.car .rec-ic svg.i{width:18px;height:18px;stroke-width:1.8}
+.car .rec-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.car .svc-main{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:13px 14px 13px 18px;text-align:left;color:var(--ink)}
+.car .svc-l{min-width:0;display:flex;flex-direction:column;gap:3px}
+.car .svc-r{flex:none;display:flex;align-items:center;gap:6px}
+.car .svc-r .fig.md{font-size:16px}
+.car .svc-r .chev{width:16px;height:16px;color:var(--ink-3);transition:transform .2s ease}
+.car .svc.open .chev{transform:rotate(90deg)}
+.car .svc-more{padding:0 18px 16px;display:flex;flex-direction:column;gap:8px}
+.car .svc-more ul{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.car .odo-row .name{font-weight:400;color:var(--ink-2)}
+.car .note-row{display:flex;flex-direction:column;gap:4px;width:100%;border:0;background:none;padding:13px 18px;text-align:left;color:var(--ink)}
+.car .note-t{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.car .kv{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:11px 18px;min-height:44px}
+.car .kv-v{font-size:13.5px;text-align:right;overflow-wrap:anywhere;min-width:0}
+.car button.kv-v{border:0;background:none;color:var(--ink);padding:0}
+.car .mono{font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.car .list > .svc:first-child,.car .list > .note-row:first-child,.car .list > .kv:first-child,.car .list > .rec-row:first-child{border-radius:28px 28px 0 0}
+
+/* the car form sheet */
+#carForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
+#carSheet .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+#carSheet .f select,#carSheet .f textarea{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;min-width:0;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);resize:vertical}
+#carSheet .f input.big{font-size:24px;font-weight:300;font-variant-numeric:tabular-nums}
+#carSheet .f > .lab{color:var(--ink-2)}
+#carSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
+#carSheet .f-check input{width:22px;height:22px;margin:0;flex:none;accent-color:var(--ink)}
+#carSheet .seg-ctl{display:grid;grid-template-columns:1fr 1fr;background:var(--well);border-radius:999px;padding:3px;gap:3px}
+#carSheet .seg-ctl label{display:block;position:relative}
+#carSheet .seg-ctl input{position:absolute;opacity:0;inset:0}
+#carSheet .seg-ctl span{display:block;text-align:center;padding:8px;font-size:13px;font-weight:500;color:var(--ink-2);border-radius:999px}
+#carSheet .seg-ctl input:checked + span{background:var(--solid);color:var(--on-solid)}
+#carSheet .seg-ctl input:focus-visible + span{outline:1.5px solid var(--ink);outline-offset:2px}
+#carSheet [hidden]{display:none}
+
+/* tablet: the page stays put; Car scrolls inside its own area */
+@media (min-width:760px) and (min-height:500px){
+  .car{flex:1;min-height:0}
+  .car-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
+  .car-scroll::-webkit-scrollbar{display:none}
+}
