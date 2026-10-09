@@ -35,10 +35,10 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261009214301">
-<script src="finance.js?v=20261009214301"></script>
-<link rel="stylesheet" href="car.css?v=20261009214301">
-<script src="car.js?v=20261009214301"></script>
+<link rel="stylesheet" href="finance.css?v=20261009215621">
+<script src="finance.js?v=20261009215621"></script>
+<link rel="stylesheet" href="car.css?v=20261009215621">
+<script src="car.js?v=20261009215621"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -327,12 +327,25 @@ body[data-view="home"] .top{display:none}
 .wx-desc{min-width:0;display:flex;flex-direction:column;gap:2px}
 .wx-desc svg.i{width:26px;height:26px;stroke-width:1.3;margin-bottom:4px}
 .wx-desc p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wx-hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px}
-.hr{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;border-radius:16px}
-.hr:first-child{background:var(--well)}
-.hr .meta{font-size:11px;white-space:nowrap}
-.hr svg.i{width:20px;height:20px}
-.hr .pop{font-size:10px;color:var(--ink-2);min-height:12px}
+/* today's temperatures as a line, midnight to midnight; the part already gone is muted */
+.wx-today{display:flex;flex-direction:column;gap:6px;flex:none}
+.wx-graph{position:relative;height:118px;touch-action:pan-y;cursor:crosshair}
+.wx-graph svg{display:block;width:100%;height:100%;overflow:visible}
+.wg-grid{stroke:var(--hair);stroke-width:1;vector-effect:non-scaling-stroke;fill:none}
+.wg-area{fill:var(--ink);opacity:.07;stroke:none}
+.wg-line{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.wg-line.past{stroke:var(--ink-3)}
+.wg-nowx,.wg-x{position:absolute;top:0;bottom:0;width:1px;margin-left:-.5px;background:var(--ink-3);pointer-events:none}
+.wg-x{background:var(--ink-2)}
+.wg-dot{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2.5px var(--ring);pointer-events:none}
+.wg-l{position:absolute;transform:translate(-50%,-100%);margin-top:-7px;font-size:11px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}
+.wg-l.lo{transform:translate(-50%,0);margin-top:7px}
+.wg-l b{font-weight:600;color:var(--ink)}
+.wg-tip{position:absolute;top:-6px;transform:translate(-50%,-100%);background:var(--solid);color:var(--on-solid);border-radius:999px;padding:4px 10px;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none;z-index:2;text-shadow:none}
+.wg-axis{position:relative;height:14px;font-size:10px;letter-spacing:.04em;color:var(--ink-3)}
+.wg-axis span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.wg-axis .now{color:var(--ink);font-weight:500;background:var(--glass,transparent);padding:0 3px}
+.wg-rain{font-size:12px}
 .wx-days{display:flex;flex-direction:column}
 .wd-row{display:grid;grid-template-columns:44px 20px 30px 30px minmax(30px,1fr) 30px;align-items:center;gap:6px;padding:8px 0;font-size:13px}
 .wd-row + .wd-row{box-shadow:inset 0 1px 0 var(--hair)}
@@ -406,7 +419,7 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .cal-ic svg.i{width:18px;height:18px}
 .ev-body{display:flex;flex-direction:column;gap:10px;padding:10px 20px 22px}
 
-/* the one add button: bottom-right, mirroring the menu arrow at bottom-left */
+/* the add button on phones: bottom-right, mirroring the menu arrow at bottom-left (tablets and computers: the foot of the rail) */
 #fab{position:fixed;z-index:5;right:max(var(--corner),calc((100% - var(--wrap)) / 2 + 24px));bottom:var(--corner);width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:0;
   background:var(--solid);color:var(--on-solid);box-shadow:var(--fab-glow),var(--lift)}
 #fab svg.i{width:24px;height:24px}
@@ -936,7 +949,12 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .fin-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col::-webkit-scrollbar{display:none}
-  #fab{right:12px;bottom:12px}
+  /* the add button lives at the foot of the rail, so nothing sits in the bottom-right corner */
+  #fab,.cs-add{display:none}
+  .r-add{flex:none;width:48px;height:48px;margin:8px 0 2px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--solid);color:var(--on-solid);box-shadow:var(--fab-glow),var(--lift-sm)}
+  .r-add svg.i{width:22px;height:22px}
+  .r-add:active{transform:scale(.95)}
+  .r-add:disabled{opacity:.4}
 
   /* upright iPad: calendar down the left; on the right the clock, what's next (filling the middle), then the weather */
   .home > .g-next{display:flex}
@@ -949,7 +967,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .home > *{min-height:0}
   .g-hero{align-items:center;text-align:center;padding:6px 6px 0}
   .clock{font-size:clamp(64px,10.5vw,118px)}
-  .g-wx{margin-bottom:68px;overflow-y:auto;scrollbar-width:none}
+  .g-wx{overflow-y:auto;scrollbar-width:none}
   .g-wx .wx-days{display:none}
   .g-uns{display:flex;flex-direction:column}
   .g-uns .list{min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -1065,6 +1083,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn dim" data-act="soon" data-what="Lights" aria-label="Lights, coming soon" title="Lights (coming soon)"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span></button>
   <button type="button" class="r-btn dim" data-act="soon" data-what="Notes" aria-label="Notes, coming soon" title="Notes (coming soon)"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span></button>
   <div class="r-foot">
+    <button type="button" class="r-add" id="railAdd" aria-label="Add" title="Add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
     <i class="r-line"></i>
     <button type="button" class="r-btn" id="fsBtn" title="Full screen" hidden><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path id="fsPath" d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15"/></svg></span><span class="sr-only" id="fsLabel">Full screen</span></button>
     <button type="button" class="r-btn r-set" data-act="settings" aria-label="Settings" title="Settings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg></span><span class="r-dot" id="railDot" role="img" aria-label="Connecting"></span></button>
@@ -1247,13 +1266,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261009214301"></script>
+<script src="appearance.js?v=20261009215621"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261009214301';
+  const VERSION = '20261009215621';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1564,6 +1583,72 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- weather ---------- */
+  // a smooth line through points that never overshoots them (monotone cubic), so the high and low stay the real high and low
+  function smoothPath(P) {
+    const n = P.length;
+    if (n < 2) return n ? `M${P[0][0]} ${P[0][1]}` : '';
+    const dx = [], m = [];
+    for (let i = 0; i < n - 1; i++) { dx[i] = P[i + 1][0] - P[i][0]; m[i] = (P[i + 1][1] - P[i][1]) / dx[i]; }
+    const t = [m[0]];
+    for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+    t[n - 1] = m[n - 2];
+    for (let i = 0; i < n - 1; i++) {
+      if (m[i] === 0) { t[i] = 0; t[i + 1] = 0; continue; }
+      const a = t[i] / m[i], b = t[i + 1] / m[i], q = a * a + b * b;
+      if (q > 9) { const k = 3 / Math.sqrt(q); t[i] = k * a * m[i]; t[i + 1] = k * b * m[i]; }
+    }
+    const f = v => v.toFixed(2);
+    let d = `M${f(P[0][0])} ${f(P[0][1])}`;
+    for (let i = 0; i < n - 1; i++) {
+      const h = dx[i] / 3;
+      d += `C${f(P[i][0] + h)} ${f(P[i][1] + t[i] * h)} ${f(P[i + 1][0] - h)} ${f(P[i + 1][1] - t[i + 1] * h)} ${f(P[i + 1][0])} ${f(P[i + 1][1])}`;
+    }
+    return d;
+  }
+  // today, midnight to midnight: the temperature line, where now sits on it, the day's high and low, and when rain is likely
+  function wxToday(w, tk, isDayAt) {
+    const tmr = fromKey(tk); tmr.setDate(tmr.getDate() + 1);
+    const tmrMid = `${dkey(tmr)}T00:00`;
+    const pts = (w.hourly || []).filter(h => h.t.slice(0, 10) === tk || h.t === tmrMid)
+      .map(h => ({ m: h.t === tmrMid ? 1440 : +h.t.slice(11, 13) * 60 + +h.t.slice(14, 16), temp: h.temp, code: h.code, pop: h.pop || 0, t: h.t }));
+    if (pts.length < 4) return '';
+    const day = pts.filter(p => p.m < 1440);
+    let hiP = day[0], loP = day[0];
+    for (const p of day) { if (p.temp > hiP.temp) hiP = p; if (p.temp < loP.temp) loP = p; }
+    const span = Math.max(4, hiP.temp - loP.temp);
+    const W = 240, X = m => m / 1440 * W, Y = v => 22 + (hiP.temp - v) / span * 58; // 0–100 tall: room above the high and below the low for labels
+    const P = pts.map(p => [X(p.m), Y(p.temp)]);
+    const line = smoothPath(P);
+    const now = new Date(), nm = now.getHours() * 60 + now.getMinutes();
+    // where now falls on the line
+    let ny = null;
+    for (let i = 0; i < pts.length - 1; i++) if (pts[i].m <= nm && nm <= pts[i + 1].m) { const k = (nm - pts[i].m) / (pts[i + 1].m - pts[i].m); ny = pts[i].temp + (pts[i + 1].temp - pts[i].temp) * k; }
+    const nx = X(nm) / W * 100, pct = v => (v / W * 100).toFixed(2);
+    const label = (p, cls) => `<span class="wg-l ${cls}" style="left:${Math.min(94, Math.max(6, X(p.m) / W * 100)).toFixed(2)}%;top:${Y(p.temp).toFixed(2)}%"><b>${cls === 'hi' ? 'H' : 'L'}</b> ${Math.round(p.temp)}°</span>`;
+    // rain still to come today
+    const ahead = day.filter(p => p.m + 60 > nm), wet = ahead.filter(p => p.pop >= 50), maybe = ahead.reduce((a, p) => (p.pop > (a ? a.pop : 0) ? p : a), null);
+    const hr = p => hourFmt.format(fromKey(tk).setHours(p.m / 60));
+    let rain = '';
+    if (wet.length) rain = `Rain likely ${wet.length > 1 ? `${hr(wet[0])} to ${hr({ m: Math.min(1440, wet[wet.length - 1].m + 60) })}` : `around ${hr(wet[0])}`}`;
+    else if (maybe && maybe.pop >= 20) rain = `${maybe.pop}% chance of rain around ${hr(maybe)}`;
+    const data = pts.filter(p => p.m < 1440).map(p => [p.m, Math.round(p.temp), wx(p.code, isDayAt(p.t))[0], p.pop]);
+    return `<div class="wx-today">
+      <div class="wx-graph" data-wg='${esc(JSON.stringify(data))}' role="img" aria-label="Today: high ${Math.round(hiP.temp)} degrees around ${esc(hr(hiP))}, low ${Math.round(loP.temp)} around ${esc(hr(loP))}">
+        <svg viewBox="0 0 ${W} 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs><clipPath id="wgPast"><rect x="0" y="0" width="${X(nm).toFixed(2)}" height="100"/></clipPath><clipPath id="wgNext"><rect x="${X(nm).toFixed(2)}" y="0" width="${(W - X(nm)).toFixed(2)}" height="100"/></clipPath></defs>
+          <path class="wg-grid" d="M${X(360)} 0V100M${X(720)} 0V100M${X(1080)} 0V100"/>
+          <path class="wg-area" d="${line}L${X(pts[pts.length - 1].m).toFixed(2)} 100L${X(pts[0].m).toFixed(2)} 100Z" clip-path="url(#wgNext)"/>
+          <path class="wg-line past" d="${line}" clip-path="url(#wgPast)"/>
+          <path class="wg-line" d="${line}" clip-path="url(#wgNext)"/>
+        </svg>
+        ${ny != null ? `<i class="wg-nowx" style="left:${nx.toFixed(2)}%"></i><i class="wg-dot" style="left:${nx.toFixed(2)}%;top:${Y(ny).toFixed(2)}%"></i>` : ''}
+        ${label(hiP, 'hi')}${label(loP, 'lo')}
+        <i class="wg-x" hidden></i><span class="wg-tip" hidden></span>
+      </div>
+      <div class="wg-axis" aria-hidden="true">${[[25, '6 AM'], [50, 'Noon'], [75, '6 PM']].filter(([at]) => ny == null || Math.abs(at - nx) > 9).map(([at, t]) => `<span style="left:${at}%">${t}</span>`).join('')}${ny != null ? `<span class="now" style="left:${Math.min(95, Math.max(5, nx)).toFixed(2)}%">Now</span>` : ''}</div>
+      ${rain ? `<p class="meta wg-rain">${esc(rain)}</p>` : ''}
+    </div>`;
+  }
   function vWeather(order) {
     const w = S.weather;
     if (!w || !w.current) {
@@ -1574,27 +1659,24 @@ dialog::backdrop{background:transparent}
     const isDayAt = iso => { const d = dayOf(iso.slice(0, 10)); if (!d) return true; const hm = iso.slice(11, 16); return hm >= d.sunrise && hm < d.sunset; };
     const c = w.current;
     const [cLabel, cIcon] = wx(c.code, c.isDay);
-    const curHour = `${tk}T${pad(new Date().getHours())}:00`;
-    const hours = (w.hourly || []).filter(h => h.t > curHour).slice(0, 5);
     const stale = Date.now() - (w.updatedAt || 0) > 3 * 3600e3;
     const upd = new Date(w.updatedAt || 0);
     const td = dayOf(tk);
     const r = n => Math.round(n);
-    const days = (w.daily || []).filter(d => d.date >= tk).slice(0, 6);
+    // the days after today, each bar against just those days
+    const days = (w.daily || []).filter(d => d.date > tk).slice(0, 5);
     let lo = Infinity, hi = -Infinity;
     for (const d of days) { lo = Math.min(lo, d.lo); hi = Math.max(hi, d.hi); }
     const span = Math.max(1, hi - lo);
-    const hr = (label, ic, temp, pop) => `<div class="hr"><span class="meta">${label}</span>${wxIcon(ic)}<span class="num">${r(temp)}°</span><span class="pop">${pop >= 20 ? pop + '%' : ''}</span></div>`;
-    const hourHtml = hr('Now', cIcon, c.temp, 0) + hours.map(h => hr(esc(hourFmt.format(new Date(h.t))), wx(h.code, isDayAt(h.t))[1], h.temp, h.pop)).join('');
-    const dayHtml = days.map((d, i) => {
+    const dayHtml = days.map(d => {
       const [label, ic] = wx(d.code, true);
-      return `<div class="wd-row" title="${esc(label)}"><span>${i === 0 ? 'Today' : esc(wdFmt.format(fromKey(d.date)))}</span>${wxIcon(ic)}<span class="pop">${d.pop >= 20 ? d.pop + '%' : ''}</span><span class="num lo">${r(d.lo)}°</span><span class="rng"><span style="left:${((d.lo - lo) / span * 100).toFixed(1)}%;right:${((hi - d.hi) / span * 100).toFixed(1)}%"></span></span><span class="num hi">${r(d.hi)}°</span></div>`;
+      return `<div class="wd-row" title="${esc(label)}"><span>${esc(wdFmt.format(fromKey(d.date)))}</span>${wxIcon(ic)}<span class="pop">${d.pop >= 20 ? d.pop + '%' : ''}</span><span class="num lo">${r(d.lo)}°</span><span class="rng"><span style="left:${((d.lo - lo) / span * 100).toFixed(1)}%;right:${((hi - d.hi) / span * 100).toFixed(1)}%"></span></span><span class="num hi">${r(d.hi)}°</span></div>`;
     }).join('');
     return `<section class="float wx ${order}" aria-label="Weather">
       <div class="wx-top"><span class="lab">${esc(w.place || 'Weather')}</span>${stale ? `<span class="meta stale">Updated ${esc(dkey(upd) === tk ? timeFmt.format(upd) : shortFmt.format(upd))}</span>` : ''}</div>
       <div class="wx-now"><p class="fig">${r(c.temp)}°</p><div class="wx-desc">${wxIcon(cIcon)}<p class="name">${esc(cLabel)}</p><p class="meta">Feels like ${r(c.feels)}°</p>${td ? `<p class="meta">High ${r(td.hi)}° · Low ${r(td.lo)}°</p>` : ''}</div></div>
-      <div class="wx-hours" aria-label="Next hours">${hourHtml}</div>
-      ${days.length > 1 ? `<div class="wx-days" aria-label="Days ahead">${dayHtml}</div>` : ''}
+      ${wxToday(w, tk, isDayAt)}
+      ${days.length ? `<div class="wx-days" aria-label="Days ahead">${dayHtml}</div>` : ''}
     </section>`;
   }
 
@@ -2297,7 +2379,7 @@ dialog::backdrop{background:transparent}
     dot.setAttribute('aria-label', foot.textContent); dot.title = foot.textContent;
     const me = whoAmI();
     $('#meName').textContent = me.name;
-    $('#fab').disabled = !S.canSave;
+    $('#fab').disabled = !S.canSave; $('#railAdd').disabled = !S.canSave;
     renderWake();
   }
 
@@ -3583,12 +3665,45 @@ dialog::backdrop{background:transparent}
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
-  $('#fab').addEventListener('click', () => {
+  // weather graph: the hour under the pointer or finger
+  let wgHide = null;
+  function wgScrub(e) {
+    const g = e.target.closest && e.target.closest('.wx-graph');
+    if (!g) return;
+    let data;
+    try { data = JSON.parse(g.dataset.wg); } catch (err) { return; }
+    if (!data.length) return;
+    clearTimeout(wgHide);
+    const r = g.getBoundingClientRect(), m = clamp((e.clientX - r.left) / r.width, 0, 1) * 1440;
+    const p = data.reduce((a, b) => (Math.abs(b[0] - m) < Math.abs(a[0] - m) ? b : a));
+    const x = g.querySelector('.wg-x'), tip = g.querySelector('.wg-tip'), left = p[0] / 1440 * 100;
+    x.style.left = left + '%'; x.hidden = false;
+    tip.textContent = `${hourFmt.format(new Date().setHours(p[0] / 60, 0, 0, 0))} · ${p[1]}° · ${p[2]}${p[3] >= 20 ? ` · ${p[3]}% rain` : ''}`;
+    tip.hidden = false;
+    const half = tip.offsetWidth / 2 / r.width * 100;
+    tip.style.left = clamp(left, half, 100 - half) + '%';
+  }
+  const wgOff = g => { for (const el of g.querySelectorAll('.wg-x,.wg-tip')) el.hidden = true; };
+  document.addEventListener('pointermove', wgScrub);
+  document.addEventListener('pointerdown', wgScrub);
+  document.addEventListener('pointerout', e => {
+    const g = e.target.closest && e.target.closest('.wx-graph');
+    if (g && e.pointerType === 'mouse' && !g.contains(e.relatedTarget)) wgOff(g);
+  });
+  document.addEventListener('pointerup', e => {
+    const g = e.target.closest && e.target.closest('.wx-graph');
+    if (g && e.pointerType !== 'mouse') { clearTimeout(wgHide); wgHide = setTimeout(() => wgOff(g), 1800); }
+  });
+
+  // the add button: bottom-right on phones, at the foot of the side rail on tablets and computers
+  function addNew() {
     if (S.tab === 'finance') { if (FIN && S.canSave) FIN.add(); return; }
     if (S.tab === 'car') { if (CAR && S.canSave) CAR.add(); return; }
     if (S.tab === 'meetings') { newMeeting(); return; }
     openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}, S.tab === 'tasks' ? 'task' : null);
-  });
+  }
+  $('#fab').addEventListener('click', addNew);
+  $('#railAdd').addEventListener('click', addNew);
 
   document.addEventListener('click', e => {
     const tabBtn = e.target.closest('[data-tab]');
@@ -3783,12 +3898,12 @@ dialog::backdrop{background:transparent}
   const WXQ = new URLSearchParams({
     latitude: '34.76', longitude: '-82.2',
     current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
-    hourly: 'temperature_2m,weather_code,precipitation_probability', forecast_hours: '30',
+    hourly: 'temperature_2m,weather_code,precipitation_probability',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset', forecast_days: '6',
     temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', timezone: 'America/New_York',
   });
   async function loadWeather(force) {
-    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3 && (S.weather.daily || []).length >= 6) return;
+    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3 && (S.weather.daily || []).length >= 6 && ((S.weather.hourly || [])[0] || {}).t <= `${todayKey()}T00:00`) return;
     try {
       const r = await fetch('https://api.open-meteo.com/v1/forecast?' + WXQ, { cache: 'no-store' });
       if (!r.ok) return;
