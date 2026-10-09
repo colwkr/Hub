@@ -35,10 +35,10 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261009220944">
-<script src="finance.js?v=20261009220944"></script>
-<link rel="stylesheet" href="car.css?v=20261009220944">
-<script src="car.js?v=20261009220944"></script>
+<link rel="stylesheet" href="finance.css?v=20261009221230">
+<script src="finance.js?v=20261009221230"></script>
+<link rel="stylesheet" href="car.css?v=20261009221230">
+<script src="car.js?v=20261009221230"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1284,13 +1284,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261009220944"></script>
+<script src="appearance.js?v=20261009221230"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261009220944';
+  const VERSION = '20261009221230';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1406,7 +1406,7 @@ dialog::backdrop{background:transparent}
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [], ...(Array.isArray(r.repeat.days) && r.repeat.days.length ? { days: r.repeat.days } : {}) } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
@@ -1472,6 +1472,7 @@ dialog::backdrop{background:transparent}
       case 'daily': return true;
       case 'weekdays': return d.getDay() >= 1 && d.getDay() <= 5;
       case 'weekly': return d.getDay() === a.getDay();
+      case 'days': return (rp.days || []).includes(d.getDay());
       case 'monthly': return d.getDate() === a.getDate();
       case 'yearly': return d.getDate() === a.getDate() && d.getMonth() === a.getMonth();
     }
@@ -1493,13 +1494,24 @@ dialog::backdrop{background:transparent}
   }
   const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
   const wdLong = new Intl.DateTimeFormat(undefined, { weekday: 'long' }), mdFmt = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric' });
-  function repeatChoices(k) {
+  // a set of weekdays, said the short way: "Every Mon–Thu", "Every Sun–Fri", "Every Mon, Wed and Fri"
+  const WD3 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function daysText(days) {
+    const s = [...new Set(days)].sort((a, b) => a - b);
+    if (s.length === 7) return 'Every day';
+    if (s.length === 1) return `Every ${wdLong.format(new Date(2026, 0, 4 + s[0]))}`;
+    if (s.length > 2) for (const a of s) if (s.every((_, i) => s.includes((a + i) % 7))) return `Every ${WD3[a]}–${WD3[(a + s.length - 1) % 7]}`;
+    return 'Every ' + s.slice(0, -1).map(x => WD3[x]).join(', ') + ' and ' + WD3[s[s.length - 1]];
+  }
+  const rotDays = (days, n) => days.map(x => (((x + n) % 7) + 7) % 7).sort((a, b) => a - b);
+  // rp: the item's own rule, so a set of weekdays it already has stays on the list
+  function repeatChoices(k, rp) {
     const d = k ? fromKey(k) : null;
     return [['', 'Does not repeat'], ['daily', 'Every day'], ['weekdays', 'Every weekday (Mon–Fri)'],
-      ['weekly', d ? `Every week on ${wdLong.format(d)}` : 'Every week'], ['monthly', d ? `Every month on the ${ordinal(d.getDate())}` : 'Every month'],
-      ['yearly', d ? `Every year on ${mdFmt.format(d)}` : 'Every year']];
+      ['weekly', d ? `Every week on ${wdLong.format(d)}` : 'Every week']].concat(rp && rp.days ? [['days', daysText(rp.days)]] : [])
+      .concat([['monthly', d ? `Every month on the ${ordinal(d.getDate())}` : 'Every month'], ['yearly', d ? `Every year on ${mdFmt.format(d)}` : 'Every year']]);
   }
-  const repeatText = r => r && r.repeat ? (repeatChoices(r.date).find(c => c[0] === r.repeat.freq) || ['', ''])[1] + (r.repeat.until ? ` until ${shortFmt.format(fromKey(r.repeat.until))}` : '') : '';
+  const repeatText = r => r && r.repeat ? (repeatChoices(r.date, r.repeat).find(c => c[0] === r.repeat.freq) || ['', ''])[1] + (r.repeat.until ? ` until ${shortFmt.format(fromKey(r.repeat.until))}` : '') : '';
   // A task is on the calendar once it has a day and a time; a day alone puts it under Anytime; anything else is Unsorted.
   const kindOf = t => (t.date && t.time ? 'timed' : t.date ? 'anytime' : 'unsorted');
   const effMins = t => t.mins || (t.kind === 'task' ? 15 : 30); // no estimate still needs a footprint on the timeline
@@ -1965,7 +1977,7 @@ dialog::backdrop{background:transparent}
             <input type="date" data-mf="date" value="${esc(m.date || '')}" aria-label="Day">
             <input type="time" data-mf="time" step="300" value="${esc(m.time || '')}" aria-label="Start time">
             <div class="xin mt-len"><input type="number" data-mf="mins" min="5" max="1440" step="5" inputmode="numeric" value="${m.mins || ''}" placeholder="30" aria-label="Length in minutes"><span class="unit">min</span></div>
-            <select data-mf="repeat" aria-label="Repeat"${m.date && !m.seriesId ? '' : ' disabled'}>${repeatChoices(m.date).map(([v, l]) => `<option value="${v}"${(m.repeat ? m.repeat.freq : '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
+            <select data-mf="repeat" aria-label="Repeat"${m.date && !m.seriesId ? '' : ' disabled'}>${repeatChoices(m.date, m.repeat).map(([v, l]) => `<option value="${v}"${(m.repeat ? m.repeat.freq : '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
           </div>
           <p class="where" id="mtWhen">${whenNote(m)}</p>
         </div>
@@ -2621,9 +2633,9 @@ dialog::backdrop{background:transparent}
     const t = id ? task(id) : null;
     if (id && !t) return;
     F = { id: t ? t.id : null, armed: false, kind: t ? t.kind : kind, occ: !!(t && t.occ), sid: t && t.occ ? t.sid : null, day: t ? t.date : null,
-      locked: !!(t && t.seriesId), repeat0: t && t.repeat ? t.repeat.freq : '' };
+      locked: !!(t && t.seriesId), repeat0: t && t.repeat ? t.repeat.freq : '', rp: t && t.repeat ? t.repeat : null };
     const v = t || { title: '', date: preset.date || null, time: preset.time || null, mins: preset.mins ?? null };
-    $('#f_repeat').innerHTML = repeatChoices(v.date).map(([rv, rl]) => `<option value="${rv}">${esc(rl)}</option>`).join('');
+    $('#f_repeat').innerHTML = repeatChoices(v.date, F.rp).map(([rv, rl]) => `<option value="${rv}">${esc(rl)}</option>`).join('');
     $('#f_repeat').value = F.repeat0;
     $('#f_title').value = v.title || '';
     $('#f_date').value = v.date || '';
@@ -2706,7 +2718,7 @@ dialog::backdrop{background:transparent}
   // the repeat choices name the day ("Every week on Friday"), so they follow the day field
   function fillRepeat() {
     const sel = $('#f_repeat'), date = $('#f_date').value, cur = sel.value;
-    sel.innerHTML = repeatChoices(date).map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
+    sel.innerHTML = repeatChoices(date, F && F.rp).map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
     sel.value = date ? cur : '';
     sel.disabled = !date || !!(F && F.locked);
     $('#f_repNote').textContent = F && F.locked ? 'This one was changed on its own, apart from its repeating series.' : !date ? 'Pick a day first.' : sel.value ? 'Repeats with no end date.' : '';
@@ -2900,6 +2912,8 @@ dialog::backdrop{background:transparent}
     if (!r || !r.repeat) return false;
     const rp = r.repeat, base = { kind: r.kind, title: r.title, time: r.time, mins: r.mins, notes: r.notes, agenda: r.agenda };
     if (scope === 'following' && k <= r.date) scope = 'all';
+    const shift = body.date && body.date !== k ? Math.round((fromKey(body.date) - fromKey(k)) / 864e5) : 0;
+    const daysOf = () => (rp.days ? { days: rotDays(rp.days, shift) } : {});
     if (scope === 'one') return run(async () => {
       // this time only: its own row, and the series skips this day
       must(await sb.from('tasks').insert(toRow({ ...base, ...body, repeat: null, seriesId: sid, origDay: k, done: false, doneAt: null })));
@@ -2907,15 +2921,14 @@ dialog::backdrop{background:transparent}
     });
     if (scope === 'all') {
       // the whole series; moving one to another day moves them all by the same number of days
-      const shift = body.date && body.date !== k ? Math.round((fromKey(body.date) - fromKey(k)) / 864e5) : 0;
-      const patch = { ...body, date: addDays(r.date, shift), repeat: freq ? { ...rp, freq, skip: rp.skip.map(d => addDays(d, shift)) } : null };
+      const patch = { ...body, date: addDays(r.date, shift), repeat: freq ? { ...rp, freq, skip: rp.skip.map(d => addDays(d, shift)), ...daysOf() } : null };
       return run(async () => must(await sb.from('tasks').update(toRow(patch)).eq('id', sid)));
     }
     // this and following: the old series ends the day before; a new one starts here
     const id2 = newUid();
     if (!id2) return false;
     return run(async () => {
-      must(await sb.from('tasks').insert(toRow({ ...base, ...body, id: id2, repeat: freq ? { freq, until: rp.until, skip: rp.skip.filter(d => d >= k) } : null, done: false, doneAt: null })));
+      must(await sb.from('tasks').insert(toRow({ ...base, ...body, id: id2, repeat: freq ? { freq, until: rp.until, skip: rp.skip.filter(d => d >= k), ...daysOf() } : null, done: false, doneAt: null })));
       must(await sb.from('tasks').update(toRow({ repeat: { ...rp, until: addDays(k, -1), skip: rp.skip.filter(d => d < k) } })).eq('id', sid));
       must(await sb.from('tasks').update({ series_id: id2 }).eq('series_id', sid).gte('orig_day', k));
     });
@@ -3025,7 +3038,7 @@ dialog::backdrop{background:transparent}
     if (e.target.dataset.mf === 'date') {
       // the repeat choices name the day, so rebuild them for the new one
       const sel = box.querySelector('[data-mf="repeat"]');
-      sel.innerHTML = repeatChoices(w.date).map(([cv, cl]) => `<option value="${cv}"${(w.repeat ? w.repeat.freq : '') === cv ? ' selected' : ''}>${esc(cl)}</option>`).join('');
+      sel.innerHTML = repeatChoices(w.date, w.repeat).map(([cv, cl]) => `<option value="${cv}"${(w.repeat ? w.repeat.freq : '') === cv ? ' selected' : ''}>${esc(cl)}</option>`).join('');
       sel.disabled = !w.date;
     }
     const t = task(id), note = $('#mtWhen'); if (t && note) note.innerHTML = whenNote(t);
