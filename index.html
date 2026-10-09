@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261009203039">
-<script src="finance.js?v=20261009203039"></script>
+<link rel="stylesheet" href="finance.css?v=20261009204623">
+<script src="finance.js?v=20261009204623"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1215,13 +1215,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261009203039"></script>
+<script src="appearance.js?v=20261009204623"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261009203039';
+  const VERSION = '20261009204623';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1359,7 +1359,15 @@ dialog::backdrop{background:transparent}
   const must = ({ error }) => { if (error) throw error; };
   // writes show on screen at once, then reload from the database if the save fails
   // tasks are the to-dos; events and meetings only live on the calendar (and meetings in their own tab)
+  // Tasks only live for their day: one from an earlier day is gone, done or not, and a finished one goes when its day ends.
+  // The database clears them every few minutes; the page drops them the moment the day turns over.
+  function expired(t) {
+    if (t.kind !== 'task') return false;
+    const tk = todayKey();
+    return (!!t.date && t.date < tk) || (t.done && !!t.doneAt && t.doneAt < fromKey(tk).getTime());
+  }
   function split() {
+    S.all = S.all.filter(x => !expired(x));
     S.tasks = S.all.filter(x => x.kind === 'task');
     S.items = S.all.filter(x => x.kind !== 'task');
   }
@@ -1636,7 +1644,7 @@ dialog::backdrop{background:transparent}
     }
     right.push(sec('Unsorted', uns.length ? uns.map(t => row(t, false)).join('') : `<p class="empty">Nothing unsorted. Tasks with no day, or a time but no day, land here${lists.size ? '' : '. Give a task a list, like To buy, to keep it in its own group'}.</p>`));
     if (done.length) {
-      right.push(`<section class="sec"><div class="sec-head"><h2 class="lab">Done</h2><button type="button" class="link" data-act="show-done" aria-expanded="${S.showDone}">${S.showDone ? 'Hide' : `Show ${done.length}`}</button></div>${S.showDone ? `<div class="float list">${done.slice(0, 40).map(t => row(t, true)).join('')}</div>` : ''}</section>`);
+      right.push(`<section class="sec"><div class="sec-head"><h2 class="lab">Done today</h2><button type="button" class="link" data-act="show-done" aria-expanded="${S.showDone}">${S.showDone ? 'Hide' : `Show ${done.length}`}</button></div>${S.showDone ? `<div class="float list">${done.slice(0, 40).map(t => row(t, true)).join('')}</div>` : ''}</section>`);
     }
     const ex = S.tasks.some(t => t.example);
     const exBar = !ex ? '' : S.confirmClear
@@ -2212,6 +2220,7 @@ dialog::backdrop{background:transparent}
     if (m === lastMinute && d === lastDay) return;
     if (d !== lastDay && S.calDay === lastDay) S.calDay = d;
     if (d !== lastDay && S.homeDay === lastDay) S.homeDay = d;
+    if (d !== lastDay) split();
     lastMinute = m; lastDay = d;
     if (!S.user) return;
     if (touching || $('#sheet').open || $('#cfSheet').open || (FIN && FIN.sheetOpen())) { pendingTick = true; updateClockOnly(); return; }
