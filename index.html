@@ -35,10 +35,10 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261009215621">
-<script src="finance.js?v=20261009215621"></script>
-<link rel="stylesheet" href="car.css?v=20261009215621">
-<script src="car.js?v=20261009215621"></script>
+<link rel="stylesheet" href="finance.css?v=20261009220944">
+<script src="finance.js?v=20261009220944"></script>
+<link rel="stylesheet" href="car.css?v=20261009220944">
+<script src="car.js?v=20261009220944"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -327,24 +327,42 @@ body[data-view="home"] .top{display:none}
 .wx-desc{min-width:0;display:flex;flex-direction:column;gap:2px}
 .wx-desc svg.i{width:26px;height:26px;stroke-width:1.3;margin-bottom:4px}
 .wx-desc p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* today's temperatures as a line, midnight to midnight; the part already gone is muted */
-.wx-today{display:flex;flex-direction:column;gap:6px;flex:none}
-.wx-graph{position:relative;height:118px;touch-action:pan-y;cursor:crosshair}
-.wx-graph svg{display:block;width:100%;height:100%;overflow:visible}
+/* the temperature line over 24 hours (today, centered on now, or ahead); the part already gone is muted.
+   Under it, the sky's color hour by hour: night, sunrise and sunset light, day, greyed by cloud */
+.wx-today{display:flex;flex-direction:column;gap:8px;flex:none}
+.wg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.wg-head .lab{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wg-mode{grid-template-columns:repeat(3,auto);padding:2px;gap:2px;flex:none}
+.wg-mode button{padding:5px 11px;font-size:11.5px}
+.wx-graph{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:6px;touch-action:pan-y;cursor:crosshair}
+.wg-chart{position:relative;height:132px}
+.wg-chart svg{display:block;width:100%;height:100%;overflow:visible}
 .wg-grid{stroke:var(--hair);stroke-width:1;vector-effect:non-scaling-stroke;fill:none}
+.wg-grid.mid{stroke:var(--ink-3);stroke-dasharray:2 3}
 .wg-area{fill:var(--ink);opacity:.07;stroke:none}
 .wg-line{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 .wg-line.past{stroke:var(--ink-3)}
+.wg-sky{position:relative;height:22px}
+.wg-sky svg{display:block;width:100%;height:100%;border-radius:11px;box-shadow:0 0 0 1px var(--hair)}
+.wg-sun{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;color:#fff;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7));pointer-events:none}
+.wg-sun svg.i{width:16px;height:16px;stroke-width:2}
 .wg-nowx,.wg-x{position:absolute;top:0;bottom:0;width:1px;margin-left:-.5px;background:var(--ink-3);pointer-events:none}
-.wg-x{background:var(--ink-2)}
-.wg-dot{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2.5px var(--ring);pointer-events:none}
+.wg-nowx{background:var(--ink-2)}
+.wg-x{background:var(--ink)}
+.wg-dot{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2.5px var(--ring);pointer-events:none;z-index:1}
 .wg-l{position:absolute;transform:translate(-50%,-100%);margin-top:-7px;font-size:11px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}
 .wg-l.lo{transform:translate(-50%,0);margin-top:7px}
 .wg-l b{font-weight:600;color:var(--ink)}
 .wg-tip{position:absolute;top:-6px;transform:translate(-50%,-100%);background:var(--solid);color:var(--on-solid);border-radius:999px;padding:4px 10px;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none;z-index:2;text-shadow:none}
 .wg-axis{position:relative;height:14px;font-size:10px;letter-spacing:.04em;color:var(--ink-3)}
 .wg-axis span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
-.wg-axis .now{color:var(--ink);font-weight:500;background:var(--glass,transparent);padding:0 3px}
+.wg-axis .day{color:var(--ink-2);font-weight:500}
+.wg-axis .now{color:var(--ink);font-weight:500;padding:0 3px}
+.wg-axis .now.edge-l{transform:none;margin-left:-3px}
+.wg-axis .now.edge-r{transform:translateX(-100%);margin-left:3px}
+.wg-suns{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--ink-2)}
+.wg-suns span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.wg-suns svg.i{width:16px;height:16px;color:var(--ink)}
 .wg-rain{font-size:12px}
 .wx-days{display:flex;flex-direction:column}
 .wd-row{display:grid;grid-template-columns:44px 20px 30px 30px minmax(30px,1fr) 30px;align-items:center;gap:6px;padding:8px 0;font-size:13px}
@@ -1266,13 +1284,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261009215621"></script>
+<script src="appearance.js?v=20261009220944"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261009215621';
+  const VERSION = '20261009220944';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1379,6 +1397,7 @@ dialog::backdrop{background:transparent}
     all: [], tasks: [], items: [], weather: null, mtgId: null,
     tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     taskTag: (() => { try { const v = localStorage.getItem('pos.taskTag'); return v === 'personal' || v === 'work' ? v : ''; } catch (e) { return ''; } })(),
+    wxMode: (() => { try { const v = localStorage.getItem('pos.wxMode'); return v === 'day' || v === 'ahead' ? v : 'now'; } catch (e) { return 'now'; } })(),
     aim: {}, busy: new Set(),
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
@@ -1605,47 +1624,133 @@ dialog::backdrop{background:transparent}
     }
     return d;
   }
-  // today, midnight to midnight: the temperature line, where now sits on it, the day's high and low, and when rain is likely
+  // The sky through the hours: night blue, the warm light around sunrise and sunset, daytime blue. Cloud cover pulls
+  // every color toward grey, so an overcast sunset reads as a dim, muted warm grey and a clear one as orange and gold.
+  // Keyed by minutes the sun has been up (negative while it's down).
+  const SKY_CLEAR = [[-100, [12, 20, 46]], [-60, [22, 32, 78]], [-30, [48, 56, 118]], [-12, [128, 88, 140]], [0, [236, 124, 84]], [12, [245, 170, 105]], [40, [238, 206, 150]], [80, [160, 198, 232]], [150, [104, 166, 226]]];
+  const SKY_DAWN = SKY_CLEAR.map(([m, c]) => [m, m === 0 ? [242, 152, 100] : m === -12 ? [150, 112, 152] : c]);
+  const SKY_GREY = [[-100, [18, 20, 26]], [-60, [26, 29, 36]], [-30, [40, 43, 52]], [-12, [70, 66, 76]], [0, [118, 104, 104]], [12, [134, 124, 120]], [40, [150, 148, 148]], [80, [164, 168, 172]], [150, [176, 181, 187]]];
+  const lerp = (a, b, k) => a + (b - a) * k;
+  function keyColor(K, m) {
+    if (!(m > K[0][0])) return K[0][1].slice();
+    for (let i = 1; i < K.length; i++) if (m <= K[i][0]) { const k = (m - K[i - 1][0]) / (K[i][0] - K[i - 1][0]); return K[i - 1][1].map((v, j) => lerp(v, K[i][1][j], k)); }
+    return K[K.length - 1][1].slice();
+  }
+  const wetCode = c => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95;
+  const codeCloud = c => (c === 0 ? 5 : c === 1 ? 25 : c === 2 ? 55 : 95);
+  function skyColor(mUp, cloud, wet, dawn) {
+    const clear = keyColor(dawn ? SKY_DAWN : SKY_CLEAR, mUp), grey = keyColor(SKY_GREY, mUp);
+    const k = Math.min(0.92, Math.max(0, cloud / 100));
+    let c = clear.map((v, j) => lerp(v, grey[j], k));
+    if (wet) c = c.map((v, j) => v * 0.8 + (j === 2 ? 8 : 0));
+    return `rgb(${c.map(v => Math.round(Math.max(0, Math.min(255, v)))).join(',')})`;
+  }
+  const skyWord = (cloud, wet) => (wet ? 'rainy' : cloud < 20 ? 'clear' : cloud < 50 ? 'partly cloudy' : cloud < 85 ? 'mostly cloudy' : 'overcast');
+  function sunEvents(w) {
+    const ev = [];
+    for (const d of w.daily || []) {
+      if (d.sunrise) ev.push({ at: new Date(`${d.date}T${d.sunrise}`).getTime(), rise: true });
+      if (d.sunset) ev.push({ at: new Date(`${d.date}T${d.sunset}`).getTime(), rise: false });
+    }
+    return ev.sort((a, b) => a.at - b.at);
+  }
+  // minutes since sunrise or until sunset (negative while the sun is down), and whether the nearest horizon moment is a sunrise
+  function sunAt(ev, t) {
+    let prev = null, next = null;
+    for (const e of ev) { if (e.at <= t) prev = e; else { next = e; break; } }
+    const up = prev ? prev.rise : next ? !next.rise : true;
+    const dp = prev ? (t - prev.at) / 60000 : Infinity, dn = next ? (next.at - t) / 60000 : Infinity;
+    const near = dp <= dn ? prev : next, m = Math.min(dp, dn);
+    return { m: up ? m : -m, dawn: !!(near && near.rise) };
+  }
+  // a reading between two hours, straight-line
+  function hourVal(H, t, key) {
+    for (let i = 0; i < H.length - 1; i++) if (H[i].at <= t && t <= H[i + 1].at) return lerp(H[i][key], H[i + 1][key], (t - H[i].at) / (H[i + 1].at - H[i].at || 1));
+    return null;
+  }
+  const hourNear = (H, t) => H.reduce((a, h) => (Math.abs(h.at - t) < Math.abs(a.at - t) ? h : a), H[0]);
+  const SUN_IC = {
+    rise: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5h17M7 18.5a5 5 0 0 1 10 0M12 4v6M9.3 6.7 12 4l2.7 2.7"/></svg>',
+    set: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5h17M7 18.5a5 5 0 0 1 10 0M12 4v6M9.3 7.3 12 10l2.7-2.7"/></svg>',
+  };
+  const WX_MODES = { day: ['Day', 'Today', 'Midnight to midnight'], now: ['Now', 'Around now', 'Twelve hours back and twelve ahead'], ahead: ['Ahead', 'Next 24 hours', 'The next 24 hours'] };
+  // The temperature line over a 24-hour window (today, centered on now, or the next 24 hours), where now sits on it,
+  // the window's high and low, the sky's color hour by hour with sunrise and sunset, and when rain is likely.
   function wxToday(w, tk, isDayAt) {
-    const tmr = fromKey(tk); tmr.setDate(tmr.getDate() + 1);
-    const tmrMid = `${dkey(tmr)}T00:00`;
-    const pts = (w.hourly || []).filter(h => h.t.slice(0, 10) === tk || h.t === tmrMid)
-      .map(h => ({ m: h.t === tmrMid ? 1440 : +h.t.slice(11, 13) * 60 + +h.t.slice(14, 16), temp: h.temp, code: h.code, pop: h.pop || 0, t: h.t }));
-    if (pts.length < 4) return '';
-    const day = pts.filter(p => p.m < 1440);
-    let hiP = day[0], loP = day[0];
-    for (const p of day) { if (p.temp > hiP.temp) hiP = p; if (p.temp < loP.temp) loP = p; }
+    const H = (w.hourly || []).map(h => ({ at: new Date(h.t).getTime(), t: h.t, temp: h.temp, code: h.code, pop: h.pop || 0, cloud: h.cloud != null ? h.cloud : codeCloud(h.code) }));
+    if (H.length < 4) return '';
+    const mode = WX_MODES[S.wxMode] ? S.wxMode : 'now', now = Date.now(), HR = 3600e3;
+    const mid = fromKey(tk), nextMid = fromKey(tk); nextMid.setDate(nextMid.getDate() + 1);
+    const [t0, t1] = mode === 'day' ? [mid.getTime(), nextMid.getTime()] : mode === 'ahead' ? [now, now + 24 * HR] : [now - 12 * HR, now + 12 * HR];
+    const inWin = H.filter(h => h.at >= t0 && h.at <= t1);
+    if (inWin.length < 4) return '';
+    // the line runs one hour past each edge so it meets them, and is clipped there
+    const i0 = H.findIndex(h => h.at >= t0), i1 = H.length - 1 - H.slice().reverse().findIndex(h => h.at <= t1);
+    const pts = H.slice(Math.max(0, i0 - 1), Math.min(H.length, i1 + 2));
+    let hiP = inWin[0], loP = inWin[0];
+    for (const p of inWin) { if (p.temp > hiP.temp) hiP = p; if (p.temp < loP.temp) loP = p; }
     const span = Math.max(4, hiP.temp - loP.temp);
-    const W = 240, X = m => m / 1440 * W, Y = v => 22 + (hiP.temp - v) / span * 58; // 0–100 tall: room above the high and below the low for labels
-    const P = pts.map(p => [X(p.m), Y(p.temp)]);
-    const line = smoothPath(P);
-    const now = new Date(), nm = now.getHours() * 60 + now.getMinutes();
-    // where now falls on the line
-    let ny = null;
-    for (let i = 0; i < pts.length - 1; i++) if (pts[i].m <= nm && nm <= pts[i + 1].m) { const k = (nm - pts[i].m) / (pts[i + 1].m - pts[i].m); ny = pts[i].temp + (pts[i + 1].temp - pts[i].temp) * k; }
-    const nx = X(nm) / W * 100, pct = v => (v / W * 100).toFixed(2);
-    const label = (p, cls) => `<span class="wg-l ${cls}" style="left:${Math.min(94, Math.max(6, X(p.m) / W * 100)).toFixed(2)}%;top:${Y(p.temp).toFixed(2)}%"><b>${cls === 'hi' ? 'H' : 'L'}</b> ${Math.round(p.temp)}°</span>`;
-    // rain still to come today
-    const ahead = day.filter(p => p.m + 60 > nm), wet = ahead.filter(p => p.pop >= 50), maybe = ahead.reduce((a, p) => (p.pop > (a ? a.pop : 0) ? p : a), null);
-    const hr = p => hourFmt.format(fromKey(tk).setHours(p.m / 60));
+    const W = 240, X = t => (t - t0) / (t1 - t0) * W, Y = v => 22 + (hiP.temp - v) / span * 58; // 0–100 tall: room above the high and below the low for labels
+    const pc = t => (X(t) / W * 100);
+    const line = smoothPath(pts.map(p => [X(p.at), Y(p.temp)]));
+    const nowIn = now >= t0 && now <= t1, ny = nowIn ? hourVal(H, now, 'temp') : null, nx = Math.max(0, Math.min(W, X(now)));
+    const sameDay = t => dkey(new Date(t)) === tk;
+    const hr = t => `${sameDay(t) ? '' : wdFmt.format(new Date(t)) + ' '}${hourFmt.format(new Date(t))}`;
+    const label = (p, cls) => `<span class="wg-l ${cls}" style="left:${Math.min(94, Math.max(6, pc(p.at))).toFixed(2)}%;top:${Y(p.temp).toFixed(2)}%"><b>${cls === 'hi' ? 'H' : 'L'}</b> ${Math.round(p.temp)}°</span>`;
+
+    // the sky strip: a color every 15 minutes
+    const ev = sunEvents(w), N = 96, stops = [];
+    for (let i = 0; i <= N; i++) {
+      const t = t0 + (t1 - t0) * i / N, s = sunAt(ev, t), h = hourNear(H, t);
+      const cloud = hourVal(H, t, 'cloud') ?? h.cloud, pop = hourVal(H, t, 'pop') ?? h.pop;
+      stops.push(`<stop offset="${(i / N * 100).toFixed(2)}%" stop-color="${skyColor(s.m, cloud, pop >= 50 || wetCode(h.code), s.dawn)}"/>`);
+    }
+    const suns = ev.filter(e => e.at >= t0 && e.at <= t1);
+    const sunWord = e => { const h = hourNear(H, e.at); const cloud = hourVal(H, e.at, 'cloud') ?? h.cloud; return skyWord(cloud, (hourVal(H, e.at, 'pop') ?? h.pop) >= 50 || wetCode(h.code)); };
+    const sunTime = e => `${sameDay(e.at) ? '' : wdFmt.format(new Date(e.at)) + ' '}${timeFmt.format(new Date(e.at))}`;
+
+    // grid lines every six hours on the clock; midnight carries the new day's name
+    const ticks = [];
+    const d = new Date(t0); d.setMinutes(0, 0, 0);
+    while (d.getTime() < t1) {
+      const t = d.getTime(), h = d.getHours();
+      if (t > t0 + HR / 4 && t < t1 - HR / 4 && h % 6 === 0) ticks.push({ t, h, text: h === 0 ? wdFmt.format(d) : h === 12 ? 'Noon' : hourFmt.format(d) });
+      d.setHours(d.getHours() + 1);
+    }
+    const npc = nx / W * 100;
+    const nowCls = npc < 6 ? ' edge-l' : npc > 94 ? ' edge-r' : '';
+
+    // rain still to come in the window
+    const ahead = H.filter(p => p.at + HR > now && p.at < t1), wet = ahead.filter(p => p.pop >= 50), maybe = ahead.reduce((a, p) => (p.pop > (a ? a.pop : 0) ? p : a), null);
     let rain = '';
-    if (wet.length) rain = `Rain likely ${wet.length > 1 ? `${hr(wet[0])} to ${hr({ m: Math.min(1440, wet[wet.length - 1].m + 60) })}` : `around ${hr(wet[0])}`}`;
-    else if (maybe && maybe.pop >= 20) rain = `${maybe.pop}% chance of rain around ${hr(maybe)}`;
-    const data = pts.filter(p => p.m < 1440).map(p => [p.m, Math.round(p.temp), wx(p.code, isDayAt(p.t))[0], p.pop]);
+    if (wet.length) rain = `Rain likely ${wet.length > 1 ? `${hr(Math.max(now, wet[0].at))} to ${hr(wet[wet.length - 1].at + HR)}` : `around ${hr(wet[0].at)}`}`;
+    else if (maybe && maybe.pop >= 20) rain = `${maybe.pop}% chance of rain around ${hr(maybe.at)}`;
+    const data = inWin.map(p => [p.at, Math.round(p.temp), wx(p.code, isDayAt(p.t))[0], p.pop, skyWord(p.cloud, false)]);
+    const [, title] = WX_MODES[mode];
     return `<div class="wx-today">
-      <div class="wx-graph" data-wg='${esc(JSON.stringify(data))}' role="img" aria-label="Today: high ${Math.round(hiP.temp)} degrees around ${esc(hr(hiP))}, low ${Math.round(loP.temp)} around ${esc(hr(loP))}">
-        <svg viewBox="0 0 ${W} 100" preserveAspectRatio="none" aria-hidden="true">
-          <defs><clipPath id="wgPast"><rect x="0" y="0" width="${X(nm).toFixed(2)}" height="100"/></clipPath><clipPath id="wgNext"><rect x="${X(nm).toFixed(2)}" y="0" width="${(W - X(nm)).toFixed(2)}" height="100"/></clipPath></defs>
-          <path class="wg-grid" d="M${X(360)} 0V100M${X(720)} 0V100M${X(1080)} 0V100"/>
-          <path class="wg-area" d="${line}L${X(pts[pts.length - 1].m).toFixed(2)} 100L${X(pts[0].m).toFixed(2)} 100Z" clip-path="url(#wgNext)"/>
-          <path class="wg-line past" d="${line}" clip-path="url(#wgPast)"/>
-          <path class="wg-line" d="${line}" clip-path="url(#wgNext)"/>
-        </svg>
-        ${ny != null ? `<i class="wg-nowx" style="left:${nx.toFixed(2)}%"></i><i class="wg-dot" style="left:${nx.toFixed(2)}%;top:${Y(ny).toFixed(2)}%"></i>` : ''}
-        ${label(hiP, 'hi')}${label(loP, 'lo')}
+      <div class="wg-head"><span class="lab">${title}</span><div class="seg3 wg-mode" role="radiogroup" aria-label="Graph range">${Object.entries(WX_MODES).map(([k, [short, , tip]]) => `<button type="button" role="radio" data-act="wx-mode" data-mode="${k}" aria-checked="${k === mode}" title="${tip}">${short}</button>`).join('')}</div></div>
+      <div class="wx-graph" data-wg='${esc(JSON.stringify(data))}' data-t0="${t0}" data-t1="${t1}" role="img" aria-label="${esc(title)}: high ${Math.round(hiP.temp)} degrees around ${esc(hr(hiP.at))}, low ${Math.round(loP.temp)} around ${esc(hr(loP.at))}">
+        <div class="wg-chart">
+          <svg viewBox="0 0 ${W} 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs><clipPath id="wgPast"><rect x="0" y="-20" width="${nx.toFixed(2)}" height="140"/></clipPath><clipPath id="wgNext"><rect x="${nx.toFixed(2)}" y="-20" width="${(W - nx).toFixed(2)}" height="140"/></clipPath></defs>
+            <path class="wg-grid" d="${ticks.map(k => `M${X(k.t).toFixed(2)} 0V100`).join('')}"/>
+            <path class="wg-grid mid" d="${ticks.filter(k => k.h === 0).map(k => `M${X(k.t).toFixed(2)} 0V100`).join('')}"/>
+            <path class="wg-area" d="${line}L${X(pts[pts.length - 1].at).toFixed(2)} 100L${X(pts[0].at).toFixed(2)} 100Z" clip-path="url(#wgNext)"/>
+            ${nx > 0 ? `<path class="wg-line past" d="${line}" clip-path="url(#wgPast)"/>` : ''}
+            <path class="wg-line" d="${line}" clip-path="url(#wgNext)"/>
+          </svg>
+          ${ny != null ? `<i class="wg-dot" style="left:${npc.toFixed(2)}%;top:${Y(ny).toFixed(2)}%"></i>` : ''}
+          ${label(hiP, 'hi')}${label(loP, 'lo')}
+        </div>
+        <div class="wg-sky" aria-hidden="true">
+          <svg viewBox="0 0 100 10" preserveAspectRatio="none"><defs><linearGradient id="wgSky" x1="0" x2="1" y1="0" y2="0">${stops.join('')}</linearGradient></defs><rect width="100" height="10" fill="url(#wgSky)"/></svg>
+          ${suns.map(e => `<span class="wg-sun" style="left:${pc(e.at).toFixed(2)}%">${e.rise ? SUN_IC.rise : SUN_IC.set}</span>`).join('')}
+        </div>
+        ${nowIn ? `<i class="wg-nowx" style="left:${npc.toFixed(2)}%"></i>` : ''}
         <i class="wg-x" hidden></i><span class="wg-tip" hidden></span>
       </div>
-      <div class="wg-axis" aria-hidden="true">${[[25, '6 AM'], [50, 'Noon'], [75, '6 PM']].filter(([at]) => ny == null || Math.abs(at - nx) > 9).map(([at, t]) => `<span style="left:${at}%">${t}</span>`).join('')}${ny != null ? `<span class="now" style="left:${Math.min(95, Math.max(5, nx)).toFixed(2)}%">Now</span>` : ''}</div>
+      <div class="wg-axis" aria-hidden="true">${ticks.filter(k => !nowIn || Math.abs(pc(k.t) - npc) > 9).map(k => `<span${k.h === 0 ? ' class="day"' : ''} style="left:${pc(k.t).toFixed(2)}%">${esc(k.text)}</span>`).join('')}${nowIn ? `<span class="now${nowCls}" style="left:${npc.toFixed(2)}%">Now</span>` : ''}</div>
+      ${suns.length ? `<div class="wg-suns">${suns.map(e => `<span>${e.rise ? SUN_IC.rise : SUN_IC.set}${e.rise ? 'Sunrise' : 'Sunset'} ${esc(sunTime(e))}, ${sunWord(e)}</span>`).join('')}</div>` : ''}
       ${rain ? `<p class="meta wg-rain">${esc(rain)}</p>` : ''}
     </div>`;
   }
@@ -3674,11 +3779,13 @@ dialog::backdrop{background:transparent}
     try { data = JSON.parse(g.dataset.wg); } catch (err) { return; }
     if (!data.length) return;
     clearTimeout(wgHide);
-    const r = g.getBoundingClientRect(), m = clamp((e.clientX - r.left) / r.width, 0, 1) * 1440;
-    const p = data.reduce((a, b) => (Math.abs(b[0] - m) < Math.abs(a[0] - m) ? b : a));
-    const x = g.querySelector('.wg-x'), tip = g.querySelector('.wg-tip'), left = p[0] / 1440 * 100;
+    const t0 = +g.dataset.t0, t1 = +g.dataset.t1;
+    const r = g.getBoundingClientRect(), t = t0 + clamp((e.clientX - r.left) / r.width, 0, 1) * (t1 - t0);
+    const p = data.reduce((a, b) => (Math.abs(b[0] - t) < Math.abs(a[0] - t) ? b : a));
+    const x = g.querySelector('.wg-x'), tip = g.querySelector('.wg-tip'), left = (p[0] - t0) / (t1 - t0) * 100;
     x.style.left = left + '%'; x.hidden = false;
-    tip.textContent = `${hourFmt.format(new Date().setHours(p[0] / 60, 0, 0, 0))} · ${p[1]}° · ${p[2]}${p[3] >= 20 ? ` · ${p[3]}% rain` : ''}`;
+    const when = new Date(p[0]);
+    tip.textContent = `${dkey(when) === todayKey() ? '' : wdFmt.format(when) + ' '}${hourFmt.format(when)} · ${p[1]}° · ${p[2]}${p[3] >= 20 ? ` · ${p[3]}% rain` : ''}`;
     tip.hidden = false;
     const half = tip.offsetWidth / 2 / r.width * 100;
     tip.style.left = clamp(left, half, 100 - half) + '%';
@@ -3748,6 +3855,7 @@ dialog::backdrop{background:transparent}
       render();
     }
     else if (act === 'list-add') openTask(null, { list: b.dataset.list }, 'task');
+    else if (act === 'wx-mode') { S.wxMode = b.dataset.mode; try { localStorage.setItem('pos.wxMode', S.wxMode); } catch (err) {} render(); }
     else if (act === 'task-tag') { S.taskTag = b.dataset.tagF || ''; try { localStorage.setItem('pos.taskTag', S.taskTag); } catch (err) {} render(); }
     else if (act === 'clear-ask') { S.confirmClear = true; render(); }
     else if (act === 'clear-no') { S.confirmClear = false; render(); }
@@ -3898,12 +4006,14 @@ dialog::backdrop{background:transparent}
   const WXQ = new URLSearchParams({
     latitude: '34.76', longitude: '-82.2',
     current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
-    hourly: 'temperature_2m,weather_code,precipitation_probability',
+    hourly: 'temperature_2m,weather_code,precipitation_probability,cloud_cover', past_days: '1',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset', forecast_days: '6',
     temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', timezone: 'America/New_York',
   });
+  // cached weather is usable when it reaches back to yesterday (the centered graph looks 12 hours back) and has cloud cover
+  const wxFresh = w => { const h0 = (w.hourly || [])[0] || {}, y = fromKey(todayKey()); y.setDate(y.getDate() - 1); return h0.t <= `${dkey(y)}T00:00` && 'cloud' in h0; };
   async function loadWeather(force) {
-    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3 && (S.weather.daily || []).length >= 6 && ((S.weather.hourly || [])[0] || {}).t <= `${todayKey()}T00:00`) return;
+    if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3 && (S.weather.daily || []).length >= 6 && wxFresh(S.weather)) return;
     try {
       const r = await fetch('https://api.open-meteo.com/v1/forecast?' + WXQ, { cache: 'no-store' });
       if (!r.ok) return;
@@ -3911,7 +4021,7 @@ dialog::backdrop{background:transparent}
       S.weather = {
         place: 'Simpsonville', updatedAt: Date.now(),
         current: { temp: c.temperature_2m, feels: c.apparent_temperature, code: c.weather_code, wind: c.wind_speed_10m, isDay: !!c.is_day },
-        hourly: h.time.map((t, i) => ({ t, temp: h.temperature_2m[i], code: h.weather_code[i], pop: h.precipitation_probability[i] || 0 })),
+        hourly: h.time.map((t, i) => ({ t, temp: h.temperature_2m[i], code: h.weather_code[i], pop: h.precipitation_probability[i] || 0, cloud: h.cloud_cover ? h.cloud_cover[i] : null })),
         daily: d.time.map((t, i) => ({ date: t, hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i], code: d.weather_code[i], pop: d.precipitation_probability_max[i] || 0, sunrise: d.sunrise[i].slice(11, 16), sunset: d.sunset[i].slice(11, 16) })),
       };
       try { localStorage.setItem('hub.wx', JSON.stringify(S.weather)); } catch (e) {}
