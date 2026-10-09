@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261009205631">
-<script src="finance.js?v=20261009205631"></script>
+<link rel="stylesheet" href="finance.css?v=20261009210607">
+<script src="finance.js?v=20261009210607"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -348,6 +348,22 @@ body[data-view="home"] .top{display:none}
 .g-next .list{min-height:0}
 .day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .list > .day-div{box-shadow:none}
+/* steps under a task: indented on a thin line, done in order; a step that's waiting has a dashed circle */
+.tgroup{position:relative}
+.tsteps{position:relative;padding-left:26px}
+.tgroup:not(.orphan) > .tsteps::before{content:"";position:absolute;left:28px;top:-6px;bottom:28px;width:1.5px;background:var(--hair)}
+.tsteps > .trow + .trow,.tgroup:not(.orphan) > .trow + .tsteps > .trow:first-child{box-shadow:inset 0 1px 0 var(--hair)}
+.tgroup.orphan > .tsteps{padding-left:0}
+.trow.locked .chk::before{box-shadow:none;border:1.5px dashed var(--ink-3)}
+.trow.locked .name{color:var(--ink-2)}
+.trow .after{color:var(--ink-3)}
+[data-sortbox] .trow{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.srt.sorting{position:relative;z-index:6;background:var(--lift-bg);border-radius:20px;box-shadow:0 18px 36px -12px rgba(0,0,0,.55),0 0 0 1.5px var(--ink-2)!important}
+/* personal and work */
+.ttag{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px;line-height:1.3;white-space:nowrap}
+.ttag.work{background:var(--solid);color:var(--on-solid)}
+.ttag.personal{box-shadow:inset 0 0 0 1px var(--ink-3);color:var(--ink-2)}
+.tfilter{max-width:330px;margin-bottom:6px}
 /* lists in Tasks (To buy, Sell or give away...): one line of names until opened */
 .list-h{display:flex;align-items:center;gap:8px;border:0;background:none;padding:6px 0;color:var(--ink-3);min-height:36px}
 .list-h em{font-style:normal;min-width:18px;height:18px;border-radius:9px;background:var(--well);color:var(--ink-2);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px}
@@ -427,7 +443,7 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .kind-f .seg3 button{padding:10px 4px}
 #sheet[data-sheet-kind="marker"] .f-len{display:none}
 #sheet[data-sheet-kind="task"] .f-rep,#sheet[data-sheet-kind="none"] .f-rep{display:none}
-#sheet:not([data-sheet-kind="task"]) .f-list{display:none}
+#sheet:not([data-sheet-kind="task"]) .f-list,#sheet:not([data-sheet-kind="task"]) .f-tag,#sheet:not([data-sheet-kind="task"]) .f-after{display:none}
 #sheet .f select,.mt-when-row select{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);-webkit-appearance:none;appearance:none;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
 #sheet .f select:disabled,.mt-when-row select:disabled{opacity:.5}
@@ -631,6 +647,9 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 .tq::-webkit-scrollbar{display:none}
 .tq-list > .day-div:first-child{padding-top:8px}
 .tq-row .meta{font-variant-numeric:tabular-nums}
+.tq-list .tq-step .sw-face{padding-left:30px}
+.tq-list .trow.locked .sw-handle{opacity:.45}
+.tq-list .trow.locked .name{color:var(--ink-2)}
 /* the task that's on right now: a lit line down its left edge, no frame, no pulse */
 .tq-list > .trow.live{display:block;margin:2px 0;border-radius:14px;background:none;box-shadow:none;animation:none}
 .tq-list > .trow.live .sw-face::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--solid);box-shadow:var(--now-line)}
@@ -1099,6 +1118,15 @@ dialog::backdrop{background:transparent}
         <p class="kind-note" id="f_mtypeNote"></p>
       </div>
       <label class="f"><span class="f-h" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
+      <div class="f f-tag">
+        <span class="f-h" id="h_tag">Personal or work</span>
+        <div class="seg3 tags" role="radiogroup" aria-labelledby="h_tag"><button type="button" role="radio" data-tag="" aria-checked="true">Neither</button><button type="button" role="radio" data-tag="personal" aria-checked="false">Personal</button><button type="button" role="radio" data-tag="work" aria-checked="false">Work</button></div>
+      </div>
+      <div class="f f-after">
+        <span class="f-h" id="h_after">Step of <i class="opt">optional</i></span>
+        <select id="f_parent" aria-labelledby="h_after"></select>
+        <p class="kind-note">Steps go in order: this waits until that task, and the steps before this one, are checked off.</p>
+      </div>
       <div class="f f-list">
         <span class="f-h" id="h_list">List <i class="opt">optional</i></span>
         <div class="chips" id="f_listChips"></div>
@@ -1215,13 +1243,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261009205631"></script>
+<script src="appearance.js?v=20261009210607"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261009205631';
+  const VERSION = '20261009210607';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1319,7 +1347,7 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 1100 ? 'week' : window.innerWidth >= 680 ? '3day' : 'day';
   }
-  let mk = null, mv = null, bd = null, renderLater = false, scopeOpen = false;
+  let mk = null, mv = null, bd = null, so = null, renderLater = false, scopeOpen = false;
   // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
   const H_MIN = 16, H_MAX = 180;
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
@@ -1327,6 +1355,7 @@ dialog::backdrop{background:transparent}
     booted: false, canSave: false, failed: false, loaded: false,
     all: [], tasks: [], items: [], weather: null, mtgId: null,
     tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
+    taskTag: (() => { try { const v = localStorage.getItem('pos.taskTag'); return v === 'personal' || v === 'work' ? v : ''; } catch (e) { return ''; } })(),
     aim: {}, busy: new Set(),
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
@@ -1335,7 +1364,7 @@ dialog::backdrop{background:transparent}
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [] } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
@@ -1348,6 +1377,9 @@ dialog::backdrop{background:transparent}
     if ('origDay' in o) r.orig_day = o.origDay || null;
     if ('mtype' in o) r.subtype = o.mtype || null;
     if ('list' in o) r.list = o.list || null;
+    if ('parentId' in o) r.parent_id = o.parentId || null;
+    if ('pos' in o) r.pos = o.pos ?? null;
+    if ('tag' in o) r.tag = o.tag || null;
     if ('date' in o) r.day = o.date || null;
     if ('time' in o) r.at_time = o.time || null;
     if ('mins' in o) r.mins = o.mins ?? null;
@@ -1432,6 +1464,45 @@ dialog::backdrop{background:transparent}
   const isOverdue = t => !t.done && !!t.date && t.date < todayKey();
   const cmp = (a, b) => (a.date || '~').localeCompare(b.date || '~') || (a.time || '~').localeCompare(b.time || '~') || (a.createdAt || 0) - (b.createdAt || 0);
   const byNew = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
+  // the order you dragged things into comes first; anything never placed keeps its usual order after those
+  const byOrder = (fallback = cmp) => (a, b) => {
+    const pa = a.pos ?? null, pb = b.pos ?? null;
+    if (pa !== null && pb !== null && pa !== pb) return pa - pb;
+    if (pa !== null && pb === null) return -1;
+    if (pa === null && pb !== null) return 1;
+    return fallback(a, b);
+  };
+  // Steps: a task can sit under another as a later step. Steps are done in order: the parent first,
+  // then each step after the one before it. Returns what has to be done first, or null.
+  const stepsOf = id => S.tasks.filter(t => t.parentId === id).sort(byOrder());
+  function blockedBy(t) {
+    if (!t || !t.parentId || t.done) return null;
+    const p = S.tasks.find(x => x.id === t.parentId);
+    if (p && !p.done) return p;
+    for (const s of stepsOf(t.parentId)) { if (s.id === t.id) break; if (!s.done) return s; }
+    return null;
+  }
+  // what comes right before a step: its task for the first step, else the step before it ("After Dry comforter")
+  function stepBefore(t) {
+    if (!t || !t.parentId) return null;
+    const sib = stepsOf(t.parentId), i = sib.findIndex(x => x.id === t.id);
+    return i > 0 ? sib[i - 1] : S.tasks.find(x => x.id === t.parentId) || null;
+  }
+  // a list of tasks in reading order: each task followed by its steps
+  function familyOrder(list, fallback = cmp) {
+    const here = new Set(list.map(t => t.id)), fams = new Map();
+    for (const t of list) {
+      const key = t.parentId || t.id;
+      if (!fams.has(key)) fams.set(key, { key, root: null, kids: [] });
+      if (key === t.id) fams.get(key).root = t; else fams.get(key).kids.push(t);
+    }
+    const order = byOrder(fallback);
+    for (const f of fams.values()) { f.kids.sort(order); f.lead = f.root || S.tasks.find(x => x.id === f.key) || f.kids[0]; f.orphan = !f.root; }
+    void here;
+    return [...fams.values()].sort((a, b) => order(a.lead, b.lead));
+  }
+  const TAGS = { personal: 'Personal', work: 'Work' };
+  const tagPill = t => (t.tag && TAGS[t.tag] ? `<span class="ttag ${t.tag}">${TAGS[t.tag]}</span>` : '');
 
   function meta(t, withDay) {
     const bits = [], k = kindOf(t);
@@ -1460,16 +1531,26 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- pieces ---------- */
-  function row(t, withDay) {
-    const mt = meta(t, withDay);
-    return `<div class="trow${t.done ? ' done' : ''}">
-      <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>
+  function row(t, withDay, step) {
+    const wait = blockedBy(t), mt = meta(t, withDay);
+    const metaBits = [isOverdue(t) ? '<span class="pill warn">Overdue</span>' : '', tagPill(t), wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : '', mt && !wait ? `<span>${esc(mt)}</span>` : ''].filter(Boolean).join('');
+    return `<div class="trow${t.done ? ' done' : ''}${step ? ' step srt' : ''}${wait ? ' locked' : ''}" data-sid="${esc(t.id)}">
+      <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : wait ? `Waiting on ${esc(wait.title)}` : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>
       <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}">
         <span class="name">${esc(t.title)}${t.example ? '<span class="tag">Example</span>' : ''}</span>
-        ${mt || isOverdue(t) ? `<span class="meta">${isOverdue(t) ? '<span class="pill warn">Overdue</span>' : ''}<span>${esc(mt)}</span></span>` : ''}
+        ${metaBits ? `<span class="meta">${metaBits}</span>` : ''}
       </button>
     </div>`;
   }
+  // a section's tasks, each with its steps tucked under it; hold any row to drag it into a new order
+  function famList(list, withDay, fallback) {
+    return familyOrder(list, fallback).map(f => {
+      const kids = f.kids.length ? `<div class="tsteps" data-sortbox="kids">${f.kids.map(t => row(t, withDay, true)).join('')}</div>` : '';
+      return `<div class="tgroup srt${f.orphan ? ' orphan' : ''}" data-sid="${esc(f.key)}">${f.root ? row(f.root, withDay) : ''}${kids}</div>`;
+    }).join('');
+  }
+  const sortSec = (title, list, withDay, fallback, extra = '') =>
+    `<section class="sec"><div class="sec-head"><h2 class="lab">${title}</h2>${extra}</div><div class="float list" data-sortbox="top">${famList(list, withDay, fallback)}</div></section>`;
   const sec = (title, inner, extra = '', cls = '') =>
     `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">${title}</h2>${extra}</div><div class="float list">${inner}</div></section>`;
   function notReady() {
@@ -1610,22 +1691,20 @@ dialog::backdrop{background:transparent}
   /* ---------- tasks ---------- */
   function vTasks() {
     if (!S.loaded) return notReady();
-    const tk = todayKey();
-    const open = S.tasks.filter(t => !t.done);
-    const overdue = open.filter(isOverdue).sort(cmp);
-    const today = S.tasks.filter(t => t.date === tk).sort(cmp);
+    const tk = todayKey(), tag = S.taskTag;
+    // only what's left to do, and only the side you picked (Personal or Work)
+    const open = S.tasks.filter(t => !t.done && (!tag || t.tag === tag));
+    const overdue = open.filter(isOverdue);
+    const today = open.filter(t => t.date === tk);
     const upcoming = open.filter(t => t.date && t.date > tk).sort(cmp);
-    const uns = open.filter(t => kindOf(t) === 'unsorted' && !t.list).sort(byNew);
-    const done = S.tasks.filter(t => t.done && t.date !== tk).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
-    const groups = [];
-    for (const t of upcoming) {
-      const g = groups[groups.length - 1];
-      if (g && g.date === t.date) g.items.push(t); else groups.push({ date: t.date, items: [t] });
-    }
+    const uns = open.filter(t => kindOf(t) === 'unsorted' && !t.list);
+    const done = S.tasks.filter(t => t.done && (!tag || t.tag === tag)).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+    const days = [];
+    for (const t of upcoming) { const g = days[days.length - 1]; if (g && g.date === t.date) g.items.push(t); else days.push({ date: t.date, items: [t] }); }
     const left = [];
-    if (overdue.length) left.push(sec('Overdue', overdue.map(t => row(t, true)).join('')));
-    left.push(sec('Today', today.length ? today.map(t => row(t, false)).join('') : '<p class="empty">Nothing on today.</p>'));
-    for (const g of groups) left.push(sec(esc(dayLabel(g.date)), g.items.map(t => row(t, false)).join('')));
+    if (overdue.length) left.push(sortSec('Overdue', overdue, true));
+    left.push(today.length ? sortSec('Today', today, false) : sec('Today', `<p class="empty">${S.tasks.some(t => t.date === tk && !t.done) ? 'Nothing here for this filter.' : 'Nothing left today.'}</p>`));
+    for (const g of days) left.push(sortSec(esc(dayLabel(g.date)), g.items, false));
     const right = [];
     // lists: things to keep in mind (to buy, to sell...). Folded to one line each until you open one.
     const lists = new Map();
@@ -1639,10 +1718,11 @@ dialog::backdrop{background:transparent}
       const head = `<button type="button" class="list-h" data-act="list-toggle" data-list="${esc(k)}" aria-expanded="${on}"><h2 class="lab">${esc(l.name)}</h2><em>${l.items.length}</em>${ICON.chev}</button>`
         + (S.canSave ? `<button type="button" class="circle" data-act="list-add" data-list="${esc(l.name)}" aria-label="Add to ${esc(l.name)}">${ICON.plus}</button>` : '');
       right.push(`<section class="sec tlist${on ? ' open' : ''}"><div class="sec-head">${head}</div>${on
-        ? `<div class="float list">${l.items.map(t => row(t, true)).join('')}</div>`
-        : `<button type="button" class="float list-peek" data-act="list-toggle" data-list="${esc(k)}">${l.items.map(t => `<span>${esc(t.title)}</span>`).join('')}</button>`}</section>`);
+        ? `<div class="float list" data-sortbox="top">${famList(l.items, true, (a, b) => (a.createdAt || 0) - (b.createdAt || 0))}</div>`
+        : `<button type="button" class="float list-peek" data-act="list-toggle" data-list="${esc(k)}">${familyOrder(l.items).flatMap(f => [f.root, ...f.kids].filter(Boolean)).map(t => `<span>${esc(t.title)}</span>`).join('')}</button>`}</section>`);
     }
-    right.push(sec('Unsorted', uns.length ? uns.map(t => row(t, false)).join('') : `<p class="empty">Nothing unsorted. Tasks with no day, or a time but no day, land here${lists.size ? '' : '. Give a task a list, like To buy, to keep it in its own group'}.</p>`));
+    right.push(uns.length ? sortSec('Unsorted', uns, false, byNew)
+      : sec('Unsorted', `<p class="empty">Nothing unsorted. Tasks with no day, or a time but no day, land here${lists.size ? '' : '. Give a task a list, like To buy, to keep it in its own group'}.</p>`));
     if (done.length) {
       right.push(`<section class="sec"><div class="sec-head"><h2 class="lab">Done today</h2><button type="button" class="link" data-act="show-done" aria-expanded="${S.showDone}">${S.showDone ? 'Hide' : `Show ${done.length}`}</button></div>${S.showDone ? `<div class="float list">${done.slice(0, 40).map(t => row(t, true)).join('')}</div>` : ''}</section>`);
     }
@@ -1650,7 +1730,8 @@ dialog::backdrop{background:transparent}
     const exBar = !ex ? '' : S.confirmClear
       ? '<div class="examples"><span>Delete every task tagged Example?</span><button type="button" class="link" data-act="clear-yes">Delete them</button><button type="button" class="link" data-act="clear-no">Keep</button></div>'
       : '<div class="examples"><span>Tasks tagged Example are samples.</span><button type="button" class="link" data-act="clear-ask">Clear examples</button></div>';
-    return `<div class="cols"><div class="col" id="tcolA" data-keep>${left.join('')}</div><div class="col" id="tcolB" data-keep>${right.join('')}${exBar}</div></div>`;
+    const filt = `<div class="seg3 tfilter" role="radiogroup" aria-label="Show">${[['', 'All'], ['personal', 'Personal'], ['work', 'Work']].map(([v, n]) => `<button type="button" role="radio" data-act="task-tag" data-tag-f="${v}" aria-checked="${tag === v}">${n}</button>`).join('')}</div>`;
+    return `${filt}<div class="cols"><div class="col" id="tcolA" data-keep>${left.join('')}</div><div class="col" id="tcolB" data-keep>${right.join('')}${exBar}</div></div>`;
   }
 
   /* ---------- meetings: talking points and notes; a meeting can wait here without a day ---------- */
@@ -1979,7 +2060,8 @@ dialog::backdrop{background:transparent}
     const timed = open.filter(t => t.time).sort(cmp);
     const ended = t => today && toMin(t.time) + effMins(t) <= nm;
     const ahead = timed.filter(t => !ended(t)), missed = timed.filter(ended);
-    const anytime = open.filter(t => !t.time).sort(cmp);
+    // anytime tasks in your order, each followed by its steps
+    const anytime = familyOrder(open.filter(t => !t.time)).flatMap(f => [f.root, ...f.kids].filter(Boolean));
     const doneN = all.length - open.length;
     const inMins = d => (d < 60 ? `${d} min` : `${Math.floor(d / 60)} hr${d % 60 ? ` ${d % 60} min` : ''}`);
     const row = (t, cls) => {
@@ -1991,13 +2073,13 @@ dialog::backdrop{background:transparent}
       const sr = live ? ', now' : soon ? `, in ${inMins(s0 - nm)}` : '';
       const cdHtml = live ? `<span class="tq-cd now" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><b>Now</b></span>`
         : cd ? `<span class="tq-cd" data-cd="${cd}" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><small>in</small><b>${cp[0]}</b><small class="u">${cp[1]}</small></span>` : '';
-      const big = cls === 'first' && !live;
+      const big = cls === 'first' && !live, wait = blockedBy(t), isStep = !!t.parentId;
       // swipe right to complete, the same as Home's Next list; no checkboxes here
-      return `<div class="trow sw tq-row${live ? ' live' : ''}${cdHtml ? ' has-cd' : ''}${big ? ' first' : ''}" data-swipe="${esc(t.id)}">
+      return `<div class="trow sw tq-row${live ? ' live' : ''}${cdHtml ? ' has-cd' : ''}${big ? ' first' : ''}${isStep ? ' tq-step' : ''}${wait ? ' locked' : ''}" data-swipe="${esc(t.id)}">
         <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
         <div class="sw-face">
           <button type="button" class="sw-handle" data-act="swipe-hint" aria-hidden="true" tabindex="-1">${ICON.arrow}</button>
-          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta"><span>${esc(when)}</span>${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>
+          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${tagPill(t)}${wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : `<span>${esc(when)}</span>`}${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>
           ${cdHtml}
           <button type="button" class="sr-only" data-act="done" data-id="${esc(t.id)}">Complete ${esc(t.title)}</button>
         </div>
@@ -2169,7 +2251,7 @@ dialog::backdrop{background:transparent}
     follow(L, R);
   }
   function render() {
-    if (mk || mv || bd || scopeOpen || typingInMeeting()) { renderLater = true; return; }
+    if (mk || mv || bd || so || scopeOpen || typingInMeeting()) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -2294,6 +2376,12 @@ dialog::backdrop{background:transparent}
     const t = task(id);
     if (!t) return;
     if (t.done) { toggleDone(id); return; }
+    const first = blockedBy(t);
+    if (first) {
+      if (row) { row.classList.remove('armed'); const f = row.querySelector('.sw-face'); if (f) f.style.transform = ''; }
+      toast(`${first.title} comes first`);
+      return;
+    }
     cfId = id; cfRow = row || null;
     $('#cfTask').textContent = t.title;
     $('#cfWhen').textContent = meta(t, true);
@@ -2349,6 +2437,15 @@ dialog::backdrop{background:transparent}
     $('#f_time').value = v.time || '';
     $('#f_mins').value = v.mins ? String(v.mins) : '';
     $('#f_list').value = (t ? t.list : preset.list) || '';
+    F.tag = t ? t.tag || '' : preset.tag || '';
+    for (const bt of document.querySelectorAll('#sheetBody [data-tag]')) bt.setAttribute('aria-checked', String(bt.dataset.tag === F.tag));
+    // a step can sit under any open task that isn't itself a step (one level deep)
+    const parents = S.tasks.filter(x => !x.done && !x.parentId && (!t || x.id !== t.id)).sort(byOrder());
+    const curP = t ? t.parentId || '' : preset.parentId || '';
+    $('#f_parent').innerHTML = `<option value="">Nothing, it's its own task</option>` + parents.map(x => `<option value="${esc(x.id)}">${esc(x.title)}${x.date ? ` (${esc(dayLabel(x.date))})` : ''}</option>`).join('')
+      + (curP && !parents.some(x => x.id === curP) ? `<option value="${esc(curP)}">${esc((S.tasks.find(x => x.id === curP) || { title: 'A finished task' }).title)}</option>` : '');
+    $('#f_parent').value = curP;
+    $('#f_parent').disabled = !!(t && stepsOf(t.id).length); // a task with steps of its own stays on top
     // your lists so far, plus the two everyone starts with, as one-tap choices
     const names = [...new Set(['To buy', 'Sell or give away', ...S.tasks.map(x => x.list).filter(Boolean)].map(n => n.trim()))].slice(0, 8);
     $('#f_listChips').innerHTML = names.map(n => `<button type="button" class="chip" data-set="list" data-val="${esc(n)}">${esc(n)}</button>`).join('');
@@ -2467,6 +2564,8 @@ dialog::backdrop{background:transparent}
     if (kb) { setKind(kb.dataset.kind); $('#sheetErr').hidden = true; return; }
     const mb = e.target.closest('#sheetBody [data-mtype]');
     if (mb) { setMtype(mb.dataset.mtype); return; }
+    const tg = e.target.closest('#sheetBody [data-tag]');
+    if (tg && F) { F.tag = tg.dataset.tag; for (const bt of document.querySelectorAll('#sheetBody [data-tag]')) bt.setAttribute('aria-checked', String(bt.dataset.tag === F.tag)); return; }
     const set = e.target.closest('[data-set]');
     if (set) {
       if (set.dataset.set === 'date') $('#f_date').value = addDays(todayKey(), Number(set.dataset.rel));
@@ -2502,6 +2601,21 @@ dialog::backdrop{background:transparent}
     // a list keeps the name the way it was first written ("to buy" joins "To buy")
     const lt = kind === 'task' ? $('#f_list').value.trim().replace(/\s+/g, ' ').slice(0, 40) : '';
     body.list = lt ? (S.tasks.map(x => x.list).find(n => n && n.toLowerCase() === lt.toLowerCase()) || lt) : null;
+    if (kind === 'task') {
+      body.tag = F.tag || null;
+      const par = $('#f_parent').disabled ? undefined : ($('#f_parent').value || null);
+      if (par !== undefined) {
+        const t0 = F.id ? task(F.id) : null;
+        body.parentId = par;
+        // a step lives where its task lives: same day, same list, unless you gave it its own
+        const pt = par ? S.tasks.find(x => x.id === par) : null;
+        if (pt && !body.date) body.date = pt.date || null;
+        if (pt && !body.list) body.list = pt.list || null;
+        if (pt && !body.tag) body.tag = pt.tag || null;
+        // moved under a different task: it starts at the end of that line
+        if (!t0 || (t0.parentId || null) !== par) body.pos = null;
+      }
+    }
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const freq = kind !== 'task' && body.date ? ($('#f_repeat').value || null) : null;
     if (F.occ) {
@@ -2969,11 +3083,11 @@ dialog::backdrop{background:transparent}
   document.addEventListener('pointerup', e => { if (mk && e.pointerId === mk.pid) endMark(true); });
   document.addEventListener('pointercancel', e => { if (mk && e.pointerId === mk.pid) endMark(false); });
   // while drawing with a finger, the timeline must not scroll under it
-  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on)) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on) || (so && so.on)) e.preventDefault(); }, { passive: false });
   document.addEventListener('contextmenu', e => { if (mk || mv) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
-  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !bd && !scopeOpen && !typingInMeeting()) render(); }, 0); }
+  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !bd && !so && !scopeOpen && !typingInMeeting()) render(); }, 0); }
 
   // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
   let zoomSaveT = null;
@@ -3204,6 +3318,94 @@ dialog::backdrop{background:transparent}
   document.addEventListener('pointerup', e => { if (mv && e.pointerId === mv.pid) endMove(true); });
   document.addEventListener('pointercancel', e => { if (mv && e.pointerId === mv.pid) endMove(false); });
 
+  /* ---------- Tasks: hold a row (or drag it with a mouse) to move it up or down. A step moves among its own steps,
+     which changes the order they have to be done in; a task moves with its steps. ---------- */
+  function scrollerOf(el) {
+    for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+      const o = getComputedStyle(n).overflowY;
+      if ((o === 'auto' || o === 'scroll') && n.scrollHeight > n.clientHeight) return n;
+    }
+    return document.scrollingElement;
+  }
+  const sortItems = (box, but) => [...box.children].filter(c => c.classList.contains('srt') && c !== but);
+  function startSort() {
+    const s = so;
+    if (!s || s.on) return;
+    clearTimeout(s.hold);
+    if (!s.item.isConnected || sortItems(s.box).length < 2) { endSort(false); return; }
+    s.on = true; sw = null; drag = null;
+    if (!s.mouse) haptic();
+    s.order0 = sortItems(s.box).map(c => c.dataset.sid).join();
+    s.grab = s.y0 - s.item.getBoundingClientRect().top;
+    s.scroller = scrollerOf(s.box);
+    s.item.classList.add('sorting');
+    document.body.classList.add('moving');
+    drawSort();
+    const loop = () => {
+      if (!so || !so.on) return;
+      const sc = so.scroller, r = sc === document.scrollingElement ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect(), edge = 56;
+      const v = so.y < r.top + edge ? -(r.top + edge - so.y) / 3 : so.y > r.bottom - edge ? (so.y - (r.bottom - edge)) / 3 : 0;
+      if (v) { sc.scrollTop += Math.max(-20, Math.min(20, v)); drawSort(); }
+      so.raf = requestAnimationFrame(loop);
+    };
+    s.raf = requestAnimationFrame(loop);
+  }
+  function drawSort() {
+    const s = so;
+    if (!s || !s.on) return;
+    // where it belongs: before the first neighbor whose middle is below the pointer
+    const others = sortItems(s.box, s.item);
+    let at = others.length;
+    for (let i = 0; i < others.length; i++) { const r = others[i].getBoundingClientRect(); if (s.y < r.top + r.height / 2) { at = i; break; } }
+    const next = others[at] || null;
+    if (s.item.nextElementSibling !== next || (!next && s.box.lastElementChild !== s.item)) {
+      s.box.insertBefore(s.item, next);
+      if (!s.mouse && s.lastAt !== undefined && s.lastAt !== at) haptic();
+    }
+    s.lastAt = at;
+    s.item.style.transform = '';
+    const top = s.item.getBoundingClientRect().top;
+    s.item.style.transform = `translateY(${s.y - s.grab - top}px) scale(1.02)`;
+  }
+  async function endSort(commit) {
+    const s = so; so = null;
+    if (!s) return;
+    clearTimeout(s.hold); cancelAnimationFrame(s.raf);
+    if (!s.on) { flushLater(); return; } // a plain tap: the click still lands
+    quietUntil = Date.now() + 400;
+    document.body.classList.remove('moving');
+    s.item.classList.remove('sorting'); s.item.style.transform = '';
+    renderLater = false;
+    const ids = sortItems(s.box).map(c => c.dataset.sid);
+    if (!commit || ids.join() === s.order0) { render(); return; }
+    // number them in their new order, show it at once, then save
+    ids.forEach((id, i) => { const t = S.all.find(x => x.id === id); if (t) t.pos = (i + 1) * 1000; });
+    split(); render();
+    try { await Promise.all(ids.map((id, i) => sb.from('tasks').update({ pos: (i + 1) * 1000 }).eq('id', id).then(must))); }
+    catch (err) { toast('That order didn’t save. Check your connection and try again.'); await reloadTasks(); }
+  }
+  document.addEventListener('pointerdown', e => {
+    if (so) endSort(false);
+    const r = e.target.closest && e.target.closest('[data-sortbox] .trow');
+    if (!r || !e.isPrimary || !S.canSave || e.target.closest('.chk')) return;
+    const mouse = e.pointerType === 'mouse';
+    if (mouse && e.button !== 0) return;
+    const item = r.classList.contains('srt') ? r : r.closest('.srt'), box = item && item.parentElement;
+    if (!item || !box || !box.dataset.sortbox) return;
+    so = { item, box, mouse, pid: e.pointerId, x0: e.clientX, y0: e.clientY, y: e.clientY, on: false };
+    so.hold = setTimeout(startSort, mouse ? 300 : 420);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!so || e.pointerId !== so.pid) return;
+    so.y = e.clientY;
+    if (so.on) { drawSort(); return; }
+    const moved = Math.hypot(e.clientX - so.x0, e.clientY - so.y0);
+    if (!so.mouse) { if (moved > 8) endSort(false); } // the finger is scrolling
+    else if (moved > 5) startSort();
+  });
+  document.addEventListener('pointerup', e => { if (so && e.pointerId === so.pid) endSort(true); });
+  document.addEventListener('pointercancel', e => { if (so && e.pointerId === so.pid) endSort(false); });
+
   /* ---------- bills on the calendar: hold one (or drag it with a mouse) and drop it on another day ---------- */
   function startBillDrag() {
     const d = bd;
@@ -3423,6 +3625,7 @@ dialog::backdrop{background:transparent}
       render();
     }
     else if (act === 'list-add') openTask(null, { list: b.dataset.list }, 'task');
+    else if (act === 'task-tag') { S.taskTag = b.dataset.tagF || ''; try { localStorage.setItem('pos.taskTag', S.taskTag); } catch (err) {} render(); }
     else if (act === 'clear-ask') { S.confirmClear = true; render(); }
     else if (act === 'clear-no') { S.confirmClear = false; render(); }
     else if (act === 'clear-yes') { S.confirmClear = false; render(); clearExamples(); }
