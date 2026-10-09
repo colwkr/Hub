@@ -19,6 +19,7 @@ window.POSFinance = function (ctx) {
     check: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6 7.4-8"/></svg>',
     warn: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 20.8 19.3H3.2z"/><path d="M12 10v4.2M12 16.8v.2"/></svg>',
     clock: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 8v4.3l2.8 1.7"/></svg>',
+    chev: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
   };
   const canSave = () => ctx.canSave();
 
@@ -433,6 +434,15 @@ window.POSFinance = function (ctx) {
     return `<div class="float note bill-note ${s.st}"><p>${ICON.warn}<span>${what} was due ${esc(shortDay.format(s.due))} and no charge has shown up. If you paid it another way, check it off.</span></p>${canSave() ? `<button type="button" class="btn solid" data-act="fin-bill-paid" data-id="${esc(b.id)}">Paid</button>` : ''}</div>`;
   }
 
+  // what a bill is made of, line by line, as on its last statement
+  function billParts(b) {
+    const parts = b.parts || [], key = 'parts-' + b.id, open = S.open.has(key), sum = parts.reduce((t, x) => t + (x.amount || 0), 0);
+    return `<div class="b-parts${open ? ' open' : ''}">
+      <button type="button" class="b-more" data-act="fin-toggle" data-id="${esc(key)}" aria-expanded="${open}"><span>What’s in the ${esc(fmt(sum))}</span>${ICON.chev}</button>
+      ${open ? `<div class="bp-list">${parts.map(x => `<div class="bp"><span class="bp-l"><span>${esc(x.name)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}</span><span class="bp-a${x.amount < 0 ? ' neg' : ''}">${x.amount < 0 ? '−' + esc(fmt(-x.amount)) : esc(fmt(x.amount))}</span></div>`).join('')}
+        ${b.partsNote ? `<p class="meta bp-note">${esc(b.partsNote)}</p>` : ''}</div>` : ''}
+    </div>`;
+  }
   function billRow(b) {
     const s = billState(b), a = b.accountId ? acct(b.accountId) : null;
     const where = [b.day ? `The ${ordinal(b.day)}` : 'No day yet', b.accountId ? acctLabel(a) : 'No account yet'].join(' · ');
@@ -443,7 +453,7 @@ window.POSFinance = function (ctx) {
         <span class="b-l"><span class="name">${esc(b.name)}</span><span class="meta">${esc(where)}</span></span>
         <span class="b-r"><span class="fig md">${b.amount ? fmt(b.amount) : '<span class="b-none">Set amount</span>'}</span>${statusPill(s)}</span>
       </button>
-    </div>`;
+    </div>${b.parts && b.parts.length ? billParts(b) : ''}`;
   }
 
   function vBills() {
@@ -468,7 +478,9 @@ window.POSFinance = function (ctx) {
   function loanCard(l) {
     const bal = loanNow(l), b = l.billId ? billById(l.billId) : null, extra = l.extra || 0;
     const apr = l.apr == null ? '<span class="pill warn">APR not set</span>' : `<span class="pill${l.aprSure ? '' : ' warn'}">${esc(String(+l.apr))}% APR${l.aprSure ? '' : ' · confirm'}</span>`;
-    const how = [l.payment ? `${fmt(l.payment)} a month` : null, b ? `paid with the ${b.name} bill${b.day ? ` on the ${ordinal(b.day)}` : ''}` : 'not tied to a bill'].filter(Boolean).join(' · ');
+    const credit = l.credit || 0, net = l.payment ? Math.max(0, l.payment - credit) : null;
+    const how = [l.payment ? (credit ? `${fmt(net)} a month after a ${fmt(credit)} credit (${fmt(l.payment)} before it)` : `${fmt(l.payment)} a month`) : null,
+      b ? `paid with the ${b.name} bill${b.day ? ` on the ${ordinal(b.day)}` : ''}` : 'not tied to a bill'].filter(Boolean).join(' · ');
     const need = bal == null ? `Add today’s balance from ${esc(l.lender || 'the lender')} to see when it’s paid off.` : !l.payment ? `Add the monthly payment${b && b.name === 'Verizon' ? ' (the phone’s part of the Verizon bill)' : ''} to see when it’s paid off.` : '';
     const base = need ? null : payoff(l, 0);
     const since = loanPayments(l).length;
@@ -481,18 +493,19 @@ window.POSFinance = function (ctx) {
       ${need ? `<p class="loan-need">${need}</p>${canSave() ? `<div><button type="button" class="btn solid" data-act="fin-form" data-form="loan" data-id="${esc(l.id)}">Add it</button></div>` : ''}` : `
       <p class="loan-off">${base && !base.never ? `Paid off <b>${esc(monYr.format(payoffDate(l, base.months)))}</b> · ${base.months} ${base.months === 1 ? 'payment' : 'payments'} left${base.interest ? ` · about ${esc(fmt(base.interest))} interest to go` : ''}` : 'Not on track to be paid off at this payment.'}</p>
       <div class="loan-chart" data-lc>${loanChart(l, extra)}</div>
+      ${credit && base && !base.never ? `<p class="loan-warn">${ICON.warn}<span>Don’t pay this off early. The ${esc(fmt(credit))} monthly credit stops if you do, so paying off the ${esc(fmt(bal))} now costs about <b>${esc(fmt(Math.max(0, bal - net * base.months)))}</b> more than finishing the ${base.months} payments (${esc(fmt(net * base.months))} out of pocket).</span></p>` : `
       <div class="lx">
         <label for="lx_${esc(l.id)}">Pay extra each month <b data-lx-val>+${esc(usd0.format(extra / 100))}</b></label>
         <input type="range" id="lx_${esc(l.id)}" min="0" max="${Math.max(500, Math.ceil(extra / 10000) * 100)}" step="10" value="${extra / 100}" data-loan-extra="${esc(l.id)}">
         <p class="meta" data-lx-res>${extraText(l, extra)}</p>
-      </div>`}
+      </div>`}`}
     </article>`;
   }
 
   function vLoans() {
     const loans = S.loans.slice().sort(byCreated);
     const known = loans.filter(l => loanNow(l) != null);
-    const owed = known.reduce((t, l) => t + loanNow(l), 0), monthly = loans.reduce((t, l) => t + (l.payment || 0), 0);
+    const owed = known.reduce((t, l) => t + loanNow(l), 0), monthly = loans.reduce((t, l) => t + Math.max(0, (l.payment || 0) - (l.credit || 0)), 0);
     const plans = loans.map(l => ({ l, p: payoff(l, l.extra || 0) }));
     const ready = plans.length && plans.every(x => x.p && !x.p.never);
     const free = ready ? Math.max(...plans.map(x => payoffDate(x.l, x.p.months))) : null;
@@ -846,6 +859,7 @@ window.POSFinance = function (ctx) {
           + field('APR', `<input id="ff_apr" inputmode="decimal" autocomplete="off" placeholder="0" value="${l && l.apr != null ? esc(String(+l.apr)) : ''}">`, 'Percent a year. 0 for a no-interest phone plan.')
           + `<label class="f-check"><input type="checkbox" id="ff_aprsure"${!l || l.aprSure ? ' checked' : ''}><span>The APR is confirmed</span></label>`
           + field('Monthly payment', `<input id="ff_payment" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${l && l.payment ? plain(l.payment) : ''}">`, 'Only the loan’s part, if it shares a bill with other things.')
+          + field('Credit back each month', `<input id="ff_credit" class="amount" inputmode="decimal" autocomplete="off" placeholder="Optional" value="${l && l.credit ? plain(l.credit) : ''}">`, 'A promo credit the lender takes off the bill each month, like Verizon’s device credit. What you really pay is the payment less this.')
           + field('Paid with which bill', `<select id="ff_bill">${bills}</select>`, 'Each month this bill gets paid counts as a payment.'),
       };
     },
@@ -1037,7 +1051,10 @@ window.POSFinance = function (ctx) {
       if (payText && !payment) return fail('Enter the monthly payment, like 324.78, or leave it blank.');
       const apr = aprText ? Number(aprText) : null;
       if (aprText && !(apr >= 0 && apr < 100)) return fail('Enter the APR as a percent, like 14 or 6.9.');
-      const data = { name, lender: val('ff_lender').trim() || null, apr, aprSure: $('#ff_aprsure').checked, payment, billId: val('ff_bill') || null };
+      const creditText = val('ff_credit').trim(), credit = creditText ? parseMoney(creditText) : null;
+      if (creditText && !credit) return fail('Enter the monthly credit, like 30.55, or leave it blank.');
+      if (credit && payment && credit > payment) return fail('The credit can’t be more than the payment.');
+      const data = { name, lender: val('ff_lender').trim() || null, apr, aprSure: $('#ff_aprsure').checked, payment, credit, billId: val('ff_bill') || null };
       if (!F.id) return save(refs.loans.doc().set({ ...data, balance, balanceAt: Date.now(), extra: 0, createdAt: Date.now() }));
       const l = loanById(F.id);
       if (!l) return fail('That loan no longer exists.');

@@ -126,6 +126,22 @@
 .fin .lx input[type=range]{width:100%;accent-color:var(--ink);height:28px}
 .fin .lx .meta b{color:var(--ink);font-weight:500}
 .fin .loan-how{padding:0 6px}
+.fin .loan-warn{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-2);padding-top:12px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .loan-warn svg.i{width:18px;height:18px;flex:none;color:var(--warn);stroke-width:1.8;margin-top:1px}
+.fin .loan-warn b{color:var(--ink);font-weight:600}
+/* a bill's line items */
+.fin .b-parts{padding:0 16px 6px 50px}
+.fin .b-more{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0 0 8px;font-size:12px;color:var(--ink-2)}
+.fin .b-more svg.i{width:13px;height:13px;transition:transform .2s ease}
+.fin .b-parts.open .b-more svg.i{transform:rotate(90deg)}
+.fin .bp-list{display:flex;flex-direction:column;padding-bottom:8px}
+.fin .bp{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;font-size:13px}
+.fin .bp + .bp{box-shadow:inset 0 1px 0 var(--hair)}
+.fin .bp-l{display:flex;flex-direction:column;gap:1px;min-width:0}
+.fin .bp-l small{font-size:11px;color:var(--ink-2)}
+.fin .bp-a{font-variant-numeric:tabular-nums;flex:none}
+.fin .bp-a.neg{color:var(--good)}
+.fin .bp-note{padding-top:4px}
 #finSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
 #finSheet .f-check input{width:22px;height:22px;margin:0;accent-color:var(--ink)}
 
