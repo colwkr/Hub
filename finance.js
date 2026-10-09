@@ -32,14 +32,14 @@ window.POSFinance = function (ctx) {
     return m[1] ? -cents : cents;
   }
 
-  const SUBS = { home: 'Overview', bills: 'Bills', savings: 'Savings', spending: 'Spending', activity: 'Activity' };
-  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], sub: 'home', open: new Set(), confirmClear: false };
+  const SUBS = { home: 'Overview', bills: 'Bills', loans: 'Loans', savings: 'Savings', spending: 'Spending', activity: 'Activity' };
+  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], sub: 'home', open: new Set(), confirmClear: false };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; } catch (e) {}
   let F = null; // the form currently in the sheet
   const charts = new Map();
 
   /* ---------- storage: same calls the ledger always made, now on Supabase ---------- */
-  const KINDS = ['accounts', 'buckets', 'txns', 'bills'];
+  const KINDS = ['accounts', 'buckets', 'txns', 'bills', 'loans'];
   const must = ({ error }) => { if (error) throw error; };
   const strip = d => { const { id, ...rest } = d || {}; return rest; };
   const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
@@ -248,6 +248,66 @@ window.POSFinance = function (ctx) {
   const exTag = d => d && d.example ? '<span class="tag">Example</span>' : '';
   const when = ms => dayFmt.format(ms) + ' · ' + timeFmt.format(ms);
 
+  /* ---------- loans: what's left, when it's done, and what a little extra each month saves ---------- */
+  const loanById = id => S.loans.find(l => l.id === id);
+  const monYr = new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' });
+  // the payments since you last set the balance: each month its bill was paid counts as one payment
+  function loanPayments(l) {
+    const b = l.billId ? billById(l.billId) : null;
+    if (!b || !b.paid || !l.payment) return [];
+    return Object.values(b.paid).map(p => p && p.at).filter(at => at && at > (l.balanceAt || 0)).sort((x, y) => x - y);
+  }
+  // today's balance: what you set, less the principal in each payment since (interest is taken monthly at the APR)
+  function loanNow(l) {
+    if (l.balance == null) return null;
+    let bal = l.balance;
+    const r = (l.apr || 0) / 1200;
+    for (const at of loanPayments(l)) { const i = Math.round(bal * r); bal = Math.max(0, bal - Math.max(0, l.payment - i)); }
+    return bal;
+  }
+  // month by month from here: how many payments are left and the interest in them
+  function payoff(l, extra = 0) {
+    const start = loanNow(l);
+    if (start == null || !l.payment) return null;
+    const r = (l.apr || 0) / 1200, pay = l.payment + extra;
+    let bal = start, months = 0, interest = 0;
+    const pts = [bal];
+    while (bal > 0 && months < 600) {
+      const i = Math.round(bal * r);
+      if (pay <= i) return { never: true, pts };
+      interest += i; bal = Math.max(0, bal + i - pay); months++; pts.push(bal);
+    }
+    return { months, interest, pts };
+  }
+  // the next payment: its bill's day this month if that hasn't been paid yet, else next month's
+  function nextPayment(l) {
+    const b = l.billId ? billById(l.billId) : null, n = new Date();
+    if (!b || !b.day) return new Date(n.getFullYear(), n.getMonth() + 1, n.getDate()).getTime();
+    const s = billState(b);
+    return s.st === 'paid' || s.st === 'next' ? dueOn(b, n.getFullYear(), n.getMonth() + 1) : dueOn(b, n.getFullYear(), n.getMonth());
+  }
+  const payoffDate = (l, months) => { const d = new Date(nextPayment(l)); return new Date(d.getFullYear(), d.getMonth() + Math.max(0, months - 1), d.getDate()).getTime(); };
+  function loanChart(l, extra) {
+    const base = payoff(l, 0), plan = extra ? payoff(l, extra) : null;
+    if (!base || base.never) return '';
+    const W = 300, H = 70, pad = 4, n = Math.max(base.pts.length - 1, 1), hi = base.pts[0] || 1;
+    const path = pts => pts.map((v, i) => `${i ? 'L' : 'M'}${(i / n * W).toFixed(1)},${(pad + (1 - v / hi) * (H - 2 * pad)).toFixed(1)}`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <path class="${plan ? 'ghost' : 'line'}" d="${path(base.pts)}" vector-effect="non-scaling-stroke"/>
+        ${plan && !plan.never ? `<path class="line" d="${path(plan.pts)}" vector-effect="non-scaling-stroke"/>` : ''}
+      </svg>
+      <div class="axis"><span>${esc(monYr.format(nextPayment(l)))}</span><span>${esc(monYr.format(payoffDate(l, base.months)))}</span></div>`;
+  }
+  // "+$50 a month: paid off Aug 2028, 7 months sooner, $1,234 less interest"
+  function extraText(l, extra) {
+    const base = payoff(l, 0), plan = payoff(l, extra);
+    if (!base || !plan) return '';
+    if (base.never) return 'The payment doesn’t cover the interest, so this never gets paid off. Raise the payment.';
+    if (!extra) return 'Slide to see what paying a little extra each month does.';
+    const sooner = base.months - plan.months, saved = base.interest - plan.interest;
+    return `<b>+${esc(usd0.format(extra / 100))} a month:</b> paid off ${esc(monYr.format(payoffDate(l, plan.months)))}${sooner > 0 ? `, ${sooner} ${sooner === 1 ? 'month' : 'months'} sooner` : ''}${saved > 0 ? `, ${esc(fmt(saved))} less interest` : ''}.`;
+  }
+
   /* ---------- pieces ---------- */
   function chargeCard(t) {
     const billChips = billsNear(t).slice(0, 3).map(b =>
@@ -405,6 +465,48 @@ window.POSFinance = function (ctx) {
       <div class="fin-two"><div>${sec('bill', 'Bills', bills)}</div><div>${sec('sub', 'Subscriptions', subs)}</div></div>`;
   }
 
+  function loanCard(l) {
+    const bal = loanNow(l), b = l.billId ? billById(l.billId) : null, extra = l.extra || 0;
+    const apr = l.apr == null ? '<span class="pill warn">APR not set</span>' : `<span class="pill${l.aprSure ? '' : ' warn'}">${esc(String(+l.apr))}% APR${l.aprSure ? '' : ' · confirm'}</span>`;
+    const how = [l.payment ? `${fmt(l.payment)} a month` : null, b ? `paid with the ${b.name} bill${b.day ? ` on the ${ordinal(b.day)}` : ''}` : 'not tied to a bill'].filter(Boolean).join(' · ');
+    const need = bal == null ? `Add today’s balance from ${esc(l.lender || 'the lender')} to see when it’s paid off.` : !l.payment ? `Add the monthly payment${b && b.name === 'Verizon' ? ' (the phone’s part of the Verizon bill)' : ''} to see when it’s paid off.` : '';
+    const base = need ? null : payoff(l, 0);
+    const since = loanPayments(l).length;
+    return `<article class="float loan" data-loan="${esc(l.id)}">
+      <div class="a-head">
+        <div><span class="lab">${esc(l.name)}${l.lender ? ' · ' + esc(l.lender) : ''}</span><span class="fig lg">${bal == null ? '—' : fmt(bal)}</span>
+          <span class="meta">${esc(how)}</span><span class="l-pills">${apr}${since ? `<span class="pill">${since} ${since === 1 ? 'payment' : 'payments'} taken off since ${esc(shortDay.format(l.balanceAt))}</span>` : ''}</span></div>
+        ${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="loan" data-id="${esc(l.id)}" aria-label="Edit ${esc(l.name)}">${ICON.edit}</button>` : ''}
+      </div>
+      ${need ? `<p class="loan-need">${need}</p>${canSave() ? `<div><button type="button" class="btn solid" data-act="fin-form" data-form="loan" data-id="${esc(l.id)}">Add it</button></div>` : ''}` : `
+      <p class="loan-off">${base && !base.never ? `Paid off <b>${esc(monYr.format(payoffDate(l, base.months)))}</b> · ${base.months} ${base.months === 1 ? 'payment' : 'payments'} left${base.interest ? ` · about ${esc(fmt(base.interest))} interest to go` : ''}` : 'Not on track to be paid off at this payment.'}</p>
+      <div class="loan-chart" data-lc>${loanChart(l, extra)}</div>
+      <div class="lx">
+        <label for="lx_${esc(l.id)}">Pay extra each month <b data-lx-val>+${esc(usd0.format(extra / 100))}</b></label>
+        <input type="range" id="lx_${esc(l.id)}" min="0" max="${Math.max(500, Math.ceil(extra / 10000) * 100)}" step="10" value="${extra / 100}" data-loan-extra="${esc(l.id)}">
+        <p class="meta" data-lx-res>${extraText(l, extra)}</p>
+      </div>`}
+    </article>`;
+  }
+
+  function vLoans() {
+    const loans = S.loans.slice().sort(byCreated);
+    const known = loans.filter(l => loanNow(l) != null);
+    const owed = known.reduce((t, l) => t + loanNow(l), 0), monthly = loans.reduce((t, l) => t + (l.payment || 0), 0);
+    const plans = loans.map(l => ({ l, p: payoff(l, l.extra || 0) }));
+    const ready = plans.length && plans.every(x => x.p && !x.p.never);
+    const free = ready ? Math.max(...plans.map(x => payoffDate(x.l, x.p.months))) : null;
+    return `<div class="totals">
+        <div class="float"><span class="lab">Owed on loans</span><span class="fig md">${known.length ? fmt(owed) : '—'}</span></div>
+        <div class="float"><span class="lab">Each month</span><span class="fig md">${fmt(monthly)}</span></div>
+        <div class="float"><span class="lab">Debt free</span><span class="fig md">${free ? esc(monYr.format(free)) : '—'}</span></div>
+      </div>
+      <section class="sec"><div class="sec-head"><span class="lab">Loans</span>${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="loan" aria-label="Add a loan">${ICON.plus}</button>` : ''}</div>
+        ${loans.length ? `<div class="loan-grid">${loans.map(loanCard).join('')}</div>` : '<p class="empty">No loans yet. Add one with today’s balance, its APR and the monthly payment.</p>'}
+        <p class="meta loan-how">Each month its bill gets paid (a confirmed charge, or checked off), that payment comes off the balance, less the interest. Update the balance from the lender now and then to keep it exact.</p>
+      </section>`;
+  }
+
   function examplesBar() {
     const examples = [...S.accounts, ...S.buckets, ...S.txns].filter(d => d.example).length;
     if (!examples) return '';
@@ -492,7 +594,7 @@ window.POSFinance = function (ctx) {
     return `<div class="fin-page">${h}</div>`;
   }
 
-  const views = { home: vHome, bills: vBills, savings: vSavings, spending: vSpending, activity: vActivity };
+  const views = { home: vHome, bills: vBills, loans: vLoans, savings: vSavings, spending: vSpending, activity: vActivity };
   const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { home: inbox().length + nSav + nBills, savings: nSav, bills: nBills }; };
 
   function view() {
@@ -703,6 +805,21 @@ window.POSFinance = function (ctx) {
           + (b ? `<label class="f-check"><input type="checkbox" id="ff_paid"${paidNow ? ' checked' : ''}><span>Paid for ${esc(month)}</span></label>` : ''),
       };
     },
+    loan(id) {
+      const l = id ? loanById(id) : null;
+      const bills = [opt('', 'None', !(l && l.billId))].concat(S.bills.slice().sort(byDay).map(b => opt(b.id, `${b.name}${b.day ? ' · the ' + ordinal(b.day) : ''}`, !!l && l.billId === b.id))).join('');
+      const bal = l ? loanNow(l) : null;
+      return {
+        title: l ? l.name : 'New loan', del: !!l,
+        body: field('Name', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Car" value="${l ? esc(l.name) : ''}">`)
+          + field('Lender', `<input id="ff_lender" autocomplete="off" maxlength="40" placeholder="Optional" value="${l && l.lender ? esc(l.lender) : ''}">`)
+          + field('Balance right now', `<input id="ff_balance" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${bal != null ? plain(bal) : ''}">`, 'From the lender’s site or app. Payments after today come off it on their own.')
+          + field('APR', `<input id="ff_apr" inputmode="decimal" autocomplete="off" placeholder="0" value="${l && l.apr != null ? esc(String(+l.apr)) : ''}">`, 'Percent a year. 0 for a no-interest phone plan.')
+          + `<label class="f-check"><input type="checkbox" id="ff_aprsure"${!l || l.aprSure ? ' checked' : ''}><span>The APR is confirmed</span></label>`
+          + field('Monthly payment', `<input id="ff_payment" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${l && l.payment ? plain(l.payment) : ''}">`, 'Only the loan’s part, if it shares a bill with other things.')
+          + field('Paid with which bill', `<select id="ff_bill">${bills}</select>`, 'Each month this bill gets paid counts as a payment.'),
+      };
+    },
     limit(id) {
       const l = id ? bucket(id) : null;
       return {
@@ -863,6 +980,23 @@ window.POSFinance = function (ctx) {
       }
       return save(refs.bills.doc(F.id).update(data));
     },
+    async loan() {
+      const name = val('ff_name').trim();
+      if (!name) return fail('Give the loan a name.');
+      const balText = val('ff_balance').trim(), payText = val('ff_payment').trim(), aprText = val('ff_apr').trim().replace('%', '');
+      const balance = balText ? parseMoney(balText) : null;
+      if (balText && balance === null) return fail('Enter the balance, like 12450.00, or leave it blank.');
+      const payment = payText ? parseMoney(payText) : null;
+      if (payText && !payment) return fail('Enter the monthly payment, like 324.78, or leave it blank.');
+      const apr = aprText ? Number(aprText) : null;
+      if (aprText && !(apr >= 0 && apr < 100)) return fail('Enter the APR as a percent, like 14 or 6.9.');
+      const data = { name, lender: val('ff_lender').trim() || null, apr, aprSure: $('#ff_aprsure').checked, payment, billId: val('ff_bill') || null };
+      if (!F.id) return save(refs.loans.doc().set({ ...data, balance, balanceAt: Date.now(), extra: 0, createdAt: Date.now() }));
+      const l = loanById(F.id);
+      if (!l) return fail('That loan no longer exists.');
+      if (balance !== loanNow(l)) { data.balance = balance; data.balanceAt = Date.now(); }
+      return save(refs.loans.doc(F.id).update(data));
+    },
     async limit() {
       const name = val('ff_name').trim();
       if (!name) return fail('Say what the limit is for.');
@@ -882,6 +1016,7 @@ window.POSFinance = function (ctx) {
       return true;
     }
     if (k === 'bill') return save(refs.bills.doc(id).delete());
+    if (k === 'loan') return save(refs.loans.doc(id).delete());
     if (k === 'goal' || k === 'limit') return save(refs.buckets.doc(id).delete());
     if (k === 'account') {
       for (const t of S.txns.filter(x => x.accountId === id)) if (!(await save(refs.txns.doc(t.id).delete()))) return false;
@@ -983,6 +1118,24 @@ window.POSFinance = function (ctx) {
   document.addEventListener('pointerup', () => { clearTimeout(tipTimer); tipTimer = setTimeout(hideTips, 1500); });
   document.addEventListener('pointercancel', hideTips);
 
+  // the extra-payment slider on a loan: numbers and chart follow while dragging; saved when you let go
+  document.addEventListener('input', e => {
+    const r = e.target.closest && e.target.closest('[data-loan-extra]');
+    if (!r) return;
+    const l = loanById(r.dataset.loanExtra), card = r.closest('[data-loan]');
+    if (!l || !card) return;
+    const extra = Math.round(Number(r.value) * 100);
+    card.querySelector('[data-lx-val]').textContent = '+' + usd0.format(extra / 100);
+    card.querySelector('[data-lx-res]').innerHTML = extraText(l, extra);
+    card.querySelector('[data-lc]').innerHTML = loanChart(l, extra);
+  });
+  document.addEventListener('change', e => {
+    const r = e.target.closest && e.target.closest('[data-loan-extra]');
+    if (!r || !canSave()) return;
+    const l = loanById(r.dataset.loanExtra), extra = Math.round(Number(r.value) * 100);
+    if (l && extra !== (l.extra || 0)) save(refs.loans.doc(l.id).update({ extra }));
+  });
+
   /* ---------- taps routed here by POS (data-act="fin-…") ---------- */
   function act(name, b) {
     if (name === 'fin-sub') {
@@ -1006,6 +1159,7 @@ window.POSFinance = function (ctx) {
   // the + button while Finance is showing: add a charge, or the first account when there is none
   function add() {
     if (S.sub === 'bills') openForm('bill', null, {});
+    else if (S.sub === 'loans') openForm('loan', null, {});
     else openForm(S.accounts.length ? 'charge' : 'account', null, {});
   }
   const sheetOpen = () => sheet.open;

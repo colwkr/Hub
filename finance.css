@@ -108,6 +108,24 @@
 .fin .mail-line{display:flex;align-items:center;gap:8px;padding:2px 6px}
 .fin .mdot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
 .fin .mdot.off{background:var(--ink-3)}
+/* loans */
+.fin .loan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:18px}
+.fin .loan{padding:18px;display:flex;flex-direction:column;gap:14px}
+.fin .loan .a-head > div:first-child{gap:5px}
+.fin .l-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.fin .loan-need{font-size:13px;color:var(--ink-2)}
+.fin .loan-off{font-size:13px;color:var(--ink-2)}
+.fin .loan-off b{font-weight:600;color:var(--ink)}
+.fin .loan-chart svg{display:block;width:100%;height:70px;overflow:visible}
+.fin .loan-chart .line{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.fin .loan-chart .ghost{fill:none;stroke:var(--ink-3);stroke-width:1.5;stroke-dasharray:3 4}
+.fin .loan-chart .axis{margin-top:6px}
+.fin .lx{display:flex;flex-direction:column;gap:8px;padding-top:12px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .lx label{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2)}
+.fin .lx label b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.fin .lx input[type=range]{width:100%;accent-color:var(--ink);height:28px}
+.fin .lx .meta b{color:var(--ink);font-weight:500}
+.fin .loan-how{padding:0 6px}
 #finSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
 #finSheet .f-check input{width:22px;height:22px;margin:0;accent-color:var(--ink)}
 
