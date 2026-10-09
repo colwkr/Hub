@@ -18,7 +18,7 @@ async function sha256(s: string) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-type Parsed = { type: "out" | "in" | "balance" | "skip" | null; amount?: number; last4?: string; merchant?: string; why?: string };
+type Parsed = { type: "out" | "in" | "balance" | "skip" | null; amount?: number; last4?: string; merchant?: string; why?: string; transfer?: boolean };
 const MONEY = String.raw`\$\s?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{2})?)`;
 const cents = (s: string) => Math.round(parseFloat(s.replace(/,/g, "")) * 100);
 // security and settings notices, not money
@@ -28,13 +28,16 @@ export function parse(subject: string, body: string): Parsed {
   const s = (subject || "").trim();
   if (NOTICE.test(s)) return { type: "skip", why: "account notice" };
   // the alert's own words, without the legal footer, link stubs and table bars
-  let text = (body || "").split(/Service Email:|Privacy and Security:|Contacting Us:/)[0];
+  let text = (body || "").split(/View transaction details|Service Email:|Privacy and Security:|Contacting Us:/)[0];
   text = text.replace(/\[[^\]]*\]\([^)]*\)/g, " ").replace(/\|/g, " ").replace(/[ \t ]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
   const all = `${s}\n${text}`;
   const low = all.toLowerCase();
 
   let type: Parsed["type"] = null;
-  if (/balance/i.test(s) && !/withdraw|deposit|purchase|transaction|payment/i.test(s)) type = "balance";
+  // a transfer between accounts: "Transfer Sent" leaves this account, "Transfer Received" arrives in it
+  const transfer = /transfer/i.test(s);
+  if (transfer) type = /sent|\bout\b|\bto\b|withdraw/i.test(s) ? "out" : /receiv|\bin\b|\bfrom\b|deposit/i.test(s) ? "in" : null;
+  else if (/balance/i.test(s) && !/withdraw|deposit|purchase|transaction|payment/i.test(s)) type = "balance";
   else if (/deposit|credit(?!\s*card)|incoming|refund|transfer in/i.test(s)) type = "in";
   else if (/withdraw|purchase|debit|card|transaction|payment|spent|charge|ach|check/i.test(s)) type = "out";
   else if (/\b(?:deposit|was credited|has been credited|credit of)\b/.test(low)) type = "in";
@@ -53,8 +56,9 @@ export function parse(subject: string, body: string): Parsed {
     || all.match(/(?:account|acct|card)[^\d$\n]{0,30}(\d{4})\b/i);
   const mer = all.match(/(?:merchant|description|payee|location)\s*(?:name)?\s*:\s*([^\n$]{2,60})/i)
     || all.match(/\b(?:at|to|from)\s+([A-Z0-9][A-Za-z0-9 &*'#.,\-\/]{2,40}?)(?=\s+(?:on|for|in the amount|was|has)\b|\.\s|\n|$)/);
-  const merchant = mer ? mer[1].replace(/\s+/g, " ").replace(/[.,]$/, "").trim() : undefined;
-  return { type, amount, last4: l4 ? l4[1] : undefined, merchant };
+  const merchant = transfer ? (type === "out" ? "Transfer sent" : "Transfer received")
+    : mer ? mer[1].replace(/\s+/g, " ").replace(/[.,]$/, "").trim() : undefined;
+  return { type, amount, last4: l4 ? l4[1] : undefined, merchant, ...(transfer ? { transfer: true } : {}) };
 }
 
 const nyDay = (ms: number) => new Date(ms).toLocaleDateString("en-US", { timeZone: "America/New_York" });
@@ -153,7 +157,7 @@ Deno.serve(async (req) => {
     else if ((p.type === "out" || p.type === "in") && p.amount) {
       const data = {
         amount: p.amount, merchant: p.merchant || (p.type === "in" ? "Deposit" : "Card or withdrawal"), accountId: acct ? acct.id : null,
-        at, dir: p.type, bucketId: null, source: "email", mailId: m.id, alert: String(m.subject || "").slice(0, 120), createdAt: Date.now(), example: false,
+        at, dir: p.type, bucketId: p.transfer && p.type === "out" ? "_none" : null, source: "email", mailId: m.id, alert: String(m.subject || "").slice(0, 120), createdAt: Date.now(), example: false,
       };
       const { error } = await sb.from("fin_docs").insert({ user_id: uid, id: `mail-${m.id}`, kind: "txns", data });
       status = error ? "error" : "txn";
