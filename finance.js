@@ -73,7 +73,7 @@ window.POSFinance = function (ctx) {
   async function load() {
     const [{ data, error }, mail] = await Promise.all([
       sb.from('fin_docs').select('id,kind,data').limit(20000),
-      sb.from('bank_mail').select('received_at,status').order('received_at', { ascending: false }).limit(1),
+      sb.from('bank_mail').select('received_at,status').ilike('sender', '%regions.com%').order('received_at', { ascending: false }).limit(1),
     ]);
     S.mail = mail && !mail.error && mail.data && mail.data[0] ? { at: Date.parse(mail.data[0].received_at) } : null;
     if (error) { S.failed = true; rerender(); return; }

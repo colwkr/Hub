@@ -118,15 +118,21 @@ window.POSCar = function (ctx) {
     const st = (left != null && left <= 0) || now >= dueAt ? 'due' : (left != null && left <= 300) || daysLeft <= 7 ? 'soon' : 'ok';
     return { o, dueMiles, dueAt, left, when, which, daysLeft, progress, st, odo };
   }
-  // recommendations from a service stay open until a later service says it took care of them
+  // recommendations from a shop's latest visit stay open until a later service says it took care of them
+  // (an older visit's list is replaced by the next one from the same shop, which looks the car over again)
   function recs() {
-    const done = new Set();
+    const done = new Set(), seenShop = new Set();
     for (const s of S.service) for (const f of s.fixes || []) done.add(f);
     const out = [];
-    for (const s of services()) (s.recs || []).forEach((text, i) => {
-      const key = `${s.id}#${i}`;
-      if (!done.has(key)) out.push({ key, text, s });
-    });
+    for (const s of services()) {
+      const shop = String(s.shop || '').trim().toLowerCase();
+      if (shop && seenShop.has(shop)) continue;
+      if (shop) seenShop.add(shop);
+      (s.recs || []).forEach((text, i) => {
+        const key = `${s.id}#${i}`;
+        if (!done.has(key)) out.push({ key, text, s });
+      });
+    }
     return out;
   }
   const tireRec = () => recs().some(r => /tire|rotat/i.test(r.text));

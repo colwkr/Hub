@@ -1,10 +1,14 @@
-// Regions alert emails → POS.
-// A small Google Apps Script in the owner's Gmail sends each new email from alert.regions.com here, about once a minute.
-// Every email is kept in bank_mail as it arrived. Charges and deposits become Finance transactions (they show up in
-// "Needs approval", and bills they match get checked off in the app); balance alerts reset that account's balance.
+// Regions alert emails and Express Oil receipts → POS.
+// A small Google Apps Script in the owner's Gmail sends each new email from alert.regions.com or expressoil.com here,
+// about once a minute. Every email is kept in bank_mail as it arrived. Charges and deposits become Finance transactions
+// (they show up in "Needs approval", and bills they match get checked off in the app); balance alerts reset that
+// account's balance. An Express Oil receipt (its PDF) becomes a car service record: date, mileage, cost, what was done,
+// what they recommend and when the next oil change is due.
 // The script proves who it sends for with a key; only the key's SHA-256 is stored (bank_mail_keys).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
+import { getDocumentProxy } from "npm:unpdf@0.12.1";
+import { parseReceipt, pdfLines, type Receipt } from "./receipt.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -53,6 +57,52 @@ export function parse(subject: string, body: string): Parsed {
   return { type, amount, last4: l4 ? l4[1] : undefined, merchant };
 }
 
+const nyDay = (ms: number) => new Date(ms).toLocaleDateString("en-US", { timeZone: "America/New_York" });
+const stems = (s: string) => s.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3).map((w) => w.slice(0, 5));
+// a receipt line that names an open recommendation takes care of it ("Tire rotate & balance" ← "TIRE ROTATE & BALANCE")
+function covers(items: string[], rec: string) {
+  const want = stems(rec);
+  if (!want.length) return false;
+  return items.some((it) => { const have = stems(it); const hit = want.filter((w) => have.includes(w)).length; return want.length === 1 ? hit === 1 : hit >= 2; });
+}
+
+type Svc = { id: string; data: Record<string, unknown> };
+async function receipt(sb: SupabaseClient, uid: string, m: Record<string, string>) {
+  if (!m.pdf) return { status: "ignored", parsed: { why: "no PDF attached" }, text: String(m.body || "") };
+  const bytes = Uint8Array.from(atob(m.pdf), (c) => c.charCodeAt(0));
+  const text = await pdfLines(await getDocumentProxy(bytes));
+  const r: Receipt = parseReceipt(text);
+  if (!r.at || !r.miles) return { status: "unread", parsed: r, text };
+  const { data } = await sb.from("records").select("id,data").eq("user_id", uid).eq("kind", "service");
+  const svcs = (data || []) as Svc[];
+  const fresh: Record<string, unknown> = {
+    type: r.type, title: r.title, at: r.at, miles: r.miles, shop: "Express Oil Change", cost: r.cost, card: r.card, invoice: r.invoice,
+    nextMiles: r.nextMiles, nextAt: r.nextAt, items: r.items, recs: r.recs, codes: r.codes, source: "email", mailId: m.id,
+  };
+  // the same visit already logged (by hand, or from the history on a later receipt): fill in only what it's missing
+  const same = svcs.find((s) => (r.invoice && s.data.invoice === r.invoice) || (nyDay(Number(s.data.at)) === nyDay(r.at!) &&
+    (s.data.miles === r.miles || (s.data.type === r.type && Math.abs(Number(s.data.miles || 0) - r.miles!) < 500))));
+  if (same) {
+    const patch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(fresh)) {
+      const cur = same.data[k];
+      if (v != null && !(Array.isArray(v) && !v.length) && (cur == null || cur === "" || (Array.isArray(cur) && !cur.length))) patch[k] = v;
+    }
+    if (patch.items && /service history/i.test(String(same.data.note || ""))) patch.note = "";
+    if (Object.keys(patch).length) await sb.from("records").update({ data: { ...same.data, ...patch } }).eq("user_id", uid).eq("id", same.id);
+    return { status: "service", parsed: r, text, id: same.id };
+  }
+  // what earlier visits recommended and this one did
+  const fixes: string[] = [];
+  for (const s of svcs) {
+    if (Number(s.data.at) >= r.at) continue;
+    ((s.data.recs || []) as string[]).forEach((rec, i) => { if (covers(r.items, rec)) fixes.push(`${s.id}#${i}`); });
+  }
+  const id = `svc-mail-${m.id}`;
+  const { error } = await sb.from("records").insert({ user_id: uid, id, kind: "service", data: { ...fresh, fixes, note: "", createdAt: Date.now() } });
+  return { status: error ? "error" : "service", parsed: r, text, id };
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
   const key = req.headers.get("x-pos-key") || "";
@@ -64,8 +114,16 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({}));
   const list = (Array.isArray(body.messages) ? body.messages : []).slice(0, 50).filter((m: Record<string, unknown>) =>
-    m && typeof m.id === "string" && /^[\w-]{1,100}$/.test(m.id) && /regions\.com/i.test(String(m.from || "")));
-  if (body.dry) return json({ ok: true, parsed: list.map((m: Record<string, string>) => ({ id: m.id, subject: m.subject, ...parse(m.subject, m.body) })) });
+    m && typeof m.id === "string" && /^[\w-]{1,100}$/.test(m.id) && /regions\.com|expressoil\.com/i.test(String(m.from || "")));
+  const isReceipt = (m: Record<string, string>) => /expressoil\.com/i.test(String(m.from || ""));
+  if (body.dry) {
+    const out = [];
+    for (const m of list) {
+      if (!isReceipt(m)) { out.push({ id: m.id, subject: m.subject, ...parse(m.subject, m.body) }); continue; }
+      out.push({ id: m.id, subject: m.subject, receipt: m.pdf ? parseReceipt(await pdfLines(await getDocumentProxy(Uint8Array.from(atob(m.pdf), (c) => c.charCodeAt(0))))) : null });
+    }
+    return json({ ok: true, parsed: out });
+  }
   if (!list.length) return json({ ok: true, received: 0 });
 
   // only the ones not seen before
@@ -75,9 +133,19 @@ Deno.serve(async (req) => {
   const { data: accts } = await sb.from("fin_docs").select("id,data").eq("user_id", uid).eq("kind", "accounts");
   const byLast4 = (l4?: string) => (l4 ? (accts || []).find((a: { data: { last4?: string[] } }) => (a.data.last4 || []).includes(l4)) : undefined);
 
-  let txns = 0, balances = 0, unread = 0;
+  let txns = 0, balances = 0, unread = 0, services = 0;
   for (const m of fresh) {
     const at = Number(m.date) || Date.now();
+    if (isReceipt(m)) {
+      let out: { status: string; parsed: unknown; text: string };
+      try { out = await receipt(sb, uid, m); } catch (e) { out = { status: "error", parsed: { why: String(e).slice(0, 300) }, text: String(m.body || "") }; }
+      if (out.status === "service") services++;
+      await sb.from("bank_mail").insert({
+        user_id: uid, id: m.id, received_at: new Date(at).toISOString(), sender: String(m.from || "").slice(0, 200),
+        subject: String(m.subject || "").slice(0, 300), body: out.text.slice(0, 12000), parsed: out.parsed, status: out.status,
+      });
+      continue;
+    }
     const p = parse(String(m.subject || ""), String(m.body || ""));
     const acct = byLast4(p.last4);
     let status = "unread";
@@ -102,5 +170,5 @@ Deno.serve(async (req) => {
       subject: String(m.subject || "").slice(0, 300), body: String(m.body || "").slice(0, 12000), parsed: p, status,
     });
   }
-  return json({ ok: true, received: list.length, fresh: fresh.length, txns, balances, unread });
+  return json({ ok: true, received: list.length, fresh: fresh.length, txns, balances, unread, services });
 });
