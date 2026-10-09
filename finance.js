@@ -516,16 +516,34 @@ window.POSFinance = function (ctx) {
         : '<button type="button" class="link" data-act="fin-clear-ask">Clear examples</button>'}</div>`;
   }
 
+  // A category can be a list of things to buy: each item has its own price, and the list's total is the target.
+  const isList = g => Array.isArray(g.items);
+  const listTotal = g => (g.items || []).reduce((t, i) => t + (i.price || 0), 0);
+  const goalTarget = g => (isList(g) ? listTotal(g) : g.target || 0);
+  function listItems(g) {
+    const items = g.items || [];
+    const rows = items.map(i => `<div class="li${i.got ? ' got' : ''}">
+        <button type="button" class="b-chk" data-act="fin-item-got" data-id="${esc(g.id)}" data-item="${esc(i.id)}" aria-pressed="${!!i.got}" aria-label="${i.got ? 'Not bought yet' : 'Bought'}: ${esc(i.name)}">${ICON.check}</button>
+        <button type="button" class="li-main" data-act="fin-form" data-form="item" data-id="${esc(g.id)}" data-item="${esc(i.id)}"${canSave() ? '' : ' disabled'}>
+          <span class="li-n">${esc(i.name)}</span>${i.price ? `<span class="fig li-p">${fmt(i.price)}</span>` : '<span class="li-none">Add price</span>'}
+        </button></div>`).join('');
+    return `<div class="li-list">${rows}${canSave() ? `<button type="button" class="add-row li-add" data-act="fin-form" data-form="item" data-id="${esc(g.id)}"><span>Add an item</span>${ICON.plus}</button>` : ''}</div>`;
+  }
   function catRow(g) {
-    const left = catLeft(g);
-    const pct = g.target ? clamp(left / g.target * 100, 0, 100) : null;
-    return `<div class="row"><div class="cat">
+    const left = catLeft(g), target = goalTarget(g), list = isList(g);
+    const pct = target ? clamp(left / target * 100, 0, 100) : null;
+    const items = g.items || [], unpriced = items.filter(i => !i.price).length, toBuy = items.filter(i => !i.got).reduce((t, i) => t + (i.price || 0), 0);
+    const open = list && S.open.has(g.id);
+    const listMeta = list ? [`${items.length} ${items.length === 1 ? 'item' : 'items'}`, unpriced ? `${unpriced} need${unpriced === 1 ? 's' : ''} a price` : null,
+      items.some(i => i.got) && toBuy ? `${fmt(toBuy)} still to buy` : null].filter(Boolean).join(' · ') : '';
+    return `<div class="row${list ? ' is-list' : ''}"><div class="cat">
       <i class="dot" style="opacity:${shadeOf(g)}"></i>
-      <span class="name">${esc(g.name)}${exTag(g)}</span>
+      <span class="name">${esc(g.name)}${exTag(g)}${list ? ' <span class="pill">List</span>' : ''}</span>
       <span class="fig md"${left < 0 ? ' style="color:var(--bad)"' : ''}>${fmt(left)}</span>
       ${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="goal" data-id="${esc(g.id)}" aria-label="Edit ${esc(g.name)}">${ICON.edit}</button>` : '<span></span>'}
-      ${g.target ? `<div class="track"><span style="width:${pct.toFixed(2)}%"></span></div><span class="meta">${Math.round(pct)}% of ${fmt(g.target)}</span>` : ''}
-    </div></div>`;
+      ${target ? `<div class="track"><span style="width:${pct.toFixed(2)}%"></span></div><span class="meta">${Math.round(pct)}% of ${fmt(target)}${list ? ' total' : ''}</span>` : ''}
+      ${list ? `<div class="li-foot"><span class="meta">${esc(listMeta)}</span><button type="button" class="link" data-act="fin-toggle" data-id="${esc(g.id)}" aria-expanded="${open}">${open ? 'Hide items' : 'Show items'}</button></div>` : ''}
+    </div>${open ? listItems(g) : ''}</div>`;
   }
 
   function vSavings() {
@@ -769,8 +787,19 @@ window.POSFinance = function (ctx) {
         title: g ? g.name : 'New category', del: !!g,
         body: field('Saving for', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Motorcycle" value="${g ? esc(g.name) : ''}">`)
           + (accts.length > 1 && !g ? field('Held in', `<select id="ff_account">${accts.map(x => opt(x.id, x.name, a && x.id === a.id)).join('')}</select>`) : `<input type="hidden" id="ff_account" value="${a ? esc(a.id) : ''}">`)
-          + field('Target', `<input id="ff_target" class="amount" inputmode="decimal" autocomplete="off" placeholder="Optional" value="${g && g.target ? plain(g.target) : ''}">`)
+          + (g && isList(g) ? `<p class="where">The target is the list’s total, <b>${fmt(listTotal(g))}</b>, from its items’ prices.</p>`
+            : field('Target', `<input id="ff_target" class="amount" inputmode="decimal" autocomplete="off" placeholder="Optional" value="${g && g.target ? plain(g.target) : ''}">`))
+          + (g ? '' : `<label class="f-check"><input type="checkbox" id="ff_list"><span>A list of things to buy, each with its own price</span></label>`)
           + (g ? moveFields(g) : field('Put in now', `<input id="ff_start" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${free ? plain(free) : ''}">`, free ? `${fmt(free)} is waiting to be sorted.` : 'Nothing is waiting to be sorted, so this starts at $0.00. Edit another category to move money over from it.')),
+      };
+    },
+    item(id, extra) {
+      const g = bucket(id), i = g && extra.item ? (g.items || []).find(x => x.id === extra.item) : null;
+      return {
+        title: i ? i.name : `Add to ${g ? g.name : 'the list'}`, del: !!i,
+        body: field('Item', `<input id="ff_name" autocomplete="off" maxlength="60" placeholder="Couch" value="${i ? esc(i.name) : ''}">`)
+          + field('Price', `<input id="ff_price" class="amount" inputmode="decimal" autocomplete="off" placeholder="Add it later" value="${i && i.price ? plain(i.price) : ''}">`, 'Leave it blank until you know it; the list total adds it in then.')
+          + (i ? `<label class="f-check"><input type="checkbox" id="ff_got"${i.got ? ' checked' : ''}><span>Bought</span></label>` : ''),
       };
     },
     allocate(id) {
@@ -912,9 +941,10 @@ window.POSFinance = function (ctx) {
     async goal() {
       const name = val('ff_name').trim();
       if (!name) return fail('Say what you are saving for.');
-      const targetText = val('ff_target').trim();
+      const targetText = $('#ff_target') ? val('ff_target').trim() : '';
       const target = targetText ? parseMoney(targetText) : null;
       if (targetText && !target) return fail('Enter the target as an amount, or leave it blank.');
+      const asList = !!($('#ff_list') && $('#ff_list').checked);
       if (F.id) {
         const g = bucket(F.id);
         if (!g) return fail('That category no longer exists.');
@@ -928,7 +958,7 @@ window.POSFinance = function (ctx) {
           if (!to) return fail('Pick the category to move it to.');
           if (!(await save(refs.buckets.doc(to.id).update({ saved: (to.saved || 0) + moved, example: false })))) return false;
         }
-        const patch = { name, target, example: false };
+        const patch = isList(g) ? { name, example: false } : { name, target, example: false };
         if (moved) patch.saved = (g.saved || 0) - moved;
         return save(refs.buckets.doc(F.id).update(patch));
       }
@@ -942,7 +972,24 @@ window.POSFinance = function (ctx) {
       const used = new Set(catsOf(a).map(slotOf));
       let slot = 0;
       while (used.has(slot) && slot < 8) slot++;
-      return save(refs.buckets.doc().set({ kind: 'goal', name, accountId: a.id, target, saved: start, slot, createdAt: Date.now(), example: false }));
+      return save(refs.buckets.doc().set({ kind: 'goal', name, accountId: a.id, target: asList ? null : target, saved: start, slot, createdAt: Date.now(), example: false, ...(asList ? { items: [] } : {}) }));
+    },
+    async item() {
+      const g = bucket(F.id);
+      if (!g) return fail('That list no longer exists.');
+      const name = val('ff_name').trim();
+      if (!name) return fail('Name the item.');
+      const priceText = val('ff_price').trim();
+      const price = priceText ? parseMoney(priceText) : null;
+      if (priceText && !price) return fail('Enter the price as an amount, like 249.99, or leave it blank.');
+      const items = (g.items || []).slice();
+      if (F.extra.item) {
+        const k = items.findIndex(x => x.id === F.extra.item);
+        if (k < 0) return fail('That item is no longer on the list.');
+        items[k] = { ...items[k], name, price, got: !!($('#ff_got') && $('#ff_got').checked) };
+      } else items.push({ id: newId(), name, price, got: false });
+      S.open.add(g.id);
+      return save(refs.buckets.doc(g.id).update({ items }));
     },
     async allocate() {
       const a = acct(F.id);
@@ -1017,6 +1064,7 @@ window.POSFinance = function (ctx) {
     }
     if (k === 'bill') return save(refs.bills.doc(id).delete());
     if (k === 'loan') return save(refs.loans.doc(id).delete());
+    if (k === 'item') { const g = bucket(id); return !!g && save(refs.buckets.doc(id).update({ items: (g.items || []).filter(x => x.id !== F.extra.item) })); }
     if (k === 'goal' || k === 'limit') return save(refs.buckets.doc(id).delete());
     if (k === 'account') {
       for (const t of S.txns.filter(x => x.accountId === id)) if (!(await save(refs.txns.doc(t.id).delete()))) return false;
@@ -1149,7 +1197,13 @@ window.POSFinance = function (ctx) {
     }
     if (!canSave()) return;
     if (name === 'fin-sort') sortTxn(b.dataset.txn, b.dataset.bucket);
-    else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type, group: b.dataset.group });
+    else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type, group: b.dataset.group, item: b.dataset.item });
+    else if (name === 'fin-item-got') {
+      const g = bucket(b.dataset.id);
+      if (!g) return;
+      const items = (g.items || []).map(x => (x.id === b.dataset.item ? { ...x, got: !x.got } : x));
+      save(refs.buckets.doc(g.id).update({ items }));
+    }
     else if (name === 'fin-bill-paid') togglePaid(b.dataset.id);
     else if (name === 'fin-toggle') { S.open.has(b.dataset.id) ? S.open.delete(b.dataset.id) : S.open.add(b.dataset.id); rerender(); }
     else if (name === 'fin-clear-ask') { S.confirmClear = true; rerender(); }

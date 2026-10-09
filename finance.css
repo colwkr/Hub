@@ -129,6 +129,19 @@
 #finSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
 #finSheet .f-check input{width:22px;height:22px;margin:0;accent-color:var(--ink)}
 
+/* a savings category that is a list of things to buy */
+.fin .li-foot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.fin .li-foot .link{font-size:12px}
+.fin .li-list{display:flex;flex-direction:column;margin:2px -10px -6px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .li{display:flex;align-items:center;gap:0;padding:0 2px}
+.fin .li + .li{box-shadow:inset 0 1px 0 var(--hair)}
+.fin .li-main{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;border:0;background:none;padding:10px 8px 10px 0;text-align:left;color:var(--ink)}
+.fin .li-n{font-size:13.5px;min-width:0;overflow-wrap:anywhere}
+.fin .li-p{font-size:14px;flex:none}
+.fin .li-none{font-size:12px;color:var(--ink-3);flex:none}
+.fin .li.got .li-n,.fin .li.got .li-p{color:var(--ink-3);text-decoration:line-through}
+.fin .li-add{padding:12px 8px 10px 14px;box-shadow:inset 0 1px 0 var(--hair)}
+
 /* the finance form sheet */
 #finForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
 #finSheet .f select{border:0;background:var(--panel-hi);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font-size:16px;box-shadow:inset 0 0 0 1px var(--hair)}
