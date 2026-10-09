@@ -82,6 +82,33 @@
 .fin .tx .t-amt.in{color:var(--good)}
 .fin .tx .t-sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;grid-column:1/-1}
 
+/* bills and subscriptions */
+.fin .bill-row{display:flex;align-items:center;gap:2px;padding:2px 16px 2px 6px}
+.fin .b-chk{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center;border:0;background:none;padding:0;color:transparent}
+.fin .b-chk::before{content:"";position:absolute;inset:10px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.fin .b-chk[aria-pressed="true"]{color:var(--on-solid)}
+.fin .b-chk[aria-pressed="true"]::before{background:var(--solid);box-shadow:none}
+.fin .b-chk svg.i{position:relative;width:13px;height:13px;stroke-width:2.2}
+.fin .b-main{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;border:0;background:none;padding:12px 0;text-align:left;color:var(--ink)}
+.fin .b-l{min-width:0;display:flex;flex-direction:column;gap:3px}
+.fin .b-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.fin .b-none{font-size:12px;font-weight:400;color:var(--ink-3)}
+.fin .bill-row.st-paid .name,.fin .bill-row.st-paid .fig{color:var(--ink-2)}
+.fin .bill-row.st-today{background:linear-gradient(90deg,color-mix(in srgb,var(--warn) 16%,transparent),transparent 80%)}
+.fin .list > .bill-row:first-child{border-radius:28px 28px 0 0}
+.fin .pill{display:inline-flex;align-items:center;gap:4px}
+.fin .pill svg.i{width:11px;height:11px;stroke-width:2.2}
+.fin .pill.ok{color:var(--good)}
+.fin .pill.due{background:var(--warn);color:var(--on-solid);font-weight:600}
+.fin .pill.late{color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad);background:none}
+.fin .note.bill-note p{display:flex;align-items:center;gap:12px}
+.fin .note.bill-note p svg.i{width:20px;height:20px;flex:none;color:var(--warn);stroke-width:1.8}
+.fin .note.bill-note.late p svg.i{color:var(--bad)}
+.fin .note.bill-note.today{box-shadow:inset 0 0 0 1.5px var(--warn),var(--glow),var(--lift)}
+.fin .chip.bill{box-shadow:var(--lift-sm),inset 0 0 0 1px var(--ink-3)}
+#finSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
+#finSheet .f-check input{width:22px;height:22px;margin:0;accent-color:var(--ink)}
+
 /* the finance form sheet */
 #finForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
 #finSheet .f select{border:0;background:var(--panel-hi);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font-size:16px;box-shadow:inset 0 0 0 1px var(--hair)}
@@ -108,3 +135,5 @@
 }
 @media (prefers-reduced-motion:no-preference){ .fin .meter span,.fin .track span,.fin .seg{transition:width .25s ease} }
 @media (max-width:520px){ .fin-tabs{gap:2px} .fin-tabs button{padding:8px 11px;font-size:12.5px;gap:6px} }
+.fin .l-short{display:none}
+@media (max-width:520px){ .fin .l-long{display:none} .fin .l-short{display:inline} }

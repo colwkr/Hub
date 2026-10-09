@@ -35,8 +35,8 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261008224113">
-<script src="finance.js?v=20261008224113"></script>
+<link rel="stylesheet" href="finance.css?v=20261009201149">
+<script src="finance.js?v=20261009201149"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -753,6 +753,24 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .mi.done{opacity:.5;text-decoration:line-through}
 .mi.more{background:none;box-shadow:none;color:var(--ink-2);font-weight:400}
 .mc.out .mi{opacity:.55}
+/* bills and subscriptions from Finance: an outlined all-day chip with its price; amber when due today, red edge when past due */
+[data-bill]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.achip.bill,.mi.bill{display:flex;align-items:center;gap:5px;background:none;box-shadow:inset 0 0 0 1px var(--hair);color:var(--ink-2);cursor:grab}
+.achip2.bill{gap:6px;border:0;padding:0 12px;font-size:12px;font-weight:500;color:var(--ink-2);background:none;box-shadow:inset 0 0 0 1px var(--hair);cursor:grab}
+.bill .bn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.bill small{flex:none;margin:0 0 0 auto!important;font-size:10.5px;font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.achip2.bill small{margin-left:0!important}
+.bill svg.i{width:12px;height:12px;flex:none;stroke-width:2;margin:0!important}
+.bill.b-today{background:var(--warn);box-shadow:var(--lift-sm)}
+.bill.b-today .bn,.bill.b-today small,.bill.b-today svg.i{color:var(--on-solid)}
+.bill.b-late{box-shadow:inset 0 0 0 1.5px var(--bad)}
+.bill.b-late svg.i{color:var(--bad)}
+.bill.b-paid{opacity:.55}
+.bill.b-paid .bn{text-decoration:line-through;text-decoration-color:var(--ink-3)}
+.bill-ghost{position:fixed!important;left:0!important;top:0!important;z-index:80;pointer-events:none;margin:0!important;opacity:1!important;background:var(--lift-bg)!important;box-shadow:0 18px 36px -12px rgba(0,0,0,.55),0 0 0 1.5px var(--ink-2)!important;will-change:transform}
+.bill-ghost.b-today{background:var(--warn)!important}
+.bill-origin{opacity:.3}
+.bill-drop{box-shadow:inset 0 0 0 2px var(--ink-2)!important}
 .mdots{display:none}
 @media (max-width:679px){
   .mc{align-items:center;padding:5px 2px}
@@ -1184,13 +1202,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261008224113"></script>
+<script src="appearance.js?v=20261009201149"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261008224113';
+  const VERSION = '20261009201149';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1255,6 +1273,7 @@ dialog::backdrop{background:transparent}
     chev: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
     left: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>',
     right: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
+    warn: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 20.8 19.3H3.2z"/><path d="M12 10v4.2M12 16.8v.2"/></svg>',
   };
   const CLOUD = 'M7.5 18.5h9a3.75 3.75 0 0 0 .5-7.47A5.25 5.25 0 0 0 6.9 12.1 3.2 3.2 0 0 0 7.5 18.5z';
   const WXI = {
@@ -1286,7 +1305,7 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 1100 ? 'week' : window.innerWidth >= 680 ? '3day' : 'day';
   }
-  let mk = null, mv = null, renderLater = false, scopeOpen = false;
+  let mk = null, mv = null, bd = null, renderLater = false, scopeOpen = false;
   // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
   const H_MIN = 16, H_MAX = 180;
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
@@ -1711,12 +1730,19 @@ dialog::backdrop{background:transparent}
     const days = visibleDays();
     return monthLabel(days[0], days[days.length - 1]);
   }
+  // Bills and subscriptions from Finance: an all-day chip on their day. Hold one (or drag it with a mouse) onto another day
+  // and its day of the month moves with it, in Finance too. Tapping one opens it.
+  const billsOn = k => (FIN && FIN.billsOn ? FIN.billsOn(k) : []);
+  const billChip = (x, cls) => `<button type="button" class="${cls} bill${x.st ? ' b-' + x.st : ''}" data-bill="${esc(x.id)}" data-act="fin-form" data-form="bill" data-id="${esc(x.id)}" aria-label="${esc(x.name)}${x.short ? ', ' + esc(x.short) : ''}, ${x.group === 'sub' ? 'subscription' : 'bill'}${x.st === 'today' ? ', due today' : x.st === 'late' ? ', past due' : x.st === 'paid' ? ', paid' : ''}">${x.st === 'today' || x.st === 'late' ? ICON.warn : x.st === 'paid' ? ICON.check : ''}<span class="bn">${esc(x.name)}</span>${x.short ? `<small>${esc(x.short)}</small>` : ''}</button>`;
   // tasks and events per day, in the order a day reads: all-day, anytime, then by time
   function itemsByDay(from, to) {
     const m = {};
     const put = (k, x) => (m[k] || (m[k] = [])).push(x);
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
-    for (let k = from; k <= to; k = addDays(k, 1)) for (const t of dayItems(k)) if (t.kind !== 'marker' && t.kind !== 'task') put(k, { t, s: t.time ? toMin(t.time) : -1 });
+    for (let k = from; k <= to; k = addDays(k, 1)) {
+      for (const b of billsOn(k)) put(k, { b, s: -3 });
+      for (const t of dayItems(k)) if (t.kind !== 'marker' && t.kind !== 'task') put(k, { t, s: t.time ? toMin(t.time) : -1 });
+    }
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
   }
@@ -1816,9 +1842,9 @@ dialog::backdrop{background:transparent}
     const k = S.homeDay, tk = todayKey();
     const any = dayItems(k).filter(t => kindOf(t) === 'anytime').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
-    const allDay = S.events.filter(g => g.date === k && g.allDay);
+    const allDay = S.events.filter(g => g.date === k && g.allDay), bills = billsOn(k);
     const nEv = S.events.filter(g => g.date === k).length + dayItems(k).filter(x => x.kind !== 'task' && x.kind !== 'marker').length;
-    const anyRow = any.length || allDay.length ? `<div class="dc-any"><span class="lab">Anytime</span><div class="dc-chips">${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    const anyRow = any.length || allDay.length || bills.length ? `<div class="dc-any" data-day="${k}"><span class="lab">Anytime</span><div class="dc-chips">${bills.map(x => billChip(x, 'achip2')).join('')}${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
     return `<section class="float daycal ${cls}" aria-label="Day calendar">
       <div class="dc-head">
@@ -1875,13 +1901,14 @@ dialog::backdrop{background:transparent}
     const lanes = split ? [[k0, 'cal'], [k0, 'tasks']] : days.map(k => [k, v === 'day' ? undefined : 'cal']);
     const anyByDay = lanes.map(([k, lane]) => dayItems(k).filter(t => kindOf(t) === 'anytime' && inLane(t, lane)).sort(cmp));
     const allByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : S.events.filter(g => g.date === k && g.allDay));
-    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length)
-      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
+    const billByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : billsOn(k));
+    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length) || billByDay.some(a => a.length)
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell" data-day="${lanes[i][0]}">${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
     if (split) {
       // Calendar on the left at the normal scale; Tasks on the right magnified to a few hours, scrolling in step
-      const anyFor = i => anyByDay[i].length || allByDay[i].length
-        ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell">${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
+      const anyFor = i => anyByDay[i].length || allByDay[i].length || billByDay[i].length
+        ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell" data-day="${lanes[i][0]}">${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
       return wrap(`${head}${err}
       ${strip}
       <div class="cal-split">
@@ -1960,6 +1987,7 @@ dialog::backdrop{background:transparent}
       const k = addDays(g.start, i), d = fromKey(k), items = by[k] || [];
       const cls = ['mc', d.getMonth() !== g.month ? 'out' : '', k === tk ? 'today' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       const chips = items.slice(0, 3).map(x => {
+        if (x.b) return billChip(x.b, 'mi');
         if (x.g) return `<button type="button" class="mi evt" data-act="event" data-ev="${esc(x.g.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(x.g.title)}</button>`;
         const t = x.t, kc = t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : '';
         return `<button type="button" class="mi${t.done ? ' done' : ''}${kc}" data-act="edit" data-id="${esc(t.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(t.title)}</button>`;
@@ -1984,7 +2012,7 @@ dialog::backdrop{background:transparent}
       let days = '<span></span>'.repeat(first.getDay());
       for (let dd = 1; dd <= n; dd++) {
         const k = dkey(new Date(y, mo, dd)), items = by[k] || [];
-        const open = items.filter(x => x.g || !x.t.done).length;
+        const open = items.filter(x => x.g || (x.b ? x.b.st !== 'paid' : !x.t.done)).length;
         const cls = ['yd', k === tk ? 'today' : '', open ? 'has' : ''].filter(Boolean).join(' ');
         days += `<button type="button" class="${cls}" data-act="cal-open" data-day="${k}" aria-label="${esc(longFmt.format(fromKey(k)))}${open ? `, ${open} ${open === 1 ? 'item' : 'items'}` : ''}">${dd}</button>`;
       }
@@ -2100,7 +2128,7 @@ dialog::backdrop{background:transparent}
     follow(L, R);
   }
   function render() {
-    if (mk || mv || scopeOpen || typingInMeeting()) { renderLater = true; return; }
+    if (mk || mv || bd || scopeOpen || typingInMeeting()) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -2887,11 +2915,11 @@ dialog::backdrop{background:transparent}
   document.addEventListener('pointerup', e => { if (mk && e.pointerId === mk.pid) endMark(true); });
   document.addEventListener('pointercancel', e => { if (mk && e.pointerId === mk.pid) endMark(false); });
   // while drawing with a finger, the timeline must not scroll under it
-  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on)) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on)) e.preventDefault(); }, { passive: false });
   document.addEventListener('contextmenu', e => { if (mk || mv) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
-  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !scopeOpen && !typingInMeeting()) render(); }, 0); }
+  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !bd && !scopeOpen && !typingInMeeting()) render(); }, 0); }
 
   // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
   let zoomSaveT = null;
@@ -3121,6 +3149,79 @@ dialog::backdrop{background:transparent}
   });
   document.addEventListener('pointerup', e => { if (mv && e.pointerId === mv.pid) endMove(true); });
   document.addEventListener('pointercancel', e => { if (mv && e.pointerId === mv.pid) endMove(false); });
+
+  /* ---------- bills on the calendar: hold one (or drag it with a mouse) and drop it on another day ---------- */
+  function startBillDrag() {
+    const d = bd;
+    if (!d || d.on) return;
+    clearTimeout(d.hold);
+    if (!d.chip.isConnected) { endBillDrag(false); return; }
+    d.on = true; sw = null; drag = null;
+    if (!d.mouse) haptic();
+    const r = d.chip.getBoundingClientRect();
+    d.dx = d.x0 - r.left; d.dy = d.y0 - r.top;
+    const g = d.chip.cloneNode(true);
+    for (const a of ['data-bill', 'data-act', 'data-id']) g.removeAttribute(a);
+    g.setAttribute('aria-hidden', 'true');
+    g.classList.add('bill-ghost');
+    g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    document.body.appendChild(g);
+    d.ghost = g;
+    d.chip.classList.add('bill-origin');
+    document.body.classList.add('moving');
+    drawBillDrag();
+  }
+  // the day under the pointer: a day column, an all-day cell, a month square, or a day in the week strip
+  function dropDayAt(x, y) {
+    const el = document.elementFromPoint(x, y), t = el && el.closest && el.closest('[data-day]');
+    return t && /^\d{4}-\d{2}-\d{2}$/.test(t.dataset.day) && !t.closest('dialog') ? t : null;
+  }
+  function drawBillDrag() {
+    const d = bd;
+    if (!d || !d.on) return;
+    d.ghost.style.transform = `translate(${d.x - d.dx}px, ${d.y - d.dy}px) scale(1.06)`;
+    const t = dropDayAt(d.x, d.y);
+    if (t === d.target) return;
+    if (d.target) d.target.classList.remove('bill-drop');
+    d.target = t;
+    if (!t) return;
+    t.classList.add('bill-drop');
+    if (!d.mouse && d.lastDay && t.dataset.day !== d.lastDay) haptic();
+    d.lastDay = t.dataset.day;
+  }
+  async function endBillDrag(commit) {
+    const d = bd; bd = null;
+    if (!d) return;
+    clearTimeout(d.hold);
+    if (!d.on) { flushLater(); return; } // a plain tap: let the click open it
+    quietUntil = Date.now() + 400;
+    document.body.classList.remove('moving');
+    if (d.ghost) d.ghost.remove();
+    if (d.target) d.target.classList.remove('bill-drop');
+    d.chip.classList.remove('bill-origin');
+    renderLater = false;
+    const day = commit && d.target ? fromKey(d.target.dataset.day).getDate() : null;
+    if (!(day && FIN && FIN.moveBill && (await FIN.moveBill(d.id, day)))) render();
+  }
+  document.addEventListener('pointerdown', e => {
+    if (bd) endBillDrag(false);
+    const chip = e.target.closest && e.target.closest('[data-bill]');
+    if (!chip || !e.isPrimary || !S.canSave || !FIN) return;
+    const mouse = e.pointerType === 'mouse';
+    if (mouse && e.button !== 0) return;
+    bd = { chip, id: chip.dataset.bill, mouse, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, target: null };
+    bd.hold = setTimeout(startBillDrag, mouse ? 350 : 420);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!bd || e.pointerId !== bd.pid) return;
+    bd.x = e.clientX; bd.y = e.clientY;
+    if (bd.on) { drawBillDrag(); return; }
+    const moved = Math.hypot(e.clientX - bd.x0, e.clientY - bd.y0);
+    if (!bd.mouse) { if (moved > 8) endBillDrag(false); } // the finger is scrolling
+    else if (moved > 4) startBillDrag();
+  });
+  document.addEventListener('pointerup', e => { if (bd && e.pointerId === bd.pid) endBillDrag(true); });
+  document.addEventListener('pointercancel', e => { if (bd && e.pointerId === bd.pid) endBillDrag(false); });
 
   /* ---------- keep the screen on (for the wall iPad) ---------- */
   let wakeLock = null;

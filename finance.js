@@ -16,6 +16,8 @@ window.POSFinance = function (ctx) {
   const ICON = {
     edit: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5h3.6L19 8.6 15.4 5 4.5 15.9zM13.6 6.8l3.6 3.6"/></svg>',
     plus: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>',
+    check: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6 7.4-8"/></svg>',
+    warn: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 20.8 19.3H3.2z"/><path d="M12 10v4.2M12 16.8v.2"/></svg>',
   };
   const canSave = () => ctx.canSave();
 
@@ -29,14 +31,14 @@ window.POSFinance = function (ctx) {
     return m[1] ? -cents : cents;
   }
 
-  const SUBS = { home: 'Overview', savings: 'Savings', spending: 'Spending', activity: 'Activity' };
-  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], sub: 'home', open: new Set(), confirmClear: false };
+  const SUBS = { home: 'Overview', bills: 'Bills', savings: 'Savings', spending: 'Spending', activity: 'Activity' };
+  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], sub: 'home', open: new Set(), confirmClear: false };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; } catch (e) {}
   let F = null; // the form currently in the sheet
   const charts = new Map();
 
   /* ---------- storage: same calls the ledger always made, now on Supabase ---------- */
-  const KINDS = ['accounts', 'buckets', 'txns'];
+  const KINDS = ['accounts', 'buckets', 'txns', 'bills'];
   const must = ({ error }) => { if (error) throw error; };
   const strip = d => { const { id, ...rest } = d || {}; return rest; };
   const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
@@ -74,6 +76,7 @@ window.POSFinance = function (ctx) {
     for (const k of KINDS) S[k] = [];
     for (const r of data) if (S[r.kind]) S[r.kind].push({ ...r.data, id: r.id });
     rerender();
+    if (S.bills.length) autoPay();
   }
   function start() {
     load();
@@ -133,6 +136,91 @@ window.POSFinance = function (ctx) {
   const inbox = () => S.txns.filter(t => isOut(t) && !t.bucketId).sort((a, b) => b.at - a.at);
   const savingsToSort = () => savingsAccounts().filter(a => unsorted(a) !== 0);
 
+  /* ---------- bills and subscriptions: a day of the month, an amount, an account, and whether this month's went through ---------- */
+  const pad2 = n => String(n).padStart(2, '0');
+  const monthKeyOf = (y, m) => { const d = new Date(y, m, 1); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; };
+  const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+  const startOfDay = ms => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const billById = id => S.bills.find(b => b.id === id);
+  const groupOf = b => (b.group === 'sub' ? 'sub' : 'bill');
+  const byDay = (a, b) => (a.day || 99) - (b.day || 99) || byCreated(a, b);
+  const usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  const fmtShort = cents => (cents % 100 ? fmt(cents) : usd0.format(cents / 100));
+  // the 31st falls on the last day of a shorter month
+  function dueOn(b, y, m) {
+    if (!b.day) return null;
+    return new Date(y, m, Math.min(b.day, new Date(y, m + 1, 0).getDate())).getTime();
+  }
+  const paidIn = (b, mk) => (b.paid && b.paid[mk]) || null;
+  // a month counts once the bill was in here by its day (one added on the 9th starts with next month's 7th)
+  const appliesIn = (b, y, m) => { const d = dueOn(b, y, m); return d != null && d >= startOfDay(b.createdAt || 0); };
+  const createdMonth = b => { const d = new Date(b.createdAt || 0); return monthKeyOf(d.getFullYear(), d.getMonth()); };
+  function billState(b, now = Date.now()) {
+    const n = new Date(now), y = n.getFullYear(), m = n.getMonth(), today = startOfDay(now);
+    const p = paidIn(b, monthKeyOf(y, m));
+    if (p) return { st: 'paid', at: p.at || null };
+    if (!b.day) return { st: 'noday' };
+    if (!appliesIn(b, y, m)) return { st: 'next', due: dueOn(b, y, m + 1) };
+    const due = dueOn(b, y, m), days = Math.round((due - today) / DAY);
+    if (days === 0) return { st: 'today', due };
+    if (days < 0) return { st: 'late', due, days: -days };
+    return { st: 'soon', due, days };
+  }
+  // what needs a look: due today, or past its day this month and not checked off
+  const billAlerts = () => S.bills.map(b => ({ b, s: billState(b) })).filter(x => x.s.st === 'today' || x.s.st === 'late').sort((x, y) => x.s.due - y.s.due);
+  function statusPill(s) {
+    if (s.st === 'paid') return `<span class="pill ok">${ICON.check}Paid${s.at ? ' ' + esc(shortDay.format(s.at)) : ''}</span>`;
+    if (s.st === 'today') return `<span class="pill due">${ICON.warn}Due today</span>`;
+    if (s.st === 'late') return `<span class="pill late">${ICON.warn}Past due</span>`;
+    if (s.st === 'noday') return '<span class="pill">Set a day</span>';
+    if (s.st === 'soon' && s.days === 1) return '<span class="pill">Tomorrow</span>';
+    if (s.st === 'soon' && s.days < 7) return `<span class="pill">In ${s.days} days</span>`;
+    return `<span class="pill">${esc(shortDay.format(s.due))}</span>`;
+  }
+  // which month's charge a payment belongs to: the due date nearest to it
+  function nearestMonth(b, at) {
+    const d = new Date(at);
+    let best = null;
+    for (const off of [-1, 0, 1]) {
+      const due = dueOn(b, d.getFullYear(), d.getMonth() + off);
+      if (due == null) continue;
+      if (!best || Math.abs(due - at) < Math.abs(best.due - at)) best = { due, mk: monthKeyOf(d.getFullYear(), d.getMonth() + off) };
+    }
+    return best ? best.mk : monthKeyOf(d.getFullYear(), d.getMonth());
+  }
+  // A charge checks a bill off when its name (or a word you gave it) shows in the charge, at about the amount,
+  // a few days either side of the day. A bill of $20 or more also matches on the exact amount alone.
+  const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  function billMatches(b, t) {
+    const m = ' ' + norm(t.merchant) + ' ', squashed = m.replace(/ /g, '');
+    const phrases = [b.name, ...String(b.match || '').split(',')].map(norm).filter(x => x.length >= 3);
+    const named = phrases.some(x => m.includes(' ' + x + ' ') || squashed.includes(x.replace(/ /g, '')));
+    if (!b.amount) return named;
+    const diff = Math.abs(t.amount - b.amount);
+    return (named && diff <= Math.max(200, Math.round(b.amount * 0.15))) || (diff <= 1 && b.amount >= 2000);
+  }
+  function matchMonth(b, t) {
+    if (!b.day || (b.accountId && t.accountId && b.accountId !== t.accountId)) return null;
+    const d = new Date(t.at);
+    for (const off of [0, -1, 1]) {
+      const due = dueOn(b, d.getFullYear(), d.getMonth() + off), mk = monthKeyOf(d.getFullYear(), d.getMonth() + off);
+      if (paidIn(b, mk) || t.at < due - 3 * DAY || t.at > due + 8 * DAY) continue;
+      if (billMatches(b, t)) return mk;
+    }
+    return null;
+  }
+  // unpaid bills a charge could be (its name shows, or about its price), nearest first: offered when you approve it
+  function billsNear(t) {
+    const m = norm(t.merchant).replace(/ /g, '');
+    const could = b => [b.name, ...String(b.match || '').split(',')].map(norm).some(x => x.length >= 3 && m.includes(x.replace(/ /g, '')))
+      || (b.amount && Math.abs(t.amount - b.amount) <= Math.max(150, Math.round(b.amount * 0.1)));
+    return S.bills.filter(b => b.day && could(b) && (!b.accountId || !t.accountId || b.accountId === t.accountId))
+      .map(b => ({ b, mk: nearestMonth(b, t.at) }))
+      .map(x => ({ ...x, due: dueOn(x.b, +x.mk.slice(0, 4), +x.mk.slice(5) - 1) }))
+      .filter(x => !paidIn(x.b, x.mk) && Math.abs(x.due - t.at) <= 10 * DAY)
+      .sort((x, y) => Math.abs(x.due - t.at) - Math.abs(y.due - t.at)).map(x => x.b);
+  }
+
   function acctLabel(a) {
     if (!a) return 'Removed account';
     const l4 = (a.last4 || [])[0];
@@ -141,6 +229,7 @@ window.POSFinance = function (ctx) {
   function bucketLabel(t) {
     if (!t.bucketId) return null;
     if (t.bucketId === '_none') return 'Not spending';
+    if (String(t.bucketId).startsWith('bill:')) { const bl = billById(t.bucketId.slice(5)); return bl ? bl.name : 'Removed bill'; }
     const b = bucket(t.bucketId);
     return b ? b.name : 'Removed category';
   }
@@ -149,10 +238,12 @@ window.POSFinance = function (ctx) {
 
   /* ---------- pieces ---------- */
   function chargeCard(t) {
-    const chips = kind('limit').map(l => {
+    const billChips = billsNear(t).slice(0, 3).map(b =>
+      `<button type="button" class="chip bill" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="bill:${esc(b.id)}">${esc(b.name)}<span>${b.amount ? fmt(b.amount) + ' ' : ''}${groupOf(b) === 'sub' ? 'subscription' : 'bill'}</span></button>`);
+    const chips = billChips.concat(kind('limit').map(l => {
       const left = (l.monthly || 0) - limitSpent(l);
       return `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}">${esc(l.name)}<span>${left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
-    }).concat(kind('goal').filter(g => g.accountId === t.accountId).map(g =>
+    })).concat(kind('goal').filter(g => g.accountId === t.accountId).map(g =>
       `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(g.id)}">${esc(g.name)}<span>${fmt(catLeft(g))}</span></button>`
     ));
     return `<article class="float charge">
@@ -243,6 +334,8 @@ window.POSFinance = function (ctx) {
         <div class="float"><span class="lab">Owed on cards</span><span class="fig md">${fmt(sum(a => a.type === 'credit'))}</span></div>
       </div>` : '';
     let left = '';
+    const due = billAlerts();
+    if (due.length) left += `<section class="sec"><span class="lab">Bills</span><div class="stack">${due.map(billNote).join('')}</div></section>`;
     if (todo.length) left += `<section class="sec"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>`;
     const notes = savingsToSort().map(sortNote).join('');
     if (notes) left += `<section class="sec">${notes}</section>`;
@@ -253,6 +346,44 @@ window.POSFinance = function (ctx) {
       : '<p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p>';
     right += '</section>';
     return `${totals}<div class="fin-two"><div>${left}</div><div>${right}</div></div>${examplesBar()}`;
+  }
+
+  // "SimpleFIN, $1.59, is due today."
+  function billNote({ b, s }) {
+    const what = `<b>${esc(b.name)}</b>${b.amount ? `, ${fmt(b.amount)},` : ''}`;
+    return `<div class="float note bill-note ${s.st}"><p>${ICON.warn}<span>${what} ${s.st === 'today' ? 'is due today.' : `was due ${esc(shortDay.format(s.due))} and isn’t checked off.`}</span></p>${canSave() ? `<button type="button" class="btn solid" data-act="fin-bill-paid" data-id="${esc(b.id)}">Paid</button>` : ''}</div>`;
+  }
+
+  function billRow(b) {
+    const s = billState(b), a = b.accountId ? acct(b.accountId) : null;
+    const where = [b.day ? `The ${ordinal(b.day)}` : 'No day yet', b.accountId ? acctLabel(a) : 'No account yet'].join(' · ');
+    const month = monthFmt.format(new Date());
+    return `<div class="bill-row st-${s.st}">
+      <button type="button" class="b-chk" data-act="fin-bill-paid" data-id="${esc(b.id)}" aria-pressed="${s.st === 'paid'}" aria-label="${s.st === 'paid' ? `${esc(b.name)} is checked off for ${month}. Undo` : `Check off ${esc(b.name)} for ${month}`}">${ICON.check}</button>
+      <button type="button" class="b-main" data-act="fin-form" data-form="bill" data-id="${esc(b.id)}">
+        <span class="b-l"><span class="name">${esc(b.name)}</span><span class="meta">${esc(where)}</span></span>
+        <span class="b-r"><span class="fig md">${b.amount ? fmt(b.amount) : '<span class="b-none">Set amount</span>'}</span>${statusPill(s)}</span>
+      </button>
+    </div>`;
+  }
+
+  function vBills() {
+    const now = new Date(), month = monthFmt.format(now);
+    const list = g => S.bills.filter(b => groupOf(b) === g).sort(byDay);
+    const per = l => l.reduce((t, b) => t + (b.amount || 0), 0);
+    const bills = list('bill'), subs = list('sub');
+    // still to go out this month: not checked off, and due this month
+    const toGo = S.bills.filter(b => b.amount && ['today', 'late', 'soon'].includes(billState(b).st)).reduce((t, b) => t + b.amount, 0);
+    const alerts = billAlerts();
+    const sec = (g, label, l) => `<section class="sec"><div class="sec-head"><span class="lab">${label}${l.length ? ' · ' + fmt(per(l)) + ' a month' : ''}</span></div>
+      <div class="float list">${l.map(billRow).join('')}${canSave() ? `<button type="button" class="add-row" data-act="fin-form" data-form="bill" data-group="${g}"><span>${g === 'sub' ? 'New subscription' : 'New bill'}</span>${ICON.plus}</button>` : ''}</div></section>`;
+    return `<div class="totals">
+        <div class="float"><span class="lab">Bills</span><span class="fig md">${fmt(per(bills))}</span></div>
+        <div class="float"><span class="lab"><span class="l-long">Subscriptions</span><span class="l-short">Subs</span></span><span class="fig md">${fmt(per(subs))}</span></div>
+        <div class="float"><span class="lab">Left in ${esc(month)}</span><span class="fig md">${fmt(toGo)}</span></div>
+      </div>
+      ${alerts.length ? `<section class="sec"><div class="stack">${alerts.map(billNote).join('')}</div></section>` : ''}
+      <div class="fin-two"><div>${sec('bill', 'Bills', bills)}</div><div>${sec('sub', 'Subscriptions', subs)}</div></div>`;
   }
 
   function examplesBar() {
@@ -342,8 +473,8 @@ window.POSFinance = function (ctx) {
     return `<div class="fin-page">${h}</div>`;
   }
 
-  const views = { home: vHome, savings: vSavings, spending: vSpending, activity: vActivity };
-  const counts = () => { const nSav = savingsToSort().length; return { home: inbox().length + nSav, savings: nSav }; };
+  const views = { home: vHome, bills: vBills, savings: vSavings, spending: vSpending, activity: vActivity };
+  const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { home: inbox().length + nSav + nBills, savings: nSav, bills: nBills }; };
 
   function view() {
     charts.clear();
@@ -364,12 +495,85 @@ window.POSFinance = function (ctx) {
     try { await promise; return true; }
     catch (e) { toast('That did not save. Check your connection and try again.'); return false; }
   }
+  const billIdOf = bucketId => (String(bucketId || '').startsWith('bill:') ? bucketId.slice(5) : null);
   async function sortTxn(id, bucketId) {
     const t = S.txns.find(x => x.id === id);
     if (!t) return;
-    const prev = t.bucketId || null;
-    const name = bucketId === '_none' ? 'Not spending' : (bucket(bucketId) || {}).name;
-    if (await save(refs.txns.doc(id).update({ bucketId }))) toast('Approved to ' + name, () => save(refs.txns.doc(id).update({ bucketId: prev })));
+    const prev = t.bucketId || null, bid = billIdOf(bucketId);
+    const name = bucketId === '_none' ? 'Not spending' : bid ? (billById(bid) || {}).name : (bucket(bucketId) || {}).name;
+    if (!(await save(refs.txns.doc(id).update({ bucketId })))) return;
+    if (bid) await linkBill(bid, t, false);
+    toast(bid ? `${name} checked off` : 'Approved to ' + name, async () => {
+      if (await save(refs.txns.doc(id).update({ bucketId: prev }))) { if (bid) await unlinkBill(bid, id); }
+    });
+  }
+  // a payment checks off the month whose due date it's nearest to
+  async function linkBill(billId, t, auto) {
+    const b = billById(billId);
+    if (!b) return false;
+    const mk = nearestMonth(b, t.at);
+    return save(refs.bills.doc(billId).update({ paid: { ...(b.paid || {}), [mk]: { at: t.at, txnId: t.id, auto: !!auto } } }));
+  }
+  async function unlinkBill(billId, txnId) {
+    const b = billById(billId);
+    if (!b || !b.paid) return true;
+    const paid = { ...b.paid };
+    let hit = false;
+    for (const k of Object.keys(paid)) if (paid[k] && paid[k].txnId === txnId) { delete paid[k]; hit = true; }
+    return hit ? save(refs.bills.doc(billId).update({ paid })) : true;
+  }
+  async function togglePaid(id) {
+    const b = billById(id);
+    if (!b) return;
+    const now = new Date(), mk = monthKeyOf(now.getFullYear(), now.getMonth()), month = monthFmt.format(now);
+    const before = { ...(b.paid || {}) }, paid = { ...before };
+    const was = !!paid[mk];
+    if (was) delete paid[mk]; else paid[mk] = { at: Date.now() };
+    if (await save(refs.bills.doc(id).update({ paid })))
+      toast(was ? `${b.name} is no longer checked off for ${month}` : `${b.name} checked off for ${month}`, () => save(refs.bills.doc(id).update({ paid: before })));
+  }
+  // Charges that arrive (by hand now, from the bank's alert emails later) check off the bill they match.
+  // Only a single clear match counts; anything that could be two bills waits in Needs approval.
+  let autoBusy = false;
+  async function autoPay() {
+    if (autoBusy || !canSave()) return;
+    autoBusy = true;
+    try {
+      const floor = Date.now() - 45 * DAY;
+      for (const t of S.txns.filter(x => isOut(x) && !x.bucketId && x.at >= floor)) {
+        const hits = S.bills.filter(b => matchMonth(b, t));
+        if (hits.length !== 1) continue;
+        const b = hits[0];
+        if (!(await save(refs.txns.doc(t.id).update({ bucketId: 'bill:' + b.id })))) break;
+        await linkBill(b.id, t, true);
+        toast(`${b.name} checked off: ${fmt(t.amount)} from ${t.merchant}`);
+      }
+    } finally { autoBusy = false; }
+  }
+  // moving it on the calendar moves its day for every month
+  async function moveBill(id, day) {
+    const b = billById(id);
+    if (!b || !canSave() || !day || b.day === day) return false;
+    const prev = b.day || null;
+    if (!(await save(refs.bills.doc(id).update({ day })))) return false;
+    toast(`${b.name} is now due on the ${ordinal(day)} of every month`, () => save(refs.bills.doc(id).update({ day: prev })));
+    return true;
+  }
+  // for the calendar: the bills due on a day, and how that month's stands
+  function billsOn(k) {
+    if (!S.loaded || !S.bills.length) return [];
+    const [y, mo, dd] = k.split('-').map(Number), m = mo - 1, mk = monthKeyOf(y, m);
+    const today = startOfDay(Date.now()), cur = new Date(today), isCur = y === cur.getFullYear() && m === cur.getMonth();
+    const out = [];
+    for (const b of S.bills.slice().sort(byDay)) {
+      const due = dueOn(b, y, m);
+      if (due == null || new Date(due).getDate() !== dd || mk < createdMonth(b)) continue;
+      const p = paidIn(b, mk);
+      let st = p ? 'paid' : '';
+      if (!p && isCur && appliesIn(b, y, m)) st = due === today ? 'today' : due < today ? 'late' : '';
+      out.push({ id: b.id, name: b.name, amount: b.amount || 0, short: b.amount ? fmtShort(b.amount) : '', group: groupOf(b), st });
+    }
+    return out;
   }
   async function clearExamples() {
     for (const key of ['txns', 'buckets', 'accounts']) {
@@ -390,6 +594,7 @@ window.POSFinance = function (ctx) {
     return [opt('', 'Approve it later', !current)]
       .concat(kind('limit').map(l => opt(l.id, l.name + ' (limit)', current === l.id)))
       .concat(kind('goal').filter(g => g.accountId === accountId).map(g => opt(g.id, g.name + ' (savings)', current === g.id)))
+      .concat(S.bills.slice().sort(byDay).map(b => opt('bill:' + b.id, b.name + (groupOf(b) === 'sub' ? ' (subscription)' : ' (bill)'), current === 'bill:' + b.id)))
       .concat([opt('_none', 'Not spending (transfer or payment)', current === '_none')]).join('');
   }
   function moveFields(g) {
@@ -452,6 +657,26 @@ window.POSFinance = function (ctx) {
               <button type="button" class="btn" data-rest="${esc(g.id)}">Rest</button>
             </div>`).join('')
           + `<div class="leftline"><span class="lab">${u > 0 ? 'Left to sort' : 'Left to cover'}</span><span class="fig md" id="ff_left">${fmt(Math.abs(u))}</span></div>`,
+      };
+    },
+    bill(id, extra) {
+      const b = id ? billById(id) : null;
+      const group = b ? groupOf(b) : (extra.group === 'sub' ? 'sub' : 'bill');
+      const now = new Date(), month = monthFmt.format(now), paidNow = b && paidIn(b, monthKeyOf(now.getFullYear(), now.getMonth()));
+      const days = [opt('', 'Not set', !(b && b.day))].concat(Array.from({ length: 31 }, (_, i) => opt(String(i + 1), `The ${ordinal(i + 1)}`, !!b && b.day === i + 1))).join('');
+      const accts = [opt('', 'Not set', !(b && b.accountId))].concat(sorted(S.accounts).map(a => opt(a.id, acctLabel(a), !!b && b.accountId === a.id))).join('');
+      return {
+        title: b ? b.name : group === 'sub' ? 'New subscription' : 'New bill', del: !!b,
+        body: `<div class="seg-ctl" role="radiogroup" aria-label="Kind">
+            <label><input type="radio" name="ff_group" id="ff_group_bill" value="bill"${group === 'bill' ? ' checked' : ''}><span>Bill</span></label>
+            <label><input type="radio" name="ff_group" id="ff_group_sub" value="sub"${group === 'sub' ? ' checked' : ''}><span>Subscription</span></label>
+          </div>`
+          + field('Name', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="${group === 'sub' ? 'Spotify' : 'Rent'}" value="${b ? esc(b.name) : ''}">`)
+          + field('Price', `<input id="ff_amount" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${b && b.amount ? plain(b.amount) : ''}">`)
+          + field('Charged on', `<select id="ff_day">${days}</select>`, 'Just the day of the month. The 31st lands on the last day of shorter months.')
+          + field('Comes out of', `<select id="ff_acct">${accts}</select>`)
+          + field('Shows on the bank as', `<input id="ff_match" autocomplete="off" maxlength="120" placeholder="Optional" value="${b && b.match ? esc(b.match) : ''}">`, 'Words from the charge, separated by commas. The name is already looked for; these help check it off on its own.')
+          + (b ? `<label class="f-check"><input type="checkbox" id="ff_paid"${paidNow ? ' checked' : ''}><span>Paid for ${esc(month)}</span></label>` : ''),
       };
     },
     limit(id) {
@@ -523,7 +748,12 @@ window.POSFinance = function (ctx) {
       if (!Number.isFinite(at)) return fail('Pick a date and time.');
       const dir = $('#ff_dir_in').checked ? 'in' : 'out';
       const data = { amount, merchant: val('ff_merchant').trim() || (dir === 'in' ? 'Deposit' : 'Charge'), accountId, at, dir, bucketId: dir === 'out' ? (val('ff_bucket') || null) : null, example: false };
-      return F.id ? save(refs.txns.doc(F.id).update(data)) : save(refs.txns.doc().set({ ...data, source: 'manual', createdAt: Date.now() }));
+      const old = F.id ? S.txns.find(x => x.id === F.id) : null, was = old ? billIdOf(old.bucketId) : null, now = billIdOf(data.bucketId);
+      const id = F.id || newId();
+      if (!(await (F.id ? save(refs.txns.doc(id).update(data)) : save(refs.txns.doc(id).set({ ...data, source: 'manual', createdAt: Date.now() }))))) return false;
+      if (was && was !== now) await unlinkBill(was, id);
+      if (now) await linkBill(now, { ...data, id }, false);
+      return true;
     },
     async account() {
       const name = val('ff_name').trim();
@@ -587,6 +817,28 @@ window.POSFinance = function (ctx) {
       }
       return true;
     },
+    async bill() {
+      const name = val('ff_name').trim();
+      if (!name) return fail('Give it a name.');
+      const amountText = val('ff_amount').trim();
+      const amount = amountText ? parseMoney(amountText) : null;
+      if (amountText && !amount) return fail('Enter the price, like 12.99, or leave it blank.');
+      const day = parseInt(val('ff_day'), 10) || null;
+      const accountId = val('ff_acct') || null;
+      const group = $('#ff_group_sub').checked ? 'sub' : 'bill';
+      const match = val('ff_match').trim().slice(0, 120);
+      const data = { name, amount, day, accountId, group, match };
+      if (!F.id) return save(refs.bills.doc().set({ ...data, paid: {}, createdAt: Date.now() }));
+      const b = billById(F.id);
+      if (!b) return fail('That one no longer exists.');
+      const now = new Date(), mk = monthKeyOf(now.getFullYear(), now.getMonth()), box = $('#ff_paid');
+      if (box && box.checked !== !!paidIn(b, mk)) {
+        const paid = { ...(b.paid || {}) };
+        if (box.checked) paid[mk] = { at: Date.now() }; else delete paid[mk];
+        data.paid = paid;
+      }
+      return save(refs.bills.doc(F.id).update(data));
+    },
     async limit() {
       const name = val('ff_name').trim();
       if (!name) return fail('Say what the limit is for.');
@@ -599,7 +851,13 @@ window.POSFinance = function (ctx) {
 
   async function removeCurrent() {
     const { kind: k, id } = F;
-    if (k === 'charge') return save(refs.txns.doc(id).delete());
+    if (k === 'charge') {
+      const t = S.txns.find(x => x.id === id), bid = t ? billIdOf(t.bucketId) : null;
+      if (!(await save(refs.txns.doc(id).delete()))) return false;
+      if (bid) await unlinkBill(bid, id);
+      return true;
+    }
+    if (k === 'bill') return save(refs.bills.doc(id).delete());
     if (k === 'goal' || k === 'limit') return save(refs.buckets.doc(id).delete());
     if (k === 'account') {
       for (const t of S.txns.filter(x => x.accountId === id)) if (!(await save(refs.txns.doc(t.id).delete()))) return false;
@@ -714,15 +972,19 @@ window.POSFinance = function (ctx) {
     }
     if (!canSave()) return;
     if (name === 'fin-sort') sortTxn(b.dataset.txn, b.dataset.bucket);
-    else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type });
+    else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type, group: b.dataset.group });
+    else if (name === 'fin-bill-paid') togglePaid(b.dataset.id);
     else if (name === 'fin-toggle') { S.open.has(b.dataset.id) ? S.open.delete(b.dataset.id) : S.open.add(b.dataset.id); rerender(); }
     else if (name === 'fin-clear-ask') { S.confirmClear = true; rerender(); }
     else if (name === 'fin-clear-no') { S.confirmClear = false; rerender(); }
     else if (name === 'fin-clear-yes') { S.confirmClear = false; rerender(); clearExamples(); }
   }
   // the + button while Finance is showing: add a charge, or the first account when there is none
-  function add() { openForm(S.accounts.length ? 'charge' : 'account', null, {}); }
+  function add() {
+    if (S.sub === 'bills') openForm('bill', null, {});
+    else openForm(S.accounts.length ? 'charge' : 'account', null, {});
+  }
   const sheetOpen = () => sheet.open;
 
-  return { view, act, add, badge, start, stop, sheetOpen };
+  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill };
 };
