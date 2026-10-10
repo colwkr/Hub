@@ -35,20 +35,20 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010190413">
-<script src="finance.js?v=20261010190413"></script>
-<link rel="stylesheet" href="car.css?v=20261010190413">
-<script src="car.js?v=20261010190413"></script>
-<link rel="stylesheet" href="sections.css?v=20261010190413">
-<script src="records.js?v=20261010190413"></script>
-<script src="people.js?v=20261010190413"></script>
-<script src="wheels.js?v=20261010190413"></script>
-<script src="keyboard.js?v=20261010190413"></script>
-<script src="notes.js?v=20261010190413"></script>
-<script src="lights.js?v=20261010190413"></script>
-<script src="health.js?v=20261010190413"></script>
-<script src="pets.js?v=20261010190413"></script>
-<script src="places.js?v=20261010190413"></script>
+<link rel="stylesheet" href="finance.css?v=20261010192750">
+<script src="finance.js?v=20261010192750"></script>
+<link rel="stylesheet" href="car.css?v=20261010192750">
+<script src="car.js?v=20261010192750"></script>
+<link rel="stylesheet" href="sections.css?v=20261010192750">
+<script src="records.js?v=20261010192750"></script>
+<script src="people.js?v=20261010192750"></script>
+<script src="wheels.js?v=20261010192750"></script>
+<script src="keyboard.js?v=20261010192750"></script>
+<script src="notes.js?v=20261010192750"></script>
+<script src="lights.js?v=20261010192750"></script>
+<script src="health.js?v=20261010192750"></script>
+<script src="pets.js?v=20261010192750"></script>
+<script src="places.js?v=20261010192750"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -848,6 +848,9 @@ body.marking,body.marking *{cursor:ns-resize!important}
 @container (max-height:30px){ .blk small{display:none} }
 @container (max-height:17px){ .blk b{font-size:10px;line-height:1.05} .blk .bchk{display:none} .blk .bmain{padding:0 6px} }
 @container (max-height:10px){ .blk b,.blk small{display:none} }
+/* a drive block shrinks the same way: smaller words, then none */
+@container (max-height:17px){ .blk.drive b{font-size:10px;line-height:1.05} .blk.drive .car-i{width:10px;height:10px} }
+@container (max-height:10px){ .blk.drive b{display:none} }
 .blk.now{background:var(--solid);color:var(--on-solid)}
 .blk.now small{color:var(--on-solid);opacity:.7}
 .blk.noest{background:var(--ghost);box-shadow:none;outline:1px dashed var(--ink-3);outline-offset:-1px}
@@ -1381,13 +1384,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010190413"></script>
+<script src="appearance.js?v=20261010192750"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010190413';
+  const VERSION = '20261010192750';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
