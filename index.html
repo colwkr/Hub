@@ -35,19 +35,20 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010175606">
-<script src="finance.js?v=20261010175606"></script>
-<link rel="stylesheet" href="car.css?v=20261010175606">
-<script src="car.js?v=20261010175606"></script>
-<link rel="stylesheet" href="sections.css?v=20261010175606">
-<script src="records.js?v=20261010175606"></script>
-<script src="people.js?v=20261010175606"></script>
-<script src="wheels.js?v=20261010175606"></script>
-<script src="keyboard.js?v=20261010175606"></script>
-<script src="notes.js?v=20261010175606"></script>
-<script src="lights.js?v=20261010175606"></script>
-<script src="health.js?v=20261010175606"></script>
-<script src="pets.js?v=20261010175606"></script>
+<link rel="stylesheet" href="finance.css?v=20261010181229">
+<script src="finance.js?v=20261010181229"></script>
+<link rel="stylesheet" href="car.css?v=20261010181229">
+<script src="car.js?v=20261010181229"></script>
+<link rel="stylesheet" href="sections.css?v=20261010181229">
+<script src="records.js?v=20261010181229"></script>
+<script src="people.js?v=20261010181229"></script>
+<script src="wheels.js?v=20261010181229"></script>
+<script src="keyboard.js?v=20261010181229"></script>
+<script src="notes.js?v=20261010181229"></script>
+<script src="lights.js?v=20261010181229"></script>
+<script src="health.js?v=20261010181229"></script>
+<script src="pets.js?v=20261010181229"></script>
+<script src="places.js?v=20261010181229"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -835,6 +836,9 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .blk small{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .blk.tight{flex-direction:row;align-items:center;gap:6px;padding-block:0}
+.blk.drive{background:repeating-linear-gradient(135deg,var(--well) 0 5px,transparent 5px 10px);box-shadow:inset 0 0 0 1px var(--hair);color:var(--ink-2);border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+.blk.drive b{display:flex;align-items:center;gap:5px;color:var(--ink-2)}
+.blk.drive .car-i{width:13px;height:13px;flex:none;stroke-width:1.7}
 .tl-col .blk{container-type:size}
 @container (max-height:30px){ .blk small{display:none} }
 @container (max-height:17px){ .blk b{font-size:10px;line-height:1.05} .blk .bchk{display:none} .blk .bmain{padding:0 6px} }
@@ -1116,6 +1120,14 @@ dialog::backdrop{background:transparent}
 .chip:active{transform:scale(.96)}
 .where{font-size:12.5px;color:var(--ink-2);padding:12px 14px;border-radius:16px;background:var(--well)}
 .where b{font-weight:500;color:var(--ink)}
+/* where: a place, the drive to it and when to leave */
+#sheet[data-sheet-kind="marker"] .f-place{display:none}
+.pl-in{position:relative;display:block}
+.pl-in svg.i{position:absolute;left:14px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--ink-3);pointer-events:none}
+.pl-in input{padding-left:42px}
+.place-st{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--ink-2);padding:10px 14px;border-radius:16px;background:var(--well);margin-top:8px}
+.place-st b{font-weight:500;color:var(--ink)}
+.place-st .link{align-self:flex-start;font-size:12.5px;margin-top:4px}
 .err{color:var(--bad);font-size:12.5px;font-weight:500}
 .sheet-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .sheet-foot .btn{min-height:44px}
@@ -1243,6 +1255,10 @@ dialog::backdrop{background:transparent}
         <p class="kind-note" id="f_mtypeNote"></p>
       </div>
       <label class="f f-name"><span class="f-h sr-only" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
+      <div class="f f-place">
+        <label class="pl-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-6-5.6-6-10.5a6 6 0 0 1 12 0c0 4.9-6 10.5-6 10.5z"/><circle cx="12" cy="10" r="2.2"/></svg><span class="sr-only">Where</span><input id="f_place" type="text" maxlength="120" autocomplete="off" enterkeyhint="done" placeholder="Where? Publix, an address…"></label>
+        <div class="place-st" id="f_placeSt" aria-live="polite" hidden></div>
+      </div>
       <div class="f f-tag">
         <div class="seg3 tags" role="radiogroup" aria-label="Personal or work"><button type="button" role="radio" data-tag="" aria-checked="true">Neither</button><button type="button" role="radio" data-tag="personal" aria-checked="false">Personal</button><button type="button" role="radio" data-tag="work" aria-checked="false">Work</button></div>
       </div>
@@ -1311,6 +1327,12 @@ dialog::backdrop{background:transparent}
       <p class="set-note" id="wakeNote" hidden></p>
     </section>
     <i class="set-line"></i>
+    <section class="set-sec" aria-labelledby="homeLab">
+      <div class="set-head"><span class="lab" id="homeLab">Home</span><span class="set-note" id="homeNote"></span></div>
+      <p class="set-note">Drive times to places on your calendar start here. Set it on a device that's at home.</p>
+      <div class="set-row"><button type="button" class="btn" id="homeBtn" data-act="home-here">Use where I am now</button></div>
+    </section>
+    <i class="set-line"></i>
     <form id="setForm" class="set-sec" novalidate>
       <label class="f"><span class="lab">Google Calendar</span><input id="s_gcal" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" aria-describedby="gcalHelp"></label>
       <p class="where" id="gcalHelp">On a computer, open Google Calendar, then Settings. Pick your calendar on the left, scroll to <b>Integrate calendar</b>, and copy <b>Secret address in iCal format</b>. Paste it here. Keep it private: anyone with it can read that calendar.</p>
@@ -1350,13 +1372,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010175606"></script>
+<script src="appearance.js?v=20261010181229"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010175606';
+  const VERSION = '20261010181229';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1413,6 +1435,8 @@ dialog::backdrop{background:transparent}
   }
 
   const ICON = {
+    car: '<svg class="i car-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2"/></svg>',
+    pin: '<svg class="i pin-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-6-5.6-6-10.5a6 6 0 0 1 12 0c0 4.9-6 10.5-6 10.5z"/><circle cx="12" cy="10" r="2.2"/></svg>',
     rep: '<svg class="i rep-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 4.5l2.5 2.5L17 9.5"/><path d="M5 11V9.5A2.5 2.5 0 0 1 7.5 7h12M7 19.5 4.5 17 7 14.5"/><path d="M19 13v1.5a2.5 2.5 0 0 1-2.5 2.5h-12"/></svg>',
     people: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg>',
     trash: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4.5h4V7M7 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h5.4a1.5 1.5 0 0 0 1.5-1.4L17 7"/></svg>',
@@ -1472,11 +1496,11 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, NOTES = null, HEALTH = null;
+  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, NOTES = null, HEALTH = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [], ...(Array.isArray(r.repeat.days) && r.repeat.days.length ? { days: r.repeat.days } : {}) } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null });
+  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [], ...(Array.isArray(r.repeat.days) && r.repeat.days.length ? { days: r.repeat.days } : {}) } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null, place: r.place && typeof r.place === 'object' && r.place.q ? r.place : null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
@@ -1492,6 +1516,7 @@ dialog::backdrop{background:transparent}
     if ('parentId' in o) r.parent_id = o.parentId || null;
     if ('pos' in o) r.pos = o.pos ?? null;
     if ('tag' in o) r.tag = o.tag || null;
+    if ('place' in o) r.place = o.place || null;
     if ('date' in o) r.day = o.date || null;
     if ('time' in o) r.at_time = o.time || null;
     if ('mins' in o) r.mins = o.mins ?? null;
@@ -1944,6 +1969,7 @@ dialog::backdrop{background:transparent}
         const cls = x.live ? ' live' : i === firstUp ? ' first' : '';
         const t = x.t, s0 = toMin(t.time), e0 = s0 + effMins(t);
         const when = x.live ? (t.mins ? `Now · ends ${fmtTime(e0 % 1440)}` : `Now · started ${fmtTime(s0)}`)
+          : t.place && t.place.drive ? `${fmtTime(s0)} at ${t.place.name || t.place.q} · leave ${fmtTime((s0 - t.place.drive + 1440) % 1440)}`
           : t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
         return `${div}<div class="trow sw${cls}" data-swipe="${esc(t.id)}">
           <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
@@ -2188,6 +2214,7 @@ dialog::backdrop{background:transparent}
     return `${monFmt.format(da)} – ${monFmt.format(db)} ${db.getFullYear()}`;
   }
   // Side-by-side lanes for tasks that overlap in time.
+  const placeTxt = t => (t.place ? ` · ${t.place.name || t.place.q}` : '');
   function layout(items) {
     const ev = items.slice().sort((a, b) => a.s - b.s || b.e - a.e);
     let cluster = [], lanes = [], end = -1;
@@ -2243,11 +2270,17 @@ dialog::backdrop{background:transparent}
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: gEnd(g) }))),
       ...dayItems(kp).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane) && toMin(t.time) + effMins(t) > 1440).map(t => ({ t, s: 0, e: toMin(t.time) + effMins(t) - 1440, from: toMin(t.time) })),
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === kp && !g.allDay && g.start && gEnd(g) > 1440).map(g => ({ g, s: 0, e: gEnd(g) - 1440, from: toMin(g.start) }))),
+      // the drive there: a block that ends when it starts
+      ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane) && t.place && t.place.drive && !t.done).map(t => ({ dv: t, s: Math.max(0, toMin(t.time) - t.place.drive), e: toMin(t.time) })).filter(x => x.e > x.s),
     ].map(x => ({ ...x, e: Math.min(x.e, 1440) , full: x.e })));
     // happening now: on today, or started the day before and still going past midnight
     const liveAt = x => (k === tk && x.s <= nm && nm < x.full) || (addDays(k, 1) === tk && nm + 1440 < x.full);
     const blocks = items.map(x => {
       const len = x.e - x.s;
+      if (x.dv) {
+        const t = x.dv, p = t.place, st = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(len / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+        return `<button type="button" class="blk drive${isTight(len) ? ' tight' : ''}" style="${st}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(`Drive to ${p.name || p.q}, ${p.drive} minutes. Leave at ${fmtTime(x.s)}`)}"><b>${ICON.car}Drive ${p.drive} min</b><small>Leave ${esc(fmtTime(x.s))}</small></button>`;
+      }
       if (x.from != null) {
         // the part after midnight: tap it to open the whole thing
         const src = x.t || x.g, kindCls = x.g ? ' evt' : x.t.kind === 'meeting' ? ' mtg' : x.t.kind !== 'task' ? ' evt lev' : x.t.done ? ' done' : '';
@@ -2264,12 +2297,12 @@ dialog::backdrop{background:transparent}
       const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (t.kind !== 'task') {
         // events and meetings: no done circle; tapping opens the edit sheet
-        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.full), live = liveAt(x);
+        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.full) + placeTxt(t), live = liveAt(x);
         return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
       }
       const live = !t.done && liveAt(x);
       const cls = ['blk', x.full > 1440 ? 'spills' : '', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', isTight(len) ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
-      const when = t.mins ? fmtRange(x.s, x.full) : `${fmtTime(x.s)} · no estimate`;
+      const when = (t.mins ? fmtRange(x.s, x.full) : `${fmtTime(x.s)} · no estimate`) + placeTxt(t);
       const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       const inner = `<b>${esc(t.title)}</b><small>${esc(when)}</small>`;
       const grip = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
@@ -2826,6 +2859,8 @@ dialog::backdrop{background:transparent}
     $('#f_time').value = v.time || '';
     $('#f_mins').value = v.mins ? String(v.mins) : '';
     $('#f_list').value = (t ? t.list : preset.list) || '';
+    F.place = t && t.place ? t.place : null;
+    $('#f_place').value = F.place ? F.place.q : '';
     F.tag = t ? t.tag || '' : preset.tag || '';
     for (const bt of document.querySelectorAll('#sheetBody [data-tag]')) bt.setAttribute('aria-checked', String(bt.dataset.tag === F.tag));
     // a step can sit under any open task that isn't itself a step (one level deep)
@@ -2908,8 +2943,44 @@ dialog::backdrop{background:transparent}
     sel.disabled = !date || !!(F && F.locked);
     $('#f_repNote').textContent = F && F.locked ? 'This one was changed on its own, apart from its repeating series.' : !date ? 'Pick a day first.' : sel.value ? 'Repeats with no end date.' : '';
   }
+  // where it is: looked up near home as you type ("Publix" is the nearest Publix), with the drive and when to leave
+  let placeT = null, placeSeq = 0;
+  function placeInput(now) {
+    if (!F) return;
+    clearTimeout(placeT);
+    const q = $('#f_place').value.trim();
+    F.place = !q ? null : F.place && F.place.q === q && !now ? F.place : { q };
+    F.placeBusy = false;
+    placeStatus();
+    if (!q || q.length < 2 || !PLACES || !PLACES.home() || (F.place && F.place.from && !now)) return;
+    placeT = setTimeout(async () => {
+      const seq = ++placeSeq;
+      if (!F) return;
+      F.placeBusy = true; placeStatus();
+      const r = await PLACES.resolve(q).catch(() => null);
+      if (!F || seq !== placeSeq || $('#f_place').value.trim() !== q) return;
+      F.placeBusy = false;
+      F.place = r || { q };
+      placeStatus();
+    }, now ? 0 : 700);
+  }
+  function placeStatus() {
+    const el = $('#f_placeSt'), p = F && F.place;
+    if (!el) return;
+    if (!p) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    const time = $('#f_time').value;
+    let h;
+    if (!PLACES || !PLACES.home()) h = `<span>To add the drive, POS needs to know where home is.</span><button type="button" class="link" data-act="home-here">Use where I am now</button>`;
+    else if (F.placeBusy || !p.from) h = '<span>Finding it…</span>';
+    else if (p.missing) h = '<span>Nothing by that name near home. It’s kept as you wrote it, without a drive.</span>';
+    else h = `<span class="pl-name"><b>${esc(p.name)}</b>${p.addr ? ` · ${esc(p.addr)}` : ''}</span><span class="pl-drive"><b>${p.drive} min drive</b> · ${esc(String(p.mi))} mi${time ? ` · leave at ${esc(fmtTime((toMin(time) - p.drive + 1440) % 1440))}` : ''}</span>`;
+    // left alone when nothing changed, so a tap on its button isn't lost to a redraw
+    if (el.innerHTML !== h) el.innerHTML = h;
+  }
   function refreshWhere() {
     fillRepeat();
+    placeStatus();
     const date = $('#f_date').value, time = $('#f_time').value, m = readMins();
     const tk = todayKey();
     for (const c of document.querySelectorAll('#sheetBody [data-set="date"]')) c.setAttribute('aria-pressed', String(date === addDays(tk, Number(c.dataset.rel))));
@@ -2948,6 +3019,7 @@ dialog::backdrop{background:transparent}
     }
   }
   $('#sheetBody').addEventListener('input', refreshWhere);
+  $('#f_place').addEventListener('input', () => placeInput());
   $('#sheetBody').addEventListener('change', refreshWhere);
   $('#sheetBody').addEventListener('click', e => {
     const kb = e.target.closest('#sheetBody [data-kind]');
@@ -2989,6 +3061,8 @@ dialog::backdrop{background:transparent}
       body.mins = until ? toMin(until) - toMin(body.time) : null;
     }
     body.mtype = kind === 'marker' ? F.mtype || null : null;
+    const pq = $('#f_place').value.trim();
+    body.place = kind === 'marker' || !pq ? null : F.place && F.place.q === pq ? F.place : { q: pq };
     // a list keeps the name the way it was first written ("to buy" joins "To buy")
     const lt = kind === 'task' ? $('#f_list').value.trim().replace(/\s+/g, ' ').slice(0, 40) : '';
     body.list = lt ? (S.tasks.map(x => x.list).find(n => n && n.toLowerCase() === lt.toLowerCase()) || lt) : null;
@@ -4214,6 +4288,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'meeting') openMeeting(b.dataset.id);
     else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
     else if (act === 'settings') openSettings();
+    else if (act === 'home-here') setHome();
     else if (act === 'auth-mode') { S.authMode = S.authMode === 'up' ? 'in' : 'up'; S.loginNote = ''; S.loginRedraw = true; render(); }
     else if (act === 'show-done') { S.showDone = !S.showDone; render(); }
     else if (act === 'list-toggle') {
@@ -4246,6 +4321,44 @@ dialog::backdrop{background:transparent}
     S.all = data.map(fromRow); split();
     render();
     retireMovedTasks();
+    placeSweep();
+  }
+  // places on the calendar that still need finding (one typed in, or added by Claude), or were found from an older home
+  let sweepBusy = false;
+  async function placeSweep() {
+    if (sweepBusy || !S.canSave || !PLACES) return;
+    sweepBusy = true;
+    try {
+      if (!PLACES.home()) await PLACES.loadHome();
+      if (!PLACES.home()) return;
+      const tk = todayKey();
+      for (const t of S.all.filter(x => x.place && (!x.date || x.date >= tk || x.repeat) && PLACES.stale(x.place))) {
+        const place = await PLACES.resolve(t.place.q).catch(() => null);
+        if (!place || JSON.stringify(place) === JSON.stringify(t.place)) continue;
+        const { error } = await sb.from('tasks').update({ place }).eq('id', t.id);
+        if (error) break;
+        t.place = place;
+      }
+    } finally { sweepBusy = false; }
+    render();
+  }
+  async function setHome() {
+    if (!PLACES || !S.canSave) return;
+    toast('Finding where you are…');
+    try {
+      const h = await PLACES.setHomeHere();
+      toast(`Home set, to within ${h.acc || 'a few'} meters. Drive times start from here.`);
+      if (F) placeInput(true);
+      fillHome();
+      placeSweep();
+    } catch (e) {
+      toast(e && e.code === 1 ? 'Location is off for POS. Allow it for this site in Settings, then try again.' : 'Couldn’t get your location. Try again.');
+    }
+  }
+  function fillHome() {
+    const h = PLACES && PLACES.home(), n = $('#homeNote');
+    if (n) n.textContent = h ? `Set ${shortFmt.format(new Date(h.at || Date.now()))}${h.acc ? `, to within ${h.acc} m` : ''}` : 'Not set yet';
+    const b = $('#homeBtn'); if (b) b.textContent = h ? 'Move home to where I am now' : 'Use where I am now';
   }
   // tasks that now live in Finance as lists (To buy, For the apartment, Sell or give away, moved Oct 10, 2026): they leave Tasks
   const MOVED_TO_FINANCE = ['60c070cb-05eb-46aa-bae2-f52e60e45c63', '4d9263e7-d611-4de3-953d-fa3dcb12ef6a', 'beefab3b-8525-41ce-8b3c-b4bd80209916', '84241382-b05a-4762-8f42-618ef0f88cc1',
@@ -4339,6 +4452,7 @@ dialog::backdrop{background:transparent}
     const me = whoAmI();
     $('#setWho').textContent = me.email; $('#setName').textContent = me.name; $('#setInit').textContent = me.init;
     if (window.POSLook) POSLook.refresh();
+    fillHome();
     $('#s_gcal').value = S.gcal || '';
     $('#setErr').hidden = true;
     $('#setStatus').textContent = S.gcal ? (S.evErr ? `Google Calendar: ${S.evErr}` : `Connected: ${S.gcalName || 'Google Calendar'}. ${S.events.length} events loaded.`) : 'No calendar connected yet.';
@@ -4461,6 +4575,7 @@ dialog::backdrop{background:transparent}
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSKeys) window.POSKeys();
     if (window.POSWheels) POSWheels.mount($('#sheet'));
+    if (window.POSPlaces) PLACES = window.POSPlaces({ sb });
     if (window.POSHealth) HEALTH = window.POSHealth({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave,
       goals: re => (FIN && FIN.goals ? FIN.goals(re) : []),
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
