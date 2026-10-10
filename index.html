@@ -35,10 +35,10 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010022538">
-<script src="finance.js?v=20261010022538"></script>
-<link rel="stylesheet" href="car.css?v=20261010022538">
-<script src="car.js?v=20261010022538"></script>
+<link rel="stylesheet" href="finance.css?v=20261010023421">
+<script src="finance.js?v=20261010023421"></script>
+<link rel="stylesheet" href="car.css?v=20261010023421">
+<script src="car.js?v=20261010023421"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -769,6 +769,10 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .blk small{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .blk.tight{flex-direction:row;align-items:center;gap:6px;padding-block:0}
+.tl-col .blk{container-type:size}
+@container (max-height:30px){ .blk small{display:none} }
+@container (max-height:17px){ .blk b{font-size:10px;line-height:1.05} .blk .bchk{display:none} .blk .bmain{padding:0 6px} }
+@container (max-height:10px){ .blk b,.blk small{display:none} }
 .blk.now{background:var(--solid);color:var(--on-solid)}
 .blk.now small{color:var(--on-solid);opacity:.7}
 .blk.noest{background:var(--ghost);box-shadow:none;outline:1px dashed var(--ink-3);outline-offset:-1px}
@@ -1295,13 +1299,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010022538"></script>
+<script src="appearance.js?v=20261010023421"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010022538';
+  const VERSION = '20261010023421';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2098,7 +2102,7 @@ dialog::backdrop{background:transparent}
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
     for (let k = from; k <= to; k = addDays(k, 1)) {
       for (const b of billsOn(k)) put(k, { b, s: -3 });
-      for (const t of dayItems(k)) if (t.kind !== 'marker' && t.kind !== 'task') put(k, { t, s: t.time ? toMin(t.time) : -1 });
+      for (const t of dayItems(k)) if (t.kind !== 'marker') put(k, { t, s: t.time ? toMin(t.time) : -1 });
     }
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
@@ -2152,36 +2156,37 @@ dialog::backdrop{background:transparent}
     }
     return out;
   }
-  const inLane = (t, lane) => (lane === 'cal' ? t.kind !== 'task' : lane === 'tasks' ? t.kind === 'task' : true);
+  const inLane = (t, lane) => (lane === 'tasks' ? t.kind === 'task' : true);
   function dayColumn(k, withCheck, lane) {
     const tk = todayKey(), nm = nowMin();
-    const minLen = lane === 'tasks' ? 5 : 25, tightLen = lane === 'tasks' ? 12 : 45; // the Tasks timeline is magnified
+    // blocks are as tall as their time (5 minutes at least); short ones lay their words in a row, tiny ones drop them
+    const hp = lane === 'tasks' ? 0 : hourPx(), minLen = 5, isTight = len => (lane === 'tasks' ? len < 12 : len / 60 * hp < 38);
     const items = layout([
       ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane)).map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) }))),
     ]);
     const blocks = items.map(x => {
       const len = x.e - x.s;
-      const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+      const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       if (x.g) {
         const when = fmtRange(x.s, x.s + (x.g.mins || 30));
-        return `<button type="button" class="blk evt${len < 45 ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
+        return `<button type="button" class="blk evt${isTight(len) ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
       }
       const t = x.t;
       const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (t.kind !== 'task') {
         // events and meetings: no done circle; tapping opens the edit sheet
         const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.e), live = k === tk && x.s <= nm && nm < x.e;
-        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${len < 45 ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
+        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
       }
       const live = k === tk && !t.done && x.s <= nm && nm < x.e;
-      const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', len < tightLen ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
+      const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', isTight(len) ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
       const when = t.mins ? fmtRange(x.s, x.e) : `${fmtTime(x.s)} · no estimate`;
-      const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px);left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+      const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       const inner = `<b>${esc(t.title)}</b><small>${esc(when)}</small>`;
       const grip = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
-      if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>`;
-      return `<div class="${cls}" style="${style}" ${grip}>${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>`;
+      if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>`;
+      return `<div class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>`;
     }).join('');
     const line = k === tk ? `<div class="nowline" data-nowline style="top:calc(var(--h) * ${(nm / 60).toFixed(4)})"></div>` : '';
     // markers: a named moment (like waking up). A dashed line and a label, taking no time at all.
@@ -3255,7 +3260,12 @@ dialog::backdrop{background:transparent}
 
   // timeline: press a time and drag to another to block out a new task, in 15-minute steps.
   // A mouse starts drawing as soon as it moves; a finger holds still for a moment first, so a normal swipe still scrolls.
-  const stepOf = col => (col && col.closest('.tl-zoom') ? 5 : 15); // the magnified Tasks timeline works in 5-minute steps
+  // snapping follows the zoom: 5-minute steps when an hour is tall on screen, 30 when the whole day is squeezed in
+  function stepOf(col) {
+    const tl = col && col.closest('.tl');
+    const h = tl && tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx();
+    return h >= 140 ? 5 : h >= 90 ? 10 : h >= 45 ? 15 : 30;
+  }
   const slotAt = (col, y) => { const st = stepOf(col), r = col.getBoundingClientRect(); return clamp(Math.floor((y - r.top) / r.height * 1440 / st) * st, 0, 1440 - st); };
   function markRange() { const st = stepOf(mk.col), c = slotAt(mk.col, mk.y); return { lo: Math.min(mk.a, c), hi: Math.max(mk.a, c) + st }; }
   function drawMark() {
@@ -3489,12 +3499,13 @@ dialog::backdrop{background:transparent}
       m.blk.style.top = topAt(m.ns);
       if (small) small.textContent = t.mins || t.kind !== 'task' ? fmtRange(m.ns, m.ns + effMins(t)) : `${fmtTime(m.ns)} · no estimate`;
     } else {
-      const st = stepOf(m.col), zoomed = st === 5, at = Math.round(minAt(m.col, m.y) / st) * st;
+      const st = stepOf(m.col), at = Math.round(minAt(m.col, m.y) / st) * st;
+      const tl = m.col.closest('.tl'), hp = tl && tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx();
       if (m.mode === 'top') { m.ns = clamp(at, 0, m.e0 - st); m.nlen = m.e0 - m.ns; }
       else { m.ns = m.s0; m.nlen = clamp(at, m.s0 + st, 1440) - m.s0; }
       m.blk.style.top = topAt(m.ns);
-      m.blk.style.height = `calc(var(--h) * ${(Math.max(m.nlen, zoomed ? 5 : 25) / 60).toFixed(4)} - 2px)`;
-      m.blk.classList.toggle('tight', m.nlen < (zoomed ? 12 : 45));
+      m.blk.style.height = `max(4px, calc(var(--h) * ${(Math.max(m.nlen, 5) / 60).toFixed(4)} - 2px))`;
+      m.blk.classList.toggle('tight', m.nlen / 60 * hp < 38);
       m.blk.classList.remove('noest');
       if (small) small.textContent = `${fmtRange(m.ns, m.ns + m.nlen)} · ${fmtDur(m.nlen)}`;
     }
@@ -3978,7 +3989,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'slot') {
       const r = b.getBoundingClientRect();
       const st = stepOf(b), m = clamp(Math.floor((e.clientY - r.top) / r.height * 1440 / st) * st, 0, 1440 - st);
-      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: st === 5 ? 10 : 30 }, b.dataset.lane === 'tasks' ? 'task' : null);
+      openTask(null, { date: b.dataset.day, time: hhmm(m), mins: st <= 10 ? 15 : 30 }, b.dataset.lane === 'tasks' ? 'task' : null);
     }
     else if (act === 'hd-prev') shiftHome(-1);
     else if (act === 'hd-next') shiftHome(1);
