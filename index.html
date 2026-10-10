@@ -35,10 +35,13 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010025443">
-<script src="finance.js?v=20261010025443"></script>
-<link rel="stylesheet" href="car.css?v=20261010025443">
-<script src="car.js?v=20261010025443"></script>
+<link rel="stylesheet" href="finance.css?v=20261010025714">
+<script src="finance.js?v=20261010025714"></script>
+<link rel="stylesheet" href="car.css?v=20261010025714">
+<script src="car.js?v=20261010025714"></script>
+<link rel="stylesheet" href="sections.css?v=20261010025714">
+<script src="records.js?v=20261010025714"></script>
+<script src="people.js?v=20261010025714"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1303,13 +1306,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010025443"></script>
+<script src="appearance.js?v=20261010025714"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010025443';
+  const VERSION = '20261010025714';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1422,7 +1425,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, FIN = null, CAR = null;
+  let sb = null, FIN = null, CAR = null, PEOPLE = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2100,6 +2103,8 @@ dialog::backdrop{background:transparent}
   // Bills and subscriptions from Finance: an all-day chip on their day. Hold one (or drag it with a mouse) onto another day
   // and its day of the month moves with it, in Finance too. Tapping one opens it.
   const billsOn = k => (FIN && FIN.billsOn ? FIN.billsOn(k) : []);
+  const bdaysOn = k => (PEOPLE ? PEOPLE.on(k) : []);
+  const bdayChip = (x, cls) => PEOPLE.chip(x, cls);
   const billChip = (x, cls) => `<button type="button" class="${cls} bill${x.st ? ' b-' + x.st : ''}" data-bill="${esc(x.id)}" data-act="fin-form" data-form="bill" data-id="${esc(x.id)}" aria-label="${esc(x.name)}${x.short ? ', ' + esc(x.short) : ''}, ${x.group === 'sub' ? 'subscription' : 'bill'}${x.st === 'waiting' ? ', waiting on the charge' : x.st === 'late' ? ', no charge seen yet' : x.st === 'paid' ? ', paid' : ''}">${x.st === 'waiting' ? ICON.clock : x.st === 'late' ? ICON.warn : x.st === 'paid' ? ICON.check : ''}<span class="bn">${esc(x.name)}</span>${x.short ? `<small>${esc(x.short)}</small>` : ''}</button>`;
   // tasks and events per day, in the order a day reads: all-day, anytime, then by time
   function itemsByDay(from, to) {
@@ -2108,6 +2113,7 @@ dialog::backdrop{background:transparent}
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
     for (let k = from; k <= to; k = addDays(k, 1)) {
       for (const b of billsOn(k)) put(k, { b, s: -3 });
+      for (const p of bdaysOn(k)) put(k, { p, s: -4 });
       for (const t of dayItems(k)) if (t.kind !== 'marker' && (t.kind !== 'task' || t.time)) put(k, { t, s: t.time ? toMin(t.time) : -1 });
     }
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
@@ -2210,9 +2216,9 @@ dialog::backdrop{background:transparent}
     const k = S.homeDay, tk = todayKey();
     const any = dayItems(k).filter(t => kindOf(t) === 'anytime' && t.kind !== 'task').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
-    const allDay = S.events.filter(g => g.date === k && g.allDay), bills = billsOn(k);
+    const allDay = S.events.filter(g => g.date === k && g.allDay), bills = billsOn(k), bdays = bdaysOn(k);
     const nEv = S.events.filter(g => g.date === k).length + dayItems(k).filter(x => x.kind !== 'task' && x.kind !== 'marker').length;
-    const anyRow = any.length || allDay.length || bills.length ? `<div class="dc-any" data-day="${k}"><span class="lab">Anytime</span><div class="dc-chips">${bills.map(x => billChip(x, 'achip2')).join('')}${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    const anyRow = any.length || allDay.length || bills.length || bdays.length ? `<div class="dc-any" data-day="${k}"><span class="lab">Anytime</span><div class="dc-chips">${bdays.map(x => bdayChip(x, 'achip2')).join('')}${bills.map(x => billChip(x, 'achip2')).join('')}${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
     return `<section class="float daycal ${cls}" aria-label="Day calendar">
       <div class="dc-head">
@@ -2229,7 +2235,7 @@ dialog::backdrop{background:transparent}
     const pick = `<div class="cal-views" role="group" aria-label="Calendar view">${CAL_VIEWS.map(([id, name]) => `<button type="button" data-act="cal-view" data-view-id="${id}" aria-pressed="${v === id}">${name}</button>`).join('')}</div>`;
     const unit = v === 'year' ? 'year' : v === 'month' ? 'month' : v === 'day' ? 'day' : v === '3day' ? '3 days' : 'week';
     const head = `<div class="cal-head"><p class="cal-month">${esc(calTitle())}</p>${pick}
-        <div class="cal-nav"><button type="button" class="circle" data-act="cal-prev" aria-label="Previous ${unit}">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Next ${unit}">${ICON.right}</button></div></div>`;
+        <div class="cal-nav"><button type="button" class="btn" data-act="bday-list">Birthdays</button><button type="button" class="circle" data-act="cal-prev" aria-label="Previous ${unit}">${ICON.left}</button><button type="button" class="btn" data-act="cal-today">Today</button><button type="button" class="circle" data-act="cal-next" aria-label="Next ${unit}">${ICON.right}</button></div></div>`;
     const err = S.evErr ? `<p class="meta stale-note cal-err">Google Calendar: ${esc(S.evErr)}</p>` : '';
     const days = visibleDays(), n = days.length;
     const ws = addDays(S.calDay, -fromKey(S.calDay).getDay());
@@ -2249,6 +2255,8 @@ dialog::backdrop{background:transparent}
         <i class="r-line"></i>
         <div class="cs-views" role="group" aria-label="Calendar view">${CAL_VIEWS.map(([id, name]) => `<button type="button" data-act="cal-view" data-view-id="${id}" aria-pressed="${v === id}">${name}</button>`).join('')}</div>
         ${sideWeek}
+        <i class="r-line"></i>
+        <button type="button" class="btn cs-bdays" data-act="bday-list" aria-label="Birthdays"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 20.5h15M5.5 20.5v-6.5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v6.5M5.5 15.5c1.2 1 2.4 1 3.6 0s2.4-1 3.6 0 2.4 1 3.6 0 1.6-.8 2.2-.6M12 12V9M12 6.8c-.9-.8-.9-1.9 0-3 .9 1.1.9 2.2 0 3z"/></svg>Birthdays</button>
         <button type="button" class="cs-add" data-act="cal-add" aria-label="Add to the calendar" title="Add">${ICON.plus}</button>
       </aside>`;
     const wrap = inner => `<div class="calx">${side}<div class="calx-main">${inner}</div></div>`;
@@ -2270,13 +2278,14 @@ dialog::backdrop{background:transparent}
     const anyByDay = lanes.map(([k, lane]) => dayItems(k).filter(t => kindOf(t) === 'anytime' && t.kind !== 'task' && inLane(t, lane)).sort(cmp));
     const allByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : S.events.filter(g => g.date === k && g.allDay));
     const billByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : billsOn(k));
-    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length) || billByDay.some(a => a.length)
-      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell" data-day="${lanes[i][0]}">${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
+    const bdayByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : bdaysOn(k));
+    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length) || billByDay.some(a => a.length) || bdayByDay.some(a => a.length)
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell" data-day="${lanes[i][0]}">${bdayByDay[i].map(x => bdayChip(x, 'achip')).join('')}${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
       : '';
     if (split) {
       // Calendar on the left at the normal scale; Tasks on the right magnified to a few hours, scrolling in step
-      const anyFor = i => anyByDay[i].length || allByDay[i].length || billByDay[i].length
-        ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell" data-day="${lanes[i][0]}">${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
+      const anyFor = i => anyByDay[i].length || allByDay[i].length || billByDay[i].length || bdayByDay[i].length
+        ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell" data-day="${lanes[i][0]}">${bdayByDay[i].map(x => bdayChip(x, 'achip')).join('')}${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
       return wrap(`${head}${err}
       ${strip}
       <div class="cal-split">
@@ -2356,6 +2365,7 @@ dialog::backdrop{background:transparent}
       const k = addDays(g.start, i), d = fromKey(k), items = by[k] || [];
       const cls = ['mc', d.getMonth() !== g.month ? 'out' : '', k === tk ? 'today' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       const chips = items.slice(0, 3).map(x => {
+        if (x.p) return bdayChip(x.p, 'mi');
         if (x.b) return billChip(x.b, 'mi');
         if (x.g) return `<button type="button" class="mi evt" data-act="event" data-ev="${esc(x.g.id)}">${x.s >= 0 ? `<small>${esc(shortTime(x.s))}</small>` : ''}${esc(x.g.title)}</button>`;
         const t = x.t, kc = t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : '';
@@ -2381,7 +2391,7 @@ dialog::backdrop{background:transparent}
       let days = '<span></span>'.repeat(first.getDay());
       for (let dd = 1; dd <= n; dd++) {
         const k = dkey(new Date(y, mo, dd)), items = by[k] || [];
-        const open = items.filter(x => x.g || (x.b ? x.b.st !== 'paid' : !x.t.done)).length;
+        const open = items.filter(x => x.g || x.p || (x.b ? x.b.st !== 'paid' : !x.t.done)).length;
         const cls = ['yd', k === tk ? 'today' : '', open ? 'has' : ''].filter(Boolean).join(' ');
         days += `<button type="button" class="${cls}" data-act="cal-open" data-day="${k}" aria-label="${esc(longFmt.format(fromKey(k)))}${open ? `, ${open} ${open === 1 ? 'item' : 'items'}` : ''}">${dd}</button>`;
       }
@@ -2554,7 +2564,7 @@ dialog::backdrop{background:transparent}
     if (d !== lastDay) split();
     lastMinute = m; lastDay = d;
     if (!S.user) return;
-    if (touching || $('#sheet').open || $('#cfSheet').open || (FIN && FIN.sheetOpen()) || (CAR && CAR.sheetOpen())) { pendingTick = true; updateClockOnly(); return; }
+    if (touching || $('#sheet').open || $('#cfSheet').open || (FIN && FIN.sheetOpen()) || (CAR && CAR.sheetOpen()) || (window.POSSheet && POSSheet.isOpen())) { pendingTick = true; updateClockOnly(); return; }
     pendingTick = false;
     render();
   }
@@ -3989,6 +3999,7 @@ dialog::backdrop{background:transparent}
     const act = b.dataset.act;
     if (act.startsWith('fin-')) { if (FIN) FIN.act(act, b, e); return; }
     if (act.startsWith('car-')) { if (CAR) CAR.act(act, b, e); return; }
+    if (act.startsWith('bday-')) { if (PEOPLE) PEOPLE.act(act, b, e); return; }
     if (act === 'edit') openTask(b.dataset.id);
     else if (act === 'done') askDone(b.dataset.id);
     else if (act === 'swipe-hint') toast('Swipe the arrow to the right to complete');
@@ -4059,10 +4070,11 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); }
+    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
+      if (PEOPLE) PEOPLE.stop();
       if (channel) { sb.removeChannel(channel); channel = null; }
       S.all = []; split(); S.loaded = false; S.events = []; S.evWin = null; S.gcal = null; S.loginRedraw = true;
     }
@@ -4207,7 +4219,7 @@ dialog::backdrop{background:transparent}
       if (!r.ok) return;
       const j = await r.json();
       const typing = document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName);
-      if (j.v && j.v !== VERSION && !$('#sheet').open && !setSheet.open && !(FIN && FIN.sheetOpen()) && !(CAR && CAR.sheetOpen()) && !typing) {
+      if (j.v && j.v !== VERSION && !$('#sheet').open && !setSheet.open && !(FIN && FIN.sheetOpen()) && !(CAR && CAR.sheetOpen()) && !(window.POSSheet && POSSheet.isOpen()) && !typing) {
         location.replace(location.pathname + '?v=' + encodeURIComponent(j.v) + location.hash);
       }
     } catch (e) {}
@@ -4218,7 +4230,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); }
+    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);
@@ -4239,6 +4251,7 @@ dialog::backdrop{background:transparent}
     sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer });
+    if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     const { data } = await sb.auth.getSession();
     S.booted = true;
     setUser(data && data.session ? data.session.user : null);

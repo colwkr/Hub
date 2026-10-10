@@ -1,0 +1,25 @@
+/* POS sections built on records.js: the shared sheet, birthdays, pets, lights and notes. */
+
+/* the shared form sheet */
+#recForm{display:flex;flex-direction:column;gap:16px;padding:10px 20px 20px}
+#recSheet .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+#recSheet .three{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr) minmax(0,1fr);gap:10px}
+#recSheet .f select,#recSheet .f textarea{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;min-width:0;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);resize:vertical}
+#recSheet .f > .lab{color:var(--ink-2)}
+#recSheet .f-check{display:flex;align-items:center;gap:12px;font-size:14px;padding:4px 2px}
+#recSheet .f-check input{width:22px;height:22px;margin:0;flex:none;accent-color:var(--ink)}
+#recSheet [hidden]{display:none}
+
+/* birthdays */
+.bd-list{display:flex;flex-direction:column;margin:0 -8px}
+.bd-row{display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px 8px;text-align:left;color:var(--ink);border-radius:14px}
+.bd-row + .bd-row{box-shadow:inset 0 1px 0 var(--hair)}
+.bd-row.today{background:var(--well)}
+.bd-ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--well);flex:none}
+.bd-ic svg.i{width:18px;height:18px}
+.bd-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bd-t .pill{vertical-align:1px;margin-left:4px}
+.bday svg.i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1.5px;stroke-width:1.8}
+.achip.bday,.achip2.bday,.mi.bday{box-shadow:inset 0 0 0 1px var(--ink-3)}
+.cs-bdays{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px}
+.cs-bdays svg.i{width:15px;height:15px}
