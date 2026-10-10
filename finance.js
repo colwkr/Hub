@@ -20,6 +20,8 @@ window.POSFinance = function (ctx) {
     warn: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 20.8 19.3H3.2z"/><path d="M12 10v4.2M12 16.8v.2"/></svg>',
     clock: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 8v4.3l2.8 1.7"/></svg>',
     chev: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
+    back: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>',
+    up: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18.5v-13M6.5 11 12 5.5l5.5 5.5"/></svg>',
   };
   const canSave = () => ctx.canSave();
 
@@ -34,13 +36,13 @@ window.POSFinance = function (ctx) {
   }
 
   const SUBS = { home: 'Overview', bills: 'Bills', loans: 'Loans', savings: 'Savings', lists: 'Lists', spending: 'Spending', activity: 'Activity' };
-  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], sub: 'home', open: new Set(), confirmClear: false };
+  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], income: [], months: [], sub: 'home', open: new Set(), confirmClear: false, ovMk: null, spMk: null };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; } catch (e) {}
   let F = null; // the form currently in the sheet
   const charts = new Map();
 
   /* ---------- storage: same calls the ledger always made, now on Supabase ---------- */
-  const KINDS = ['accounts', 'buckets', 'txns', 'bills', 'loans'];
+  const KINDS = ['accounts', 'buckets', 'txns', 'bills', 'loans', 'income', 'months'];
   const must = ({ error }) => { if (error) throw error; };
   const strip = d => { const { id, ...rest } = d || {}; return rest; };
   const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
@@ -84,7 +86,9 @@ window.POSFinance = function (ctx) {
     rerender();
     if (S.bills.length) await autoPay();
     autoSort();
+    await autoIncome();
     dropStrayExamples();
+    saveMonths();
   }
   // once your real accounts and categories are in, example charges left behind only skew the numbers: they go
   let dropping = false;
@@ -143,14 +147,33 @@ window.POSFinance = function (ctx) {
   // one ink, stepped lighter down the list, so the bar reads in the same order as the rows under it
   const SHADES = [1, .72, .5, .34, .24, .17, .12, .09];
   const shadeOf = g => { const s = slotOf(g); return SHADES[s >= 0 && s < 8 ? s : 7]; };
-  function monthRange(now = new Date()) {
-    return [new Date(now.getFullYear(), now.getMonth(), 1).getTime(), new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime()];
+  /* ---------- months: "2026-10" keys ---------- */
+  // POS started keeping money by the month in October 2026
+  const START = '2026-10';
+  const curMk = () => { const d = new Date(); return monthKeyOf(d.getFullYear(), d.getMonth()); };
+  const mkParts = mk => [+mk.slice(0, 4), +mk.slice(5, 7) - 1];
+  const mkAdd = (mk, n) => { const [y, m] = mkParts(mk); return monthKeyOf(y, m + n); };
+  const mkRange = mk => { const [y, m] = mkParts(mk); return [new Date(y, m, 1).getTime(), new Date(y, m + 1, 1).getTime()]; };
+  const mkDate = mk => { const [y, m] = mkParts(mk); return new Date(y, m, 1); };
+  const mkName = mk => monthFmt.format(mkDate(mk));
+  const mkLong = mk => monthYearFmt.format(mkDate(mk));
+  const mkShortName = mk => monthShortFmt.format(mkDate(mk));
+  const monthYearFmt = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+  const monthShortFmt = new Intl.DateTimeFormat(undefined, { month: 'short' });
+  const inMk = (at, mk) => { const [a, b] = mkRange(mk); return at >= a && at < b; };
+  const dkey = ms => { const d = new Date(ms); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+  // a category's limit in a month: the latest change made for that month or one before it, else the limit it started with.
+  // Lowering it for November carries on into December and after, until another change. null: no limit, just tracking.
+  function limitFor(l, mk = curMk()) {
+    const m = l.months || {};
+    const keys = Object.keys(m).filter(k => k <= mk).sort();
+    const v = keys.length ? m[keys[keys.length - 1]] : l.monthly;
+    return v || null;
   }
-  function limitCharges(l) {
-    const [a, b] = monthRange();
-    return S.txns.filter(t => t.bucketId === l.id && isOut(t) && t.at >= a && t.at < b).sort((x, y) => y.at - x.at);
+  function limitCharges(l, mk = curMk()) {
+    return S.txns.filter(t => t.bucketId === l.id && isOut(t) && inMk(t.at, mk)).sort((x, y) => y.at - x.at);
   }
-  const limitSpent = l => limitCharges(l).reduce((s, t) => s + t.amount, 0);
+  const limitSpent = (l, mk) => limitCharges(l, mk).reduce((s, t) => s + t.amount, 0);
   const inbox = () => S.txns.filter(t => isOut(t) && !t.bucketId).sort((a, b) => b.at - a.at);
   const savingsToSort = () => savingsAccounts().filter(a => unsorted(a) !== 0);
 
@@ -323,13 +346,213 @@ window.POSFinance = function (ctx) {
     return `<b>+${esc(usd0.format(extra / 100))} a month:</b> paid off ${esc(monYr.format(payoffDate(l, plan.months)))}${sooner > 0 ? `, ${sooner} ${sooner === 1 ? 'month' : 'months'} sooner` : ''}${saved > 0 ? `, ${esc(fmt(saved))} less interest` : ''}.`;
   }
 
+  /* ---------- paychecks: what comes in, and when ---------- */
+  // A paycheck lands on set days of the month (the 15th and the 30th; the 30th is the last day of a shorter month),
+  // or every two weeks from a payday you know. One that falls on a weekend comes the Friday before.
+  const incById = id => S.income.find(i => i.id === id);
+  // set by hand (a deposit marked as a move between accounts, or not), else read from the bank's words
+  const isTransfer = t => (t.transfer != null ? !!t.transfer : /\btransfer\b/i.test(`${t.merchant || ''} ${t.alert || ''}`));
+  // the paycheck a deposit is ('_no': marked as not a paycheck, so it's never matched to one)
+  const payOf = t => (t.payId && t.payId !== '_no' && incById(t.payId) ? t.payId : null);
+  // money that came in and counts as income: not a move between your own accounts
+  const isIncome = t => !isOut(t) && !isTransfer(t) && !t.example;
+  function weekdayBefore(d) { const w = d.getDay(); if (w === 6) d.setDate(d.getDate() - 1); else if (w === 0) d.setDate(d.getDate() - 2); return d; }
+  function paydays(inc, mk) {
+    const [y, m] = mkParts(mk), out = new Map();
+    const add = d => { const s = weekdayBefore(d); if (inMk(s.getTime(), mk)) out.set(dkey(s.getTime()), s.getTime()); };
+    if (inc.every === 14 && inc.anchor) {
+      const [ay, am, ad] = inc.anchor.split('-').map(Number), a0 = new Date(ay, am - 1, ad).getTime();
+      const k = Math.floor((mkRange(mk)[0] - a0) / (14 * DAY));
+      for (let i = k - 1; i <= k + 3; i++) add(new Date(ay, am - 1, ad + i * 14));
+    } else {
+      for (const off of [0, 1]) for (const day of inc.days || []) add(new Date(y, m + off, Math.min(day, new Date(y, m + off + 1, 0).getDate())));
+    }
+    return [...out.entries()].sort((a, b) => a[1] - b[1]).map(([key, at]) => ({ key, at }));
+  }
+  // a payday: arrived (its deposit found, or checked off by hand), coming, waiting on it, or not seen
+  function payState(inc, p) {
+    const hits = S.txns.filter(t => t.payId === inc.id && t.payDay === p.key);
+    if (hits.length) return { st: 'got', amount: hits.reduce((s, t) => s + t.amount, 0), at: Math.max(...hits.map(t => t.at)) };
+    const g = inc.got && inc.got[p.key];
+    if (g) return { st: 'got', amount: g.amount || inc.amount || 0, at: g.at, manual: true };
+    if (p.at < startOfDay(inc.createdAt || 0)) return { st: 'before', amount: inc.amount || 0 };
+    const days = Math.round((p.at - startOfDay(Date.now())) / DAY);
+    return { st: days > 0 ? 'expected' : days >= -GRACE ? 'waiting' : 'missed', amount: inc.amount || 0, days };
+  }
+  const payWords = inc => [inc.name, ...String(inc.match || '').split(',')].map(norm).filter(x => x.length >= 3);
+  const payNamed = (inc, t) => { const m = ' ' + norm(`${t.merchant} ${t.alert || ''}`) + ' ', sq = m.replace(/ /g, ''); return payWords(inc).some(x => m.includes(' ' + x + ' ') || sq.includes(x.replace(/ /g, ''))); };
+  // which deposits are this paycheck: ones that name it, else one near its amount, else a same-day split that adds up to it
+  function pickPay(inc, p, pool) {
+    const near = t => Math.abs(t.at - p.at);
+    const byDay = list => { const g = new Map(); for (const t of list) { const k = dkey(t.at); if (!g.has(k)) g.set(k, []); g.get(k).push(t); } return [...g.values()].sort((a, b) => near(a[0]) - near(b[0])); };
+    const named = pool.filter(t => payNamed(inc, t));
+    if (named.length) return byDay(named)[0];
+    if (!inc.amount) return [];
+    const one = pool.filter(t => Math.abs(t.amount - inc.amount) <= Math.round(inc.amount * 0.15)).sort((a, b) => near(a) - near(b));
+    if (one.length) return [one[0]];
+    return byDay(pool).find(g => g.length > 1 && Math.abs(g.reduce((s, t) => s + t.amount, 0) - inc.amount) <= Math.round(inc.amount * 0.03)) || [];
+  }
+  // a deposit that arrives a few days either side of a payday becomes that paycheck (it isn't counted twice)
+  let incBusy = false;
+  async function autoIncome() {
+    if (incBusy || !canSave() || !S.income.length) return;
+    incBusy = true;
+    try {
+      const now = Date.now(), mk = curMk();
+      const free = () => S.txns.filter(t => isIncome(t) && !t.payId && t.at >= now - 45 * DAY);
+      for (const inc of S.income) {
+        const days = [mkAdd(mk, -1), mk, mkAdd(mk, 1)].flatMap(k => paydays(inc, k)).filter(p => p.at >= now - 40 * DAY && p.at <= now + 6 * DAY);
+        for (const p of days) {
+          const pool = free().filter(t => t.at >= p.at - 5 * DAY && t.at < p.at + 5 * DAY && (!inc.accountId || !t.accountId || t.accountId === inc.accountId));
+          if (!pool.length) continue;
+          const have = S.txns.filter(t => t.payId === inc.id && t.payDay === p.key);
+          // already found: only another deposit naming it on the same day joins it (a paycheck split between accounts)
+          const pick = have.length ? pool.filter(t => payNamed(inc, t) && dkey(t.at) === dkey(have[0].at)) : pickPay(inc, p, pool);
+          if (!pick.length) continue;
+          for (const t of pick) if (!(await save(refs.txns.doc(t.id).update({ payId: inc.id, payDay: p.key })))) return;
+          const total = S.txns.filter(t => t.payId === inc.id && t.payDay === p.key).reduce((s, t) => s + t.amount, 0);
+          const patch = {};
+          if (inc.got && inc.got[p.key]) { const got = { ...inc.got }; delete got[p.key]; patch.got = got; }
+          // the paycheck's usual amount follows what really lands, unless it's way off (a bonus, a short week)
+          if (total !== inc.amount && inc.amount && Math.abs(total - inc.amount) <= inc.amount * 0.1) patch.amount = total;
+          if (Object.keys(patch).length) await save(refs.income.doc(inc.id).update(patch));
+          toast(`Paycheck arrived: ${fmt(total)}${patch.amount ? `. Now expecting ${fmt(total)} each payday` : ''}`);
+        }
+      }
+    } finally { incBusy = false; }
+  }
+  async function togglePay(incId, key) {
+    const inc = incById(incId);
+    if (!inc) return;
+    const got = { ...(inc.got || {}) }, was = !!got[key];
+    if (was) delete got[key]; else got[key] = { at: Date.now(), amount: inc.amount || 0 };
+    const day = shortDay.format(new Date(+key.slice(0, 4), +key.slice(5, 7) - 1, +key.slice(8)));
+    if (await save(refs.income.doc(inc.id).update({ got })))
+      toast(was ? `Paycheck for ${day} is no longer checked off` : `Paycheck for ${day} checked off`, () => save(refs.income.doc(inc.id).update({ got: inc.got || {} })));
+  }
+
+  /* ---------- a month of money: what came in, what went out and where ---------- */
+  // a bill that is really a loan's payment (the car's) sits with the loans; a bill with a small loan inside (the phone's part of Verizon) stays a bill
+  const loanOfBill = b => S.loans.find(l => l.billId === b.id && l.payment && b.amount && l.payment >= b.amount * 0.8) || null;
+  // which month a bill's charge counts for: the month it checked off, else when it went through
+  const billMonthOf = (b, t) => { for (const [k, p] of Object.entries(b.paid || {})) if (p && p.txnId === t.id) return k; return monthKeyOf(new Date(t.at).getFullYear(), new Date(t.at).getMonth()); };
+  const DUE = new Set(['due', 'waiting', 'late', 'noday']);
+  function monthModel(mk) {
+    const cur = curMk(), [y, m] = mkParts(mk), [, end] = mkRange(mk), today = startOfDay(Date.now());
+    const pays = S.income.flatMap(inc => paydays(inc, mk).map(p => ({ incId: inc.id, name: inc.name, key: p.key, at: p.at, ...payState(inc, p) })))
+      .map(({ days, manual, ...p }) => ({ ...p, ...(manual ? { manual: true } : {}) }));
+    const others = S.txns.filter(t => isIncome(t) && !payOf(t) && inMk(t.at, mk)).sort((a, b) => a.at - b.at).map(t => ({ id: t.id, name: t.merchant || 'Deposit', at: t.at, amount: t.amount }));
+    const lines = [], missing = [];
+    const outs = S.txns.filter(t => isOut(t) && t.bucketId !== '_none');
+    for (const b of S.bills.slice().sort(byDay)) {
+      const loan = loanOfBill(b), group = loan ? 'loan' : groupOf(b), name = loan ? `${loan.name} payment` : b.name;
+      const tagged = outs.filter(t => t.bucketId === 'bill:' + b.id && billMonthOf(b, t) === mk);
+      const p = paidIn(b, mk);
+      let amount = tagged.reduce((s, t) => s + t.amount, 0);
+      if (p && !p.txnId) amount += b.amount || 0;
+      const line = { id: b.id, group, name, ...(loan && b.name !== name ? { note: b.name } : {}) };
+      if (amount || p) { lines.push({ ...line, amount, st: 'paid', at: p && p.at ? p.at : tagged.length ? Math.max(...tagged.map(t => t.at)) : null }); continue; }
+      if (createdMonth(b) > mk) continue;
+      if (!b.amount) { missing.push({ id: b.id, group, name }); continue; }
+      if (!b.day) { lines.push({ ...line, amount: b.amount, st: mk < cur ? 'unseen' : 'noday' }); continue; }
+      const due = dueOn(b, y, m);
+      let st;
+      if (mk < cur) st = 'unseen';
+      else if (due < startOfDay(b.createdAt || 0)) st = 'before';
+      else { const d = Math.round((due - today) / DAY); st = d > 0 ? 'due' : d >= -GRACE ? 'waiting' : 'late'; }
+      lines.push({ ...line, amount: b.amount, st, at: due });
+    }
+    // charges to a bill that's since been removed
+    const gone = outs.filter(t => String(t.bucketId || '').startsWith('bill:') && !billById(t.bucketId.slice(5)) && inMk(t.at, mk));
+    if (gone.length) lines.push({ id: '_gonebill', group: 'bill', name: 'Removed bill', amount: gone.reduce((s, t) => s + t.amount, 0), st: 'paid' });
+    for (const l of kind('limit')) {
+      const spent = limitSpent(l, mk);
+      if (!spent && (l.createdAt || 0) >= end) continue;
+      lines.push({ id: l.id, group: 'cat', name: l.name, amount: spent, limit: limitFor(l, mk) });
+    }
+    const known = new Set(S.buckets.map(b => b.id));
+    const stray = outs.filter(t => t.bucketId && !String(t.bucketId).startsWith('bill:') && !known.has(t.bucketId) && inMk(t.at, mk));
+    if (stray.length) lines.push({ id: '_gonecat', group: 'cat', name: 'Removed category', amount: stray.reduce((s, t) => s + t.amount, 0), limit: null });
+    for (const g of S.buckets.filter(b => b.kind === 'goal')) {
+      const v = outs.filter(t => t.bucketId === g.id && inMk(t.at, mk)).reduce((s, t) => s + t.amount, 0);
+      if (v) lines.push({ id: g.id, group: 'goal', name: g.name, amount: v });
+    }
+    // money moved into savings from your other accounts (less what came back out of it)
+    const isSav = t => (acct(t.accountId) || {}).type === 'savings';
+    const saved = S.txns.filter(t => inMk(t.at, mk) && isSav(t) && (isOut(t) ? (isTransfer(t) || t.bucketId === '_none') : isTransfer(t)) && !t.example)
+      .reduce((s, t) => s + (isOut(t) ? -t.amount : t.amount), 0);
+    if (saved > 0) lines.push({ id: '_saved', group: 'save', name: 'Moved to savings', amount: saved });
+    const waiting = outs.filter(t => !t.bucketId && inMk(t.at, mk));
+    if (waiting.length) lines.push({ id: '_wait', group: 'wait', name: `${waiting.length} ${waiting.length === 1 ? 'charge' : 'charges'} to approve`, amount: waiting.reduce((s, t) => s + t.amount, 0) });
+    return { mk, pays, others, lines, missing };
+  }
+  // the totals, worked out the same way from a live month or a saved one
+  function monthTotals(mod) {
+    const cur = curMk(), ahead = mod.mk >= cur;
+    const inAll = mod.pays.reduce((s, p) => s + (p.amount || 0), 0) + mod.others.reduce((s, o) => s + o.amount, 0);
+    const inGot = mod.pays.filter(p => p.st === 'got' || p.st === 'before').reduce((s, p) => s + (p.amount || 0), 0) + mod.others.reduce((s, o) => s + o.amount, 0);
+    let done = 0, due = 0, open = 0, saved = 0;
+    for (const l of mod.lines) {
+      if (l.group === 'cat') { done += l.amount; if (ahead && l.limit) open += Math.max(0, l.limit - l.amount); }
+      else if (l.group === 'save') saved += l.amount;
+      else if (DUE.has(l.st)) due += l.amount;
+      else done += l.amount;
+    }
+    return { inAll, inGot, done, due, open, saved, left: inAll - done - due - saved, free: inAll - done - due - saved - open };
+  }
+
+  // Each month's figures are kept: this month's and last month's follow the data (late charges, re-sorting);
+  // an older month shows what was saved for it, even after a bill or category is gone.
+  const stable = v => (Array.isArray(v) ? `[${v.map(stable).join(',')}]` : v && typeof v === 'object'
+    ? `{${Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',')}}` : JSON.stringify(v === undefined ? null : v));
+  const snapOf = mk => S.months.find(x => x.id === 'month-' + mk) || null;
+  function modelFor(mk) {
+    const s = mk < mkAdd(curMk(), -1) ? snapOf(mk) : null;
+    return s ? { mk, pays: s.pays || [], others: s.others || [], lines: s.lines || [], missing: s.missing || [] } : monthModel(mk);
+  }
+  let monthsBusy = false;
+  async function saveMonths() {
+    if (monthsBusy || !canSave() || !S.loaded) return;
+    monthsBusy = true;
+    try {
+      for (const mk of [mkAdd(curMk(), -1), curMk()]) {
+        if (mk < START) continue;
+        const data = monthModel(mk), old = snapOf(mk);
+        if (old && stable({ ...strip(old), savedAt: 0 }) === stable({ ...data, savedAt: 0 })) continue;
+        const ref = refs.months.doc('month-' + mk), body = { ...data, savedAt: Date.now() };
+        try { await (old ? ref.update(body) : ref.set(body)); } catch (e) { break; }
+      }
+    } finally { monthsBusy = false; }
+  }
+
+  // what's next to come in or go out: paydays and bills, soonest first (a paycheck before a bill on the same day)
+  function upcoming(n = 4) {
+    const today = startOfDay(Date.now()), mk = curMk(), out = [];
+    for (const inc of S.income) for (const k of [mk, mkAdd(mk, 1), mkAdd(mk, 2)]) for (const p of paydays(inc, k)) {
+      if (p.at < today || ['got', 'before'].includes(payState(inc, p).st)) continue;
+      out.push({ kind: 'pay', at: p.at, amount: inc.amount || 0, name: 'Paycheck', sub: inc.name, id: inc.id, key: p.key });
+    }
+    const n0 = new Date(today);
+    for (const b of S.bills) {
+      if (!b.day || !b.amount) continue;
+      const loan = loanOfBill(b);
+      for (const off of [0, 1, 2]) {
+        const y = n0.getFullYear(), m = n0.getMonth() + off, due = dueOn(b, y, m);
+        if (due < today || paidIn(b, monthKeyOf(y, m)) || (off === 0 && !appliesIn(b, y, m))) continue;
+        out.push({ kind: 'bill', at: due, amount: b.amount, name: loan ? `${loan.name} payment` : b.name, sub: loan ? b.name : groupOf(b) === 'sub' ? 'Subscription' : 'Bill', id: b.id });
+        break;
+      }
+    }
+    return out.sort((a, b) => a.at - b.at || (a.kind === 'pay' ? -1 : b.kind === 'pay' ? 1 : b.amount - a.amount)).slice(0, n);
+  }
+
   /* ---------- pieces ---------- */
   function chargeCard(t) {
     const billChips = billsNear(t).slice(0, 3).map(b =>
       `<button type="button" class="chip bill" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="bill:${esc(b.id)}">${esc(b.name)}<span>${b.amount ? fmt(b.amount) + ' ' : ''}${groupOf(b) === 'sub' ? 'subscription' : 'bill'}</span></button>`);
     const chips = billChips.concat(kind('limit').map(l => {
-      const left = (l.monthly || 0) - limitSpent(l);
-      return `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}">${esc(l.name)}<span>${!l.monthly ? fmt(limitSpent(l)) + ' this month' : left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
+      const lim = limitFor(l), left = (lim || 0) - limitSpent(l);
+      return `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}">${esc(l.name)}<span>${!lim ? fmt(limitSpent(l)) + ' this month' : left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
     })).concat(kind('goal').filter(g => g.accountId === t.accountId).map(g =>
       `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(g.id)}">${esc(g.name)}<span>${fmt(catLeft(g))}</span></button>`
     ));
@@ -414,22 +637,6 @@ window.POSFinance = function (ctx) {
   /* ---------- the overview's pictures ---------- */
   // a big money figure, the cents dimmed
   const big = c => { const t = fmt(c), i = t.lastIndexOf('.'); return i < 0 ? esc(t) : `${esc(t.slice(0, i))}<span class="cents">${esc(t.slice(i))}</span>`; };
-  const SHADE = i => [1, .62, .4, .26, .17, .12][Math.min(i, 5)];
-  // everything in checking and savings, split by account
-  function onHand() {
-    const accts = sorted(S.accounts.filter(a => a.type !== 'credit'));
-    if (!accts.length) return '';
-    const parts = accts.map(a => ({ a, v: Math.max(0, acctBalance(a)) }));
-    const total = parts.reduce((t, p) => t + p.v, 0) || 1;
-    const owed = S.accounts.filter(a => a.type === 'credit').reduce((t, a) => t + acctBalance(a), 0);
-    return `<article class="float fh">
-      <span class="lab">On hand</span>
-      <span class="fig xl">${big(parts.reduce((t, p) => t + p.v, 0))}</span>
-      <div class="split" role="img" aria-label="${esc(parts.map(p => `${p.a.name} ${fmt(p.v)}`).join(', '))}">${parts.map((p, i) => p.v ? `<span class="seg" style="width:${(p.v / total * 100).toFixed(2)}%;opacity:${SHADE(i)}"></span>` : '').join('')}</div>
-      <div class="fh-rows">${parts.map((p, i) => `<div class="fh-row"><i class="dot" style="opacity:${SHADE(i)}"></i><span>${esc(p.a.name)}</span><span class="num">${fmt(p.v)}</span></div>`).join('')}
-        ${S.accounts.some(a => a.type === 'credit') ? `<div class="fh-row owed"><i class="dot hollow"></i><span>Owed on cards</span><span class="num">${fmt(owed)}</span></div>` : ''}</div>
-    </article>`;
-  }
   // this month's bills on a line from the 1st to the last day: bigger dot, bigger bill
   function billLine() {
     const now = new Date(), y = now.getFullYear(), m = now.getMonth(), dim = new Date(y, m + 1, 0).getDate(), today = now.getDate();
@@ -482,10 +689,11 @@ window.POSFinance = function (ctx) {
     </article>`;
   }
   // spending by day this month: one thin bar a day; days still to come are outlines
-  function dailyBars(limits) {
-    const now = new Date(), y = now.getFullYear(), m = now.getMonth(), dim = new Date(y, m + 1, 0).getDate(), today = now.getDate();
+  function dailyBars(limits, mk = curMk()) {
+    const now = new Date(), [y, m] = mkParts(mk), dim = new Date(y, m + 1, 0).getDate(), cur = curMk();
+    const today = mk === cur ? now.getDate() : mk < cur ? dim + 1 : 0;
     const day = new Array(dim + 1).fill(0);
-    for (const l of limits) for (const t of limitCharges(l)) day[new Date(t.at).getDate()] += t.amount;
+    for (const l of limits) for (const t of limitCharges(l, mk)) day[new Date(t.at).getDate()] += t.amount;
     const most = Math.max(...day, 1);
     const bars = [];
     for (let d = 1; d <= dim; d++) {
@@ -493,52 +701,170 @@ window.POSFinance = function (ctx) {
       const tip = `${shortDay.format(new Date(y, m, d))}: ${future ? 'still to come' : fmt(v)}`;
       bars.push(`<span class="db${future ? ' later' : v ? '' : ' zero'}${d === today ? ' today' : ''}" style="--h:${future ? 12 : v ? Math.max(8, v / most * 100).toFixed(1) : 4}%" title="${esc(tip)}"></span>`);
     }
-    return `<div class="daily" role="img" aria-label="${esc(`Spending by day in ${monthFmt.format(now)}, most on one day ${fmt(most === 1 ? 0 : most)}`)}"><div class="db-bars">${bars.join('')}</div>
-      <div class="db-axis"><span>${esc(shortDay.format(new Date(y, m, 1)))}</span><span class="db-now" style="left:${((today - 0.5) / dim * 100).toFixed(2)}%">Today</span><span>${esc(shortDay.format(new Date(y, m, dim)))}</span></div></div>`;
+    return `<div class="daily" role="img" aria-label="${esc(`Spending by day in ${mkName(mk)}, most on one day ${fmt(most === 1 ? 0 : most)}`)}"><div class="db-bars">${bars.join('')}</div>
+      <div class="db-axis"><span>${esc(shortDay.format(new Date(y, m, 1)))}</span>${mk === cur ? `<span class="db-now" style="left:${((today - 0.5) / dim * 100).toFixed(2)}%">Today</span>` : ''}<span>${esc(shortDay.format(new Date(y, m, dim)))}</span></div></div>`;
   }
   // a ring per category: how much of its limit is used, or just what's been spent when it has none
-  function ring(l) {
-    const spent = limitSpent(l), lim = l.monthly || 0, p = lim ? spent / lim : 0;
+  function ring(l, mk = curMk()) {
+    const spent = limitSpent(l, mk), lim = limitFor(l, mk) || 0, p = lim ? spent / lim : 0;
     const R = 26, C = 2 * Math.PI * R, st = lim && spent > lim ? 'over' : lim && p >= 0.85 ? 'near' : '';
     const mid = lim ? `${Math.round(p * 100)}%` : usd0.format(Math.round(spent / 100));
-    return `<button type="button" class="ring ${st}${lim ? '' : ' open'}" data-act="fin-sub" data-sub="spending" aria-label="${esc(`${l.name}: ${fmt(spent)}${lim ? ' of ' + fmt(lim) : ', no limit'}`)}">
+    return `<button type="button" class="ring ${st}${lim ? '' : ' open'}" data-act="fin-card" data-id="${esc(l.id)}" aria-label="${esc(`${l.name}: ${fmt(spent)}${lim ? ' of ' + fmt(lim) : ', no limit'}`)}">
       <svg viewBox="0 0 64 64" aria-hidden="true"><circle class="r-track" cx="32" cy="32" r="${R}"/>${lim && spent ? `<circle class="r-fill" cx="32" cy="32" r="${R}" stroke-dasharray="${Math.max(2, Math.min(1, p) * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>` : ''}<text x="32" y="37" text-anchor="middle">${esc(mid)}</text></svg>
       <span class="r-name">${esc(l.name)}</span><span class="r-sub">${lim ? `${esc(fmt(spent))} of ${esc(usd0.format(lim / 100))}` : 'no limit'}</span>
     </button>`;
   }
-  function spendCard() {
-    const limits = kind('limit');
-    if (!limits.length) return '';
-    const total = limits.reduce((t, l) => t + limitSpent(l), 0);
-    return `<article class="float sc">
-      <div class="bl-head"><span class="lab">Spending · ${esc(monthFmt.format(new Date()))}</span><span class="fig lg">${big(total)}</span></div>
-      <div class="rings">${limits.map(ring).join('')}</div>
-      ${dailyBars(limits)}
+  // a share of the month's income: "12%", "4.5%", "<0.1%"
+  const pctText = f => (f == null || !isFinite(f) ? '' : f <= 0 ? '0%' : f < 0.001 ? '<0.1%' : f < 0.1 ? (f * 100).toFixed(1).replace(/\.0$/, '') + '%' : Math.round(f * 100) + '%');
+  const relDay = at => { const d = Math.round((startOfDay(at) - startOfDay(Date.now())) / DAY); return d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : d > 1 && d < 7 ? `In ${d} days` : null; };
+
+  // the very next thing to come in or go out, then the few after it
+  function nextUp() {
+    const list = upcoming(4);
+    if (!list.length) return `<article class="float nx"><span class="lab">Next up</span><p class="empty">Nothing coming. Add your bills and your paycheck to see what’s next.</p></article>`;
+    const [x, ...rest] = list, inn = x.kind === 'pay', rel = relDay(x.at);
+    const open = x.kind === 'pay' ? `data-act="fin-form" data-form="income" data-id="${esc(x.id)}"` : `data-act="fin-form" data-form="bill" data-id="${esc(x.id)}"`;
+    return `<article class="float nx">
+      <span class="lab">Next up</span>
+      <button type="button" class="nx-main" ${open}${canSave() ? '' : ' disabled'}>
+        <span class="nx-amt${inn ? ' in' : ''}">${inn ? '+' : ''}${big(x.amount)}</span>
+        <span class="nx-what"><b>${esc(x.name)}</b><span>${esc(x.sub)}</span></span>
+        <span class="nx-when">${esc(dayFmt.format(x.at))}${rel ? `<b>${esc(rel)}</b>` : ''}</span>
+      </button>
+      ${rest.length ? `<div class="nx-then"><span class="lab">After that</span>${rest.map(r => `<div class="nx-r${r.kind === 'pay' ? ' in' : ''}"><span class="nx-d">${esc(shortDay.format(r.at))}</span><span class="nx-n">${esc(r.name)}</span><span class="num">${r.kind === 'pay' ? '+' : ''}${esc(fmt(r.amount))}</span></div>`).join('')}</div>` : ''}
     </article>`;
+  }
+
+  // can each account cover the bills it still has to pay this month?
+  function coverage() {
+    const toGo = S.bills.filter(b => b.amount && b.accountId && ['waiting', 'late', 'soon'].includes(billState(b).st));
+    return sorted(S.accounts.filter(a => a.type !== 'credit')).map(a => {
+      const due = toGo.filter(b => b.accountId === a.id).reduce((t, b) => t + b.amount, 0), bal = acctBalance(a);
+      return { a, due, bal, short: due - bal };
+    }).filter(c => c.due);
+  }
+  // every account's balance on one line; tap one to update it
+  function acctStrip() {
+    const accts = sorted(S.accounts);
+    const add = canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : '';
+    if (!accts.length) return `<article class="float ac"><div class="sec-head"><span class="lab">Accounts</span>${add}</div><p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p></article>`;
+    const onHand = accts.filter(a => a.type !== 'credit').reduce((t, a) => t + Math.max(0, acctBalance(a)), 0);
+    const cells = accts.map(a => {
+      const credit = a.type === 'credit', l4 = (a.last4 || []).map(x => '••' + x).join(' ');
+      return `<button type="button" class="ac-cell${credit ? ' owed' : ''}" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(acctBalance(a))}. Update`)}">
+        <span class="ac-n">${esc(a.name)}${credit ? ' · owed' : ''}</span><span class="ac-v">${big(acctBalance(a))}</span>${l4 ? `<small>${esc(l4)}</small>` : ''}</button>`;
+    }).join('');
+    const short = coverage().filter(c => c.short > 0).map(c => `<p class="ac-warn">${ICON.warn}<span>${esc(c.a.name)} has ${esc(fmt(c.bal))} for the ${esc(fmt(c.due))} of bills still to come out this month: <b>${esc(fmt(c.short))} short</b>.</span></p>`).join('');
+    return `<article class="float ac">
+      <div class="ac-head"><span class="lab">Accounts</span><span class="meta">On hand <b>${esc(fmt(onHand))}</b></span>${add}</div>
+      <div class="ac-row">${cells}</div>${short}${mailLine()}
+    </article>`;
+  }
+
+  const GROUPS = [['bill', 'Bills'], ['loan', 'Loans'], ['sub', 'Subscriptions'], ['cat', 'Spending'], ['goal', 'Paid from savings'], ['wait', 'Not sorted yet'], ['save', 'Saved']];
+  function lineMeta(l) {
+    const d = l.at ? shortDay.format(l.at) : '';
+    return ({
+      paid: d ? `Paid ${d}` : 'Paid', due: `Due ${d}`, waiting: `Due ${d} · waiting on the charge`, late: `Due ${d} · no charge seen yet`,
+      before: `${d} · before POS was tracking it`, unseen: d ? `Due ${d} · no charge seen` : 'No charge seen', noday: 'No day set yet',
+    })[l.st] || '';
+  }
+  // a month's money: what came in, where it went (as a share of what came in), and what's left
+  function monthCard(mk) {
+    const cur = curMk(), mod = modelFor(mk), t = monthTotals(mod), future = mk > cur, now = mk === cur;
+    const share = v => (t.inAll ? pctText(v / t.inAll) : '');
+    const out = t.done + t.due + (future ? t.open : 0), left = future ? t.free : t.left;
+    // the month's income as one bar: what's gone, bills to come, room left in the limits, and what's free
+    const parts = [['done', t.done, 'Spent and paid'], ['due', t.due, future ? 'Bills' : 'Bills still to come'], ['saved', t.saved, 'Moved to savings'], ['open', t.open, future ? 'Spending limits' : 'Left in your limits']].filter(p => p[1] > 0);
+    const used = parts.reduce((s, p) => s + p[1], 0), base = Math.max(t.inAll, used, 1), over = used - t.inAll;
+    const pc = v => (v / base * 100).toFixed(2);
+    const bar = parts.map(([k, v]) => `<span class="mb-seg ${k}" style="width:${pc(v)}%"></span>`).join('') + (over < 0 ? `<span class="mb-seg free" style="width:${pc(-over)}%"></span>` : '');
+    const legend = parts.map(([k, v, label]) => `<span><i class="mb-key ${k}"></i>${esc(label)} <b>${esc(fmt(v))}</b>${t.inAll ? ` <small>${share(v)}</small>` : ''}</span>`).join('')
+      + (t.inAll ? (over < 0 ? `<span><i class="mb-key free"></i>${future ? 'Free' : now ? 'Free after all that' : 'Kept'} <b>${esc(fmt(-over))}</b> <small>${share(-over)}</small></span>` : `<span class="mb-over">${now || future ? 'Short' : 'Over'} by <b>${esc(fmt(over))}</b></span>`) : '');
+    const stat = (label, v, sub, cls = '') => `<div class="mo-stat${cls}"><span class="lab">${label}</span><span class="fig lg">${v < 0 ? '−' : ''}${big(Math.abs(v))}</span><span class="meta">${sub}</span></div>`;
+    const inSub = !mod.pays.length && !mod.others.length ? 'No paycheck set up' : future ? 'Expected' : now ? (t.inGot ? `${esc(fmt(t.inGot))} arrived so far` : 'None arrived yet') : 'Came in';
+    const outSub = future ? 'Bills and spending limits' : now ? `${esc(fmt(t.done))} so far · ${esc(fmt(t.due))} still to come` : 'Went out';
+    const leftSub = future ? 'If you spend up to your limits' : now ? `After bills${t.saved ? ' and savings' : ''} · ${t.free < 0 ? '−' : ''}${esc(fmt(Math.abs(t.free)))} if you spend to your limits` : t.saved ? `Kept, on top of ${esc(fmt(t.saved))} saved` : 'Kept';
+    const stats = stat('In', t.inAll, inSub) + stat('Out', out, outSub) + stat(future ? 'Free' : 'Left', left, leftSub, left < 0 ? ' neg' : '');
+    // where it goes, group by group
+    const groups = GROUPS.map(([g, label]) => {
+      const lines = mod.lines.filter(l => l.group === g);
+      if (!lines.length) return '';
+      const amt = l => (g === 'cat' && future ? l.limit || 0 : l.amount);
+      const sum = lines.reduce((s, l) => s + amt(l), 0);
+      const rows = lines.map(l => {
+        const v = amt(l), dueish = DUE.has(l.st);
+        let meta = '', meter = '', act = '';
+        if (g === 'cat') {
+          meta = future ? (l.limit ? 'Limit' : 'No limit') : l.limit ? `of ${fmtShort(l.limit)}${l.amount > l.limit ? ' · over' : ''}` : 'No limit';
+          if (!future && l.limit) meter = `<i class="mo-meter${l.amount > l.limit ? ' over' : ''}"><i style="width:${Math.min(100, l.amount / l.limit * 100).toFixed(1)}%"></i></i>`;
+          if (!l.id.startsWith('_')) act = `data-act="fin-sub" data-sub="spending" data-mk="${mk}"`;
+        } else if (g === 'goal') { meta = 'From savings'; }
+        else if (g === 'save') { meta = 'Moved over from your other accounts'; }
+        else if (g === 'wait') { meta = 'Approve them to sort them'; act = 'data-act="fin-sub" data-sub="home"'; }
+        else { meta = [l.note, lineMeta(l)].filter(Boolean).join(' · '); if (billById(l.id) && canSave()) act = `data-act="fin-form" data-form="bill" data-id="${esc(l.id)}"`; }
+        const tag = act ? 'button type="button"' : 'div', close = act ? 'button' : 'div';
+        return `<${tag} class="mo-r${dueish ? ' due' : ''}${l.st === 'before' ? ' before' : ''}" ${act}>
+          <span class="mo-n"><span>${esc(l.name)}</span><small>${esc(meta)}</small>${meter}</span>
+          <span class="num">${v ? esc(fmt(v)) : '—'}</span><span class="pct">${v ? share(v) : ''}</span></${close}>`;
+      }).join('');
+      return `<div class="mo-g"><div class="mo-gh"><span>${label}</span><span class="num">${esc(fmt(sum))}</span><span class="pct">${share(sum)}</span></div>${rows}</div>`;
+    }).join('');
+    const order = { bill: 0, loan: 1, sub: 2 };
+    const missing = mk >= cur && mod.missing.length ? `<p class="mo-miss">No amount yet, so not counted: ${mod.missing.slice().sort((x, y) => (order[x.group] ?? 3) - (order[y.group] ?? 3)).map(x => billById(x.id) && canSave() ? `<button type="button" class="link" data-act="fin-form" data-form="bill" data-id="${esc(x.id)}">${esc(x.name)}</button>` : esc(x.name)).join(', ')}</p>` : '';
+    return `<article class="float mo" aria-label="${esc(mkLong(mk))}: money in and out">
+      ${monthNav('ov', mk)}
+      <div class="mo-stats">${stats}</div>
+      ${t.inAll || used ? `<div class="mo-bar" role="img" aria-label="${esc(parts.map(p => `${p[2]} ${fmt(p[1])}`).join(', ') + (t.inAll ? `, of ${fmt(t.inAll)} coming in` : ''))}">${bar}${over > 0 && t.inAll ? `<i class="mb-income" style="left:${pc(t.inAll)}%"></i>` : ''}</div><div class="mo-legend">${legend}</div>` : ''}
+      <div class="mo-body">
+        <div class="mo-out"><div class="mo-cols"><span class="lab">Where it goes</span><span class="lab">${t.inAll ? 'Of income' : ''}</span></div>${groups || '<p class="empty">Nothing yet.</p>'}${missing}</div>
+        <div class="mo-side">${moneyIn(mod, t)}${monthsChart(mk)}</div>
+      </div>
+    </article>`;
+  }
+  // the paychecks in a month (arrived, coming, or not seen) and anything else that came in
+  function moneyIn(mod, t) {
+    const edit = S.income.length && canSave() ? `<button type="button" class="link" data-act="fin-form" data-form="income" data-id="${esc(S.income[0].id)}">Edit paycheck</button>` : '';
+    const pays = mod.pays.map(p => {
+      const d = shortDay.format(p.at), inc = incById(p.incId), fromTxn = p.st === 'got' && !p.manual;
+      const meta = { got: p.manual ? `${d} · checked off` : `Arrived ${shortDay.format(p.at)}`, expected: `${d} · expected`, waiting: `${d} · waiting on it`, missed: `${d} · not seen`, before: `${d} · before POS` }[p.st] || d;
+      const canTick = inc && canSave() && !fromTxn && p.st !== 'before' && p.at <= Date.now() + DAY;
+      const chk = canTick ? `<button type="button" class="b-chk" data-act="fin-pay" data-id="${esc(p.incId)}" data-key="${esc(p.key)}" aria-pressed="${p.st === 'got'}" aria-label="${p.st === 'got' ? `Paycheck for ${d} is checked off. Undo` : `It came: check off the paycheck for ${d}`}">${ICON.check}</button>` : `<span class="mi-dot${p.st === 'got' || p.st === 'before' ? ' got' : ''}" aria-hidden="true"></span>`;
+      return `<div class="mi-r st-${p.st}">${chk}<span class="mo-n"><span>Paycheck</span><small>${esc(meta)}</small></span><span class="num">+${esc(fmt(p.amount))}</span></div>`;
+    }).join('');
+    const others = mod.others.map(o => `<div class="mi-r"><span class="mi-dot got" aria-hidden="true"></span><span class="mo-n"><span>${esc(o.name)}</span><small>${esc(shortDay.format(o.at))}</small></span><span class="num">+${esc(fmt(o.amount))}</span></div>`).join('');
+    const none = !S.income.length && canSave() ? `<p class="empty">Add your paycheck to see what each thing costs as a share of it.</p><div><button type="button" class="btn solid" data-act="fin-form" data-form="income">Add paycheck</button></div>` : '';
+    return `<section class="m-in"><div class="mo-cols"><span class="lab">Money in · ${esc(fmt(t.inAll))}</span>${edit}</div>${pays}${others}${none}</section>`;
+  }
+  // month by month: each column is what came in (the outline) and what went out (filled); months ahead are the plan
+  function monthsChart(sel) {
+    const cur = curMk(), first = mkAdd(cur, -9) > START ? mkAdd(cur, -9) : START, last = mkAdd(cur, 2), cols = [];
+    for (let k = first; k <= last; k = mkAdd(k, 1)) { const t = monthTotals(modelFor(k)); cols.push({ mk: k, t, open: k >= cur ? t.open : 0 }); }
+    const top = Math.max(...cols.map(c => Math.max(c.t.inAll, c.t.done + c.t.due + c.t.saved + c.open)), 1);
+    const h = v => (v / top * 100).toFixed(2);
+    const html = cols.map(({ mk, t, open }) => {
+      const spent = t.done + t.due + t.saved + open, f = t.inAll ? spent / t.inAll : null;
+      let y = 0;
+      const seg = (cls, v) => { if (v <= 0) return ''; const s = `<i class="mc-fill ${cls}" style="bottom:${h(y)}%;height:${h(v)}%"></i>`; y += v; return s; };
+      const fills = seg('done', t.done) + seg('due', t.due) + seg('saved', t.saved) + seg('open', open);
+      const label = `${mkLong(mk)}: ${fmt(t.inAll)} in, ${fmt(t.done)} out${t.due ? `, ${fmt(t.due)} of bills to come` : ''}${t.saved ? `, ${fmt(t.saved)} saved` : ''}${open ? `, ${fmt(open)} left in the limits` : ''}`;
+      return `<button type="button" class="mc-col${mk === sel ? ' sel' : ''}${mk > cur ? ' ahead' : ''}" data-act="fin-month" data-for="ov" data-mk="${mk}" aria-label="${esc(label)}"${mk === sel ? ' aria-current="true"' : ''}>
+        <span class="mc-pct">${f == null ? '' : pctText(f)}</span>
+        <span class="mc-plot"><i class="mc-track" style="height:${h(t.inAll)}%"></i>${fills}</span>
+        <span class="mc-mo">${esc(mkShortName(mk))}</span></button>`;
+    }).join('');
+    return `<section class="m-chart"><div class="mo-cols"><span class="lab">By month · share of income</span></div><div class="mc-cols">${html}</div></section>`;
   }
 
   /* ---------- views ---------- */
   function vHome() {
-    const todo = inbox();
-    const accounts = sorted(S.accounts);
-    const sum = f => S.accounts.filter(f).reduce((s, a) => s + acctBalance(a), 0);
-    const top = [onHand(), billLine()].filter(Boolean);
-    const totals = top.length ? `<div class="fin-viz${top.length === 1 ? ' one' : ''}">${top.join('')}</div>` : '';
-    let left = '';
-    const due = billAlerts();
-    if (due.length) left += `<section class="sec"><span class="lab">Bills</span><div class="stack">${due.map(billNote).join('')}</div></section>`;
-    if (todo.length) left += `<section class="sec"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>`;
-    const notes = savingsToSort().map(sortNote).join('');
-    if (notes) left += `<section class="sec">${notes}</section>`;
-    if (!left) left = '<section class="sec"><span class="lab">Needs approval</span><p class="empty">Nothing waiting. New charges show up here to be sorted.</p></section>';
-    const sc = spendCard();
-    if (sc) left += `<section class="sec">${sc}</section>`;
-    let right = '<section class="sec"><div class="sec-head"><span class="lab">Accounts</span>'
-      + (canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : '') + '</div>';
-    right += accounts.length ? `<div class="stack">${accounts.map(accountCard).join('')}</div>`
-      : '<p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p>';
-    right += mailLine() + '</section>';
-    return `${totals}<div class="fin-two"><div>${left}</div><div>${right}</div></div>${examplesBar()}`;
+    const todo = inbox(), due = billAlerts(), notes = savingsToSort().map(sortNote).join('');
+    let acts = '';
+    if (due.length) acts += `<section class="sec"><span class="lab">Bills</span><div class="ov-grid">${due.map(billNote).join('')}</div></section>`;
+    if (todo.length) acts += `<section class="sec"><span class="lab">Needs approval · ${todo.length}</span><div class="ov-grid">${todo.map(chargeCard).join('')}</div></section>`;
+    if (notes) acts += `<section class="sec"><div class="ov-grid">${notes}</div></section>`;
+    const mk = S.ovMk && S.ovMk >= START ? S.ovMk : curMk();
+    return `<div class="ov-top">${nextUp()}${acctStrip()}</div>${acts}${monthCard(mk)}${examplesBar()}`;
   }
 
   // whether the Regions alert emails are reaching POS
@@ -592,6 +918,7 @@ window.POSFinance = function (ctx) {
         <div class="float"><span class="lab">Left in ${esc(month)}</span><span class="fig md">${fmt(toGo)}</span></div>
       </div>
       ${alerts.length ? `<section class="sec"><div class="stack">${alerts.map(billNote).join('')}</div></section>` : ''}
+      ${billLine()}
       <div class="fin-two"><div>${sec('bill', 'Bills', bills)}</div><div>${sec('sub', 'Subscriptions', subs)}</div></div>`;
   }
 
@@ -713,89 +1040,114 @@ window.POSFinance = function (ctx) {
     return `<div class="fin-page">${h}</div>`;
   }
 
-  // this month in a category: what's been spent, building day by day; with a limit, the even pace to it (dashed)
-  function spendChart(l, charges) {
-    const now = new Date(), y = now.getFullYear(), mo = now.getMonth(), dim = new Date(y, mo + 1, 0).getDate();
-    const today = now.getDate(), byDay = new Array(dim + 1).fill(0);
+  // a month in a category: what's been spent, building day by day; with a limit, the even pace to it (dashed)
+  function spendChart(l, charges, mk) {
+    const cur = curMk(), [y, mo] = mkParts(mk), dim = new Date(y, mo + 1, 0).getDate(), lim = limitFor(l, mk);
+    const today = mk === cur ? new Date().getDate() : dim, byDay = new Array(dim + 1).fill(0);
     for (const t of charges) byDay[new Date(t.at).getDate()] += t.amount;
     const pts = [[0, 0]];
     let cum = 0;
     for (let d = 1; d <= today; d++) { if (byDay[d]) { pts.push([d - 1 + 0.5, cum]); cum += byDay[d]; pts.push([d - 1 + 0.5, cum]); } }
     pts.push([today, cum]);
-    const top = Math.max(l.monthly || 0, cum, 1) * 1.08, W = 300, H = 56;
+    const top = Math.max(lim || 0, cum, 1) * 1.08, W = 300, H = 56;
     const X = d => (d / dim * W).toFixed(1), Y = v => (H - 2 - v / top * (H - 6)).toFixed(1);
     const line = pts.map(([d, v], i) => `${i ? 'L' : 'M'}${X(d)},${Y(v)}`).join('');
     const area = `${line}L${X(today)},${H}L0,${H}Z`;
-    const pace = l.monthly ? `<path class="pace" d="M0,${Y(0)}L${W},${Y(l.monthly)}" vector-effect="non-scaling-stroke"/><path class="cap" d="M0,${Y(l.monthly)}H${W}" vector-effect="non-scaling-stroke"/>` : '';
+    const pace = lim ? `<path class="pace" d="M0,${Y(0)}L${W},${Y(lim)}" vector-effect="non-scaling-stroke"/><path class="cap" d="M0,${Y(lim)}H${W}" vector-effect="non-scaling-stroke"/>` : '';
     return `<div class="s-chart" aria-hidden="true"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${pace}<path class="fill" d="${area}"/><path class="line" d="${line}" vector-effect="non-scaling-stroke"/></svg>
       <i class="s-dot" style="left:${(today / dim * 100).toFixed(2)}%;top:${(Number(Y(cum)) / H * 100).toFixed(2)}%"></i>
       <div class="axis"><span>${esc(shortDay.format(new Date(y, mo, 1)))}</span><span>${esc(shortDay.format(new Date(y, mo, dim)))}</span></div></div>`;
   }
-  // where this month's spending went, category by category
-  function spendSplit(limits) {
-    const parts = limits.map(l => ({ l, v: limitSpent(l) })).filter(p => p.v > 0).sort((a, b) => b.v - a.v);
-    const total = parts.reduce((t, p) => t + p.v, 0);
-    if (!total) return `<div class="hero"><span class="fig xl">${fmt(0)}</span><span class="meta">Nothing spent in your categories yet this month.</span>${limits.length ? dailyBars(limits) : ''}</div>`;
+  // where a month's spending went, category by category
+  function spendSplit(limits, mk) {
+    const cur = curMk(), parts = limits.map(l => ({ l, v: limitSpent(l, mk) })).filter(p => p.v > 0).sort((a, b) => b.v - a.v);
+    const total = parts.reduce((t, p) => t + p.v, 0), when = mk === cur ? 'this month' : `in ${mkName(mk)}`;
+    if (!total) return `<div class="hero"><span class="fig xl">${fmt(0)}</span><span class="meta">Nothing spent in your categories ${esc(when)}${mk === cur ? ' yet' : ''}.</span>${limits.length ? dailyBars(limits, mk) : ''}</div>`;
     const op = i => [1, .72, .5, .34, .24, .17, .12, .09][Math.min(i, 7)];
-    return `<div class="hero"><div class="s-top"><span class="lab">Spent this month</span><span class="fig xl">${big(total)}</span></div>
+    return `<div class="hero"><div class="s-top"><span class="lab">Spent ${esc(when)}</span><span class="fig xl">${big(total)}</span></div>
       <div class="split" role="img" aria-label="${esc(parts.map(p => `${p.l.name} ${fmt(p.v)}`).join(', '))}">${parts.map((p, i) => `<span class="seg" style="width:${(p.v / total * 100).toFixed(2)}%;opacity:${op(i)}"></span>`).join('')}</div>
       <div class="s-legend">${parts.map((p, i) => `<span><i class="dot" style="opacity:${op(i)}"></i>${esc(p.l.name)} <b>${fmt(p.v)}</b> <small>${Math.round(p.v / total * 100)}%</small></span>`).join('')}</div>
-      <div class="rings">${limits.map(ring).join('')}</div>${dailyBars(limits)}</div>`;
+      <div class="rings">${limits.map(l => ring(l, mk)).join('')}</div>${dailyBars(limits, mk)}</div>`;
   }
-  function limitRow(l) {
-    const charges = limitCharges(l);
-    const spent = charges.reduce((s, t) => s + t.amount, 0);
-    if (!l.monthly) {
-      const open = S.open.has(l.id);
-      return `<div class="row limit tracking">
-        <div class="l-head"><div><span class="name">${esc(l.name)}${exTag(l)}</span><span class="meta">This month · no limit set</span></div><span class="fig lg">${fmt(spent)}</span></div>
-        ${spendChart(l, charges)}
-        <div class="l-foot">
-          ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : '<span>No charges this month</span>'}
-          <button type="button" class="link" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}">Edit</button>
-        </div>
-        ${open && charges.length ? `<div class="mini">${charges.map(t => `<div><span>${esc(t.merchant)} · ${esc(shortDay.format(t.at))}</span><span class="num">${fmt(t.amount)}</span></div>`).join('')}</div>` : ''}
+  function limitRow(l, mk) {
+    const cur = curMk(), now = mk === cur, charges = limitCharges(l, mk), lim = limitFor(l, mk);
+    const spent = charges.reduce((s, t) => s + t.amount, 0), open = S.open.has(l.id + mk);
+    // what's already set for next month, when it differs
+    const nx = mkAdd(cur, 1), nxLim = limitFor(l, nx), ahead = now && nxLim !== lim ? `<span class="pill">${esc(mkName(nx))}: ${nxLim ? esc(fmtShort(nxLim)) : 'no limit'}</span>` : '';
+    const foot = `<div class="l-foot">
+        ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id + mk)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : `<span>No charges ${now ? 'this month' : 'in ' + esc(mkName(mk))}</span>`}
+        ${now && canSave() ? `<button type="button" class="link" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}" data-mk="${mk}">Edit</button>` : ''}${ahead}
+      </div>
+      ${open && charges.length ? `<div class="mini">${charges.map(t => `<div><span>${esc(t.merchant)} · ${esc(shortDay.format(t.at))}</span><span class="num">${fmt(t.amount)}</span></div>`).join('')}</div>` : ''}`;
+    if (!lim) return `<div class="row limit tracking">
+        <div class="l-head"><div><span class="name">${esc(l.name)}${exTag(l)}</span><span class="meta">${now ? 'This month' : esc(mkName(mk))} · no limit set</span></div><span class="fig lg">${fmt(spent)}</span></div>
+        ${spendChart(l, charges, mk)}${foot}
       </div>`;
-    }
-    const left = (l.monthly || 0) - spent;
-    const ratio = l.monthly ? spent / l.monthly : 0;
-    const state = left < 0 ? 'over' : ratio >= 0.85 ? 'near' : '';
-    const open = S.open.has(l.id);
+    const left = lim - spent, ratio = spent / lim, state = left < 0 ? 'over' : ratio >= 0.85 ? 'near' : '';
     return `<div class="row limit ${state}">
       <div class="l-head">
-        <div><span class="name">${esc(l.name)}${exTag(l)} ${state === 'over' ? '<span class="pill over">Over</span>' : state === 'near' ? '<span class="pill near">Almost out</span>' : ''}</span>
-        <span class="meta num">${fmt(spent)} of ${fmt(l.monthly)}</span></div>
-        <span class="fig lg"${left < 0 ? ' style="color:var(--bad)"' : ''}>${left < 0 ? '−' + fmt(-left) : fmt(left)}</span>
+        <div><span class="name">${esc(l.name)}${exTag(l)} ${state === 'over' ? '<span class="pill over">Over</span>' : state === 'near' && now ? '<span class="pill near">Almost out</span>' : ''}</span>
+        <span class="meta num">${fmt(spent)} of ${fmt(lim)}</span></div>
+        <span class="fig lg"${left < 0 ? ' style="color:var(--bad)"' : ''}>${left < 0 ? '−' + fmt(-left) : fmt(left)}${now ? '' : `<small class="l-was">${left < 0 ? 'over' : 'under'}</small>`}</span>
       </div>
-      <div class="meter" role="img" aria-label="${esc(fmt(spent) + ' spent of ' + fmt(l.monthly))}"><span style="width:${Math.min(100, ratio * 100).toFixed(2)}%"></span></div>
-      ${spendChart(l, charges)}
-      <div class="l-foot">
-        ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : '<span>No charges this month</span>'}
-        <button type="button" class="link" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}">Edit</button>
-      </div>
-      ${open && charges.length ? `<div class="mini">${charges.map(t => `<div><span>${esc(t.merchant)} · ${esc(shortDay.format(t.at))}</span><span class="num">${fmt(t.amount)}</span></div>`).join('')}</div>` : ''}
+      <div class="meter" role="img" aria-label="${esc(fmt(spent) + ' spent of ' + fmt(lim))}"><span style="width:${Math.min(100, ratio * 100).toFixed(2)}%"></span></div>
+      ${spendChart(l, charges, mk)}${foot}
     </div>`;
   }
-
+  // back and forth through the months: the ones gone by, this one, and ones ahead to plan
+  function monthNav(which, mk) {
+    const cur = curMk(), prev = mkAdd(mk, -1), next = mkAdd(mk, 1), max = mkAdd(cur, 12);
+    const tag = mk === cur ? 'This month' : mk > cur ? 'Planning ahead' : 'Gone by';
+    return `<div class="mo-nav" role="group" aria-label="Pick a month">
+      <button type="button" class="circle mo-prev" data-act="fin-month" data-for="${which}" data-mk="${prev}"${prev < START ? ' disabled' : ''} aria-label="${esc(mkLong(prev))}">${ICON.back}</button>
+      <span class="mo-name"><b>${esc(mkLong(mk))}</b><small>${esc(tag)}</small></span>
+      <button type="button" class="circle mo-next" data-act="fin-month" data-for="${which}" data-mk="${next}"${next > max ? ' disabled' : ''} aria-label="${esc(mkLong(next))}">${ICON.chev}</button>
+      ${mk !== cur ? `<button type="button" class="link mo-back" data-act="fin-month" data-for="${which}" data-mk="${cur}">Back to ${esc(mkName(cur))}</button>` : ''}
+    </div>`;
+  }
+  // a month ahead: each category's limit for it, ready to lower (or raise) before the month starts
+  function planView(mk, limits) {
+    const prev = mkAdd(mk, -1), total = limits.reduce((t, l) => t + (limitFor(l, mk) || 0), 0), was = limits.reduce((t, l) => t + (limitFor(l, prev) || 0), 0);
+    const diff = total - was, inAll = monthTotals(monthModel(mk)).inAll;
+    const rows = limits.map(l => {
+      const v = limitFor(l, mk), p = limitFor(l, prev);
+      const change = v === p ? `Same as ${mkName(prev)}` : !v ? `No limit (${fmtShort(p)} in ${mkName(prev)})` : !p ? 'A limit starts this month' : `${v < p ? '−' : '+'}${fmtShort(Math.abs(v - p))} from ${mkName(prev)}`;
+      return `<button type="button" class="pl-row${v !== p ? ' changed' : ''}" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}" data-mk="${mk}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${l.name}: ${v ? fmt(v) : 'no limit'} in ${mkName(mk)}, ${change}. Change it`)}">
+        <span class="pl-n"><b>${esc(l.name)}</b><small>${esc(change)}</small></span>
+        <span class="fig md">${v ? esc(fmt(v)) : '<span class="b-none">No limit</span>'}</span>${ICON.edit}</button>`;
+    }).join('');
+    return `<div class="fin-page">${monthNav('sp', mk)}
+      <div class="hero"><div class="s-top"><span class="lab">Limits for ${esc(mkName(mk))}</span><span class="fig xl">${big(total)}</span>
+        <span class="meta">${diff ? `${esc(fmt(Math.abs(diff)))} ${diff < 0 ? 'less' : 'more'} than ${esc(mkName(prev))}` : `The same as ${esc(mkName(prev))}`}${inAll ? ` · ${pctText(total / inAll)} of the ${esc(fmt(inAll))} coming in` : ''}</span></div></div>
+      <section class="sec"><span class="lab">Tap one to change it for ${esc(mkName(mk))}</span><div class="float list pl-list">${rows || '<p class="empty">No spending categories yet.</p>'}</div>
+        <p class="meta pl-how">A change carries on into the months after it, until you change it again. ${esc(mkName(mkAdd(mk, 1)))} starts from ${esc(mkName(mk))}’s limits.</p></section></div>`;
+  }
   function vSpending() {
-    const limits = kind('limit');
-    const now = new Date();
-    const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
+    const cur = curMk(), mk = S.spMk && S.spMk >= START ? S.spMk : cur, limits = kind('limit');
+    if (mk > cur) return planView(mk, limits);
+    const [y, m] = mkParts(mk), end = mkRange(mk)[1];
+    const shown = limits.filter(l => (l.createdAt || 0) < end || limitSpent(l, mk));
+    const daysLeft = new Date(y, m + 1, 0).getDate() - new Date().getDate();
+    const head = mk === cur ? `${mkName(mk)} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left` : `${mkLong(mk)} · how it went`;
     // each category is its own card
-    return `<div class="fin-page wide">${spendSplit(limits)}<section class="sec"><span class="lab">${esc(monthFmt.format(now))} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left</span>
-      <div class="s-cards">${limits.map(l => `<div class="float s-card">${limitRow(l)}</div>`).join('')}${canSave() ? `<button type="button" class="float s-card s-add" data-act="fin-form" data-form="limit">${ICON.plus}<span>New category</span></button>` : ''}</div></section></div>`;
+    return `<div class="fin-page wide">${monthNav('sp', mk)}${spendSplit(shown, mk)}<section class="sec"><span class="lab">${esc(head)}</span>
+      <div class="s-cards">${shown.map(l => `<div class="float s-card" data-card="${esc(l.id)}">${limitRow(l, mk)}</div>`).join('')}${mk === cur && canSave() ? `<button type="button" class="float s-card s-add" data-act="fin-form" data-form="limit">${ICON.plus}<span>New category</span></button>` : ''}</div></section>
+      ${mk === cur && limits.length ? `<div class="plan-next"><span class="meta">Want to spend less next month? Set ${esc(mkName(mkAdd(cur, 1)))}’s limits now.</span><button type="button" class="btn" data-act="fin-month" data-for="sp" data-mk="${mkAdd(cur, 1)}">Plan ${esc(mkName(mkAdd(cur, 1)))}</button></div>` : ''}</div>`;
   }
 
   function vActivity() {
-    const all = S.txns.slice().sort((a, b) => b.at - a.at);
-    if (!all.length) return '<div class="fin-page"><p class="empty">No charges or deposits yet. Tap + to add one.</p></div>';
-    let h = '', day = '', rows = '';
+    const all = S.txns.slice().sort((a, b) => b.at - a.at), accounts = sorted(S.accounts);
+    // the accounts, each with its balance over the last few weeks
+    const accts = `<section class="sec"><div class="sec-head"><span class="lab">Accounts</span>${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : ''}</div>
+      ${accounts.length ? `<div class="acct-grid">${accounts.map(accountCard).join('')}</div>` : '<p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p>'}${mailLine()}</section>`;
+    if (!all.length) return `<div class="fin-page">${accts}<p class="empty">No charges or deposits yet. Tap + to add one.</p></div>`;
+    let h = accts, day = '', rows = '';
     const flush = () => { if (rows) h += `<section class="sec"><span class="lab">${esc(day)}</span><div class="float list">${rows}</div></section>`; rows = ''; };
     for (const t of all) {
       const d = dayFmt.format(t.at);
       if (d !== day) { flush(); day = d; }
       const label = bucketLabel(t);
-      const pill = !isOut(t) ? '<span class="pill">Deposit</span>' : label ? `<span class="pill">${esc(label)}</span>` : '<span class="pill todo">Needs approval</span>';
+      const pill = !isOut(t) ? `<span class="pill">${t.payId ? 'Paycheck' : isTransfer(t) ? 'Transfer' : 'Deposit'}</span>` : label ? `<span class="pill">${esc(label)}</span>` : '<span class="pill todo">Needs approval</span>';
       rows += `<button type="button" class="tx" data-act="fin-form" data-form="charge" data-id="${esc(t.id)}">
         <span class="name">${esc(t.merchant)}${exTag(t)}</span>
         <span class="fig md t-amt ${isOut(t) ? '' : 'in'}">${isOut(t) ? '' : '+'}${fmt(t.amount)}</span>
@@ -959,6 +1311,17 @@ window.POSFinance = function (ctx) {
       .concat(S.bills.slice().sort(byDay).map(b => opt('bill:' + b.id, b.name + (groupOf(b) === 'sub' ? ' (subscription)' : ' (bill)'), current === 'bill:' + b.id)))
       .concat([opt('_none', 'Not spending (transfer or payment)', current === '_none')]).join('');
   }
+  // what a deposit is: one of your paychecks, other money in, or a move between your own accounts
+  function inKindOptions(t) {
+    const sel = !t ? 'other' : payOf(t) ? 'pay:' + payOf(t) : isTransfer(t) ? 'transfer' : 'other';
+    return S.income.map(inc => opt('pay:' + inc.id, S.income.length > 1 ? `Paycheck · ${inc.name}` : 'Paycheck', sel === 'pay:' + inc.id)).join('')
+      + opt('other', 'Other money in (a refund, a sale)', sel === 'other') + opt('transfer', 'A move between my accounts', sel === 'transfer');
+  }
+  // the payday a deposit made by hand belongs to: the nearest one
+  function nearestPayday(inc, at) {
+    const d = new Date(at), list = [-1, 0, 1].flatMap(o => paydays(inc, monthKeyOf(d.getFullYear(), d.getMonth() + o)));
+    return list.length ? list.sort((a, b) => Math.abs(a.at - at) - Math.abs(b.at - at))[0].key : dkey(at);
+  }
   function moveFields(g) {
     const others = kind('goal').filter(x => x.accountId === g.accountId && x.id !== g.id);
     if (!others.length) return '';
@@ -982,7 +1345,27 @@ window.POSFinance = function (ctx) {
           + field('What was it', `<input id="ff_merchant" autocomplete="off" maxlength="80" placeholder="Shell, Kroger, paycheck" value="${t ? esc(t.merchant) : ''}">`)
           + field('Account', `<select id="ff_account">${accounts.map(a => opt(a.id, acctLabel(a), a.id === accountId)).join('')}</select>`)
           + field('When', `<input id="ff_when" type="datetime-local" value="${localInput(t ? t.at : Date.now())}">`, 'An entry dated before the account balance was last set does not change that balance.')
-          + `<div id="ff_bucket_wrap"${dir === 'in' ? ' hidden' : ''}>${field('Where it goes', `<select id="ff_bucket">${bucketOptions(accountId, t ? t.bucketId : null)}</select>`)}</div>`,
+          + `<div id="ff_bucket_wrap"${dir === 'in' ? ' hidden' : ''}>${field('Where it goes', `<select id="ff_bucket">${bucketOptions(accountId, t ? t.bucketId : null)}</select>`)}</div>`
+          + `<div id="ff_in_wrap"${dir === 'out' ? ' hidden' : ''}>${field('What it is', `<select id="ff_inkind">${inKindOptions(t)}</select>`, 'A paycheck counts once, on its payday. A move between your own accounts isn’t income.')}</div>`,
+      };
+    },
+    income(id) {
+      const inc = id ? incById(id) : null, every = !!(inc && inc.every === 14), days = (inc && inc.days) || [15, 30];
+      const dayOpts = (sel, none) => (none ? opt('', 'None', !sel) : '') + Array.from({ length: 31 }, (_, i) => opt(String(i + 1), `The ${ordinal(i + 1)}${i + 1 >= 29 ? ' (or the last day)' : ''}`, sel === i + 1)).join('');
+      const accts = [opt('', 'Any account', !(inc && inc.accountId))].concat(sorted(S.accounts.filter(a => a.type !== 'credit')).map(a => opt(a.id, acctLabel(a), !!inc && inc.accountId === a.id))).join('');
+      return {
+        title: inc ? 'Paycheck' : 'Add your paycheck', del: !!inc,
+        body: field('From', `<input id="ff_name" autocomplete="off" maxlength="60" placeholder="Employer" value="${inc ? esc(inc.name) : ''}">`)
+          + field('Take-home each paycheck', `<input id="ff_amount" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${inc && inc.amount ? plain(inc.amount) : ''}">`, 'What lands in the bank, after taxes.')
+          + `<div class="seg-ctl" role="radiogroup" aria-label="How often">
+              <label><input type="radio" name="ff_sched" id="ff_sched_twice" value="twice"${every ? '' : ' checked'}><span>Twice a month</span></label>
+              <label><input type="radio" name="ff_sched" id="ff_sched_every" value="every"${every ? ' checked' : ''}><span>Every two weeks</span></label>
+            </div>`
+          + `<div id="ff_twice" class="f-two"${every ? ' hidden' : ''}>${field('Payday', `<select id="ff_day1">${dayOpts(days[0])}</select>`)}${field('And', `<select id="ff_day2">${dayOpts(days[1], true)}</select>`)}</div>`
+          + `<div id="ff_every"${every ? '' : ' hidden'}>${field('A recent payday', `<input type="hidden" id="ff_anchor" value="${inc && inc.anchor ? esc(inc.anchor) : ''}"><div data-wheel="date" data-for="ff_anchor"></div>`, 'From there, every other week.')}</div>`
+          + field('Lands in', `<select id="ff_acct">${accts}</select>`)
+          + field('Shows on the bank as', `<input id="ff_match" autocomplete="off" maxlength="120" placeholder="Optional" value="${inc && inc.match ? esc(inc.match) : ''}">`, 'Words from the deposit, separated by commas, so it’s known as your paycheck.')
+          + '<p class="where">A payday on a Saturday or Sunday comes the Friday before. When the deposit shows up, it checks that payday off instead of counting twice.</p>',
       };
     },
     account(id, extra) {
@@ -1077,13 +1460,31 @@ window.POSFinance = function (ctx) {
           + field('Paid with which bill', `<select id="ff_bill">${bills}</select>`, 'Each month this bill gets paid counts as a payment.'),
       };
     },
-    limit(id) {
-      const l = id ? bucket(id) : null;
+    limit(id, extra) {
+      const l = id ? bucket(id) : null, cur = curMk(), mk = extra.mk && extra.mk > cur ? extra.mk : cur;
+      if (!l) return {
+        title: 'New spending category', del: false,
+        body: field('Spending on', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Gas">`)
+          + field('Limit each month', `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="No limit">`, 'Leave it blank to just track what goes here.'),
+      };
+      const prev = mkAdd(mk, -1), lim = limitFor(l, mk);
+      // the changes already planned for the months after this one
+      const later = Object.keys(l.months || {}).filter(k => k > mk).sort().map(k => `${mkName(k)} ${l.months[k] ? fmtShort(l.months[k]) : 'no limit'}`);
+      const plans = later.length ? `<p class="where">Already planned: ${esc(later.join(', '))}. Those stay as they are.</p>` : '';
+      if (mk > cur) {
+        const own = l.months && mk in l.months;
+        return {
+          title: `${l.name} · ${mkName(mk)}`, del: false,
+          body: field(`Limit for ${mkName(mk)}`, `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="Same as ${esc(mkName(prev))}${limitFor(l, prev) ? ' (' + esc(fmtShort(limitFor(l, prev))) + ')' : ''}" value="${own && lim ? plain(lim) : ''}">`,
+            `Leave it blank to keep ${esc(mkName(prev))}’s. A change carries on into the months after, until you change it again.`) + plans,
+        };
+      }
       return {
-        title: l ? l.name : 'New spending category', del: !!l,
-        body: field('Spending on', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Gas" value="${l ? esc(l.name) : ''}">`)
-          + field('Limit each month', `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="No limit" value="${l && l.monthly ? plain(l.monthly) : ''}">`, 'Leave it blank to just track what goes here.')
-          + (l && (l.merchants || []).length ? `<p class="where">Charges from <b>${esc(l.merchants.join(', '))}</b> sort here on their own.</p>` : ''),
+        title: l.name, del: true,
+        body: field('Spending on', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Gas" value="${esc(l.name)}">`)
+          + field(`Limit for ${mkName(mk)}`, `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="No limit" value="${lim ? plain(lim) : ''}">`, `Leave it blank to just track what goes here. It carries on into the months after; to lower it later instead, plan ${esc(mkName(mkAdd(cur, 1)))} on the Spending page.`)
+          + plans
+          + ((l.merchants || []).length ? `<p class="where">Charges from <b>${esc(l.merchants.join(', '))}</b> sort here on their own.</p>` : ''),
       };
     },
   };
@@ -1111,6 +1512,7 @@ window.POSFinance = function (ctx) {
     if (ctx.setDrawer) ctx.setDrawer(false);
     sheet.style.transform = '';
     if (!sheet.open) sheet.showModal();
+    if (window.POSWheels && $('#finBody [data-wheel]')) { POSWheels.mount($('#finBody')); POSWheels.sync(); }
   }
   function closeForm() { if (sheet.open) sheet.close(); F = null; }
   function fail(msg) { const e = $('#finErr'); e.textContent = msg; e.hidden = false; return false; }
@@ -1147,6 +1549,11 @@ window.POSFinance = function (ctx) {
       if (!Number.isFinite(at)) return fail('Pick a date and time.');
       const dir = $('#ff_dir_in').checked ? 'in' : 'out';
       const data = { amount, merchant: val('ff_merchant').trim() || (dir === 'in' ? 'Deposit' : 'Charge'), accountId, at, dir, bucketId: dir === 'out' ? (val('ff_bucket') || null) : null, example: false };
+      if (dir === 'in') {
+        const k = val('ff_inkind');
+        if (k.startsWith('pay:')) { const inc = incById(k.slice(4)); Object.assign(data, { payId: inc ? inc.id : null, payDay: inc ? nearestPayday(inc, at) : null, transfer: false }); }
+        else Object.assign(data, { payId: '_no', payDay: null, transfer: k === 'transfer' });
+      }
       const old = F.id ? S.txns.find(x => x.id === F.id) : null, was = old ? billIdOf(old.bucketId) : null, now = billIdOf(data.bucketId);
       const id = F.id || newId();
       if (!(await (F.id ? save(refs.txns.doc(id).update(data)) : save(refs.txns.doc(id).set({ ...data, source: 'manual', createdAt: Date.now() }))))) return false;
@@ -1284,12 +1691,38 @@ window.POSFinance = function (ctx) {
       return save(refs.loans.doc(F.id).update(data));
     },
     async limit() {
+      const monthlyText = val('ff_monthly').trim(), monthly = monthlyText ? parseMoney(monthlyText) : null;
+      if (monthlyText && !monthly) return fail('Enter the limit, like 200, or leave it blank.');
+      if (!F.id) {
+        const name = val('ff_name').trim();
+        if (!name) return fail('Say what the limit is for.');
+        return save(refs.buckets.doc().set({ kind: 'limit', name, monthly, createdAt: Date.now(), example: false }));
+      }
+      const l = bucket(F.id), cur = curMk(), mk = F.extra.mk && F.extra.mk > cur ? F.extra.mk : cur;
+      if (!l) return fail('That category no longer exists.');
+      const months = { ...(l.months || {}) };
+      // a month ahead: blank goes back to carrying on the month before's
+      if (mk > cur) {
+        if (monthly) months[mk] = monthly; else delete months[mk];
+        return save(refs.buckets.doc(l.id).update({ months }));
+      }
+      // this month: the months before keep the limit they had
       const name = val('ff_name').trim();
       if (!name) return fail('Say what the limit is for.');
-      const monthlyText = val('ff_monthly').trim(), monthly = monthlyText ? parseMoney(monthlyText) : null;
-      if (monthlyText && !monthly) return fail('Enter the monthly limit, like 200, or leave it blank.');
-      return F.id ? save(refs.buckets.doc(F.id).update({ name, monthly, example: false }))
-        : save(refs.buckets.doc().set({ kind: 'limit', name, monthly, createdAt: Date.now(), example: false }));
+      const patch = { name, example: false };
+      if ((monthly || null) !== limitFor(l, cur)) { months[cur] = monthly || null; patch.months = months; }
+      return save(refs.buckets.doc(l.id).update(patch));
+    },
+    async income() {
+      const amount = parseMoney(val('ff_amount'));
+      if (!amount) return fail('Enter what lands each payday, like 1649.18.');
+      const every = $('#ff_sched_every').checked;
+      let days = null, anchor = null;
+      if (every) { anchor = val('ff_anchor'); if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor)) return fail('Pick a recent payday.'); }
+      else { days = [...new Set([val('ff_day1'), val('ff_day2')].map(Number).filter(Boolean))].sort((a, b) => a - b); if (!days.length) return fail('Pick the payday.'); }
+      const data = { name: val('ff_name').trim() || 'Paycheck', amount, every: every ? 14 : null, anchor, days, accountId: val('ff_acct') || null, match: val('ff_match').trim().slice(0, 120) };
+      if (!F.id) return save(refs.income.doc().set({ ...data, got: {}, createdAt: Date.now(), example: false }));
+      return save(refs.income.doc(F.id).update(data));
     },
   };
 
@@ -1302,6 +1735,7 @@ window.POSFinance = function (ctx) {
       return true;
     }
     if (k === 'bill') return save(refs.bills.doc(id).delete());
+    if (k === 'income') return save(refs.income.doc(id).delete());
     if (k === 'loan') return save(refs.loans.doc(id).delete());
     if (k === 'item') { const g = bucket(id); return !!g && save(refs.buckets.doc(id).update({ items: (g.items || []).filter(x => x.id !== F.extra.item) })); }
     if (k === 'goal' || k === 'limit' || k === 'list') return save(refs.buckets.doc(id).delete());
@@ -1317,7 +1751,8 @@ window.POSFinance = function (ctx) {
   $('#finClose').addEventListener('click', closeForm);
   sheet.addEventListener('close', () => { F = null; });
   $('#finBody').addEventListener('change', e => {
-    if (e.target.name === 'ff_dir') { const w = $('#ff_bucket_wrap'); if (w) w.hidden = $('#ff_dir_in').checked; }
+    if (e.target.name === 'ff_dir') { const w = $('#ff_bucket_wrap'), w2 = $('#ff_in_wrap'); if (w) w.hidden = $('#ff_dir_in').checked; if (w2) w2.hidden = !$('#ff_dir_in').checked; }
+    if (e.target.name === 'ff_sched') { const ev = $('#ff_sched_every').checked; $('#ff_twice').hidden = ev; $('#ff_every').hidden = !ev; if (ev && window.POSWheels) POSWheels.sync(); }
     if (e.target.id === 'ff_account' && $('#ff_bucket')) $('#ff_bucket').innerHTML = bucketOptions(e.target.value, null);
   });
   $('#finBody').addEventListener('input', refreshAlloc);
@@ -1425,8 +1860,21 @@ window.POSFinance = function (ctx) {
 
   /* ---------- taps routed here by POS (data-act="fin-…") ---------- */
   function act(name, b) {
+    if (name === 'fin-month') {
+      const mk = b.dataset.mk, key = b.dataset.for === 'sp' ? 'spMk' : 'ovMk';
+      if (!/^\d{4}-\d{2}$/.test(mk || '') || mk < START) return;
+      S[key] = mk === curMk() ? null : mk;
+      rerender();
+      return;
+    }
+    if (name === 'fin-card') {
+      const el = document.querySelector(`.fin [data-card="${CSS.escape(b.dataset.id || '')}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (name === 'fin-sub') {
       if (!SUBS[b.dataset.sub]) return;
+      if (b.dataset.mk) S.spMk = b.dataset.mk === curMk() ? null : b.dataset.mk;
       S.sub = b.dataset.sub;
       try { localStorage.setItem('pos.fin.sub', S.sub); } catch (e) {}
       const sc = $('#finScroll'); if (sc) sc.scrollTop = 0;
@@ -1436,7 +1884,8 @@ window.POSFinance = function (ctx) {
     }
     if (!canSave()) return;
     if (name === 'fin-sort') sortTxn(b.dataset.txn, b.dataset.bucket);
-    else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type, group: b.dataset.group, item: b.dataset.item });
+    else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type, group: b.dataset.group, item: b.dataset.item, mk: b.dataset.mk });
+    else if (name === 'fin-pay') togglePay(b.dataset.id, b.dataset.key);
     else if (name === 'fin-item-got') {
       const g = bucket(b.dataset.id);
       if (!g) return;
@@ -1467,7 +1916,7 @@ window.POSFinance = function (ctx) {
     return {
       loan: loan ? { name: loan.name, lender: loan.lender, left: loanNow(loan), payment: loan.payment || null, day: payBill ? payBill.day : null } : null,
       insurance: insurance ? { name: insurance.name, amount: insurance.amount || null, day: insurance.day || null } : null,
-      gas: gas ? { spent: limitSpent(gas), monthly: gas.monthly || null, count: limitCharges(gas).length } : null,
+      gas: gas ? { spent: limitSpent(gas), monthly: limitFor(gas), count: limitCharges(gas).length } : null,
     };
   }
   // savings categories whose name matches, for other pages (the Pets page shows what's saved for the cat)

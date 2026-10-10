@@ -287,3 +287,129 @@
 .fin .fl-card{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .fin .fl-top{display:flex;flex-direction:column;gap:4px}
 .fin .fl-card .li-list{margin:0 -8px}
+
+/* the overview: what's next, the accounts, and the month's money */
+.fin .ov-top{display:grid;gap:16px}
+@media (min-width:900px){ .fin .ov-top{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);align-items:stretch} }
+.fin .ov-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));align-items:start}
+.fin .nx,.fin .ac,.fin .mo{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fin .nx-main{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"amt when" "what what";gap:8px 12px;align-items:end;border:0;background:none;padding:0;text-align:left;color:var(--ink);width:100%}
+.fin .nx-amt{grid-area:amt;font-size:42px;font-weight:200;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .nx-amt.in{color:var(--good)}
+.fin .nx-amt.in .cents{color:inherit;opacity:.6}
+.fin .nx-what{grid-area:what;display:flex;flex-direction:column;gap:2px;font-size:15px;min-width:0}
+.fin .nx-what b{font-weight:500}
+.fin .nx-what span{font-size:12.5px;color:var(--ink-2)}
+.fin .nx-when{grid-area:when;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:12.5px;color:var(--ink-2);text-align:right}
+.fin .nx-when b{font-size:13px;font-weight:600;color:var(--ink)}
+.fin .nx-then{display:flex;flex-direction:column;padding-top:12px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .nx-then .lab{margin-bottom:4px}
+.fin .nx-r{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;font-size:13.5px;min-height:30px;align-items:center}
+.fin .nx-d{color:var(--ink-2);font-variant-numeric:tabular-nums;font-size:12.5px}
+.fin .nx-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .nx-r .num{font-variant-numeric:tabular-nums}
+.fin .nx-r.in .num{color:var(--good)}
+.fin .ac-head{display:flex;align-items:center;gap:12px}
+.fin .ac-head .lab{flex:1}
+.fin .ac-head .meta b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.fin .ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
+.fin .ac-cell{display:flex;flex-direction:column;align-items:flex-start;gap:3px;border:0;background:var(--well);border-radius:18px;padding:12px 14px;text-align:left;color:var(--ink);min-width:0}
+.fin .ac-cell:hover{background:var(--panel-hi)}
+.fin .ac-n{font-size:12px;color:var(--ink-2)}
+.fin .ac-v{font-size:21px;font-weight:300;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .ac-cell small{font-size:10.5px;color:var(--ink-3);letter-spacing:.04em}
+.fin .ac-cell.owed .ac-v{color:var(--ink-2)}
+.fin .ac-warn{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-2)}
+.fin .ac-warn svg.i{width:18px;height:18px;flex:none;color:var(--warn);stroke-width:1.8}
+.fin .ac-warn b{color:var(--warn);font-weight:600}
+.fin .ac .mail-line{padding:0;margin-top:auto}
+
+/* going month to month */
+.fin .mo-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fin .mo-name{display:flex;flex-direction:column;min-width:148px;text-align:center;gap:1px}
+.fin .mo-name b{font-size:17px;font-weight:500}
+.fin .mo-name small{font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.fin .mo-nav .circle:disabled{opacity:.3}
+.fin .mo-back{font-size:12.5px;margin-left:auto}
+
+/* a month: in, out, left; the income as a bar; where it goes, as a share of it */
+.fin .mo-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px}
+.fin .mo-stat{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fin .mo-stat .fig.lg{font-size:30px;font-weight:200;white-space:nowrap}
+.fin .mo-stat.neg .fig{color:var(--bad)}
+@media (max-width:620px){ .fin .mo-stats{grid-template-columns:1fr 1fr} .fin .mo-stat:last-child{grid-column:1/-1} .fin .mo-stat .fig.lg{font-size:26px} }
+.fin .mo-bar{position:relative;display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden}
+.fin .mb-seg{display:block;height:100%;min-width:3px;border-radius:3px}
+.fin .mb-seg.done,.fin .mb-key.done{background:var(--ink)}
+.fin .mb-seg.due,.fin .mb-key.due{background:color-mix(in srgb,var(--ink) 42%,transparent)}
+.fin .mb-seg.saved,.fin .mb-key.saved,.fin .mc-fill.saved{background:color-mix(in srgb,var(--good) 75%,transparent)}
+.fin .mb-seg.open,.fin .mb-key.open{background:repeating-linear-gradient(135deg,var(--ink-3) 0 1.5px,transparent 1.5px 5px);box-shadow:inset 0 0 0 1px var(--hair)}
+.fin .mb-seg.free,.fin .mb-key.free{background:none;box-shadow:inset 0 0 0 1.5px var(--hair)}
+.fin .mb-income{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--bad)}
+.fin .mo-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-2)}
+.fin .mo-legend span{display:inline-flex;align-items:center;gap:6px}
+.fin .mo-legend b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.fin .mo-legend small{color:var(--ink-3)}
+.fin .mb-key{display:inline-block;width:12px;height:8px;border-radius:2px}
+.fin .mb-over,.fin .mb-over b{color:var(--bad)}
+.fin .mo-body{display:grid;gap:24px;padding-top:4px}
+@media (min-width:900px){ .fin .mo-body{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:36px;align-items:start} }
+.fin .mo-cols{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px}
+.fin .mo-cols .link{font-size:12.5px}
+.fin .mo-g{display:flex;flex-direction:column;padding:4px 0 6px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .mo-gh,.fin .mo-r{display:grid;grid-template-columns:minmax(0,1fr) auto 48px;gap:12px;align-items:baseline}
+.fin .mo-gh{padding:10px 0 4px;font-size:14px;font-weight:600}
+.fin .mo-gh .num,.fin .mo-r .num{font-variant-numeric:tabular-nums}
+.fin .mo-r{border:0;background:none;color:var(--ink);text-align:left;width:100%;padding:7px 0;font-size:13.5px;border-radius:0}
+.fin button.mo-r:hover .mo-n > span{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px}
+.fin .mo-n{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fin .mo-n > span{overflow-wrap:anywhere}
+.fin .mo-n small{font-size:11.5px;color:var(--ink-3)}
+.fin .pct{font-size:12px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.fin .mo-gh .pct{color:var(--ink);font-size:13px}
+.fin .mo-r.due .num,.fin .mo-r.due .mo-n > span{color:var(--ink-2)}
+.fin .mo-meter{display:block;height:3px;border-radius:2px;background:var(--hair);margin-top:5px;max-width:180px;overflow:hidden}
+.fin .mo-meter i{display:block;height:100%;background:var(--ink)}
+.fin .mo-meter.over i{background:var(--bad)}
+.fin .mo-miss{font-size:12.5px;color:var(--ink-2);padding-top:12px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .mo-miss .link{font-size:12.5px}
+.fin .mo-side{display:flex;flex-direction:column;gap:26px;min-width:0}
+.fin .m-in{display:flex;flex-direction:column}
+.fin .mi-r{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:4px;font-size:13.5px;min-height:46px;margin-left:-10px}
+.fin .mi-r .num{font-variant-numeric:tabular-nums;color:var(--good)}
+.fin .mi-r.st-expected .num,.fin .mi-r.st-waiting .num,.fin .mi-r.st-missed .num{color:var(--ink-2)}
+.fin .mi-r.st-missed small{color:var(--warn)}
+.fin .mi-dot{width:10px;height:10px;border-radius:50%;justify-self:center;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.fin .mi-dot.got{background:var(--good);box-shadow:none}
+.fin .m-in .empty{margin:6px 0 10px}
+/* month by month: the outline is what came in, the fill what went out */
+.fin .mc-cols{display:flex;gap:4px;height:156px}
+.fin .mc-col{flex:1;max-width:58px;display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;padding:6px 0;border-radius:14px;color:var(--ink);min-width:0}
+.fin .mc-col:hover,.fin .mc-col.sel{background:var(--well)}
+.fin .mc-pct{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums;min-height:14px}
+.fin .mc-plot{position:relative;flex:1;width:24px}
+.fin .mc-track{position:absolute;left:0;right:0;bottom:0;border-radius:5px;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.fin .mc-fill{position:absolute;left:4px;right:4px;border-radius:2px}
+.fin .mc-fill.done{background:var(--ink)}
+.fin .mc-fill.due{background:color-mix(in srgb,var(--ink) 42%,transparent)}
+.fin .mc-fill.open{background:repeating-linear-gradient(135deg,var(--ink-3) 0 1.5px,transparent 1.5px 4px)}
+.fin .mc-col.ahead .mc-track{box-shadow:inset 0 0 0 1px var(--ink-3)}
+.fin .mc-mo{font-size:11px;color:var(--ink-2)}
+.fin .mc-col.sel .mc-mo,.fin .mc-col.sel .mc-pct{color:var(--ink);font-weight:600}
+
+/* planning a month's limits ahead */
+.fin .pl-list{display:flex;flex-direction:column}
+.fin .pl-row{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:12px;align-items:center;border:0;background:none;padding:14px 20px;text-align:left;color:var(--ink);width:100%}
+.fin .pl-row + .pl-row{box-shadow:inset 0 1px 0 var(--hair)}
+.fin .pl-n{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fin .pl-n b{font-weight:500;font-size:15px}
+.fin .pl-n small{font-size:12px;color:var(--ink-2)}
+.fin .pl-row.changed .pl-n small{color:var(--ink);font-weight:500}
+.fin .pl-row svg.i{width:16px;height:16px;color:var(--ink-3)}
+.fin .pl-how{padding:10px 6px 0}
+.fin .plan-next{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 20px;border-radius:24px;box-shadow:inset 0 0 0 1.5px var(--hair)}
+.fin .l-was{display:block;font-size:11px;color:var(--ink-3);text-align:right;font-weight:400;letter-spacing:0}
+.fin .acct-grid{display:grid;gap:16px}
+@media (min-width:600px){ .fin .acct-grid{grid-template-columns:1fr 1fr} }
+.fin .bl{margin-bottom:0}
+#finSheet .f-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
