@@ -210,3 +210,73 @@
 @media (max-width:520px){ .fin-tabs{gap:2px} .fin-tabs button{padding:8px 11px;font-size:12.5px;gap:6px} }
 .fin .l-short{display:none}
 @media (max-width:520px){ .fin .l-long{display:none} .fin .l-short{display:inline} }
+
+/* the overview's pictures: on hand, the bills line, spending rings and day bars */
+.fin .cents{color:var(--ink-3)}
+.fin-viz{display:grid;gap:16px}
+@media (min-width:900px){ .fin-viz{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:stretch} .fin-viz.one{grid-template-columns:minmax(0,1fr)} }
+.fin .fh,.fin .bl,.fin .sc{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fin .fh .fig.xl{line-height:1}
+.fin .fh-rows{display:flex;flex-direction:column}
+.fin .fh-row{display:flex;align-items:center;gap:10px;min-height:38px;font-size:15px}
+.fin .fh-row span:nth-of-type(1){flex:1;min-width:0}
+.fin .fh-row .num{font-variant-numeric:tabular-nums}
+.fin .fh-row.owed{color:var(--ink-2)}
+.fin .dot.hollow{background:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.fin .bl-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fin .bl-head .meta b{color:var(--ink);font-weight:500}
+.fin .bl-track{position:relative;height:128px;margin:0 12px}
+.fin .bl-line,.fin .bl-past{position:absolute;left:0;top:80px;height:2px;margin-top:-1px;border-radius:1px}
+.fin .bl-line{right:0;background:var(--hair)}
+.fin .bl-past{background:var(--ink-3)}
+.fin .bl-node{position:absolute;top:80px;width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);border:0;padding:0;border-radius:50%;
+  background:var(--well);box-shadow:inset 0 0 0 1.5px var(--ink),0 0 0 3px var(--ring),var(--glow);cursor:pointer;z-index:1}
+.fin .bl-node::after{content:"";position:absolute;inset:-6px;border-radius:50%}
+.fin .bl-node.paid{background:var(--ink-3);box-shadow:0 0 0 3px var(--ring)}
+.fin .bl-node.late{box-shadow:inset 0 0 0 2px var(--bad),0 0 0 3px var(--ring)}
+.fin .bl-node:hover,.fin .bl-node:focus-visible{background:var(--panel-hi)}
+.fin .bl-tag{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums;pointer-events:none}
+.fin .bl-tag b{font-weight:500;color:var(--ink)}
+.fin .bl-tag small{color:var(--ink-3)}
+.fin .bl-tag.r0{top:22px}
+.fin .bl-tag.r1{top:2px}
+.fin .bl-tag.at-start{transform:translateX(-12px)}
+.fin .bl-tag.at-end{transform:translateX(calc(-100% + 12px))}
+.fin .bl-today{position:absolute;top:46px;height:52px;width:0;border-left:1.5px dashed var(--ink-2);margin-left:-.75px}
+.fin .bl-axis{position:absolute;left:0;right:0;top:104px;height:20px;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.fin .bl-axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.fin .bl-axis span:first-child{transform:none}
+.fin .bl-axis span:nth-child(4){transform:translateX(-100%)}
+.fin .bl-axis .bl-now{color:var(--ink);font-weight:500;background:var(--well);padding:0 6px;border-radius:999px;z-index:1}
+.fin .bl-cover{display:flex;flex-direction:column;gap:7px}
+.fin .bl-ct{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.fin .bl-ct .num{font-variant-numeric:tabular-nums;color:var(--ink)}
+.fin .bl-cover .meter{height:6px;border-radius:3px}
+.fin .bl-cover.short .meter{background:repeating-linear-gradient(135deg,var(--warn) 0 1.5px,transparent 1.5px 5px);opacity:1}
+.fin .bl-cover.short .bl-ct b{color:var(--warn);font-weight:600}
+.fin .rings{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px 10px}
+.fin .ring{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;color:var(--ink);padding:6px 2px;border-radius:16px;min-width:0;text-align:center}
+.fin .ring:hover{background:var(--well)}
+.fin .ring svg{width:68px;height:68px;overflow:visible}
+.fin .ring .r-track{fill:none;stroke:var(--hair);stroke-width:5}
+.fin .ring.open .r-track{stroke:var(--ink-3);stroke-dasharray:2 4}
+.fin .ring .r-fill{fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.fin .ring.near .r-fill{stroke:var(--warn)}
+.fin .ring.over .r-fill{stroke:var(--bad)}
+.fin .ring text{font:300 15px var(--font);fill:var(--ink);font-variant-numeric:tabular-nums}
+.fin .r-name{font-size:13px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fin .r-sub{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.fin .daily{display:flex;flex-direction:column;gap:8px}
+.fin .db-bars{display:flex;align-items:flex-end;gap:3px;height:56px}
+.fin .db{flex:1;min-width:0;height:var(--h);border-radius:3px 3px 1px 1px;background:var(--ink-3)}
+.fin .db.zero{background:var(--hair)}
+.fin .db.today{background:var(--ink);box-shadow:var(--glow)}
+.fin .db.later{background:none;box-shadow:inset 0 0 0 1px var(--hair)}
+.fin .db-axis{position:relative;height:16px;font-size:10px;letter-spacing:.06em;color:var(--ink-3)}
+.fin .db-axis span{position:absolute;top:0}
+.fin .db-axis span:first-child{left:0}
+.fin .db-axis span:last-child{right:0}
+.fin .db-axis .db-now{transform:translateX(-50%);color:var(--ink);font-weight:500}
+.fin .loan-chart{position:relative}
+.fin .loan-chart .fill{fill:var(--ink);opacity:.07}
+.fin .loan-chart .l-dot{position:absolute;left:0;top:4px;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--ring),var(--glow)}

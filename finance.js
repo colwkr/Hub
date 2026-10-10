@@ -294,10 +294,13 @@ window.POSFinance = function (ctx) {
     if (!base || base.never) return '';
     const W = 300, H = 70, pad = 4, n = Math.max(base.pts.length - 1, 1), hi = base.pts[0] || 1;
     const path = pts => pts.map((v, i) => `${i ? 'L' : 'M'}${(i / n * W).toFixed(1)},${(pad + (1 - v / hi) * (H - 2 * pad)).toFixed(1)}`).join('');
+    const cur = plan && !plan.never ? plan.pts : base.pts;
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <path class="fill" d="${path(cur)}L${W},${H}L0,${H}Z"/>
         <path class="${plan ? 'ghost' : 'line'}" d="${path(base.pts)}" vector-effect="non-scaling-stroke"/>
         ${plan && !plan.never ? `<path class="line" d="${path(plan.pts)}" vector-effect="non-scaling-stroke"/>` : ''}
       </svg>
+      <i class="l-dot"></i>
       <div class="axis"><span>${esc(monYr.format(nextPayment(l)))}</span><span>${esc(monYr.format(payoffDate(l, base.months)))}</span></div>`;
   }
   // "+$50 a month: paid off Aug 2028, 7 months sooner, $1,234 less interest"
@@ -397,16 +400,120 @@ window.POSFinance = function (ctx) {
     </article>`;
   }
 
+
+  /* ---------- the overview's pictures ---------- */
+  // a big money figure, the cents dimmed
+  const big = c => { const t = fmt(c), i = t.lastIndexOf('.'); return i < 0 ? esc(t) : `${esc(t.slice(0, i))}<span class="cents">${esc(t.slice(i))}</span>`; };
+  const SHADE = i => [1, .62, .4, .26, .17, .12][Math.min(i, 5)];
+  // everything in checking and savings, split by account
+  function onHand() {
+    const accts = sorted(S.accounts.filter(a => a.type !== 'credit'));
+    if (!accts.length) return '';
+    const parts = accts.map(a => ({ a, v: Math.max(0, acctBalance(a)) }));
+    const total = parts.reduce((t, p) => t + p.v, 0) || 1;
+    const owed = S.accounts.filter(a => a.type === 'credit').reduce((t, a) => t + acctBalance(a), 0);
+    return `<article class="float fh">
+      <span class="lab">On hand</span>
+      <span class="fig xl">${big(parts.reduce((t, p) => t + p.v, 0))}</span>
+      <div class="split" role="img" aria-label="${esc(parts.map(p => `${p.a.name} ${fmt(p.v)}`).join(', '))}">${parts.map((p, i) => p.v ? `<span class="seg" style="width:${(p.v / total * 100).toFixed(2)}%;opacity:${SHADE(i)}"></span>` : '').join('')}</div>
+      <div class="fh-rows">${parts.map((p, i) => `<div class="fh-row"><i class="dot" style="opacity:${SHADE(i)}"></i><span>${esc(p.a.name)}</span><span class="num">${fmt(p.v)}</span></div>`).join('')}
+        ${S.accounts.some(a => a.type === 'credit') ? `<div class="fh-row owed"><i class="dot hollow"></i><span>Owed on cards</span><span class="num">${fmt(owed)}</span></div>` : ''}</div>
+    </article>`;
+  }
+  // this month's bills on a line from the 1st to the last day: bigger dot, bigger bill
+  function billLine() {
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth(), dim = new Date(y, m + 1, 0).getDate(), today = now.getDate();
+    const items = S.bills.filter(b => b.day && appliesIn(b, y, m)).map(b => ({ b, s: billState(b), d: new Date(dueOn(b, y, m)).getDate() }));
+    if (!items.length) return '';
+    const open = x => ['waiting', 'late', 'soon'].includes(x.s.st);
+    const toGo = items.filter(x => open(x) && x.b.amount);
+    const toGoSum = toGo.reduce((t, x) => t + x.b.amount, 0);
+    const pos = d => (dim > 1 ? (d - 1) / (dim - 1) * 100 : 50);
+    const byDay = new Map();
+    for (const x of items) { if (!byDay.has(x.d)) byDay.set(x.d, []); byDay.get(x.d).push(x); }
+    const sums = [...byDay.values()].map(g => g.reduce((t, x) => t + (x.b.amount || 0), 0));
+    const most = Math.max(...sums, 1);
+    const nodes = [...byDay.entries()].sort((a, b) => a[0] - b[0]).map(([d, g]) => {
+      const sum = g.reduce((t, x) => t + (x.b.amount || 0), 0), size = Math.round(14 + Math.sqrt(sum / most) * 18);
+      const st = g.some(x => x.s.st === 'late') ? 'late' : g.every(x => x.s.st === 'paid') ? 'paid' : 'due';
+      const names = g.map(x => `${x.b.name}${x.b.amount ? ' ' + fmt(x.b.amount) : ''}`).join(', ');
+      return { d, g, sum, st, html: `<button type="button" class="bl-node ${st}" style="left:${pos(d).toFixed(2)}%;--s:${size}px" data-act="fin-sub" data-sub="bills" title="${esc(shortDay.format(new Date(y, m, d)))}: ${esc(names)}" aria-label="${esc(shortDay.format(new Date(y, m, d)))}: ${esc(names)}${st === 'paid' ? ', paid' : st === 'late' ? ', no charge seen' : ''}"></button>` };
+    });
+    // labels for the bills still to come, biggest first; two rows, and one that would crowd another is left to the tooltip
+    const rows = [[], []], labels = [], room = window.innerWidth < 700 ? 44 : 28;
+    for (const n of nodes.filter(x => x.st !== 'paid').sort((a, b) => b.sum - a.sum)) {
+      const p = pos(n.d), r = rows.findIndex(row => row.every(q => Math.abs(q - p) > room));
+      if (r < 0 || labels.length >= 3) continue;
+      rows[r].push(p);
+      const top = n.g.slice().sort((a, b) => (b.b.amount || 0) - (a.b.amount || 0))[0].b;
+      const edge = p < 9 ? ' at-start' : p > 91 ? ' at-end' : '';
+      labels.push(`<span class="bl-tag r${r}${edge}" style="left:${p.toFixed(2)}%"><b>${esc(top.name)}</b>${top.amount ? ' ' + esc(fmt(top.amount)) : ''}${n.g.length > 1 ? ` <small>+${n.g.length - 1}</small>` : ''}</span>`);
+    }
+    const ticks = [1, 10, 20, dim].map(d => `<span style="left:${pos(d).toFixed(2)}%">${d === 1 ? esc(shortDay.format(new Date(y, m, 1))) : d}</span>`).join('');
+    // can each account cover what it still has to pay this month?
+    const cover = sorted(S.accounts.filter(a => a.type !== 'credit')).map(a => {
+      const due = toGo.filter(x => x.b.accountId === a.id).reduce((t, x) => t + x.b.amount, 0);
+      if (!due) return '';
+      const bal = acctBalance(a), short = due - bal;
+      return `<div class="bl-cover${short > 0 ? ' short' : ''}">
+        <div class="bl-ct"><span>${esc(a.name)} account</span><span class="num">${short > 0 ? `${fmt(bal)} for ${fmt(due)} · <b>${fmt(short)} short</b>` : `covers the ${fmt(due)} still to pay`}</span></div>
+        <div class="meter" role="img" aria-label="${esc(`${a.name}: ${fmt(bal)} for ${fmt(due)} still to pay`)}"><span style="width:${Math.max(0, Math.min(100, bal / due * 100)).toFixed(1)}%"></span></div>
+      </div>`;
+    }).join('');
+    return `<article class="float bl">
+      <div class="bl-head"><span class="lab">Bills · ${esc(monthFmt.format(now))}</span><span class="meta">${toGo.length ? `<b>${fmt(toGoSum)}</b> still to go · ${toGo.length} ${toGo.length === 1 ? 'bill' : 'bills'}` : 'All paid this month'}</span></div>
+      <div class="bl-track" role="group" aria-label="Bills in ${esc(monthFmt.format(now))}">
+        <i class="bl-line"></i><i class="bl-past" style="width:${pos(today).toFixed(2)}%"></i>
+        ${labels.join('')}${nodes.map(n => n.html).join('')}
+        <i class="bl-today" style="left:${pos(today).toFixed(2)}%"></i>
+        <div class="bl-axis">${ticks}<span class="bl-now" style="left:${pos(today).toFixed(2)}%">Today</span></div>
+      </div>
+      ${cover}
+    </article>`;
+  }
+  // spending by day this month: one thin bar a day; days still to come are outlines
+  function dailyBars(limits) {
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth(), dim = new Date(y, m + 1, 0).getDate(), today = now.getDate();
+    const day = new Array(dim + 1).fill(0);
+    for (const l of limits) for (const t of limitCharges(l)) day[new Date(t.at).getDate()] += t.amount;
+    const most = Math.max(...day, 1);
+    const bars = [];
+    for (let d = 1; d <= dim; d++) {
+      const v = day[d], future = d > today;
+      const tip = `${shortDay.format(new Date(y, m, d))}: ${future ? 'still to come' : fmt(v)}`;
+      bars.push(`<span class="db${future ? ' later' : v ? '' : ' zero'}${d === today ? ' today' : ''}" style="--h:${future ? 12 : v ? Math.max(8, v / most * 100).toFixed(1) : 4}%" title="${esc(tip)}"></span>`);
+    }
+    return `<div class="daily" role="img" aria-label="${esc(`Spending by day in ${monthFmt.format(now)}, most on one day ${fmt(most === 1 ? 0 : most)}`)}"><div class="db-bars">${bars.join('')}</div>
+      <div class="db-axis"><span>${esc(shortDay.format(new Date(y, m, 1)))}</span><span class="db-now" style="left:${((today - 0.5) / dim * 100).toFixed(2)}%">Today</span><span>${esc(shortDay.format(new Date(y, m, dim)))}</span></div></div>`;
+  }
+  // a ring per category: how much of its limit is used, or just what's been spent when it has none
+  function ring(l) {
+    const spent = limitSpent(l), lim = l.monthly || 0, p = lim ? spent / lim : 0;
+    const R = 26, C = 2 * Math.PI * R, st = lim && spent > lim ? 'over' : lim && p >= 0.85 ? 'near' : '';
+    const mid = lim ? `${Math.round(p * 100)}%` : usd0.format(Math.round(spent / 100));
+    return `<button type="button" class="ring ${st}${lim ? '' : ' open'}" data-act="fin-sub" data-sub="spending" aria-label="${esc(`${l.name}: ${fmt(spent)}${lim ? ' of ' + fmt(lim) : ', no limit'}`)}">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><circle class="r-track" cx="32" cy="32" r="${R}"/>${lim && spent ? `<circle class="r-fill" cx="32" cy="32" r="${R}" stroke-dasharray="${Math.max(2, Math.min(1, p) * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>` : ''}<text x="32" y="37" text-anchor="middle">${esc(mid)}</text></svg>
+      <span class="r-name">${esc(l.name)}</span><span class="r-sub">${lim ? `${esc(fmt(spent))} of ${esc(usd0.format(lim / 100))}` : 'no limit'}</span>
+    </button>`;
+  }
+  function spendCard() {
+    const limits = kind('limit');
+    if (!limits.length) return '';
+    const total = limits.reduce((t, l) => t + limitSpent(l), 0);
+    return `<article class="float sc">
+      <div class="bl-head"><span class="lab">Spending · ${esc(monthFmt.format(new Date()))}</span><span class="fig lg">${big(total)}</span></div>
+      <div class="rings">${limits.map(ring).join('')}</div>
+      ${dailyBars(limits)}
+    </article>`;
+  }
+
   /* ---------- views ---------- */
   function vHome() {
     const todo = inbox();
     const accounts = sorted(S.accounts);
     const sum = f => S.accounts.filter(f).reduce((s, a) => s + acctBalance(a), 0);
-    const totals = accounts.length ? `<div class="totals">
-        <div class="float"><span class="lab">Checking</span><span class="fig md">${fmt(sum(a => a.type === 'checking'))}</span></div>
-        <div class="float"><span class="lab">Savings</span><span class="fig md">${fmt(sum(a => a.type === 'savings'))}</span></div>
-        <div class="float"><span class="lab">Owed on cards</span><span class="fig md">${fmt(sum(a => a.type === 'credit'))}</span></div>
-      </div>` : '';
+    const top = [onHand(), billLine()].filter(Boolean);
+    const totals = top.length ? `<div class="fin-viz${top.length === 1 ? ' one' : ''}">${top.join('')}</div>` : '';
     let left = '';
     const due = billAlerts();
     if (due.length) left += `<section class="sec"><span class="lab">Bills</span><div class="stack">${due.map(billNote).join('')}</div></section>`;
@@ -414,6 +521,8 @@ window.POSFinance = function (ctx) {
     const notes = savingsToSort().map(sortNote).join('');
     if (notes) left += `<section class="sec">${notes}</section>`;
     if (!left) left = '<section class="sec"><span class="lab">Needs approval</span><p class="empty">Nothing waiting. New charges show up here to be sorted.</p></section>';
+    const sc = spendCard();
+    if (sc) left += `<section class="sec">${sc}</section>`;
     let right = '<section class="sec"><div class="sec-head"><span class="lab">Accounts</span>'
       + (canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : '') + '</div>';
     right += accounts.length ? `<div class="stack">${accounts.map(accountCard).join('')}</div>`
@@ -598,11 +707,12 @@ window.POSFinance = function (ctx) {
   function spendSplit(limits) {
     const parts = limits.map(l => ({ l, v: limitSpent(l) })).filter(p => p.v > 0).sort((a, b) => b.v - a.v);
     const total = parts.reduce((t, p) => t + p.v, 0);
-    if (!total) return `<div class="hero"><span class="fig xl">${fmt(0)}</span><span class="meta">Nothing spent in your categories yet this month.</span></div>`;
+    if (!total) return `<div class="hero"><span class="fig xl">${fmt(0)}</span><span class="meta">Nothing spent in your categories yet this month.</span>${limits.length ? dailyBars(limits) : ''}</div>`;
     const op = i => [1, .72, .5, .34, .24, .17, .12, .09][Math.min(i, 7)];
-    return `<div class="hero"><div class="s-top"><span class="lab">Spent this month</span><span class="fig xl">${fmt(total)}</span></div>
+    return `<div class="hero"><div class="s-top"><span class="lab">Spent this month</span><span class="fig xl">${big(total)}</span></div>
       <div class="split" role="img" aria-label="${esc(parts.map(p => `${p.l.name} ${fmt(p.v)}`).join(', '))}">${parts.map((p, i) => `<span class="seg" style="width:${(p.v / total * 100).toFixed(2)}%;opacity:${op(i)}"></span>`).join('')}</div>
-      <div class="s-legend">${parts.map((p, i) => `<span><i class="dot" style="opacity:${op(i)}"></i>${esc(p.l.name)} <b>${fmt(p.v)}</b> <small>${Math.round(p.v / total * 100)}%</small></span>`).join('')}</div></div>`;
+      <div class="s-legend">${parts.map((p, i) => `<span><i class="dot" style="opacity:${op(i)}"></i>${esc(p.l.name)} <b>${fmt(p.v)}</b> <small>${Math.round(p.v / total * 100)}%</small></span>`).join('')}</div>
+      <div class="rings">${limits.map(ring).join('')}</div>${dailyBars(limits)}</div>`;
   }
   function limitRow(l) {
     const charges = limitCharges(l);
