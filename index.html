@@ -35,18 +35,19 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010050335">
-<script src="finance.js?v=20261010050335"></script>
-<link rel="stylesheet" href="car.css?v=20261010050335">
-<script src="car.js?v=20261010050335"></script>
-<link rel="stylesheet" href="sections.css?v=20261010050335">
-<script src="records.js?v=20261010050335"></script>
-<script src="people.js?v=20261010050335"></script>
-<script src="keyboard.js?v=20261010050335"></script>
-<script src="notes.js?v=20261010050335"></script>
-<script src="lights.js?v=20261010050335"></script>
-<script src="health.js?v=20261010050335"></script>
-<script src="pets.js?v=20261010050335"></script>
+<link rel="stylesheet" href="finance.css?v=20261010162200">
+<script src="finance.js?v=20261010162200"></script>
+<link rel="stylesheet" href="car.css?v=20261010162200">
+<script src="car.js?v=20261010162200"></script>
+<link rel="stylesheet" href="sections.css?v=20261010162200">
+<script src="records.js?v=20261010162200"></script>
+<script src="people.js?v=20261010162200"></script>
+<script src="wheels.js?v=20261010162200"></script>
+<script src="keyboard.js?v=20261010162200"></script>
+<script src="notes.js?v=20261010162200"></script>
+<script src="lights.js?v=20261010162200"></script>
+<script src="health.js?v=20261010162200"></script>
+<script src="pets.js?v=20261010162200"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -416,6 +417,11 @@ body[data-view="home"] .top{display:none}
 .trow.locked .name{color:var(--ink-2)}
 .trow .after{color:var(--ink-3)}
 [data-sortbox] .trow{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.tgroup.nest-target{box-shadow:inset 0 0 0 1.5px var(--ink-3);border-radius:18px}
+.srt.nesting,.srt.outdenting{position:relative}
+.srt.nesting::after,.srt.outdenting::after{position:absolute;right:14px;top:-10px;padding:2px 10px;border-radius:999px;background:var(--solid);color:var(--on-solid);font-size:11px;font-weight:500;white-space:nowrap;pointer-events:none}
+.srt.nesting::after{content:attr(data-nest-label)}
+.srt.outdenting::after{content:"Its own task"}
 .srt.sorting{position:relative;z-index:6;background:var(--lift-bg);border-radius:20px;box-shadow:0 18px 36px -12px rgba(0,0,0,.55),0 0 0 1.5px var(--ink-2)!important}
 /* personal and work */
 .ttag{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px;line-height:1.3;white-space:nowrap}
@@ -507,6 +513,33 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .kind-f .seg3{grid-template-columns:repeat(4,minmax(0,1fr))}
 .kind-f .seg3 button{padding:10px 4px}
 #sheet[data-sheet-kind="marker"] .f-len{display:none}
+/* the sheet's spin wheels: day, time and how long */
+#sheetBody{gap:12px}
+#sheet .f-when{gap:8px}
+.when-row{display:flex;gap:10px;flex-wrap:wrap}
+.wh-box{display:flex;flex-direction:column;gap:6px;min-width:0}
+.wh-h{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:26px}
+.wh-x{width:26px;height:26px;border:0;border-radius:50%;display:grid;place-items:center;background:var(--well);color:var(--ink-2);padding:0;flex:none}
+.wh-x svg.i{width:13px;height:13px}
+.wh-box:has(.wh-group.off) .wh-x{visibility:hidden}
+.wh-box:has(.wh-group.off) .wh-h .f-h::after{content:" · none";color:var(--ink-3)}
+.wh-group{position:relative;display:flex;align-items:center;gap:0;padding:0 4px;border-radius:16px;background:var(--field);box-shadow:inset 0 0 0 1px var(--field-border);align-self:flex-start}
+.wh-group::before{content:"";position:absolute;left:4px;right:4px;top:50%;height:32px;margin-top:-16px;border-radius:10px;background:var(--panel-hi);box-shadow:inset 0 0 0 1px var(--hair);pointer-events:none}
+.wh-col{position:relative;height:102px;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;touch-action:pan-y;outline:none;cursor:grab;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 34%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 34%,#000 66%,transparent 100%)}
+.wh-col::-webkit-scrollbar{display:none}
+.wh-col.dragging{scroll-snap-type:none;cursor:grabbing}
+.wh-col:focus-visible{box-shadow:inset 0 0 0 1.5px var(--ink-3);border-radius:10px}
+.wh-pad{height:34px}
+.wh-it{height:34px;line-height:34px;text-align:center;scroll-snap-align:center;font-size:17px;color:var(--ink-3);font-variant-numeric:tabular-nums;user-select:none;-webkit-user-select:none;white-space:nowrap}
+.wh-it.on{color:var(--ink);font-weight:500}
+.wh-group.off .wh-it.on{color:var(--ink-3);font-weight:400}
+.wh-group.off::before{background:none}
+.wh-unit{font-size:13px;color:var(--ink-3);padding-right:4px}
+.len-row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.len-row .f-len{flex:none}
+.len-row .f-rep{flex:1 1 160px;min-width:0}
+.len-row .f-rep .f-h{min-height:26px;display:flex;align-items:center}
 #sheet[data-sheet-kind="task"] .f-rep,#sheet[data-sheet-kind="none"] .f-rep{display:none}
 #sheet:not([data-sheet-kind="task"]) .f-list,#sheet:not([data-sheet-kind="task"]) .f-tag,#sheet:not([data-sheet-kind="task"]) .f-after{display:none}
 #sheet .f select,.mt-when-row select{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);-webkit-appearance:none;appearance:none;
@@ -1197,11 +1230,10 @@ dialog::backdrop{background:transparent}
     </div>
     <div id="sheetBody" class="sheet-body">
       <div class="f kind-f">
-        <span class="f-h" id="h_kind">What is it?</span>
-        <div class="seg3 kinds" role="radiogroup" aria-labelledby="h_kind">
+        <div class="seg3 kinds" role="radiogroup" aria-label="What it is">
           <button type="button" role="radio" data-kind="task" aria-checked="false">Task</button><button type="button" role="radio" data-kind="event" aria-checked="false">Event</button><button type="button" role="radio" data-kind="meeting" aria-checked="false">Meeting</button><button type="button" role="radio" data-kind="marker" aria-checked="false">Marker</button>
         </div>
-        <p class="kind-note" id="f_kindNote"></p>
+        <p class="kind-note" id="f_kindNote" hidden></p>
       </div>
       <div class="f f-mtype">
         <span class="f-h" id="h_mtype">Marker type</span>
@@ -1210,50 +1242,32 @@ dialog::backdrop{background:transparent}
         </div>
         <p class="kind-note" id="f_mtypeNote"></p>
       </div>
-      <label class="f"><span class="f-h" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
+      <label class="f f-name"><span class="f-h sr-only" id="h_title">Name</span><input id="f_title" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="What is it?"></label>
       <div class="f f-tag">
-        <span class="f-h" id="h_tag">Personal or work</span>
-        <div class="seg3 tags" role="radiogroup" aria-labelledby="h_tag"><button type="button" role="radio" data-tag="" aria-checked="true">Neither</button><button type="button" role="radio" data-tag="personal" aria-checked="false">Personal</button><button type="button" role="radio" data-tag="work" aria-checked="false">Work</button></div>
+        <div class="seg3 tags" role="radiogroup" aria-label="Personal or work"><button type="button" role="radio" data-tag="" aria-checked="true">Neither</button><button type="button" role="radio" data-tag="personal" aria-checked="false">Personal</button><button type="button" role="radio" data-tag="work" aria-checked="false">Work</button></div>
       </div>
-      <div class="f f-after">
-        <span class="f-h" id="h_after">Step of <i class="opt">optional</i></span>
-        <select id="f_parent" aria-labelledby="h_after"></select>
-        <p class="kind-note">Steps go in order: this waits until that task, and the steps before this one, are checked off.</p>
-      </div>
-      <div class="f f-list">
-        <span class="f-h" id="h_list">List <i class="opt">optional</i></span>
-        <div class="chips" id="f_listChips"></div>
-        <div class="xin"><input id="f_list" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Like To buy, or To sell" aria-labelledby="h_list"><button type="button" class="circle" data-clear="f_list" aria-label="Clear list"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
-      </div>
-      <div class="f">
-        <span class="f-h" id="h_date">Day</span>
-        <div class="frow">
-          <div class="chips"><button type="button" class="chip" data-set="date" data-rel="0">Today</button><button type="button" class="chip" data-set="date" data-rel="1">Tomorrow</button></div>
-          <div class="xin"><input id="f_date" type="date" aria-labelledby="h_date"><button type="button" class="circle" data-clear="f_date" aria-label="Clear day"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
+      <select id="f_parent" hidden disabled aria-hidden="true" tabindex="-1"></select><input type="hidden" id="f_list">
+      <div class="f f-when">
+        <div class="when-top"><div class="chips"><button type="button" class="chip" data-set="date" data-rel="0">Today</button><button type="button" class="chip" data-set="date" data-rel="1">Tomorrow</button></div></div>
+        <div class="when-row">
+          <div class="wh-box"><div class="wh-h"><span class="f-h" id="h_date">Day</span><button type="button" class="wh-x" data-clear="f_date" aria-label="No day"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div><div data-wheel="date" data-for="f_date" role="group" aria-labelledby="h_date"></div></div>
+          <div class="wh-box"><div class="wh-h"><span class="f-h" id="h_time">Time</span><button type="button" class="wh-x" data-clear="f_time" aria-label="No time"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div><div data-wheel="time" data-for="f_time" role="group" aria-labelledby="h_time"></div></div>
         </div>
-      </div>
-      <div class="f">
-        <span class="f-h" id="h_time">Time</span>
-        <div class="xin"><input id="f_time" type="time" step="300" aria-labelledby="h_time"><button type="button" class="circle" data-clear="f_time" aria-label="Clear time"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
+        <input type="hidden" id="f_date"><input type="hidden" id="f_time">
       </div>
       <div class="f f-until">
-        <span class="f-h" id="h_until">Until <i class="opt">optional</i></span>
-        <div class="xin"><input id="f_until" type="time" step="300" aria-labelledby="h_until"><button type="button" class="circle" data-clear="f_until" aria-label="Clear end time"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
-        <p class="kind-note">Leave empty for one moment, like waking up. Add an end to mark a stretch of time, like 9 to 5 at the office.</p>
+        <div class="wh-box"><div class="wh-h"><span class="f-h" id="h_until">Until <i class="opt">optional</i></span><button type="button" class="wh-x" data-clear="f_until" aria-label="No end time"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div><div data-wheel="time" data-for="f_until" data-default="17:00" role="group" aria-labelledby="h_until"></div></div>
+        <input type="hidden" id="f_until">
       </div>
-      <div class="f f-len">
-        <span class="f-h" id="h_mins">How long it takes</span>
-        <div class="chips">
-          <button type="button" class="chip" data-set="mins" data-val="15">15 min</button><button type="button" class="chip" data-set="mins" data-val="30">30 min</button><button type="button" class="chip" data-set="mins" data-val="45">45 min</button><button type="button" class="chip" data-set="mins" data-val="60">1 hr</button><button type="button" class="chip" data-set="mins" data-val="90">1½ hr</button><button type="button" class="chip" data-set="mins" data-val="120">2 hr</button>
+      <div class="len-row">
+        <div class="f f-len"><div class="wh-h"><span class="f-h" id="h_mins">How long</span></div><div data-wheel="duration" data-for="f_mins" role="group" aria-labelledby="h_mins"></div><input type="hidden" id="f_mins"></div>
+        <div class="f f-rep">
+          <span class="f-h" id="h_rep">Repeat</span>
+          <select id="f_repeat" aria-labelledby="h_rep"></select>
+          <p class="kind-note" id="f_repNote" hidden></p>
         </div>
-        <div class="xin"><input id="f_mins" type="number" inputmode="numeric" min="1" max="1440" step="1" placeholder="Other" aria-labelledby="h_mins"><span class="unit">min</span><button type="button" class="circle" data-clear="f_mins" aria-label="Clear length"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>
       </div>
-      <div class="f f-rep">
-        <span class="f-h" id="h_rep">Repeat</span>
-        <select id="f_repeat" aria-labelledby="h_rep"></select>
-        <p class="kind-note" id="f_repNote"></p>
-      </div>
-      <p class="where" id="f_where" aria-live="polite"></p>
+      <p class="where" id="f_where" hidden></p>
     </div>
     <p id="sheetErr" class="err" hidden></p>
     <div class="sheet-foot">
@@ -1336,13 +1350,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010050335"></script>
+<script src="appearance.js?v=20261010162200"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010050335';
+  const VERSION = '20261010162200';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1442,7 +1456,7 @@ dialog::backdrop{background:transparent}
   }
   let mk = null, mv = null, bd = null, so = null, renderLater = false, scopeOpen = false;
   // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
-  const H_MIN = 16, H_MAX = 180;
+  const H_MIN = 16, H_MAX = 480; // all the way in, a 5-minute block is tall enough for its name and its time
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
@@ -2796,7 +2810,7 @@ dialog::backdrop{background:transparent}
     if (id && !t) return;
     F = { id: t ? t.id : null, armed: false, kind: t ? t.kind : kind, occ: !!(t && t.occ), sid: t && t.occ ? t.sid : null, day: t ? t.date : null,
       locked: !!(t && t.seriesId), repeat0: t && t.repeat ? t.repeat.freq : '', rp: t && t.repeat ? t.repeat : null };
-    const v = t || { title: '', date: preset.date || null, time: preset.time || null, mins: preset.mins ?? null };
+    const v = t || { title: '', date: preset.date || null, time: preset.time || null, mins: preset.mins ?? 60 };
     $('#f_repeat').innerHTML = repeatChoices(v.date, F.rp).map(([rv, rl]) => `<option value="${rv}">${esc(rl)}</option>`).join('');
     $('#f_repeat').value = F.repeat0;
     $('#f_title').value = v.title || '';
@@ -2812,10 +2826,7 @@ dialog::backdrop{background:transparent}
     $('#f_parent').innerHTML = `<option value="">Nothing, it's its own task</option>` + parents.map(x => `<option value="${esc(x.id)}">${esc(x.title)}${x.date ? ` (${esc(dayLabel(x.date))})` : ''}</option>`).join('')
       + (curP && !parents.some(x => x.id === curP) ? `<option value="${esc(curP)}">${esc((S.tasks.find(x => x.id === curP) || { title: 'A finished task' }).title)}</option>` : '');
     $('#f_parent').value = curP;
-    $('#f_parent').disabled = !!(t && stepsOf(t.id).length); // a task with steps of its own stays on top
-    // your lists so far, plus the two everyone starts with, as one-tap choices
-    const names = [...new Set(['To buy', 'Sell or give away', ...S.tasks.map(x => x.list).filter(Boolean)].map(n => n.trim()))].slice(0, 8);
-    $('#f_listChips').innerHTML = names.map(n => `<button type="button" class="chip" data-set="list" data-val="${esc(n)}">${esc(n)}</button>`).join('');
+    $('#f_parent').disabled = true; // steps are made by dragging one task under another in Tasks
     // a marker's end: shown for one that already has a length, or when you dragged out a stretch of time
     $('#f_until').value = v.time && v.mins && ((t && t.kind === 'marker') || preset.ranged) ? hhmm((toMin(v.time) + v.mins) % 1440) : '';
     $('#sheetErr').hidden = true;
@@ -2826,6 +2837,7 @@ dialog::backdrop{background:transparent}
     setKind(F.kind);
     setMtype(F.mtype, true);
     sheet.showModal();
+    POSWheels.sync();
     // on a computer the name is ready to type into; on the iPad and phone nothing pops up until you tap a field
     if (touchOnly()) { const a = document.activeElement; if (a && a.matches && a.matches('input, textarea')) a.blur(); }
     else if (!t) $('#f_title').focus();
@@ -2847,6 +2859,7 @@ dialog::backdrop{background:transparent}
     $('#h_mins').textContent = tx ? tx.len : 'How long';
     $('#f_kindNote').textContent = tx ? tx.note : 'Pick one so it lands in the right place.';
     $('#sheet').dataset.sheetKind = F.kind || 'none';
+    if (sheet.open) requestAnimationFrame(() => POSWheels.sync()); // a wheel that just appeared needs placing
     $('#sheetDone').hidden = !(F.id && F.kind === 'task');
     $('#sheetNotes').hidden = !(F.id && F.kind === 'meeting');
     refreshWhere();
@@ -2864,7 +2877,7 @@ dialog::backdrop{background:transparent}
       const ti = $('#f_title'), cur = ti.value.trim();
       if (F.mtype && (!cur || /^(sleep|wake ?up)$/i.test(cur))) ti.value = MTYPE_NAME[F.mtype];
       if (!F.mtype && /^(sleep|wake ?up)$/i.test(cur)) ti.value = '';
-      if (F.mtype) $('#f_until').value = '';
+      if (F.mtype) { $('#f_until').value = ''; POSWheels.sync(); }
       // sleeping and waking happen every day, so a new one starts out repeating daily
       if (F.mtype && !F.id && !$('#f_repeat').value && $('#f_date').value) $('#f_repeat').value = 'daily';
     }
@@ -2940,11 +2953,12 @@ dialog::backdrop{background:transparent}
       if (set.dataset.set === 'date') $('#f_date').value = addDays(todayKey(), Number(set.dataset.rel));
       else if (set.dataset.set === 'list') $('#f_list').value = $('#f_list').value === set.dataset.val ? '' : set.dataset.val;
       else $('#f_mins').value = set.dataset.val;
+      POSWheels.sync();
       refreshWhere();
       return;
     }
     const clr = e.target.closest('[data-clear]');
-    if (clr) { $('#' + clr.dataset.clear).value = ''; refreshWhere(); }
+    if (clr) { $('#' + clr.dataset.clear).value = ''; POSWheels.sync(); refreshWhere(); }
   });
   $('#sheetClose').addEventListener('click', closeForm);
   sheet.addEventListener('close', () => { F = null; if (pendingTick) { pendingTick = false; render(); } });
@@ -3719,7 +3733,7 @@ dialog::backdrop{background:transparent}
     const s = so;
     if (!s || s.on) return;
     clearTimeout(s.hold);
-    if (!s.item.isConnected || sortItems(s.box).length < 2) { endSort(false); return; }
+    if (!s.item.isConnected || (sortItems(s.box).length < 2 && s.box.dataset.sortbox !== 'kids')) { endSort(false); return; } // a lone step can still be slid out
     s.on = true; sw = null; drag = null;
     if (!s.mouse) haptic();
     s.order0 = sortItems(s.box).map(c => c.dataset.sid).join();
@@ -3750,9 +3764,27 @@ dialog::backdrop{background:transparent}
       if (!s.mouse && s.lastAt !== undefined && s.lastAt !== at) haptic();
     }
     s.lastAt = at;
+    // slide a task to the right, under another, and it becomes a step of that one; slide a step left and it's its own task again
+    const dx = (s.x ?? s.x0) - s.x0;
+    if (s.box.dataset.sortbox === 'top') {
+      const prev = s.item.previousElementSibling, mine = s.item.querySelector(':scope > .trow');
+      const canNest = mine && !s.item.querySelector('.tsteps') && !s.item.classList.contains('orphan');
+      const root = prev && prev.classList.contains('tgroup') && !prev.classList.contains('orphan') ? prev.querySelector(':scope > .trow') : null;
+      const target = dx > 44 && canNest && root ? root.dataset.sid : null;
+      if (s.nest !== target) {
+        if (s.nestEl) s.nestEl.classList.remove('nest-target');
+        s.nest = target; s.nestEl = target ? prev : null;
+        if (target) { prev.classList.add('nest-target'); s.item.dataset.nestLabel = `Step of ${(task(target) || {}).title || ''}`; }
+        s.item.classList.toggle('nesting', !!target);
+        if (target && !s.mouse) haptic();
+      }
+    } else if (s.box.dataset.sortbox === 'kids') {
+      const out = dx < -44;
+      if (s.out !== out) { s.out = out; s.item.classList.toggle('outdenting', out); if (out && !s.mouse) haptic(); }
+    }
     s.item.style.transform = '';
     const top = s.item.getBoundingClientRect().top;
-    s.item.style.transform = `translateY(${s.y - s.grab - top}px) scale(1.02)`;
+    s.item.style.transform = `translate(${s.nest ? 28 : s.out ? -28 : 0}px, ${s.y - s.grab - top}px) scale(1.02)`;
   }
   async function endSort(commit) {
     const s = so; so = null;
@@ -3761,8 +3793,10 @@ dialog::backdrop{background:transparent}
     if (!s.on) { flushLater(); return; } // a plain tap: the click still lands
     quietUntil = Date.now() + 400;
     document.body.classList.remove('moving');
-    s.item.classList.remove('sorting'); s.item.style.transform = '';
+    s.item.classList.remove('sorting', 'nesting', 'outdenting'); s.item.style.transform = '';
+    if (s.nestEl) s.nestEl.classList.remove('nest-target');
     renderLater = false;
+    if (commit && (s.nest || s.out)) { await reparent(s); return; }
     const ids = sortItems(s.box).map(c => c.dataset.sid);
     if (!commit || ids.join() === s.order0) { render(); return; }
     // number them in their new order, show it at once, then save
@@ -3770,6 +3804,25 @@ dialog::backdrop{background:transparent}
     split(); render();
     try { await Promise.all(ids.map((id, i) => sb.from('tasks').update({ pos: (i + 1) * 1000 }).eq('id', id).then(must))); }
     catch (err) { toast('That order didn’t save. Check your connection and try again.'); await reloadTasks(); }
+  }
+  // the drop that makes a step (or undoes one): it goes last among its new task's steps, or right after its old task
+  async function reparent(s) {
+    const id = s.nest ? (s.item.querySelector(':scope > .trow') || {}).dataset?.sid : s.item.dataset.sid, t = id && task(id);
+    if (!t) { render(); return; }
+    const before = { parentId: t.parentId || null, pos: t.pos ?? null, date: t.date };
+    let patch, msg;
+    if (s.nest) {
+      const p = task(s.nest);
+      if (!p) { render(); return; }
+      const last = stepsOf(p.id).reduce((m, x) => Math.max(m, x.pos || 0), 0);
+      patch = { parentId: p.id, pos: last + 1000, ...(!t.date && p.date ? { date: p.date } : {}) };
+      msg = `${t.title} is a step of ${p.title}`;
+    } else {
+      const p = task(t.parentId);
+      patch = { parentId: null, pos: p && p.pos != null ? p.pos + 1 : null };
+      msg = `${t.title} is its own task again`;
+    }
+    if (await save(store.update(t.id, patch))) toast(msg, () => save(store.update(t.id, before)));
   }
   document.addEventListener('pointerdown', e => {
     if (so) endSort(false);
@@ -3784,7 +3837,7 @@ dialog::backdrop{background:transparent}
   });
   document.addEventListener('pointermove', e => {
     if (!so || e.pointerId !== so.pid) return;
-    so.y = e.clientY;
+    so.y = e.clientY; so.x = e.clientX;
     if (so.on) { drawSort(); return; }
     const moved = Math.hypot(e.clientX - so.x0, e.clientY - so.y0);
     if (!so.mouse) { if (moved > 8) endSort(false); } // the finger is scrolling
@@ -4399,6 +4452,7 @@ dialog::backdrop{background:transparent}
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSKeys) window.POSKeys();
+    if (window.POSWheels) POSWheels.mount($('#sheet'));
     if (window.POSHealth) HEALTH = window.POSHealth({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave,
       goals: re => (FIN && FIN.goals ? FIN.goals(re) : []),
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
