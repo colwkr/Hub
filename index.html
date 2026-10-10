@@ -35,19 +35,19 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010173630">
-<script src="finance.js?v=20261010173630"></script>
-<link rel="stylesheet" href="car.css?v=20261010173630">
-<script src="car.js?v=20261010173630"></script>
-<link rel="stylesheet" href="sections.css?v=20261010173630">
-<script src="records.js?v=20261010173630"></script>
-<script src="people.js?v=20261010173630"></script>
-<script src="wheels.js?v=20261010173630"></script>
-<script src="keyboard.js?v=20261010173630"></script>
-<script src="notes.js?v=20261010173630"></script>
-<script src="lights.js?v=20261010173630"></script>
-<script src="health.js?v=20261010173630"></script>
-<script src="pets.js?v=20261010173630"></script>
+<link rel="stylesheet" href="finance.css?v=20261010175606">
+<script src="finance.js?v=20261010175606"></script>
+<link rel="stylesheet" href="car.css?v=20261010175606">
+<script src="car.js?v=20261010175606"></script>
+<link rel="stylesheet" href="sections.css?v=20261010175606">
+<script src="records.js?v=20261010175606"></script>
+<script src="people.js?v=20261010175606"></script>
+<script src="wheels.js?v=20261010175606"></script>
+<script src="keyboard.js?v=20261010175606"></script>
+<script src="notes.js?v=20261010175606"></script>
+<script src="lights.js?v=20261010175606"></script>
+<script src="health.js?v=20261010175606"></script>
+<script src="pets.js?v=20261010175606"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1180,7 +1180,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="tasks" aria-label="Tasks" title="Tasks"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg></span><span class="pip" id="railBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="calendar" aria-label="Calendar" title="Calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="meetings" aria-label="Meetings" title="Meetings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg></span></button>
-  <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
+  <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="health" aria-label="Health" title="Health"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="car" aria-label="Car" title="Car"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg></span><span class="pip" id="railCarBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="pets" aria-label="Pets" title="Pets"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg></span><span class="pip" id="railPetBadge" hidden></span></button>
@@ -1205,7 +1205,7 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="tasks"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg><span>Tasks</span><span class="badge" id="taskBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg><span>Health</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="car"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg><span>Car</span><span class="badge" id="carBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="pets"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg><span>Pets</span><span class="badge" id="petBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
@@ -1350,13 +1350,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010173630"></script>
+<script src="appearance.js?v=20261010175606"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010173630';
+  const VERSION = '20261010175606';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));

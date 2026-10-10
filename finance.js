@@ -718,20 +718,17 @@ window.POSFinance = function (ctx) {
   const pctText = f => (f == null || !isFinite(f) ? '' : f <= 0 ? '0%' : f < 0.001 ? '<0.1%' : f < 0.1 ? (f * 100).toFixed(1).replace(/\.0$/, '') + '%' : Math.round(f * 100) + '%');
   const relDay = at => { const d = Math.round((startOfDay(at) - startOfDay(Date.now())) / DAY); return d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : d > 1 && d < 7 ? `In ${d} days` : null; };
 
-  // the very next thing to come in or go out, then the few after it
+  // the very next thing to come in or go out
   function nextUp() {
-    const list = upcoming(4);
-    if (!list.length) return `<article class="float nx"><span class="lab">Next up</span><p class="empty">Nothing coming. Add your bills and your paycheck to see what’s next.</p></article>`;
-    const [x, ...rest] = list, inn = x.kind === 'pay', rel = relDay(x.at);
-    const open = x.kind === 'pay' ? `data-act="fin-form" data-form="income" data-id="${esc(x.id)}"` : `data-act="fin-form" data-form="bill" data-id="${esc(x.id)}"`;
+    const [x] = upcoming(1);
+    if (!x) return '';
+    const inn = x.kind === 'pay', rel = relDay(x.at);
     return `<article class="float nx">
       <span class="lab">Next up</span>
-      <button type="button" class="nx-main" ${open}${canSave() ? '' : ' disabled'}>
+      <button type="button" class="nx-main" data-act="fin-form" data-form="${inn ? 'income' : 'bill'}" data-id="${esc(x.id)}"${canSave() ? '' : ' disabled'}>
         <span class="nx-amt${inn ? ' in' : ''}">${inn ? '+' : ''}${big(x.amount)}</span>
-        <span class="nx-what"><b>${esc(x.name)}</b><span>${esc(x.sub)}</span></span>
-        <span class="nx-when">${esc(dayFmt.format(x.at))}${rel ? `<b>${esc(rel)}</b>` : ''}</span>
+        <span class="nx-what"><b>${esc(x.name)}</b><span>${esc(rel ? `${rel} · ${shortDay.format(x.at)}` : dayFmt.format(x.at))}</span></span>
       </button>
-      ${rest.length ? `<div class="nx-then"><span class="lab">After that</span>${rest.map(r => `<div class="nx-r${r.kind === 'pay' ? ' in' : ''}"><span class="nx-d">${esc(shortDay.format(r.at))}</span><span class="nx-n">${esc(r.name)}</span><span class="num">${r.kind === 'pay' ? '+' : ''}${esc(fmt(r.amount))}</span></div>`).join('')}</div>` : ''}
     </article>`;
   }
 
@@ -743,128 +740,104 @@ window.POSFinance = function (ctx) {
       return { a, due, bal, short: due - bal };
     }).filter(c => c.due);
   }
-  // every account's balance on one line; tap one to update it
-  function acctStrip() {
+  // the debit card on a checking account: the last of its numbers when it has more than one ("6444, 7206": card 7206)
+  const cardOf = a => (a.card !== undefined ? a.card : (a.last4 || []).length > 1 ? a.last4[a.last4.length - 1] : null);
+  function cardArt(a) {
+    if (a.type === 'checking') {
+      const c = cardOf(a);
+      return c ? `<span class="dcard" role="img" aria-label="Debit card ending ${esc(c)}"><i class="dc-chip"></i><span class="dc-no">${esc(c)}</span></span>`
+        : '<span class="dcard none" role="img" aria-label="No card on this account"><span>No card</span></span>';
+    }
+    return a.type === 'savings'
+      ? `<span class="ac-ic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 8.8v-.8M12 16v-.8M7 19v1.5M17 19v1.5"/></svg></span>`
+      : `<span class="ac-ic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M3.5 10h17M7 14.5h3"/></svg></span>`;
+  }
+  // the accounts stacked, the way the bank lists them; tap one to update its balance
+  function acctList() {
     const accts = sorted(S.accounts);
-    const add = canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : '';
-    if (!accts.length) return `<article class="float ac"><div class="sec-head"><span class="lab">Accounts</span>${add}</div><p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p></article>`;
-    const onHand = accts.filter(a => a.type !== 'credit').reduce((t, a) => t + Math.max(0, acctBalance(a)), 0);
-    const cells = accts.map(a => {
-      const credit = a.type === 'credit', l4 = (a.last4 || []).map(x => '••' + x).join(' ');
-      return `<button type="button" class="ac-cell${credit ? ' owed' : ''}" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(acctBalance(a))}. Update`)}">
-        <span class="ac-n">${esc(a.name)}${credit ? ' · owed' : ''}</span><span class="ac-v">${big(acctBalance(a))}</span>${l4 ? `<small>${esc(l4)}</small>` : ''}</button>`;
+    if (!accts.length) return `<article class="float ac"><span class="lab">Accounts</span><p class="empty">No accounts yet.</p>${canSave() ? '<div><button type="button" class="btn solid" data-act="fin-form" data-form="account">Add account</button></div>' : ''}</article>`;
+    const cov = coverage();
+    const rows = accts.map(a => {
+      const credit = a.type === 'credit', num = (a.last4 || [])[0], bal = acctBalance(a);
+      const short = cov.find(c => c.a.id === a.id && c.short > 0);
+      const u = a.type === 'savings' ? unsorted(a) : 0, cats = a.type === 'savings' ? catsOf(a).length : 0;
+      const sort = u && canSave() ? `<button type="button" class="ac-sort" data-act="fin-form" data-form="${cats ? 'allocate' : 'goal'}" ${cats ? `data-id="${esc(a.id)}"` : `data-account="${esc(a.id)}"`}>${u > 0 ? `Sort ${esc(fmt(u))}` : `Cover ${esc(fmt(-u))}`}</button>` : '';
+      return `<div class="ac-row">
+        <button type="button" class="ac-main" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(bal)}. Update the balance`)}">
+          ${cardArt(a)}
+          <span class="ac-n"><b>${esc(a.name)}</b><span>${num ? '••' + esc(num) : ''}${credit ? (num ? ' · ' : '') + 'owed' : ''}</span></span>
+          <span class="ac-v${credit ? ' owed' : ''}">${big(bal)}</span>
+        </button>
+        ${short ? `<span class="ac-short">${ICON.warn}${esc(fmt(short.short))} short for bills</span>` : ''}${sort}
+      </div>`;
     }).join('');
-    const short = coverage().filter(c => c.short > 0).map(c => `<p class="ac-warn">${ICON.warn}<span>${esc(c.a.name)} has ${esc(fmt(c.bal))} for the ${esc(fmt(c.due))} of bills still to come out this month: <b>${esc(fmt(c.short))} short</b>.</span></p>`).join('');
-    return `<article class="float ac">
-      <div class="ac-head"><span class="lab">Accounts</span><span class="meta">On hand <b>${esc(fmt(onHand))}</b></span>${add}</div>
-      <div class="ac-row">${cells}</div>${short}${mailLine()}
-    </article>`;
+    return `<article class="float ac"><span class="lab">Accounts</span><div class="ac-list">${rows}</div></article>`;
   }
 
-  const GROUPS = [['bill', 'Bills'], ['loan', 'Loans'], ['sub', 'Subscriptions'], ['cat', 'Spending'], ['goal', 'Paid from savings'], ['wait', 'Not sorted yet'], ['save', 'Saved']];
-  function lineMeta(l) {
-    const d = l.at ? shortDay.format(l.at) : '';
-    return ({
-      paid: d ? `Paid ${d}` : 'Paid', due: `Due ${d}`, waiting: `Due ${d} · waiting on the charge`, late: `Due ${d} · no charge seen yet`,
-      before: `${d} · before POS was tracking it`, unseen: d ? `Due ${d} · no charge seen` : 'No charge seen', noday: 'No day set yet',
-    })[l.st] || '';
+  // a month as one ring: all of its income, and where it goes. Bills, then spending, then what was saved; what's left stays empty.
+  function monthSlices(mk) {
+    const cur = curMk(), future = mk > cur, mod = modelFor(mk), t = monthTotals(mod);
+    const bills = mod.lines.filter(l => ['bill', 'loan', 'sub'].includes(l.group)).reduce((s, l) => s + l.amount, 0);
+    const cats = mod.lines.filter(l => l.group === 'cat').map(l => ({ id: l.id, name: l.name, v: future ? l.limit || 0 : l.amount })).filter(c => c.v > 0).sort((a, b) => b.v - a.v);
+    const rest = mod.lines.filter(l => l.group === 'goal' || l.group === 'wait').reduce((s, l) => s + l.amount, 0);
+    const saved = t.saved;
+    const top = cats.slice(0, 3), fold = cats.slice(3).reduce((s, c) => s + c.v, 0) + rest;
+    const parts = [];
+    if (bills) parts.push({ key: 'bills', name: 'Bills', v: bills, shade: 1, sub: 'bills' });
+    top.forEach((c, i) => parts.push({ key: c.id, name: c.name, v: c.v, shade: [.66, .46, .32][i], sub: 'spending' }));
+    if (fold) parts.push({ key: 'other', name: cats.length > 3 ? 'Other spending' : 'Other', v: fold, shade: .2, sub: 'spending' });
+    if (saved) parts.push({ key: 'saved', name: 'Saved', v: saved, good: true, sub: 'savings' });
+    const out = parts.filter(p => p.key !== 'saved').reduce((s, p) => s + p.v, 0);
+    return { parts, inAll: t.inAll, out, saved, left: t.inAll - out - saved, future };
   }
-  // a month's money: what came in, where it went (as a share of what came in), and what's left
-  function monthCard(mk) {
-    const cur = curMk(), mod = modelFor(mk), t = monthTotals(mod), future = mk > cur, now = mk === cur;
-    const share = v => (t.inAll ? pctText(v / t.inAll) : '');
-    const out = t.done + t.due + (future ? t.open : 0), left = future ? t.free : t.left;
-    // the month's income as one bar: what's gone, bills to come, room left in the limits, and what's free
-    const parts = [['done', t.done, 'Spent and paid'], ['due', t.due, future ? 'Bills' : 'Bills still to come'], ['saved', t.saved, 'Moved to savings'], ['open', t.open, future ? 'Spending limits' : 'Left in your limits']].filter(p => p[1] > 0);
-    const used = parts.reduce((s, p) => s + p[1], 0), base = Math.max(t.inAll, used, 1), over = used - t.inAll;
-    const pc = v => (v / base * 100).toFixed(2);
-    const bar = parts.map(([k, v]) => `<span class="mb-seg ${k}" style="width:${pc(v)}%"></span>`).join('') + (over < 0 ? `<span class="mb-seg free" style="width:${pc(-over)}%"></span>` : '');
-    const legend = parts.map(([k, v, label]) => `<span><i class="mb-key ${k}"></i>${esc(label)} <b>${esc(fmt(v))}</b>${t.inAll ? ` <small>${share(v)}</small>` : ''}</span>`).join('')
-      + (t.inAll ? (over < 0 ? `<span><i class="mb-key free"></i>${future ? 'Free' : now ? 'Free after all that' : 'Kept'} <b>${esc(fmt(-over))}</b> <small>${share(-over)}</small></span>` : `<span class="mb-over">${now || future ? 'Short' : 'Over'} by <b>${esc(fmt(over))}</b></span>`) : '');
-    const stat = (label, v, sub, cls = '') => `<div class="mo-stat${cls}"><span class="lab">${label}</span><span class="fig lg">${v < 0 ? '−' : ''}${big(Math.abs(v))}</span><span class="meta">${sub}</span></div>`;
-    const inSub = !mod.pays.length && !mod.others.length ? 'No paycheck set up' : future ? 'Expected' : now ? (t.inGot ? `${esc(fmt(t.inGot))} arrived so far` : 'None arrived yet') : 'Came in';
-    const outSub = future ? 'Bills and spending limits' : now ? `${esc(fmt(t.done))} so far · ${esc(fmt(t.due))} still to come` : 'Went out';
-    const leftSub = future ? 'If you spend up to your limits' : now ? `After bills${t.saved ? ' and savings' : ''} · ${t.free < 0 ? '−' : ''}${esc(fmt(Math.abs(t.free)))} if you spend to your limits` : t.saved ? `Kept, on top of ${esc(fmt(t.saved))} saved` : 'Kept';
-    const stats = stat('In', t.inAll, inSub) + stat('Out', out, outSub) + stat(future ? 'Free' : 'Left', left, leftSub, left < 0 ? ' neg' : '');
-    // where it goes, group by group
-    const groups = GROUPS.map(([g, label]) => {
-      const lines = mod.lines.filter(l => l.group === g);
-      if (!lines.length) return '';
-      const amt = l => (g === 'cat' && future ? l.limit || 0 : l.amount);
-      const sum = lines.reduce((s, l) => s + amt(l), 0);
-      const rows = lines.map(l => {
-        const v = amt(l), dueish = DUE.has(l.st);
-        let meta = '', meter = '', act = '';
-        if (g === 'cat') {
-          meta = future ? (l.limit ? 'Limit' : 'No limit') : l.limit ? `of ${fmtShort(l.limit)}${l.amount > l.limit ? ' · over' : ''}` : 'No limit';
-          if (!future && l.limit) meter = `<i class="mo-meter${l.amount > l.limit ? ' over' : ''}"><i style="width:${Math.min(100, l.amount / l.limit * 100).toFixed(1)}%"></i></i>`;
-          if (!l.id.startsWith('_')) act = `data-act="fin-sub" data-sub="spending" data-mk="${mk}"`;
-        } else if (g === 'goal') { meta = 'From savings'; }
-        else if (g === 'save') { meta = 'Moved over from your other accounts'; }
-        else if (g === 'wait') { meta = 'Approve them to sort them'; act = 'data-act="fin-sub" data-sub="home"'; }
-        else { meta = [l.note, lineMeta(l)].filter(Boolean).join(' · '); if (billById(l.id) && canSave()) act = `data-act="fin-form" data-form="bill" data-id="${esc(l.id)}"`; }
-        const tag = act ? 'button type="button"' : 'div', close = act ? 'button' : 'div';
-        return `<${tag} class="mo-r${dueish ? ' due' : ''}${l.st === 'before' ? ' before' : ''}" ${act}>
-          <span class="mo-n"><span>${esc(l.name)}</span><small>${esc(meta)}</small>${meter}</span>
-          <span class="num">${v ? esc(fmt(v)) : '—'}</span><span class="pct">${v ? share(v) : ''}</span></${close}>`;
-      }).join('');
-      return `<div class="mo-g"><div class="mo-gh"><span>${label}</span><span class="num">${esc(fmt(sum))}</span><span class="pct">${share(sum)}</span></div>${rows}</div>`;
+  function donut(m) {
+    const R = 88, C = 2 * Math.PI * R, base = Math.max(m.inAll, m.out + m.saved, 1), gap = m.parts.length > 1 ? 2.5 : 0;
+    let at = 0;
+    const arcs = m.parts.map(p => {
+      const len = p.v / base * C, draw = Math.max(1.5, len - gap);
+      const s = `<circle class="dn-seg${p.good ? ' good' : ''}" cx="100" cy="100" r="${R}" style="${p.good ? '' : `opacity:${p.shade}`}" stroke-dasharray="${draw.toFixed(2)} ${(C - draw).toFixed(2)}" stroke-dashoffset="${(-at).toFixed(2)}"><title>${esc(`${p.name}: ${fmt(p.v)}`)}</title></circle>`;
+      at += len;
+      return s;
     }).join('');
-    const order = { bill: 0, loan: 1, sub: 2 };
-    const missing = mk >= cur && mod.missing.length ? `<p class="mo-miss">No amount yet, so not counted: ${mod.missing.slice().sort((x, y) => (order[x.group] ?? 3) - (order[y.group] ?? 3)).map(x => billById(x.id) && canSave() ? `<button type="button" class="link" data-act="fin-form" data-form="bill" data-id="${esc(x.id)}">${esc(x.name)}</button>` : esc(x.name)).join(', ')}</p>` : '';
-    return `<article class="float mo" aria-label="${esc(mkLong(mk))}: money in and out">
+    return `<svg class="dn" viewBox="0 0 200 200" aria-hidden="true"><circle class="dn-track" cx="100" cy="100" r="${R}"/><g transform="rotate(-90 100 100)">${arcs}</g></svg>`;
+  }
+  function monthCard(mk) {
+    const m = monthSlices(mk), share = v => (m.inAll ? pctText(v / m.inAll) : '');
+    const fig = (label, v, cls = '') => `<div class="mo-fig${cls}"><span class="lab">${label}</span><span class="fig">${v < 0 ? '−' : ''}${big(Math.abs(v))}</span></div>`;
+    const figs = fig(m.future ? 'Planned out' : 'Out', m.out) + (m.saved ? fig('Saved', m.saved, ' good') : '') + fig(m.left < 0 ? 'Short' : 'Left', m.left, m.left < 0 ? ' neg' : '');
+    const row = p => `<button type="button" class="mo-leg-r" data-act="fin-sub" data-sub="${p.sub}"${p.sub === 'spending' ? ` data-mk="${mk}"` : ''}>
+        <i class="dn-key${p.good ? ' good' : ''}" style="${p.good ? '' : `opacity:${p.shade}`}"></i><span class="mo-leg-n">${esc(p.name)}</span><span class="num">${esc(fmt(p.v))}</span><span class="pct">${share(p.v)}</span></button>`;
+    const leg = m.parts.map(row).join('') + (m.left > 0 ? `<div class="mo-leg-r left"><i class="dn-key hollow"></i><span class="mo-leg-n">Left</span><span class="num">${esc(fmt(m.left))}</span><span class="pct">${share(m.left)}</span></div>` : '');
+    return `<article class="float mo" aria-label="${esc(mkLong(mk))}: money in and where it goes">
       ${monthNav('ov', mk)}
-      <div class="mo-stats">${stats}</div>
-      ${t.inAll || used ? `<div class="mo-bar" role="img" aria-label="${esc(parts.map(p => `${p[2]} ${fmt(p[1])}`).join(', ') + (t.inAll ? `, of ${fmt(t.inAll)} coming in` : ''))}">${bar}${over > 0 && t.inAll ? `<i class="mb-income" style="left:${pc(t.inAll)}%"></i>` : ''}</div><div class="mo-legend">${legend}</div>` : ''}
-      <div class="mo-body">
-        <div class="mo-out"><div class="mo-cols"><span class="lab">Where it goes</span><span class="lab">${t.inAll ? 'Of income' : ''}</span></div>${groups || '<p class="empty">Nothing yet.</p>'}${missing}</div>
-        <div class="mo-side">${moneyIn(mod, t)}${monthsChart(mk)}</div>
+      <div class="mo-figs">${figs}</div>
+      <div class="mo-main">
+        <div class="dn-wrap" role="img" aria-label="${esc(`${fmt(m.inAll)} in. ` + m.parts.map(p => `${p.name} ${fmt(p.v)}`).join(', ') + (m.left > 0 ? `, ${fmt(m.left)} left` : ''))}">
+          ${donut(m)}
+          <div class="dn-mid"><span class="lab">In</span><span class="fig">${big(m.inAll)}</span></div>
+        </div>
+        <div class="mo-right">
+          <div class="mo-leg">${leg || '<p class="empty">Nothing yet this month.</p>'}</div>
+        </div>
       </div>
     </article>`;
   }
-  // the paychecks in a month (arrived, coming, or not seen) and anything else that came in
-  function moneyIn(mod, t) {
-    const edit = S.income.length && canSave() ? `<button type="button" class="link" data-act="fin-form" data-form="income" data-id="${esc(S.income[0].id)}">Edit paycheck</button>` : '';
-    const pays = mod.pays.map(p => {
-      const d = shortDay.format(p.at), inc = incById(p.incId), fromTxn = p.st === 'got' && !p.manual;
-      const meta = { got: p.manual ? `${d} · checked off` : `Arrived ${shortDay.format(p.at)}`, expected: `${d} · expected`, waiting: `${d} · waiting on it`, missed: `${d} · not seen`, before: `${d} · before POS` }[p.st] || d;
-      const canTick = inc && canSave() && !fromTxn && p.st !== 'before' && p.at <= Date.now() + DAY;
-      const chk = canTick ? `<button type="button" class="b-chk" data-act="fin-pay" data-id="${esc(p.incId)}" data-key="${esc(p.key)}" aria-pressed="${p.st === 'got'}" aria-label="${p.st === 'got' ? `Paycheck for ${d} is checked off. Undo` : `It came: check off the paycheck for ${d}`}">${ICON.check}</button>` : `<span class="mi-dot${p.st === 'got' || p.st === 'before' ? ' got' : ''}" aria-hidden="true"></span>`;
-      return `<div class="mi-r st-${p.st}">${chk}<span class="mo-n"><span>Paycheck</span><small>${esc(meta)}</small></span><span class="num">+${esc(fmt(p.amount))}</span></div>`;
-    }).join('');
-    const others = mod.others.map(o => `<div class="mi-r"><span class="mi-dot got" aria-hidden="true"></span><span class="mo-n"><span>${esc(o.name)}</span><small>${esc(shortDay.format(o.at))}</small></span><span class="num">+${esc(fmt(o.amount))}</span></div>`).join('');
-    const none = !S.income.length && canSave() ? `<p class="empty">Add your paycheck to see what each thing costs as a share of it.</p><div><button type="button" class="btn solid" data-act="fin-form" data-form="income">Add paycheck</button></div>` : '';
-    return `<section class="m-in"><div class="mo-cols"><span class="lab">Money in · ${esc(fmt(t.inAll))}</span>${edit}</div>${pays}${others}${none}</section>`;
-  }
-  // month by month: each column is what came in (the outline) and what went out (filled); months ahead are the plan
-  function monthsChart(sel) {
-    const cur = curMk(), first = mkAdd(cur, -9) > START ? mkAdd(cur, -9) : START, last = mkAdd(cur, 2), cols = [];
-    for (let k = first; k <= last; k = mkAdd(k, 1)) { const t = monthTotals(modelFor(k)); cols.push({ mk: k, t, open: k >= cur ? t.open : 0 }); }
-    const top = Math.max(...cols.map(c => Math.max(c.t.inAll, c.t.done + c.t.due + c.t.saved + c.open)), 1);
-    const h = v => (v / top * 100).toFixed(2);
-    const html = cols.map(({ mk, t, open }) => {
-      const spent = t.done + t.due + t.saved + open, f = t.inAll ? spent / t.inAll : null;
-      let y = 0;
-      const seg = (cls, v) => { if (v <= 0) return ''; const s = `<i class="mc-fill ${cls}" style="bottom:${h(y)}%;height:${h(v)}%"></i>`; y += v; return s; };
-      const fills = seg('done', t.done) + seg('due', t.due) + seg('saved', t.saved) + seg('open', open);
-      const label = `${mkLong(mk)}: ${fmt(t.inAll)} in, ${fmt(t.done)} out${t.due ? `, ${fmt(t.due)} of bills to come` : ''}${t.saved ? `, ${fmt(t.saved)} saved` : ''}${open ? `, ${fmt(open)} left in the limits` : ''}`;
-      return `<button type="button" class="mc-col${mk === sel ? ' sel' : ''}${mk > cur ? ' ahead' : ''}" data-act="fin-month" data-for="ov" data-mk="${mk}" aria-label="${esc(label)}"${mk === sel ? ' aria-current="true"' : ''}>
-        <span class="mc-pct">${f == null ? '' : pctText(f)}</span>
-        <span class="mc-plot"><i class="mc-track" style="height:${h(t.inAll)}%"></i>${fills}</span>
-        <span class="mc-mo">${esc(mkShortName(mk))}</span></button>`;
-    }).join('');
-    return `<section class="m-chart"><div class="mo-cols"><span class="lab">By month · share of income</span></div><div class="mc-cols">${html}</div></section>`;
+  // a payday that's passed with no deposit seen: did it come?
+  function payNotes() {
+    const today = startOfDay(Date.now()), mk = curMk();
+    return S.income.flatMap(inc => [mkAdd(mk, -1), mk].flatMap(k => paydays(inc, k)).map(p => ({ inc, p, s: payState(inc, p) })))
+      .filter(x => (x.s.st === 'waiting' || x.s.st === 'missed') && x.p.at < today && x.p.at >= today - 20 * DAY)
+      .map(({ inc, p }) => `<div class="float note bill-note late"><p>${ICON.warn}<span>The <b>${esc(fmt(inc.amount))}</b> paycheck for ${esc(shortDay.format(p.at))} hasn’t shown up. If it came, check it off.</span></p>${canSave() ? `<button type="button" class="btn solid" data-act="fin-pay" data-id="${esc(inc.id)}" data-key="${esc(p.key)}">It came</button>` : ''}</div>`).join('');
   }
 
   /* ---------- views ---------- */
   function vHome() {
-    const todo = inbox(), due = billAlerts(), notes = savingsToSort().map(sortNote).join('');
+    const todo = inbox(), due = billAlerts(), pays = payNotes();
     let acts = '';
-    if (due.length) acts += `<section class="sec"><span class="lab">Bills</span><div class="ov-grid">${due.map(billNote).join('')}</div></section>`;
-    if (todo.length) acts += `<section class="sec"><span class="lab">Needs approval · ${todo.length}</span><div class="ov-grid">${todo.map(chargeCard).join('')}</div></section>`;
-    if (notes) acts += `<section class="sec"><div class="ov-grid">${notes}</div></section>`;
+    if (due.length || pays) acts += `<section class="sec"><div class="stack">${pays}${due.map(billNote).join('')}</div></section>`;
+    if (todo.length) acts += `<section class="sec"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>`;
     const mk = S.ovMk && S.ovMk >= START ? S.ovMk : curMk();
-    return `<div class="ov-top">${nextUp()}${acctStrip()}</div>${acts}${monthCard(mk)}${examplesBar()}`;
+    return `<div class="ov"><div class="ov-l">${acctList()}${nextUp()}</div><div class="ov-r">${acts}${monthCard(mk)}</div></div>${examplesBar()}`;
   }
 
   // whether the Regions alert emails are reaching POS
