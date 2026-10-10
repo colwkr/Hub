@@ -35,19 +35,19 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010162200">
-<script src="finance.js?v=20261010162200"></script>
-<link rel="stylesheet" href="car.css?v=20261010162200">
-<script src="car.js?v=20261010162200"></script>
-<link rel="stylesheet" href="sections.css?v=20261010162200">
-<script src="records.js?v=20261010162200"></script>
-<script src="people.js?v=20261010162200"></script>
-<script src="wheels.js?v=20261010162200"></script>
-<script src="keyboard.js?v=20261010162200"></script>
-<script src="notes.js?v=20261010162200"></script>
-<script src="lights.js?v=20261010162200"></script>
-<script src="health.js?v=20261010162200"></script>
-<script src="pets.js?v=20261010162200"></script>
+<link rel="stylesheet" href="finance.css?v=20261010162820">
+<script src="finance.js?v=20261010162820"></script>
+<link rel="stylesheet" href="car.css?v=20261010162820">
+<script src="car.js?v=20261010162820"></script>
+<link rel="stylesheet" href="sections.css?v=20261010162820">
+<script src="records.js?v=20261010162820"></script>
+<script src="people.js?v=20261010162820"></script>
+<script src="wheels.js?v=20261010162820"></script>
+<script src="keyboard.js?v=20261010162820"></script>
+<script src="notes.js?v=20261010162820"></script>
+<script src="lights.js?v=20261010162820"></script>
+<script src="health.js?v=20261010162820"></script>
+<script src="pets.js?v=20261010162820"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1350,13 +1350,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010162200"></script>
+<script src="appearance.js?v=20261010162820"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010162200';
+  const VERSION = '20261010162820';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1369,6 +1369,9 @@ dialog::backdrop{background:transparent}
   const todayKey = () => dkey(new Date());
   const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
   const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  // the same, down to the second, for the now-line so it slides instead of hopping a minute at a time
+  const nowFrac = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60 + d.getMilliseconds() / 60000; };
+  const nowTop = () => `calc(var(--h) * ${(nowFrac() / 60).toFixed(6)})`;
   // a day key plus minutes into that day, as a moment in time
   const atEpoch = (k, min) => { const d = fromKey(k); d.setMinutes(min); return d.getTime(); };
   // a countdown in whole minutes: [number, unit] — "12" "min" under an hour, "1:13" over
@@ -2273,7 +2276,7 @@ dialog::backdrop{background:transparent}
       if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>`;
       return `<div class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>`;
     }).join('');
-    const line = k === tk ? `<div class="nowline" data-nowline style="top:calc(var(--h) * ${(nm / 60).toFixed(4)})"></div>` : '';
+    const line = k === tk ? `<div class="nowline" data-nowline style="top:${nowTop()}"></div>` : '';
     // markers: a named moment (like waking up). A dashed line and a label, taking no time at all.
     // a marker with an end is a stretch of time: a bracket down the right side that blocks sit inside
     const marks = dayItems(k).filter(t => t.kind === 'marker' && t.time).map(t => {
@@ -2694,7 +2697,12 @@ dialog::backdrop{background:transparent}
     const p = timeParts(nowMin());
     const c = document.querySelector('[data-clock]'); if (c) c.textContent = p.bare;
     const a = document.querySelector('[data-ampm]'); if (a) a.textContent = p.per;
-    for (const nl of document.querySelectorAll('[data-nowline]')) nl.style.top = `calc(var(--h) * ${(nowMin() / 60).toFixed(4)})`;
+    slideNow();
+  }
+  // nudge the now-line down a sliver each second (at the closest zoom that's a fraction of a pixel), so it glides
+  function slideNow() {
+    const top = nowTop();
+    for (const nl of document.querySelectorAll('[data-nowline]')) nl.style.top = top;
   }
   // countdowns move every second by rewriting their digits only; the page itself still rebuilds once a minute
   function tickCountdowns() {
@@ -2705,8 +2713,8 @@ dialog::backdrop{background:transparent}
       if (us && us.textContent !== u) us.textContent = u;
     }
   }
-  setInterval(() => { if (document.hidden) return; tickCountdowns(); tick(); }, 1000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+  setInterval(() => { if (document.hidden) return; tickCountdowns(); slideNow(); tick(); }, 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { slideNow(); tick(); } });
   document.addEventListener('touchstart', () => { touching = true; }, { passive: true, capture: true });
   const untouch = () => { touching = false; if (pendingTick && !$('#sheet').open) setTimeout(() => { if (!touching) { pendingTick = false; render(); } }, 400); };
   document.addEventListener('touchend', untouch, { passive: true, capture: true });
