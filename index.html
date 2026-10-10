@@ -35,10 +35,10 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010023641">
-<script src="finance.js?v=20261010023641"></script>
-<link rel="stylesheet" href="car.css?v=20261010023641">
-<script src="car.js?v=20261010023641"></script>
+<link rel="stylesheet" href="finance.css?v=20261010025443">
+<script src="finance.js?v=20261010025443"></script>
+<link rel="stylesheet" href="car.css?v=20261010025443">
+<script src="car.js?v=20261010025443"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1303,13 +1303,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010023641"></script>
+<script src="appearance.js?v=20261010025443"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010023641';
+  const VERSION = '20261010025443';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2108,7 +2108,7 @@ dialog::backdrop{background:transparent}
     for (const g of S.events) if (g.date >= from && g.date <= to) put(g.date, { g, s: g.allDay || !g.start ? -2 : toMin(g.start) });
     for (let k = from; k <= to; k = addDays(k, 1)) {
       for (const b of billsOn(k)) put(k, { b, s: -3 });
-      for (const t of dayItems(k)) if (t.kind !== 'marker') put(k, { t, s: t.time ? toMin(t.time) : -1 });
+      for (const t of dayItems(k)) if (t.kind !== 'marker' && (t.kind !== 'task' || t.time)) put(k, { t, s: t.time ? toMin(t.time) : -1 });
     }
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
@@ -2208,7 +2208,7 @@ dialog::backdrop{background:transparent}
   // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
   function vDayCal(cls) {
     const k = S.homeDay, tk = todayKey();
-    const any = dayItems(k).filter(t => kindOf(t) === 'anytime').sort(cmp);
+    const any = dayItems(k).filter(t => kindOf(t) === 'anytime' && t.kind !== 'task').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
     const allDay = S.events.filter(g => g.date === k && g.allDay), bills = billsOn(k);
     const nEv = S.events.filter(g => g.date === k).length + dayItems(k).filter(x => x.kind !== 'task' && x.kind !== 'marker').length;
@@ -2238,7 +2238,7 @@ dialog::backdrop{background:transparent}
     // so the calendar itself runs the full height of the screen
     const [big, small] = calTitleParts();
     const sideWeek = v === 'day' || v === '3day' ? `<i class="r-line"></i><div class="cs-week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
+      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker' && (t.kind !== 'task' || t.time)).length;
       const cls = ['csd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} things` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>` : '';
@@ -2255,7 +2255,7 @@ dialog::backdrop{background:transparent}
     if (v === 'month') return wrap(head + err + vMonth());
     if (v === 'year') return wrap(head + err + vYear());
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
+      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker' && (t.kind !== 'task' || t.time)).length;
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
@@ -2267,7 +2267,7 @@ dialog::backdrop{background:transparent}
       ? `<div class="dh lane-h"><span>Calendar</span></div><div class="dh lane-h"><span>Tasks</span>${openTasks ? `<em>${openTasks}</em>` : ''}</div>`
       : days.map(k => `<button type="button" class="dh${k === tk ? ' today' : ''}" data-act="cal-open" data-day="${k}" aria-label="Open ${esc(shortFmt.format(fromKey(k)))}"><span>${esc(wdFmt.format(fromKey(k)))}</span><b>${fromKey(k).getDate()}</b></button>`).join('');
     const lanes = split ? [[k0, 'cal'], [k0, 'tasks']] : days.map(k => [k, v === 'day' ? undefined : 'cal']);
-    const anyByDay = lanes.map(([k, lane]) => dayItems(k).filter(t => kindOf(t) === 'anytime' && inLane(t, lane)).sort(cmp));
+    const anyByDay = lanes.map(([k, lane]) => dayItems(k).filter(t => kindOf(t) === 'anytime' && t.kind !== 'task' && inLane(t, lane)).sort(cmp));
     const allByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : S.events.filter(g => g.date === k && g.allDay));
     const billByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : billsOn(k));
     const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length) || billByDay.some(a => a.length)

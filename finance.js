@@ -643,8 +643,9 @@ window.POSFinance = function (ctx) {
     const limits = kind('limit');
     const now = new Date();
     const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
-    return `<div class="fin-page">${spendSplit(limits)}<section class="sec"><span class="lab">${esc(monthFmt.format(now))} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left</span>
-      <div class="float list">${limits.map(limitRow).join('')}${canSave() ? `<button type="button" class="add-row" data-act="fin-form" data-form="limit"><span>New category</span>${ICON.plus}</button>` : ''}</div></section></div>`;
+    // each category is its own card
+    return `<div class="fin-page wide">${spendSplit(limits)}<section class="sec"><span class="lab">${esc(monthFmt.format(now))} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left</span>
+      <div class="s-cards">${limits.map(l => `<div class="float s-card">${limitRow(l)}</div>`).join('')}${canSave() ? `<button type="button" class="float s-card s-add" data-act="fin-form" data-form="limit">${ICON.plus}<span>New category</span></button>` : ''}</div></section></div>`;
   }
 
   function vActivity() {
