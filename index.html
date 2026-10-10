@@ -35,16 +35,16 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010031716">
-<script src="finance.js?v=20261010031716"></script>
-<link rel="stylesheet" href="car.css?v=20261010031716">
-<script src="car.js?v=20261010031716"></script>
-<link rel="stylesheet" href="sections.css?v=20261010031716">
-<script src="records.js?v=20261010031716"></script>
-<script src="people.js?v=20261010031716"></script>
-<script src="notes.js?v=20261010031716"></script>
-<script src="lights.js?v=20261010031716"></script>
-<script src="pets.js?v=20261010031716"></script>
+<link rel="stylesheet" href="finance.css?v=20261010032310">
+<script src="finance.js?v=20261010032310"></script>
+<link rel="stylesheet" href="car.css?v=20261010032310">
+<script src="car.js?v=20261010032310"></script>
+<link rel="stylesheet" href="sections.css?v=20261010032310">
+<script src="records.js?v=20261010032310"></script>
+<script src="people.js?v=20261010032310"></script>
+<script src="notes.js?v=20261010032310"></script>
+<script src="lights.js?v=20261010032310"></script>
+<script src="pets.js?v=20261010032310"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -427,6 +427,8 @@ body[data-view="home"] .top{display:none}
 .achip2.done .bmain{text-decoration:line-through;color:var(--ink-3)}
 .daycal .tl{height:min(68vh,560px)}
 .tl-grid.one{grid-template-columns:52px minmax(0,1fr)}
+.daybreak{position:absolute;top:0;left:52px;right:0;height:0;box-shadow:0 -.5px 0 1px var(--ink-3);z-index:4;pointer-events:none}
+.daybreak span{position:absolute;top:6px;left:8px;padding:3px 9px;border-radius:999px;background:var(--lift-bg);box-shadow:var(--lift-sm);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
 
 /* sign-in */
 .login{min-height:calc(100vh - 120px);display:grid;place-items:center;padding-block:24px}
@@ -1307,13 +1309,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010031716"></script>
+<script src="appearance.js?v=20261010032310"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010031716';
+  const VERSION = '20261010032310';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2140,12 +2142,13 @@ dialog::backdrop{background:transparent}
     flush();
     return ev;
   }
-  function hoursCol(fine) {
+  // stack: 'first' (another day follows, so no closing midnight) or 'next' (its midnight sits on the line between the two days)
+  function hoursCol(fine, stack) {
     let h = '';
     const mid = esc(hourFmt.format(new Date(2000, 0, 1, 0)));
-    h += `<span class="h-top" style="top:0">${mid}</span>`;
+    h += `<span${stack === 'next' ? '' : ' class="h-top"'} style="top:0">${mid}</span>`;
     for (let i = 1; i < 24; i++) h += `<span style="top:calc(var(--h) * ${i})">${esc(hourFmt.format(new Date(2000, 0, 1, i)))}</span>`;
-    h += `<span class="h-bot" style="top:calc(var(--h) * 24)">${mid}</span>`;
+    if (stack !== 'first') h += `<span class="h-bot" style="top:calc(var(--h) * 24)">${mid}</span>`;
     if (fine) for (let q = 1; q < 96; q++) if (q % 4) h += `<span class="q" style="top:calc(var(--h) * ${(q / 4).toFixed(2)})">:${pad((q % 4) * 15)}</span>`;
     return `<div class="tl-hours">${h}</div>`;
   }
@@ -2212,9 +2215,10 @@ dialog::backdrop{background:transparent}
     const dims = sleepDims(k).map(([a, b]) => `<div class="dim" style="top:calc(var(--h) * ${(a / 60).toFixed(4)});height:calc(var(--h) * ${((b - a) / 60).toFixed(4)})" aria-hidden="true"></div>`).join('');
     return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}"${lane ? ` data-lane="${lane}"` : ''} aria-label="${esc(shortFmt.format(fromKey(k)))}${lane === 'tasks' ? ' tasks' : ''} timeline">${dims}${blocks}${marks}${line}</div>`;
   }
-  // Home's calendar: exactly one day, 24 hours tall, with arrows to step a day at a time
+  // Home's calendar: the day, with the next day running on below it, so late at night you can still see through tomorrow.
+  // Arrows step a day at a time.
   function vDayCal(cls) {
-    const k = S.homeDay, tk = todayKey();
+    const k = S.homeDay, tk = todayKey(), k1 = addDays(k, 1);
     const any = dayItems(k).filter(t => kindOf(t) === 'anytime' && t.kind !== 'task').sort(cmp);
     const open = S.tasks.filter(t => t.date === k && !t.done).length;
     const allDay = S.events.filter(g => g.date === k && g.allDay), bills = billsOn(k), bdays = bdaysOn(k);
@@ -2227,7 +2231,7 @@ dialog::backdrop{background:transparent}
         <div class="cal-nav"><button type="button" class="circle" data-act="hd-prev" aria-label="Previous day">${ICON.left}</button>${k !== tk ? '<button type="button" class="btn" data-act="hd-today">Today</button>' : ''}<button type="button" class="circle" data-act="hd-next" aria-label="Next day">${ICON.right}</button></div>
       </div>
       ${anyRow}
-      <div class="tl" id="hometl" data-keep><div class="tl-grid one">${hoursCol()}${dayColumn(k, true)}</div></div>
+      <div class="tl" id="hometl" data-keep><div class="tl-grid one">${hoursCol(false, 'first')}${dayColumn(k, true)}</div><div class="tl-grid one tl-next">${hoursCol(false, 'next')}${dayColumn(k1, true)}<div class="daybreak" aria-hidden="true"><span>${esc(dayLabel(k1) === 'Tomorrow' ? `Tomorrow · ${shortFmt.format(fromKey(k1))}` : shortFmt.format(fromKey(k1)))}</span></div></div></div>
     </section>`;
   }
 
@@ -2408,7 +2412,7 @@ dialog::backdrop{background:transparent}
     S.aim.tl = at * hourPx();
   }
   function aimHome() {
-    const at = S.homeDay === todayKey() ? Math.max(0, nowMin() / 60 - 1.5) : 7;
+    const at = S.homeDay === todayKey() ? Math.max(0, nowMin() / 60 - 1) : 7;
     S.aim.hometl = at * hourPx();
   }
   function shiftHome(dir) {
@@ -2558,12 +2562,19 @@ dialog::backdrop{background:transparent}
   }
 
   // keep the clock and the now-line moving without rebuilding the page every second
-  let lastMinute = nowMin(), lastDay = todayKey(), touching = false, pendingTick = false;
+  let lastMinute = nowMin(), lastDay = todayKey(), touching = false, pendingTick = false, homeTouchedAt = 0;
+  // the home calendar follows the time on its own, unless you've been scrolling it in the last few minutes
+  for (const ev of ['wheel', 'touchstart', 'pointerdown']) document.addEventListener(ev, e => { if (e.target.closest && e.target.closest('#hometl')) homeTouchedAt = Date.now(); }, { passive: true, capture: true });
   function tick() {
     const m = nowMin(), d = todayKey();
     if (m === lastMinute && d === lastDay) return;
     if (d !== lastDay && S.calDay === lastDay) S.calDay = d;
-    if (d !== lastDay && S.homeDay === lastDay) S.homeDay = d;
+    if (d !== lastDay && S.homeDay === lastDay) {
+      S.homeDay = d;
+      const el = document.getElementById('hometl');
+      if (el) S.aim.hometl = Math.max(0, el.scrollTop - 24 * hourPx()); // yesterday's tomorrow is today now: same hours on screen
+    }
+    if (S.tab === 'home' && S.homeDay === d && Date.now() - homeTouchedAt > 5 * 60e3) aimHome();
     if (d !== lastDay) split();
     lastMinute = m; lastDay = d;
     if (!S.user) return;
@@ -3504,7 +3515,8 @@ dialog::backdrop{background:transparent}
     if (m.mode === 'move') {
       // the day under the pointer (the nearest one when off the side), then the time, keeping where you grabbed it
       let col = m.cols[0];
-      for (const c of m.cols) { const r = c.getBoundingClientRect(); if (m.x >= r.left) col = c; }
+      const stacked = m.cols.length > 1 && Math.abs(m.cols[0].getBoundingClientRect().left - m.cols[1].getBoundingClientRect().left) < 1;
+      for (const c of m.cols) { const r = c.getBoundingClientRect(); if (stacked ? m.y >= r.top : m.x >= r.left) col = c; }
       m.nd = col.dataset.day;
       const st = stepOf(col);
       m.ns = clamp(Math.round((minAt(col, m.y) - m.grab) / st) * st, 0, 1440 - st);
@@ -3572,7 +3584,7 @@ dialog::backdrop{background:transparent}
     if (!id && !blk.dataset.ev) return;
     const col = blk.closest('.tl-col'), rz = mouse && id ? e.target.closest('.rz') : null;
     const s0 = id ? +blk.dataset.s : 0, e0 = id ? +blk.dataset.e : 0;
-    mv = { blk, col, cols: [...col.parentElement.querySelectorAll('.tl-col')].filter(c => c.dataset.lane === col.dataset.lane), tl: col.closest('.tl'), id, ev: !id, marker: blk.classList.contains('mark'), pid: e.pointerId,
+    mv = { blk, col, cols: [...col.closest('.tl').querySelectorAll('.tl-col')].filter(c => c.dataset.lane === col.dataset.lane), tl: col.closest('.tl'), id, ev: !id, marker: blk.classList.contains('mark'), pid: e.pointerId,
       x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, mouse, on: false, mode: rz ? (rz.classList.contains('rz-t') ? 'top' : 'bot') : 'move',
       s0, e0, grab: minAt(col, e.clientY) - s0, ns: s0, nd: col.dataset.day, nlen: e0 - s0 };
     // a finger holds still to pick it up; a mouse picks it up by moving, or by holding a moment
@@ -4101,7 +4113,7 @@ dialog::backdrop{background:transparent}
     // what's on screen (on Home, also today, for what's next), plus a margin so stepping around doesn't refetch
     const tk = todayKey();
     const far = Math.abs(fromKey(S.homeDay) - fromKey(tk)) > 300 * 864e5;
-    const [a, b] = S.tab === 'calendar' ? calSpan() : far ? [S.homeDay, S.homeDay] : [S.homeDay < tk ? S.homeDay : tk, S.homeDay > tk ? S.homeDay : tk];
+    const [a, b] = S.tab === 'calendar' ? calSpan() : far ? [S.homeDay, addDays(S.homeDay, 1)] : [S.homeDay < tk ? S.homeDay : tk, S.homeDay > tk ? S.homeDay : tk];
     const w = S.evWin;
     const inside = w && a >= w.from && b <= w.to;
     if (!force && inside && Date.now() - w.at < 10 * 60e3) return;
