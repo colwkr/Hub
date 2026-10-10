@@ -35,16 +35,17 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010033306">
-<script src="finance.js?v=20261010033306"></script>
-<link rel="stylesheet" href="car.css?v=20261010033306">
-<script src="car.js?v=20261010033306"></script>
-<link rel="stylesheet" href="sections.css?v=20261010033306">
-<script src="records.js?v=20261010033306"></script>
-<script src="people.js?v=20261010033306"></script>
-<script src="notes.js?v=20261010033306"></script>
-<script src="lights.js?v=20261010033306"></script>
-<script src="pets.js?v=20261010033306"></script>
+<link rel="stylesheet" href="finance.css?v=20261010034343">
+<script src="finance.js?v=20261010034343"></script>
+<link rel="stylesheet" href="car.css?v=20261010034343">
+<script src="car.js?v=20261010034343"></script>
+<link rel="stylesheet" href="sections.css?v=20261010034343">
+<script src="records.js?v=20261010034343"></script>
+<script src="people.js?v=20261010034343"></script>
+<script src="keyboard.js?v=20261010034343"></script>
+<script src="notes.js?v=20261010034343"></script>
+<script src="lights.js?v=20261010034343"></script>
+<script src="pets.js?v=20261010034343"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1316,13 +1317,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010033306"></script>
+<script src="appearance.js?v=20261010034343"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010033306';
+  const VERSION = '20261010034343';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2197,7 +2198,7 @@ dialog::backdrop{background:transparent}
       if (x.from != null) {
         // the part after midnight: tap it to open the whole thing
         const src = x.t || x.g, kindCls = x.g ? ' evt' : x.t.kind === 'meeting' ? ' mtg' : x.t.kind !== 'task' ? ' evt lev' : x.t.done ? ' done' : '';
-        const when = fmtRange(x.from, x.e + 1440), live = k === tk && nm < x.e && !(x.t && x.t.done);
+        const when = fmtRange(x.from, x.e + 1440), live = !(x.t && x.t.done) && ((k === tk && nm < x.e) || (kp === tk && nm >= x.from)); // happening now: after midnight, or before it on the day it started
         const st = `top:1px;height:max(4px, calc(var(--h) * ${(Math.max(len, 5) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
         return `<button type="button" class="blk cont${kindCls}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${st}" ${x.g ? `data-act="event" data-ev="${esc(x.g.id)}"` : `data-act="edit" data-id="${esc(x.t.id)}"`} title="${esc(src.title)} · ${esc(when)}" aria-label="${esc(src.title)}, ${esc(when)}, from the day before"><b>${esc(src.title)}</b><small>${esc(when)}</small></button>`;
       }
@@ -2480,6 +2481,7 @@ dialog::backdrop{background:transparent}
     loadEvents(false);
   }
   // the old days slide out one side while the new ones slide in from the other
+  const touchOnly = () => !!(window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches);
   const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   function slideNav(dir, fn) {
     const sel = S.tab === 'home' ? '#view .daycal' : '#view .cal';
@@ -2788,7 +2790,9 @@ dialog::backdrop{background:transparent}
     setKind(F.kind);
     setMtype(F.mtype, true);
     sheet.showModal();
-    if (!t) $('#f_title').focus();
+    // on a computer the name is ready to type into; on the iPad and phone nothing pops up until you tap a field
+    if (touchOnly()) { const a = document.activeElement; if (a && a.matches && a.matches('input, textarea')) a.blur(); }
+    else if (!t) $('#f_title').focus();
   }
   const KIND_TXT = {
     task: { name: 'Task', ph: 'What needs doing?', len: 'How long it takes', note: 'A to-do. It shows in Tasks and on Home, and you check it off.' },
@@ -4340,6 +4344,7 @@ dialog::backdrop{background:transparent}
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
+    if (window.POSKeys) window.POSKeys({ scope: '#sheet' });
     if (window.POSNotes) NOTES = window.POSNotes({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSLights) LIGHTS = window.POSLights({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks });
