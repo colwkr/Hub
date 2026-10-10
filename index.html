@@ -35,20 +35,20 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010182436">
-<script src="finance.js?v=20261010182436"></script>
-<link rel="stylesheet" href="car.css?v=20261010182436">
-<script src="car.js?v=20261010182436"></script>
-<link rel="stylesheet" href="sections.css?v=20261010182436">
-<script src="records.js?v=20261010182436"></script>
-<script src="people.js?v=20261010182436"></script>
-<script src="wheels.js?v=20261010182436"></script>
-<script src="keyboard.js?v=20261010182436"></script>
-<script src="notes.js?v=20261010182436"></script>
-<script src="lights.js?v=20261010182436"></script>
-<script src="health.js?v=20261010182436"></script>
-<script src="pets.js?v=20261010182436"></script>
-<script src="places.js?v=20261010182436"></script>
+<link rel="stylesheet" href="finance.css?v=20261010190413">
+<script src="finance.js?v=20261010190413"></script>
+<link rel="stylesheet" href="car.css?v=20261010190413">
+<script src="car.js?v=20261010190413"></script>
+<link rel="stylesheet" href="sections.css?v=20261010190413">
+<script src="records.js?v=20261010190413"></script>
+<script src="people.js?v=20261010190413"></script>
+<script src="wheels.js?v=20261010190413"></script>
+<script src="keyboard.js?v=20261010190413"></script>
+<script src="notes.js?v=20261010190413"></script>
+<script src="lights.js?v=20261010190413"></script>
+<script src="health.js?v=20261010190413"></script>
+<script src="pets.js?v=20261010190413"></script>
+<script src="places.js?v=20261010190413"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -308,6 +308,9 @@ body[data-view="home"] .top{display:none}
 }
 #cfSheet .cf-body{display:flex;flex-direction:column;gap:14px;padding:22px 20px 20px}
 #cfSheet .cf-task{padding:14px 16px;border-radius:18px;background:var(--well);display:flex;flex-direction:column;gap:3px}
+#cfSheet .cf-end{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#cfSheet .cf-end[hidden]{display:none}
+#cfSheet .cf-note{font-size:12.5px;color:var(--ink-2)}
 
 /* a task happening right now glows, like a light that's on */
 .list > .trow.live{display:block;margin:6px;border-radius:20px;background:var(--live-fill);box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
@@ -836,7 +839,9 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .blk small{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .blk.tight{flex-direction:row;align-items:center;gap:6px;padding-block:0}
-.blk.drive{background:repeating-linear-gradient(135deg,var(--well) 0 5px,transparent 5px 10px);box-shadow:inset 0 0 0 1px var(--hair);color:var(--ink-2);border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+.blk.drive{background:repeating-linear-gradient(135deg,var(--well) 0 5px,transparent 5px 10px);box-shadow:inset 0 0 0 1px var(--hair);color:var(--ink-2)}
+.blk.drive.before{border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+.blk.drive.after{border-top-left-radius:4px;border-top-right-radius:4px}
 .blk.drive b{display:flex;align-items:center;gap:5px;color:var(--ink-2)}
 .blk.drive .car-i{width:13px;height:13px;flex:none;stroke-width:1.7}
 .tl-col .blk{container-type:size}
@@ -1121,7 +1126,6 @@ dialog::backdrop{background:transparent}
 .where{font-size:12.5px;color:var(--ink-2);padding:12px 14px;border-radius:16px;background:var(--well)}
 .where b{font-weight:500;color:var(--ink)}
 /* where: a place, the drive to it and when to leave */
-#sheet[data-sheet-kind="marker"] .f-place{display:none}
 .pl-in{position:relative;display:block}
 .pl-in svg.i{position:absolute;left:14px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--ink-3);pointer-events:none}
 .pl-in input{padding-left:42px}
@@ -1366,19 +1370,24 @@ dialog::backdrop{background:transparent}
   <div class="cf-body">
     <h2 class="name" id="cfTitle" style="font-size:17px">Complete this task?</h2>
     <div class="cf-task"><span class="name" id="cfTask"></span><span class="meta" id="cfWhen"></span></div>
+    <div class="cf-end" id="cfEnd" hidden>
+      <span class="f-h" id="h_cfend">Finished at</span>
+      <div data-wheel="time" data-for="cf_end" role="group" aria-labelledby="h_cfend"></div><input type="hidden" id="cf_end">
+      <p class="cf-note" id="cfEndNote" hidden></p>
+    </div>
     <div class="sheet-foot"><button type="button" class="btn" id="cfNo">Not yet</button><button type="button" class="btn solid" id="cfYes">Complete</button></div>
   </div>
 </dialog>
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010182436"></script>
+<script src="appearance.js?v=20261010190413"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010182436';
+  const VERSION = '20261010190413';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1969,7 +1978,7 @@ dialog::backdrop{background:transparent}
         const cls = x.live ? ' live' : i === firstUp ? ' first' : '';
         const t = x.t, s0 = toMin(t.time), e0 = s0 + effMins(t);
         const when = x.live ? (t.mins ? `Now · ends ${fmtTime(e0 % 1440)}` : `Now · started ${fmtTime(s0)}`)
-          : t.place && t.place.drive ? `${fmtTime(s0)} at ${t.place.name || t.place.q} · leave ${fmtTime((s0 - t.place.drive + 1440) % 1440)}`
+          : t.place && t.place.drive ? `${fmtTime(s0)} at ${t.place.name || t.place.q} · leave ${fmtTime(((tripsOn(t.date).find(d => d.t.id === t.id && d.e === s0) || { s: s0 - t.place.drive }).s + 1440) % 1440)}`
           : t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
         return `${div}<div class="trow sw${cls}" data-swipe="${esc(t.id)}">
           <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
@@ -2215,6 +2224,32 @@ dialog::backdrop{background:transparent}
   }
   // Side-by-side lanes for tasks that overlap in time.
   const placeTxt = t => (t.place ? ` · ${t.place.name || t.place.q}` : '');
+  // A day's drives. Each place is driven to from home, or from the place before it when there isn't time to go home
+  // in between; something during a stretch you spend at a place (office hours) starts from there and returns there;
+  // after the last place of a run, the drive home.
+  function tripsOn(k) {
+    if (!PLACES) return [];
+    const stops = dayItems(k).filter(t => t.time && t.place && Number.isFinite(t.place.lat) && t.place.drive && (t.kind === 'marker' || kindOf(t) === 'timed'))
+      .map(t => { const s = toMin(t.time); return { t, p: t.place, s, e: s + (t.kind === 'marker' ? t.mins || 0 : effMins(t)) }; })
+      .sort((a, b) => a.s - b.s || b.e - a.e);
+    const leg = (a, b) => PLACES.legMins(a.p, b.p);
+    const chained = (a, b) => b.s - a.e < a.p.drive + b.p.drive + 30;
+    const out = [];
+    stops.forEach((X, i) => {
+      const earlier = stops.slice(0, i);
+      const within = earlier.filter(C => C.s <= X.s && C.e > X.s).pop() || null;
+      const ended = earlier.filter(P => P.e <= X.s).sort((a, b) => b.e - a.e)[0] || null;
+      const from = within || (ended && chained(ended, X) ? ended : null);
+      const d = from ? leg(from, X) : X.p.drive;
+      if (d > 0) out.push({ t: X.t, s: X.s - d, e: X.s, mins: d, kind: from ? (within ? 'back' : 'between') : 'to', other: from ? from.p.name : null });
+      const outer = earlier.filter(C => C.s <= X.s && C.e > X.e).pop();
+      if (outer) { const d2 = leg(X, outer); if (d2 > 0) out.push({ t: X.t, s: X.e, e: X.e + d2, mins: d2, kind: 'return', other: outer.p.name }); return; }
+      const next = stops.slice(i + 1).filter(N => N.s >= X.e).sort((a, b) => a.s - b.s)[0];
+      if (next && chained(X, next)) return;
+      out.push({ t: X.t, s: X.e, e: X.e + X.p.drive, mins: X.p.drive, kind: 'home' });
+    });
+    return out;
+  }
   function layout(items) {
     const ev = items.slice().sort((a, b) => a.s - b.s || b.e - a.e);
     let cluster = [], lanes = [], end = -1;
@@ -2270,16 +2305,19 @@ dialog::backdrop{background:transparent}
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: gEnd(g) }))),
       ...dayItems(kp).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane) && toMin(t.time) + effMins(t) > 1440).map(t => ({ t, s: 0, e: toMin(t.time) + effMins(t) - 1440, from: toMin(t.time) })),
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === kp && !g.allDay && g.start && gEnd(g) > 1440).map(g => ({ g, s: 0, e: gEnd(g) - 1440, from: toMin(g.start) }))),
-      // the drive there: a block that ends when it starts
-      ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane) && t.place && t.place.drive && !t.done).map(t => ({ dv: t, s: Math.max(0, toMin(t.time) - t.place.drive), e: toMin(t.time) })).filter(x => x.e > x.s),
+      // the drives: there, between places, and home
+      ...tripsOn(k).filter(d => inLane(d.t, lane)).map(d => ({ dv: d, s: Math.max(0, d.s), e: Math.min(1440, d.e) })).filter(x => x.e > x.s),
     ].map(x => ({ ...x, e: Math.min(x.e, 1440) , full: x.e })));
     // happening now: on today, or started the day before and still going past midnight
     const liveAt = x => (k === tk && x.s <= nm && nm < x.full) || (addDays(k, 1) === tk && nm + 1440 < x.full);
     const blocks = items.map(x => {
       const len = x.e - x.s;
       if (x.dv) {
-        const t = x.dv, p = t.place, st = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(len / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
-        return `<button type="button" class="blk drive${isTight(len) ? ' tight' : ''}" style="${st}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(`Drive to ${p.name || p.q}, ${p.drive} minutes. Leave at ${fmtTime(x.s)}`)}"><b>${ICON.car}Drive ${p.drive} min</b><small>Leave ${esc(fmtTime(x.s))}</small></button>`;
+        const d = x.dv, to = d.t.place.name || d.t.place.q, st = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(len / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+        const head = d.kind === 'home' ? `Drive home ${d.mins} min` : `Drive ${d.mins} min`;
+        const sub = d.kind === 'to' ? `Leave ${fmtTime(d.s)}` : d.kind === 'between' ? `From ${d.other}` : d.kind === 'back' ? `From ${d.other}` : d.kind === 'return' ? `Back to ${d.other}` : `Home ${fmtTime(d.e % 1440)}`;
+        const label = d.kind === 'home' ? `Drive home from ${to}, ${d.mins} minutes` : d.kind === 'return' ? `Drive back to ${d.other} from ${to}, ${d.mins} minutes` : `Drive to ${to}${d.other ? ` from ${d.other}` : ''}, ${d.mins} minutes, leave at ${fmtTime(d.s)}`;
+        return `<button type="button" class="blk drive ${d.kind === 'home' || d.kind === 'return' ? 'after' : 'before'}${isTight(len) ? ' tight' : ''}" style="${st}" data-act="edit" data-id="${esc(d.t.id)}" aria-label="${esc(label)}"><b>${ICON.car}${esc(head)}</b><small>${esc(sub)}</small></button>`;
       }
       if (x.from != null) {
         // the part after midnight: tap it to open the whole thing
@@ -2782,14 +2820,42 @@ dialog::backdrop{background:transparent}
   }
   const bodyOf = t => { const { id, ...rest } = t; return { ...rest }; };
 
-  async function toggleDone(id) {
+  async function toggleDone(id, mins) {
     const t = task(id);
     if (!t || !S.canSave || S.busy.has(id)) return;
     S.busy.add(id);
-    const done = !t.done;
-    const ok = await save(store.update(id, { done, doneAt: done ? Date.now() : null }));
+    const done = !t.done, was = t.mins;
+    const patch = { done, doneAt: done ? Date.now() : null, ...(done && mins && mins !== t.mins ? { mins } : {}) };
+    const ok = await save(store.update(id, patch));
     S.busy.delete(id);
-    if (ok && done) toast(`Done: ${t.title}`, () => save(store.update(id, { done: false, doneAt: null })));
+    if (ok && done) toast(`Done: ${t.title}${patch.mins ? `, ${fmtDur(patch.mins)}` : ''}`, () => save(store.update(id, { done: false, doneAt: null, ...(patch.mins ? { mins: was } : {}) })));
+  }
+  // finishing something that's on today's calendar: when it really ended, so the calendar (and the drive home) match
+  let cfAsk = 0;
+  function fillEnd(t) {
+    const box = $('#cfEnd'), note = $('#cfEndNote');
+    const tk = todayKey(), nm = nowMin(), s0 = t.time ? toMin(t.time) : null;
+    box.hidden = true; note.hidden = true;
+    if (t.date !== tk || s0 == null || nm < s0) return;
+    const planned = s0 + effMins(t), now5 = Math.floor(nm / 5) * 5;
+    const set = m => { $('#cf_end').value = hhmm(Math.min(1435, Math.max(s0 + 5, m))); POSWheels.sync(); };
+    set(nm < planned ? now5 : planned);
+    box.hidden = false;
+    // somewhere with a drive, and this device is home: it ended a drive before now
+    if (nm < planned + 180 && t.place && t.place.drive && PLACES && PLACES.home() && navigator.permissions) {
+      const ask = ++cfAsk;
+      navigator.permissions.query({ name: 'geolocation' }).then(st => {
+        if (st.state !== 'granted') return null;
+        return new Promise(res => navigator.geolocation.getCurrentPosition(p => res(p.coords), () => res(null), { maximumAge: 120000, timeout: 6000 }));
+      }).then(c => {
+        if (!c || ask !== cfAsk || !cfId) return;
+        const h = PLACES.home();
+        if (PLACES.miles(h, { lat: c.latitude, lon: c.longitude }) > 0.3) return;
+        set(Math.min(now5, planned + 180) - t.place.drive);
+        note.textContent = `You’re home, so that’s a ${t.place.drive}-minute drive before now.`;
+        note.hidden = false;
+      }).catch(() => {});
+    }
   }
   // completing always asks first; a swiped row waits, pushed aside, until the answer
   const cfSheet = $('#cfSheet');
@@ -2807,8 +2873,10 @@ dialog::backdrop{background:transparent}
     cfId = id; cfRow = row || null;
     $('#cfTask').textContent = t.title;
     $('#cfWhen').textContent = meta(t, true);
+    fillEnd(t);
     setDrawer(false);
     cfSheet.showModal();
+    if (!$('#cfEnd').hidden) POSWheels.sync(); // the wheel can only be placed once the sheet shows
   }
   function settleRow() {
     if (!cfRow) return;
@@ -2819,9 +2887,11 @@ dialog::backdrop{background:transparent}
   $('#cfNo').addEventListener('click', () => cfSheet.close());
   $('#cfYes').addEventListener('click', async () => {
     const id = cfId, row = cfRow; cfId = null; cfRow = null; // the swiped row stays pushed aside, then slides away
+    const t = id ? task(id) : null, endV = !$('#cfEnd').hidden && $('#cf_end').value;
+    const mins = t && t.time && endV ? toMin(endV) - toMin(t.time) : null;
     cfSheet.close();
     if (row) await sweepOut(row);
-    if (id) await toggleDone(id);
+    if (id) await toggleDone(id, mins && mins > 0 ? mins : null);
   });
   // a completed row carries on off to the right, then the gap closes
   async function sweepOut(row) {
@@ -3062,7 +3132,7 @@ dialog::backdrop{background:transparent}
     }
     body.mtype = kind === 'marker' ? F.mtype || null : null;
     const pq = $('#f_place').value.trim();
-    body.place = kind === 'marker' || !pq ? null : F.place && F.place.q === pq ? F.place : { q: pq };
+    body.place = !pq ? null : F.place && F.place.q === pq ? F.place : { q: pq };
     // a list keeps the name the way it was first written ("to buy" joins "To buy")
     const lt = kind === 'task' ? $('#f_list').value.trim().replace(/\s+/g, ' ').slice(0, 40) : '';
     body.list = lt ? (S.tasks.map(x => x.list).find(n => n && n.toLowerCase() === lt.toLowerCase()) || lt) : null;
@@ -4574,8 +4644,8 @@ dialog::backdrop{background:transparent}
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSKeys) window.POSKeys();
-    if (window.POSWheels) POSWheels.mount($('#sheet'));
-    if (window.POSPlaces) PLACES = window.POSPlaces({ sb });
+    if (window.POSWheels) { POSWheels.mount($('#sheet')); POSWheels.mount($('#cfSheet')); }
+    if (window.POSPlaces) { PLACES = window.POSPlaces({ sb }); PLACES.onLeg(() => render()); }
     if (window.POSHealth) HEALTH = window.POSHealth({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave,
       goals: re => (FIN && FIN.goals ? FIN.goals(re) : []),
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });

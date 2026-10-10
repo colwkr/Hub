@@ -110,5 +110,29 @@ window.POSPlaces = function (ctx) {
     if (!p.from) return true;
     return Math.abs(p.from[0] - home.lat) > 0.0005 || Math.abs(p.from[1] - home.lon) > 0.0005;
   }
-  return { home: () => home, loadHome, setHomeHere, resolve, stale, miles };
+  // the drive from one place to another (not home): answered from memory, else a straight-line guess while the router is asked
+  const LEGS = 'pos.legs', legs = new Map(), asking = new Set();
+  let onLeg = null;
+  const ptKey = p => `${(+p.lat).toFixed(4)},${(+p.lon).toFixed(4)}`;
+  function legMins(a, b) {
+    if (miles(a, b) < 0.15) return 0;
+    const key = ptKey(a) + '>' + ptKey(b);
+    if (legs.has(key)) return legs.get(key);
+    let kept = null;
+    try { kept = (JSON.parse(localStorage.getItem(LEGS) || '{}'))[key]; } catch (e) { kept = null; }
+    if (kept && Date.now() - kept.at < MONTH) { legs.set(key, kept.v); return kept.v; }
+    if (!asking.has(key)) {
+      asking.add(key);
+      getJSON(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`).then(j => {
+        const r = j && j.routes && j.routes[0];
+        if (!r || !Number.isFinite(r.duration)) return;
+        const v = ceil5(r.duration / 60 * 1.25);
+        legs.set(key, v);
+        try { const m = JSON.parse(localStorage.getItem(LEGS) || '{}'); m[key] = { v, at: Date.now() }; localStorage.setItem(LEGS, JSON.stringify(m)); } catch (e) { /* kept for this visit only */ }
+        if (onLeg) onLeg();
+      }).catch(() => {}).finally(() => asking.delete(key));
+    }
+    return ceil5(miles(a, b) * 1.3 / 30 * 60);
+  }
+  return { home: () => home, loadHome, setHomeHere, resolve, stale, miles, legMins, onLeg: fn => { onLeg = fn; }, here };
 };
