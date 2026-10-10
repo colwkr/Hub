@@ -84,6 +84,16 @@ window.POSFinance = function (ctx) {
     rerender();
     if (S.bills.length) await autoPay();
     autoSort();
+    dropStrayExamples();
+  }
+  // once your real accounts and categories are in, example charges left behind only skew the numbers: they go
+  let dropping = false;
+  async function dropStrayExamples() {
+    if (dropping || !canSave() || S.accounts.some(a => a.example) || S.buckets.some(b => b.example)) return;
+    const stray = S.txns.filter(t => t.example);
+    if (!stray.length) return;
+    dropping = true;
+    try { for (const t of stray) if (!(await save(refs.txns.doc(t.id).delete()))) break; } finally { dropping = false; }
   }
   function start() {
     load();
