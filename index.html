@@ -35,13 +35,14 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010030050">
-<script src="finance.js?v=20261010030050"></script>
-<link rel="stylesheet" href="car.css?v=20261010030050">
-<script src="car.js?v=20261010030050"></script>
-<link rel="stylesheet" href="sections.css?v=20261010030050">
-<script src="records.js?v=20261010030050"></script>
-<script src="people.js?v=20261010030050"></script>
+<link rel="stylesheet" href="finance.css?v=20261010030641">
+<script src="finance.js?v=20261010030641"></script>
+<link rel="stylesheet" href="car.css?v=20261010030641">
+<script src="car.js?v=20261010030641"></script>
+<link rel="stylesheet" href="sections.css?v=20261010030641">
+<script src="records.js?v=20261010030641"></script>
+<script src="people.js?v=20261010030641"></script>
+<script src="pets.js?v=20261010030641"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -187,9 +188,9 @@ body[data-auth="out"] #view{overflow-y:auto}
 .cal{flex:1;min-height:0;display:flex;flex-direction:column}
 .cal .tl{height:auto;flex:1 1 0;min-height:0}
 .cal-hint{display:none}
-.fin{flex:1;min-height:0}
-.fin-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
-.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.home > .g-next .list::-webkit-scrollbar{display:none}
+.fin,.car,.pets{flex:1;min-height:0}
+.fin-scroll,.car-scroll,.pets-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.home > .g-next .list::-webkit-scrollbar{display:none}
 @media (min-width:760px){ .app{padding-inline:32px;padding-block:28px 116px} }
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink-2);min-height:36px;text-shadow:var(--halo)}
 .top .right{display:flex;align-items:center;gap:14px}
@@ -986,7 +987,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .cal .tl,.daycal .tl{height:auto;flex:1 1 0;min-height:0}
   .cal-hint{display:none}
   .cols{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr);overflow:visible;margin:0;padding:0}
-  .fin-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
+  .fin-scroll,.car-scroll,.pets-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col::-webkit-scrollbar{display:none}
   /* the add button lives at the foot of the rail, so nothing sits in the bottom-right corner */
@@ -1119,6 +1120,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="meetings" aria-label="Meetings" title="Meetings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="car" aria-label="Car" title="Car"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg></span><span class="pip" id="railCarBadge" hidden></span></button>
+  <button type="button" class="r-btn" data-tab="pets" aria-label="Pets" title="Pets"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg></span><span class="pip" id="railPetBadge" hidden></span></button>
   <i class="r-line"></i>
   <button type="button" class="r-btn dim" data-act="soon" data-what="Lights" aria-label="Lights, coming soon" title="Lights (coming soon)"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span></button>
   <button type="button" class="r-btn dim" data-act="soon" data-what="Notes" aria-label="Notes, coming soon" title="Notes (coming soon)"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span></button>
@@ -1142,6 +1144,7 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="car"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg><span>Car</span><span class="badge" id="carBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" data-tab="pets"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg><span>Pets</span><span class="badge" id="petBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
   </nav>
   <i class="d-line"></i>
   <span class="lab d-lab">Coming next</span>
@@ -1306,13 +1309,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010030050"></script>
+<script src="appearance.js?v=20261010030641"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010030050';
+  const VERSION = '20261010030641';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1404,7 +1407,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- state ---------- */
-  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', meetings: 'Meetings', finance: 'Finance', car: 'Car' };
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', meetings: 'Meetings', finance: 'Finance', car: 'Car', pets: 'Pets' };
   const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
   function savedCalView() {
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
@@ -1425,7 +1428,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, FIN = null, CAR = null, PEOPLE = null;
+  let sb = null, FIN = null, CAR = null, PEOPLE = null, PETS = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2464,7 +2467,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()) };
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -2539,6 +2542,8 @@ dialog::backdrop{background:transparent}
     for (const badge of [$('#finBadge'), $('#railFinBadge')]) { badge.hidden = !nFin; badge.textContent = nFin; }
     const nCar = CAR ? CAR.badge() : 0;
     for (const badge of [$('#carBadge'), $('#railCarBadge')]) { badge.hidden = !nCar; badge.textContent = nCar; }
+    const nPet = PETS ? PETS.badge() : 0;
+    for (const badge of [$('#petBadge'), $('#railPetBadge')]) { badge.hidden = !nPet; badge.textContent = nPet; }
     const pip = $('#grabCount');
     pip.hidden = !od; pip.textContent = od;
     const foot = $('#drawerFoot');
@@ -3985,6 +3990,7 @@ dialog::backdrop{background:transparent}
   function addNew() {
     if (S.tab === 'finance') { if (FIN && S.canSave) FIN.add(); return; }
     if (S.tab === 'car') { if (CAR && S.canSave) CAR.add(); return; }
+    if (S.tab === 'pets') { if (PETS && S.canSave) PETS.add(); return; }
     if (S.tab === 'meetings') { newMeeting(); return; }
     openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}, S.tab === 'tasks' ? 'task' : null);
   }
@@ -4000,6 +4006,7 @@ dialog::backdrop{background:transparent}
     if (act.startsWith('fin-')) { if (FIN) FIN.act(act, b, e); return; }
     if (act.startsWith('car-')) { if (CAR) CAR.act(act, b, e); return; }
     if (act.startsWith('bday-')) { if (PEOPLE) PEOPLE.act(act, b, e); return; }
+    if (act.startsWith('pet-')) { if (PETS) PETS.act(act, b, e); return; }
     if (act === 'edit') openTask(b.dataset.id);
     else if (act === 'done') askDone(b.dataset.id);
     else if (act === 'swipe-hint') toast('Swipe the arrow to the right to complete');
@@ -4070,11 +4077,12 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); }
+    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
       if (PEOPLE) PEOPLE.stop();
+      if (PETS) PETS.stop();
       if (channel) { sb.removeChannel(channel); channel = null; }
       S.all = []; split(); S.loaded = false; S.events = []; S.evWin = null; S.gcal = null; S.loginRedraw = true;
     }
@@ -4230,7 +4238,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); }
+    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);
@@ -4252,6 +4260,7 @@ dialog::backdrop{background:transparent}
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
+    if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks });
     const { data } = await sb.auth.getSession();
     S.booted = true;
     setUser(data && data.session ? data.session.user : null);

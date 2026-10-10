@@ -1317,5 +1317,10 @@ window.POSFinance = function (ctx) {
       gas: gas ? { spent: limitSpent(gas), monthly: gas.monthly || null, count: limitCharges(gas).length } : null,
     };
   }
-  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney };
+  // savings categories whose name matches, for other pages (the Pets page shows what's saved for the cat)
+  function goals(re) {
+    if (!S.loaded) return [];
+    return kind('goal').filter(g => !g.example && re.test(g.name)).map(g => ({ id: g.id, name: g.name, saved: catLeft(g), target: goalTarget(g) }));
+  }
+  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals };
 };
