@@ -741,13 +741,15 @@ window.POSFinance = function (ctx) {
     }).filter(c => c.due);
   }
   // the debit card on a checking account: the last of its numbers when it has more than one ("6444, 7206": card 7206)
-  const cardOf = a => (a.card !== undefined ? a.card : (a.last4 || []).length > 1 ? a.last4[a.last4.length - 1] : null);
+  // a credit card account is the card itself, so its number is the card's
+  const cardOf = a => (a.card !== undefined ? a.card : (a.last4 || []).length > (a.type === 'credit' ? 0 : 1) ? a.last4[a.last4.length - 1] : null);
   function cardArt(a) {
     if (a.type === 'checking') {
       const c = cardOf(a);
       return c ? `<span class="dcard" role="img" aria-label="Debit card ending ${esc(c)}"><i class="dc-chip"></i><span class="dc-no">${esc(c)}</span></span>`
         : '<span class="dcard none" role="img" aria-label="No card on this account"><span>No card</span></span>';
     }
+    if (a.type === 'credit' && cardOf(a)) return `<span class="dcard credit" role="img" aria-label="Credit card ending ${esc(cardOf(a))}"><i class="dc-chip"></i><span class="dc-no">${esc(cardOf(a))}</span></span>`;
     return a.type === 'savings'
       ? `<span class="ac-ic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 8.8v-.8M12 16v-.8M7 19v1.5M17 19v1.5"/></svg></span>`
       : `<span class="ac-ic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M3.5 10h17M7 14.5h3"/></svg></span>`;
