@@ -576,6 +576,34 @@ window.POSFinance = function (ctx) {
     return `<div class="fin-page">${h}</div>`;
   }
 
+  // this month in a category: what's been spent, building day by day; with a limit, the even pace to it (dashed)
+  function spendChart(l, charges) {
+    const now = new Date(), y = now.getFullYear(), mo = now.getMonth(), dim = new Date(y, mo + 1, 0).getDate();
+    const today = now.getDate(), byDay = new Array(dim + 1).fill(0);
+    for (const t of charges) byDay[new Date(t.at).getDate()] += t.amount;
+    const pts = [[0, 0]];
+    let cum = 0;
+    for (let d = 1; d <= today; d++) { if (byDay[d]) { pts.push([d - 1 + 0.5, cum]); cum += byDay[d]; pts.push([d - 1 + 0.5, cum]); } }
+    pts.push([today, cum]);
+    const top = Math.max(l.monthly || 0, cum, 1) * 1.08, W = 300, H = 56;
+    const X = d => (d / dim * W).toFixed(1), Y = v => (H - 2 - v / top * (H - 6)).toFixed(1);
+    const line = pts.map(([d, v], i) => `${i ? 'L' : 'M'}${X(d)},${Y(v)}`).join('');
+    const area = `${line}L${X(today)},${H}L0,${H}Z`;
+    const pace = l.monthly ? `<path class="pace" d="M0,${Y(0)}L${W},${Y(l.monthly)}" vector-effect="non-scaling-stroke"/><path class="cap" d="M0,${Y(l.monthly)}H${W}" vector-effect="non-scaling-stroke"/>` : '';
+    return `<div class="s-chart" aria-hidden="true"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${pace}<path class="fill" d="${area}"/><path class="line" d="${line}" vector-effect="non-scaling-stroke"/></svg>
+      <i class="s-dot" style="left:${(today / dim * 100).toFixed(2)}%;top:${(Number(Y(cum)) / H * 100).toFixed(2)}%"></i>
+      <div class="axis"><span>${esc(shortDay.format(new Date(y, mo, 1)))}</span><span>${esc(shortDay.format(new Date(y, mo, dim)))}</span></div></div>`;
+  }
+  // where this month's spending went, category by category
+  function spendSplit(limits) {
+    const parts = limits.map(l => ({ l, v: limitSpent(l) })).filter(p => p.v > 0).sort((a, b) => b.v - a.v);
+    const total = parts.reduce((t, p) => t + p.v, 0);
+    if (!total) return `<div class="hero"><span class="fig xl">${fmt(0)}</span><span class="meta">Nothing spent in your categories yet this month.</span></div>`;
+    const op = i => [1, .72, .5, .34, .24, .17, .12, .09][Math.min(i, 7)];
+    return `<div class="hero"><div class="s-top"><span class="lab">Spent this month</span><span class="fig xl">${fmt(total)}</span></div>
+      <div class="split" role="img" aria-label="${esc(parts.map(p => `${p.l.name} ${fmt(p.v)}`).join(', '))}">${parts.map((p, i) => `<span class="seg" style="width:${(p.v / total * 100).toFixed(2)}%;opacity:${op(i)}"></span>`).join('')}</div>
+      <div class="s-legend">${parts.map((p, i) => `<span><i class="dot" style="opacity:${op(i)}"></i>${esc(p.l.name)} <b>${fmt(p.v)}</b> <small>${Math.round(p.v / total * 100)}%</small></span>`).join('')}</div></div>`;
+  }
   function limitRow(l) {
     const charges = limitCharges(l);
     const spent = charges.reduce((s, t) => s + t.amount, 0);
@@ -583,6 +611,7 @@ window.POSFinance = function (ctx) {
       const open = S.open.has(l.id);
       return `<div class="row limit tracking">
         <div class="l-head"><div><span class="name">${esc(l.name)}${exTag(l)}</span><span class="meta">This month · no limit set</span></div><span class="fig lg">${fmt(spent)}</span></div>
+        ${spendChart(l, charges)}
         <div class="l-foot">
           ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : '<span>No charges this month</span>'}
           <button type="button" class="link" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}">Edit</button>
@@ -601,6 +630,7 @@ window.POSFinance = function (ctx) {
         <span class="fig lg"${left < 0 ? ' style="color:var(--bad)"' : ''}>${left < 0 ? '−' + fmt(-left) : fmt(left)}</span>
       </div>
       <div class="meter" role="img" aria-label="${esc(fmt(spent) + ' spent of ' + fmt(l.monthly))}"><span style="width:${Math.min(100, ratio * 100).toFixed(2)}%"></span></div>
+      ${spendChart(l, charges)}
       <div class="l-foot">
         ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : '<span>No charges this month</span>'}
         <button type="button" class="link" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}">Edit</button>
@@ -613,7 +643,7 @@ window.POSFinance = function (ctx) {
     const limits = kind('limit');
     const now = new Date();
     const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
-    return `<div class="fin-page"><section class="sec"><span class="lab">${esc(monthFmt.format(now))} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left</span>
+    return `<div class="fin-page">${spendSplit(limits)}<section class="sec"><span class="lab">${esc(monthFmt.format(now))} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left</span>
       <div class="float list">${limits.map(limitRow).join('')}${canSave() ? `<button type="button" class="add-row" data-act="fin-form" data-form="limit"><span>New category</span>${ICON.plus}</button>` : ''}</div></section></div>`;
   }
 
