@@ -187,11 +187,22 @@ window.POSFinance = function (ctx) {
   const byDay = (a, b) => (a.day || 99) - (b.day || 99) || byCreated(a, b);
   const usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   const fmtShort = cents => (cents % 100 ? fmt(cents) : usd0.format(cents / 100));
-  // the 31st falls on the last day of a shorter month
+  // a yearly one (every: 'year') renews once a year, in its month (1-12); the rest renew every month
+  const yearly = b => b.every === 'year' && b.month >= 1 && b.month <= 12;
+  const perMonth = b => (yearly(b) ? Math.round((b.amount || 0) / 12) : b.amount || 0);
+  // the 31st falls on the last day of a shorter month; a yearly one is only due in its month
   function dueOn(b, y, m) {
     if (!b.day) return null;
-    return new Date(y, m, Math.min(b.day, new Date(y, m + 1, 0).getDate())).getTime();
+    const first = new Date(y, m, 1), yy = first.getFullYear(), mm = first.getMonth();
+    if (yearly(b) && mm !== b.month - 1) return null;
+    return new Date(yy, mm, Math.min(b.day, new Date(yy, mm + 1, 0).getDate())).getTime();
   }
+  // the next time it's due after this month (next month for most; up to a year out for a yearly one)
+  function dueAfter(b, y, m) {
+    for (let i = 1; i <= 12; i++) { const d = dueOn(b, y, m + i); if (d != null) return d; }
+    return null;
+  }
+  const renewText = b => (yearly(b) && b.day ? `${shortDay.format(new Date(2000, b.month - 1, b.day))} each year` : b.day ? `The ${ordinal(b.day)}` : 'No day yet');
   const paidIn = (b, mk) => (b.paid && b.paid[mk]) || null;
   // a month counts once the bill was in here by its day (one added on the 9th starts with next month's 7th)
   const appliesIn = (b, y, m) => { const d = dueOn(b, y, m); return d != null && d >= startOfDay(b.createdAt || 0); };
@@ -204,7 +215,7 @@ window.POSFinance = function (ctx) {
     const p = paidIn(b, monthKeyOf(y, m));
     if (p) return { st: 'paid', at: p.at || null, confirmed: confirmedBy(p) };
     if (!b.day) return { st: 'noday' };
-    if (!appliesIn(b, y, m)) return { st: 'next', due: dueOn(b, y, m + 1) };
+    if (!appliesIn(b, y, m)) return { st: 'next', due: dueAfter(b, y, m) };
     const due = dueOn(b, y, m), days = Math.round((due - today) / DAY);
     if (days <= 0 && days >= -GRACE) return { st: 'waiting', due, days: -days };
     if (days < 0) return { st: 'late', due, days: -days };
@@ -219,7 +230,8 @@ window.POSFinance = function (ctx) {
     if (s.st === 'noday') return '<span class="pill">Set a day</span>';
     if (s.st === 'soon' && s.days === 1) return '<span class="pill">Tomorrow</span>';
     if (s.st === 'soon' && s.days < 7) return `<span class="pill">In ${s.days} days</span>`;
-    return `<span class="pill">${esc(shortDay.format(s.due))}</span>`;
+    const far = s.due && new Date(s.due).getFullYear() !== new Date().getFullYear();
+    return `<span class="pill">${esc(shortDay.format(s.due))}${far ? ', ' + new Date(s.due).getFullYear() : ''}</span>`;
   }
   // which month's charge a payment belongs to: the due date nearest to it
   function nearestMonth(b, at) {
@@ -456,6 +468,7 @@ window.POSFinance = function (ctx) {
       if (!b.amount) { missing.push({ id: b.id, group, name }); continue; }
       if (!b.day) { lines.push({ ...line, amount: b.amount, st: mk < cur ? 'unseen' : 'noday' }); continue; }
       const due = dueOn(b, y, m);
+      if (due == null) continue; // a yearly one, outside its month
       let st;
       if (mk < cur) st = 'unseen';
       else if (due < startOfDay(b.createdAt || 0)) st = 'before';
@@ -866,7 +879,7 @@ window.POSFinance = function (ctx) {
   }
   function billRow(b) {
     const s = billState(b), a = b.accountId ? acct(b.accountId) : null;
-    const where = [b.day ? `The ${ordinal(b.day)}` : 'No day yet', b.accountId ? acctLabel(a) : 'No account yet'].join(' · ');
+    const where = [renewText(b), b.accountId ? acctLabel(a) : 'No account yet'].join(' · ');
     const month = monthFmt.format(new Date());
     return `<div class="bill-row st-${s.st}">
       <button type="button" class="b-chk" data-act="fin-bill-paid" data-id="${esc(b.id)}" aria-pressed="${s.st === 'paid'}" aria-label="${s.st === 'paid' ? `${esc(b.name)} is checked off for ${month}. Undo` : `Check off ${esc(b.name)} for ${month}`}">${ICON.check}</button>
@@ -880,7 +893,7 @@ window.POSFinance = function (ctx) {
   function vBills() {
     const now = new Date(), month = monthFmt.format(now);
     const list = g => S.bills.filter(b => groupOf(b) === g).sort(byDay);
-    const per = l => l.reduce((t, b) => t + (b.amount || 0), 0);
+    const per = l => l.reduce((t, b) => t + perMonth(b), 0); // a yearly one counts a twelfth each month
     const bills = list('bill'), subs = list('sub');
     // still to go out this month: not checked off, and due this month
     const toGo = S.bills.filter(b => b.amount && ['waiting', 'late', 'soon'].includes(billState(b).st)).reduce((t, b) => t + b.amount, 0);
@@ -1196,8 +1209,9 @@ window.POSFinance = function (ctx) {
   async function linkBill(billId, t, auto) {
     const b = billById(billId);
     if (!b) return false;
-    const mk = nearestMonth(b, t.at), day = new Date(t.at).getDate(), learned = [];
+    const tm = new Date(t.at), mk = yearly(b) && dueOn(b, tm.getFullYear(), tm.getMonth()) == null ? monthKeyOf(tm.getFullYear(), tm.getMonth()) : nearestMonth(b, t.at), day = tm.getDate(), learned = [];
     const patch = { paid: { ...(b.paid || {}), [mk]: { at: t.at, txnId: t.id, auto: !!auto } } };
+    if (yearly(b) && b.month !== +mk.slice(5)) { patch.month = +mk.slice(5); learned.push(`${monthFmt.format(tm)} each year`); }
     if (b.day !== day) { patch.day = day; learned.push(`the ${ordinal(day)}`); }
     if (t.amount && b.amount !== t.amount) { patch.amount = t.amount; learned.push(fmt(t.amount)); }
     if (t.accountId && acct(t.accountId) && b.accountId !== t.accountId) { patch.accountId = t.accountId; learned.push(acctLabel(acct(t.accountId))); }
@@ -1215,6 +1229,7 @@ window.POSFinance = function (ctx) {
     const b = billById(id);
     if (!b) return;
     const now = new Date(), mk = monthKeyOf(now.getFullYear(), now.getMonth()), month = monthFmt.format(now);
+    if (yearly(b) && dueOn(b, now.getFullYear(), now.getMonth()) == null) { const d = dueAfter(b, now.getFullYear(), now.getMonth()); toast(`${b.name} renews ${d ? shortDay.format(d) + ', ' + new Date(d).getFullYear() : 'once a year'}`); return; }
     const before = { ...(b.paid || {}) }, paid = { ...before };
     const was = !!paid[mk];
     if (was) delete paid[mk]; else paid[mk] = { at: Date.now() };
@@ -1413,10 +1428,12 @@ window.POSFinance = function (ctx) {
           </div>`
           + field('Name', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="${group === 'sub' ? 'Spotify' : 'Rent'}" value="${b ? esc(b.name) : ''}">`)
           + field('Price', `<input id="ff_amount" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${b && b.amount ? plain(b.amount) : ''}">`)
-          + field('Charged on', `<select id="ff_day">${days}</select>`, 'Just the day of the month. The 31st lands on the last day of shorter months.')
+          + field('How often', `<select id="ff_every">${opt('', 'Every month', !(b && yearly(b)))}${opt('year', 'Every year', !!(b && yearly(b)))}</select>`)
+          + `<div class="ff-yr"${b && yearly(b) ? '' : ' hidden'}>${field('Renews in', `<select id="ff_month">${Array.from({ length: 12 }, (_, i) => opt(String(i + 1), monthFmt.format(new Date(2000, i, 1)), (b && yearly(b) ? b.month : new Date().getMonth() + 1) === i + 1)).join('')}</select>`)}</div>`
+          + field('Charged on', `<select id="ff_day">${days}</select>`, 'The day of the month. The 31st lands on the last day of shorter months.')
           + field('Comes out of', `<select id="ff_acct">${accts}</select>`)
           + field('Shows on the bank as', `<input id="ff_match" autocomplete="off" maxlength="120" placeholder="Optional" value="${b && b.match ? esc(b.match) : ''}">`, 'Words from the charge, separated by commas. The name is already looked for; these help check it off on its own.')
-          + (b ? `<label class="f-check"><input type="checkbox" id="ff_paid"${paidNow ? ' checked' : ''}><span>Paid for ${esc(month)}</span></label>` : ''),
+          + (b && !(yearly(b) && dueOn(b, now.getFullYear(), now.getMonth()) == null) ? `<label class="f-check"><input type="checkbox" id="ff_paid"${paidNow ? ' checked' : ''}><span>Paid for ${esc(month)}</span></label>` : ''),
       };
     },
     loan(id) {
@@ -1633,7 +1650,8 @@ window.POSFinance = function (ctx) {
       const accountId = val('ff_acct') || null;
       const group = $('#ff_group_sub').checked ? 'sub' : 'bill';
       const match = val('ff_match').trim().slice(0, 120);
-      const data = { name, amount, day, accountId, group, match };
+      const every = val('ff_every') === 'year' ? 'year' : null, month = every ? parseInt(val('ff_month'), 10) || null : null;
+      const data = { name, amount, day, accountId, group, match, every, month };
       if (!F.id) return save(refs.bills.doc().set({ ...data, paid: {}, createdAt: Date.now() }));
       const b = billById(F.id);
       if (!b) return fail('That one no longer exists.');
@@ -1827,6 +1845,7 @@ window.POSFinance = function (ctx) {
     card.querySelector('[data-lc]').innerHTML = loanChart(l, extra);
   });
   document.addEventListener('change', e => {
+    if (e.target && e.target.id === 'ff_every') { const y = document.querySelector('.ff-yr'); if (y) y.hidden = e.target.value !== 'year'; return; }
     const r = e.target.closest && e.target.closest('[data-loan-extra]');
     if (!r || !canSave()) return;
     const l = loanById(r.dataset.loanExtra), extra = Math.round(Number(r.value) * 100);
