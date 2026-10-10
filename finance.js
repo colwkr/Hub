@@ -581,7 +581,7 @@ window.POSFinance = function (ctx) {
     const spent = charges.reduce((s, t) => s + t.amount, 0);
     if (!l.monthly) {
       const open = S.open.has(l.id);
-      return `<div class="row limit track">
+      return `<div class="row limit tracking">
         <div class="l-head"><div><span class="name">${esc(l.name)}${exTag(l)}</span><span class="meta">This month · no limit set</span></div><span class="fig lg">${fmt(spent)}</span></div>
         <div class="l-foot">
           ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : '<span>No charges this month</span>'}
