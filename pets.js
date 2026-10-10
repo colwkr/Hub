@@ -83,10 +83,13 @@ window.POSPets = function (ctx) {
   function forHim(p) {
     const goals = ctx.goals ? ctx.goals(/litter|\bcats?\b|kitty|\biso\b|\bpets?\b/i) : [];
     const buys = ctx.tasks ? ctx.tasks().filter(t => !t.done && /litter|\bcats?\b|kitty|\biso\b|\bpets?\b/i.test(t.title)) : [];
-    if (!goals.length && !buys.length) return '';
+    // things on Finance's lists for him (a fountain on To buy); the cats keeping out of the hamper doesn't make it his
+    const items = ctx.items ? ctx.items(/litter|\bcats?\b|kitty|\biso\b|\bpets?\b|fountain/i).filter(i => !/hamper|stay out/i.test(i.name)) : [];
+    if (!goals.length && !buys.length && !items.length) return '';
     return `<section class="sec"><div class="sec-head"><span class="lab">For ${esc(p.name)}</span><button type="button" class="link" data-tab="finance">Finance</button></div>
       <div class="float list">
         ${goals.map(g => { const pct = g.target ? Math.min(100, Math.round(g.saved / g.target * 100)) : null; return `<div class="pf-row"><div class="pf-l"><span class="name">${esc(g.name)}</span><span class="meta">Saving · ${esc(fmt(g.saved))}${g.target ? ` of ${esc(fmt(g.target))}` : ''}</span>${pct != null ? `<span class="pf-track"><span style="width:${pct}%"></span></span>` : ''}</div>${pct != null ? `<span class="fig md">${pct}%</span>` : ''}</div>`; }).join('')}
+        ${items.map(i => `<button type="button" class="pf-row" data-tab="finance"><div class="pf-l"><span class="name">${esc(i.name)}</span><span class="meta">On ${esc(i.list)}${i.price ? ' · ' + esc(fmt(i.price)) : ''}</span></div></button>`).join('')}
         ${buys.map(t => `<button type="button" class="pf-row" data-act="edit" data-id="${esc(t.id)}"><div class="pf-l"><span class="name">${esc(t.title)}</span><span class="meta">To buy${t.list ? ' · ' + esc(t.list) : ''}${t.date ? ' · ' + esc(dFull.format(fromKey(t.date))) : ''}</span></div></button>`).join('')}
       </div></section>`;
   }

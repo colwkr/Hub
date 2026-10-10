@@ -35,18 +35,18 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010045341">
-<script src="finance.js?v=20261010045341"></script>
-<link rel="stylesheet" href="car.css?v=20261010045341">
-<script src="car.js?v=20261010045341"></script>
-<link rel="stylesheet" href="sections.css?v=20261010045341">
-<script src="records.js?v=20261010045341"></script>
-<script src="people.js?v=20261010045341"></script>
-<script src="keyboard.js?v=20261010045341"></script>
-<script src="notes.js?v=20261010045341"></script>
-<script src="lights.js?v=20261010045341"></script>
-<script src="health.js?v=20261010045341"></script>
-<script src="pets.js?v=20261010045341"></script>
+<link rel="stylesheet" href="finance.css?v=20261010050335">
+<script src="finance.js?v=20261010050335"></script>
+<link rel="stylesheet" href="car.css?v=20261010050335">
+<script src="car.js?v=20261010050335"></script>
+<link rel="stylesheet" href="sections.css?v=20261010050335">
+<script src="records.js?v=20261010050335"></script>
+<script src="people.js?v=20261010050335"></script>
+<script src="keyboard.js?v=20261010050335"></script>
+<script src="notes.js?v=20261010050335"></script>
+<script src="lights.js?v=20261010050335"></script>
+<script src="health.js?v=20261010050335"></script>
+<script src="pets.js?v=20261010050335"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1336,13 +1336,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010045341"></script>
+<script src="appearance.js?v=20261010050335"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010045341';
+  const VERSION = '20261010050335';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -4184,6 +4184,21 @@ dialog::backdrop{background:transparent}
     S.failed = false; S.loaded = true;
     S.all = data.map(fromRow); split();
     render();
+    retireMovedTasks();
+  }
+  // tasks that now live in Finance as lists (To buy, For the apartment, Sell or give away, moved Oct 10, 2026): they leave Tasks
+  const MOVED_TO_FINANCE = ['60c070cb-05eb-46aa-bae2-f52e60e45c63', '4d9263e7-d611-4de3-953d-fa3dcb12ef6a', 'beefab3b-8525-41ce-8b3c-b4bd80209916', '84241382-b05a-4762-8f42-618ef0f88cc1',
+    '8ab3cc32-5b87-4094-a0f2-e14b2343dca1', 'e56c9043-c7bd-428e-8712-a706ce5798a1', 'aa47130d-d390-4022-be52-76f6aeed0dc5', '786d22f0-a928-4f8e-8b3a-f993d9e2c724',
+    '93487a42-5836-47ec-807b-56b04585ca2a', 'd4eb95c1-7353-4476-9144-130803d6e01b', 'c3fb1ad6-511e-44f7-87a0-af9cb6c75753', '8a064697-f442-4c58-b81b-523a63df6e12',
+    '838f2535-9a89-4674-ba75-9935e1d17646', '36076563-bcd1-4d88-a3fb-6fcdadf5032d', '633994f2-028c-4c53-8b95-b3ae6e16e122', 'ae562f56-6415-417a-8638-dfdec9aef839'];
+  let retiring = false;
+  async function retireMovedTasks() {
+    if (retiring || !S.canSave) return;
+    const ids = S.all.filter(t => MOVED_TO_FINANCE.includes(t.id)).map(t => t.id);
+    if (!ids.length) return;
+    retiring = true;
+    try { const { error } = await sb.from('tasks').delete().in('id', ids); if (!error) { S.all = S.all.filter(t => !ids.includes(t.id)); split(); render(); } }
+    finally { retiring = false; }
   }
   const scheduleReload = () => { clearTimeout(reloadT); reloadT = setTimeout(reloadTasks, 300); };
   async function startData() {
@@ -4389,7 +4404,7 @@ dialog::backdrop{background:transparent}
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
     if (window.POSNotes) NOTES = window.POSNotes({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSLights) LIGHTS = window.POSLights({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
-    if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks });
+    if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
     const { data } = await sb.auth.getSession();
     S.booted = true;
     setUser(data && data.session ? data.session.user : null);

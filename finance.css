@@ -280,3 +280,10 @@
 .fin .loan-chart{position:relative}
 .fin .loan-chart .fill{fill:var(--ink);opacity:.07}
 .fin .loan-chart .l-dot{position:absolute;left:0;top:4px;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--ring),var(--glow)}
+
+/* lists: to buy, to sell or give away */
+.fin .fl-grid{display:grid;gap:22px}
+@media (min-width:900px){ .fin .fl-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
+.fin .fl-card{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.fin .fl-top{display:flex;flex-direction:column;gap:4px}
+.fin .fl-card .li-list{margin:0 -8px}

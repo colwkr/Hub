@@ -33,7 +33,7 @@ window.POSFinance = function (ctx) {
     return m[1] ? -cents : cents;
   }
 
-  const SUBS = { home: 'Overview', bills: 'Bills', loans: 'Loans', savings: 'Savings', spending: 'Spending', activity: 'Activity' };
+  const SUBS = { home: 'Overview', bills: 'Bills', loans: 'Loans', savings: 'Savings', lists: 'Lists', spending: 'Spending', activity: 'Activity' };
   const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], sub: 'home', open: new Set(), confirmClear: false };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; } catch (e) {}
   let F = null; // the form currently in the sheet
@@ -654,11 +654,11 @@ window.POSFinance = function (ctx) {
   const listTotal = g => (g.items || []).reduce((t, i) => t + (i.price || 0), 0);
   const goalTarget = g => (isList(g) ? listTotal(g) : g.target || 0);
   function listItems(g) {
-    const items = g.items || [];
+    const items = g.items || [], sell = g.mode === 'sell';
     const rows = items.map(i => `<div class="li${i.got ? ' got' : ''}">
-        <button type="button" class="b-chk" data-act="fin-item-got" data-id="${esc(g.id)}" data-item="${esc(i.id)}" aria-pressed="${!!i.got}" aria-label="${i.got ? 'Not bought yet' : 'Bought'}: ${esc(i.name)}">${ICON.check}</button>
+        <button type="button" class="b-chk" data-act="fin-item-got" data-id="${esc(g.id)}" data-item="${esc(i.id)}" aria-pressed="${!!i.got}" aria-label="${i.got ? (sell ? 'Not gone yet' : 'Not bought yet') : (sell ? 'Sold or given away' : 'Bought')}: ${esc(i.name)}">${ICON.check}</button>
         <button type="button" class="li-main" data-act="fin-form" data-form="item" data-id="${esc(g.id)}" data-item="${esc(i.id)}"${canSave() ? '' : ' disabled'}>
-          <span class="li-n">${esc(i.name)}</span>${i.price ? `<span class="fig li-p">${fmt(i.price)}</span>` : '<span class="li-none">Add price</span>'}
+          <span class="li-n">${esc(i.name)}</span>${i.price ? `<span class="fig li-p">${fmt(i.price)}</span>` : `<span class="li-none">${sell ? 'Add asking price' : 'Add price'}</span>`}
         </button></div>`).join('');
     return `<div class="li-list">${rows}${canSave() ? `<button type="button" class="add-row li-add" data-act="fin-form" data-form="item" data-id="${esc(g.id)}"><span>Add an item</span>${ICON.plus}</button>` : ''}</div>`;
   }
@@ -677,6 +677,24 @@ window.POSFinance = function (ctx) {
       ${target ? `<div class="track"><span style="width:${pct.toFixed(2)}%"></span></div><span class="meta">${Math.round(pct)}% of ${fmt(target)}${list ? ' total' : ''}</span>` : ''}
       ${list ? `<div class="li-foot"><span class="meta">${esc(listMeta)}</span><button type="button" class="link" data-act="fin-toggle" data-id="${esc(g.id)}" aria-expanded="${open}">${open ? 'Hide items' : 'Show items'}</button></div>` : ''}
     </div>${open ? listItems(g) : ''}</div>`;
+  }
+
+  // lists that aren't savings: things to buy someday, things to sell or give away
+  function vLists() {
+    const lists = kind('list');
+    const card = g => {
+      const sell = g.mode === 'sell', items = g.items || [], open = items.filter(i => !i.got), done = items.filter(i => i.got);
+      const sum = open.reduce((t, i) => t + (i.price || 0), 0), unpriced = open.filter(i => !i.price).length, doneSum = done.reduce((t, i) => t + (i.price || 0), 0);
+      const meta = [`${open.length} ${sell ? 'still to go' : 'still to buy'}`, unpriced ? `${unpriced} without a price` : null,
+        done.length ? `${done.length} ${sell ? 'gone' : 'bought'}${doneSum ? ' for ' + fmt(doneSum) : ''}` : null].filter(Boolean).join(' · ');
+      return `<section class="sec"><div class="sec-head"><span class="lab">${esc(g.name)}</span>${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="list" data-id="${esc(g.id)}" aria-label="Edit ${esc(g.name)}">${ICON.edit}</button>` : ''}</div>
+        <div class="float fl-card">
+          <div class="fl-top"><span class="fig lg">${big(sum)}</span><span class="meta">${sell ? (sum ? 'if it all sells at its asking price' : 'Add asking prices to see what it could bring in') : (sum ? 'for what still needs buying' : 'Add prices to see what it adds up to')}</span><span class="meta">${esc(meta)}</span></div>
+          ${listItems(g)}
+        </div></section>`;
+    };
+    return `<div class="fin-page wide">${lists.length ? `<div class="fl-grid">${lists.map(card).join('')}</div>` : '<p class="empty">No lists yet. A list keeps things to buy, or to sell, with their prices, apart from your savings.</p>'}
+      ${canSave() ? '<div><button type="button" class="btn" data-act="fin-form" data-form="list">New list</button></div>' : ''}</div>`;
   }
 
   function vSavings() {
@@ -788,7 +806,7 @@ window.POSFinance = function (ctx) {
     return `<div class="fin-page">${h}</div>`;
   }
 
-  const views = { home: vHome, bills: vBills, loans: vLoans, savings: vSavings, spending: vSpending, activity: vActivity };
+  const views = { home: vHome, bills: vBills, loans: vLoans, savings: vSavings, lists: vLists, spending: vSpending, activity: vActivity };
   const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { home: inbox().length + nSav + nBills, savings: nSav, bills: nBills }; };
 
   function view() {
@@ -994,12 +1012,21 @@ window.POSFinance = function (ctx) {
       };
     },
     item(id, extra) {
-      const g = bucket(id), i = g && extra.item ? (g.items || []).find(x => x.id === extra.item) : null;
+      const g = bucket(id), i = g && extra.item ? (g.items || []).find(x => x.id === extra.item) : null, sell = g && g.mode === 'sell';
       return {
         title: i ? i.name : `Add to ${g ? g.name : 'the list'}`, del: !!i,
-        body: field('Item', `<input id="ff_name" autocomplete="off" maxlength="60" placeholder="Couch" value="${i ? esc(i.name) : ''}">`)
-          + field('Price', `<input id="ff_price" class="amount" inputmode="decimal" autocomplete="off" placeholder="Add it later" value="${i && i.price ? plain(i.price) : ''}">`, 'Leave it blank until you know it; the list total adds it in then.')
-          + (i ? `<label class="f-check"><input type="checkbox" id="ff_got"${i.got ? ' checked' : ''}><span>Bought</span></label>` : ''),
+        body: field('Item', `<input id="ff_name" autocomplete="off" maxlength="80" placeholder="${sell ? 'Old guitar' : 'Couch'}" value="${i ? esc(i.name) : ''}">`)
+          + field(sell ? 'Asking price' : 'Price', `<input id="ff_price" class="amount" inputmode="decimal" autocomplete="off" placeholder="Add it later" value="${i && i.price ? plain(i.price) : ''}">`, sell ? 'Leave it blank to give it away, or until you decide.' : 'Leave it blank until you know it; the list total adds it in then.')
+          + (i ? `<label class="f-check"><input type="checkbox" id="ff_got"${i.got ? ' checked' : ''}><span>${sell ? 'Sold or given away' : 'Bought'}</span></label>` : ''),
+      };
+    },
+    list(id) {
+      const g = id ? bucket(id) : null, mode = g ? g.mode || 'buy' : 'buy';
+      return {
+        title: g ? g.name : 'New list', del: !!g,
+        body: field('Name', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="To buy" value="${g ? esc(g.name) : ''}">`)
+          + field('Kind', `<select id="ff_mode">${opt('buy', 'Things to buy', mode === 'buy')}${opt('sell', 'Things to sell or give away', mode === 'sell')}</select>`)
+          + '<p class="where">Lists sit apart from your savings and spending; they only keep track of what things cost.</p>',
       };
     },
     allocate(id) {
@@ -1177,6 +1204,12 @@ window.POSFinance = function (ctx) {
       while (used.has(slot) && slot < 8) slot++;
       return save(refs.buckets.doc().set({ kind: 'goal', name, accountId: a.id, target: asList ? null : target, saved: start, slot, createdAt: Date.now(), example: false, ...(asList ? { items: [] } : {}) }));
     },
+    async list() {
+      const name = val('ff_name').trim(), mode = val('ff_mode') === 'sell' ? 'sell' : 'buy';
+      if (!name) return fail('Name the list.');
+      if (F.id) return save(refs.buckets.doc(F.id).update({ name, mode }));
+      return save(refs.buckets.doc().set({ kind: 'list', name, mode, items: [], createdAt: Date.now(), example: false }));
+    },
     async item() {
       const g = bucket(F.id);
       if (!g) return fail('That list no longer exists.');
@@ -1271,7 +1304,7 @@ window.POSFinance = function (ctx) {
     if (k === 'bill') return save(refs.bills.doc(id).delete());
     if (k === 'loan') return save(refs.loans.doc(id).delete());
     if (k === 'item') { const g = bucket(id); return !!g && save(refs.buckets.doc(id).update({ items: (g.items || []).filter(x => x.id !== F.extra.item) })); }
-    if (k === 'goal' || k === 'limit') return save(refs.buckets.doc(id).delete());
+    if (k === 'goal' || k === 'limit' || k === 'list') return save(refs.buckets.doc(id).delete());
     if (k === 'account') {
       for (const t of S.txns.filter(x => x.accountId === id)) if (!(await save(refs.txns.doc(t.id).delete()))) return false;
       for (const g of S.buckets.filter(x => x.accountId === id)) if (!(await save(refs.buckets.doc(g.id).delete()))) return false;
@@ -1442,5 +1475,9 @@ window.POSFinance = function (ctx) {
     if (!S.loaded) return [];
     return kind('goal').filter(g => !g.example && re.test(g.name)).map(g => ({ id: g.id, name: g.name, saved: catLeft(g), target: goalTarget(g) }));
   }
-  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals };
+  function listMatches(re) {
+    if (!S.loaded) return [];
+    return [...kind('list').filter(g => g.mode !== 'sell'), ...kind('goal').filter(isList)].flatMap(g => (g.items || []).filter(i => !i.got && re.test(i.name)).map(i => ({ name: i.name, price: i.price || null, list: g.name })));
+  }
+  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals, listMatches };
 };
