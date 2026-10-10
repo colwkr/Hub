@@ -35,17 +35,17 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010034343">
-<script src="finance.js?v=20261010034343"></script>
-<link rel="stylesheet" href="car.css?v=20261010034343">
-<script src="car.js?v=20261010034343"></script>
-<link rel="stylesheet" href="sections.css?v=20261010034343">
-<script src="records.js?v=20261010034343"></script>
-<script src="people.js?v=20261010034343"></script>
-<script src="keyboard.js?v=20261010034343"></script>
-<script src="notes.js?v=20261010034343"></script>
-<script src="lights.js?v=20261010034343"></script>
-<script src="pets.js?v=20261010034343"></script>
+<link rel="stylesheet" href="finance.css?v=20261010040817">
+<script src="finance.js?v=20261010040817"></script>
+<link rel="stylesheet" href="car.css?v=20261010040817">
+<script src="car.js?v=20261010040817"></script>
+<link rel="stylesheet" href="sections.css?v=20261010040817">
+<script src="records.js?v=20261010040817"></script>
+<script src="people.js?v=20261010040817"></script>
+<script src="keyboard.js?v=20261010040817"></script>
+<script src="notes.js?v=20261010040817"></script>
+<script src="lights.js?v=20261010040817"></script>
+<script src="pets.js?v=20261010040817"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -185,15 +185,15 @@ html{touch-action:pan-x pan-y} /* panning only: no pinch or double-tap zoom */
 body[data-auth="out"] #view{overflow-y:auto}
 /* phones: each view's long part scrolls in place, reaching to the screen edges so shadows aren't clipped */
 .home{flex:1;min-height:0}
-.home > .g-next{flex:1;min-height:0;display:flex;flex-direction:column}
-.home > .g-next .list{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.home > .g-mid{flex:1;min-height:0;display:flex;flex-direction:column;gap:22px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.home > .g-mid::-webkit-scrollbar{display:none}
 .cols{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
 .cal{flex:1;min-height:0;display:flex;flex-direction:column}
 .cal .tl{height:auto;flex:1 1 0;min-height:0}
 .cal-hint{display:none}
 .fin,.car,.pets,.lights,.notes{flex:1;min-height:0}
 .fin-scroll,.car-scroll,.pets-scroll,.lights-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
-.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.lights-scroll::-webkit-scrollbar,.home > .g-next .list::-webkit-scrollbar{display:none}
+.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.lights-scroll::-webkit-scrollbar,.g-next .list::-webkit-scrollbar{display:none}
 @media (min-width:760px){ .app{padding-inline:32px;padding-block:28px 116px} }
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink-2);min-height:36px;text-shadow:var(--halo)}
 .top .right{display:flex;align-items:center;gap:14px}
@@ -388,7 +388,19 @@ body[data-view="home"] .top{display:none}
 
 /* home: phone stacks in reading order; tablets place each piece in a fixed one-screen grid */
 .home{display:flex;flex-direction:column;gap:22px}
-.g-hero{grid-area:hero}.g-next{grid-area:next}
+.g-hero{grid-area:hero}.g-mid{grid-area:next}
+.nm{display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:100%;border:0;background:none;color:var(--ink);text-align:left;padding:16px 18px;border-radius:inherit}
+.nm-when{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.nm-when .cal-ic{width:22px;height:22px}
+.nm-when .cal-ic svg.i{width:14px;height:14px}
+.nm-title{font-size:20px;font-weight:300;line-height:1.2}
+.nm-pts{display:flex;flex-direction:column;gap:5px;width:100%}
+.nm-pts > span{position:relative;padding-left:14px;font-size:14px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm-pts > span::before{content:"";position:absolute;left:2px;top:.6em;width:4px;height:4px;border-radius:50%;background:var(--ink-3)}
+.nm-pts > .nm-more{padding-left:0;color:var(--ink-3)}
+.nm-pts > .nm-more::before{display:none}
+.nm.live{background:var(--live-fill);box-shadow:0 0 0 1px var(--live-edge),0 0 18px 0 var(--live-glow)}
+.nm.live .nm-when{color:var(--ink)}
 .g-next{display:flex;flex-direction:column}
 .g-next .list{min-height:0}
 .day-div{padding:12px 18px 4px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
@@ -1010,7 +1022,11 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .r-add:disabled{opacity:.4}
 
   /* upright iPad: calendar down the left; on the right the clock, what's next (filling the middle), then the weather */
-  .home > .g-next{display:flex}
+  /* the middle: the next tasks and the next meeting, half each */
+  .home > .g-mid{display:flex;overflow:visible;margin:0;padding:0;gap:16px}
+  .g-mid > .sec{flex:1 1 0;min-height:0}
+  .g-meet > .float{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+  .g-meet .nm{min-height:100%}
   .home{flex:1;min-height:0;display:grid;gap:16px 18px;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
     grid-template-rows:auto minmax(0,1fr) auto;
@@ -1317,13 +1333,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010034343"></script>
+<script src="appearance.js?v=20261010040817"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010034343';
+  const VERSION = '20261010040817';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1887,35 +1903,27 @@ dialog::backdrop{background:transparent}
   }
 
   // Next: only tasks that are on the calendar (a day and a time) and haven't started yet, soonest first
+  // Next: the next three tasks with a day and a time (anything already under way first, even from before midnight)
   function vNext(cls) {
-    const tk = todayKey(), nm = nowMin();
-    const liveT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && t.date === tk && toMin(t.time) < nm && nm < toMin(t.time) + effMins(t)).map(t => ({ t, date: t.date, time: t.time, live: true }));
-    const mtgs = [];
-    for (let i = 0, k = tk; i < 21; i++, k = addDays(k, 1)) for (const m of dayItems(k)) if (m.kind === 'meeting' && m.time) mtgs.push(m);
-    const liveG = mtgs.filter(m => m.date === tk && toMin(m.time) <= nm && nm < toMin(m.time) + effMins(m)).map(m => ({ m, date: m.date, time: m.time, live: true }));
-    const upT = S.tasks.filter(t => !t.done && kindOf(t) === 'timed' && (t.date > tk || (t.date === tk && toMin(t.time) >= nm))).map(t => ({ t, date: t.date, time: t.time }));
-    const upG = mtgs.filter(m => m.date > tk || (m.date === tk && toMin(m.time) > nm)).map(m => ({ m, date: m.date, time: m.time }));
+    const tk = todayKey(), nm = nowMin(), yk = addDays(tk, -1);
+    const timed = S.tasks.filter(t => !t.done && kindOf(t) === 'timed');
+    const liveT = timed.filter(t => (t.date === tk && toMin(t.time) < nm && nm < toMin(t.time) + effMins(t)) || (t.date === yk && nm + 1440 < toMin(t.time) + effMins(t))).map(t => ({ t, date: t.date, time: t.time, live: true }));
+    const upT = timed.filter(t => t.date > tk || (t.date === tk && toMin(t.time) >= nm)).map(t => ({ t, date: t.date, time: t.time }));
     const byWhen = (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
-    const up = [...liveT, ...liveG].sort(byWhen).concat([...upT, ...upG].sort(byWhen)).slice(0, 20);
+    const up = liveT.sort(byWhen).concat(upT.sort(byWhen).slice(0, 3));
     const firstUp = up.findIndex(x => !x.live);
     let inner;
     if (!S.loaded) inner = notReady();
-    else if (!up.length) inner = '<p class="empty">Nothing scheduled. Give a task or a meeting a day and a time and it lines up here.</p>';
+    else if (!up.length) inner = '<p class="empty">No tasks lined up. Give a task a day and a time and it shows here.</p>';
     else {
       let lastDay = tk;
       inner = up.map((x, i) => {
         // rows show only the time; a quiet divider marks where tomorrow (or a later day) begins
-        const div = x.date !== lastDay ? `<div class="day-div">${esc(dayLabel(x.date))}</div>` : '';
-        lastDay = x.date;
+        const div = !x.live && x.date !== lastDay ? `<div class="day-div">${esc(dayLabel(x.date))}</div>` : '';
+        if (!x.live) lastDay = x.date;
         const cls = x.live ? ' live' : i === firstUp ? ' first' : '';
-        if (x.m) {
-          const m = x.m, s0 = toMin(m.time), e0 = s0 + effMins(m);
-          const pts = m.agenda.filter(a => !a.done).length;
-          const when = x.live ? `Now · ends ${fmtTime(e0)}` : fmtRange(s0, e0);
-          return `${div}<div class="trow${x.live ? ' live' : cls}"><span class="cal-ic" aria-hidden="true">${ICON.people}</span><button type="button" class="tmain" data-act="edit" data-id="${esc(m.id)}"><span class="name">${esc(m.title)}<span class="tag">Meeting</span></span><span class="meta">${x.live ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${esc(when)}${pts ? ` · ${pts} to talk about` : ''}</span></span></button></div>`;
-        }
-        const t = x.t, s0 = toMin(t.time);
-        const when = x.live ? (t.mins ? `Now · ends ${fmtTime(s0 + t.mins)}` : `Now · started ${fmtTime(s0)}`)
+        const t = x.t, s0 = toMin(t.time), e0 = s0 + effMins(t);
+        const when = x.live ? (t.mins ? `Now · ends ${fmtTime(e0 % 1440)}` : `Now · started ${fmtTime(s0)}`)
           : t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
         return `${div}<div class="trow sw${cls}" data-swipe="${esc(t.id)}">
           <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
@@ -1927,7 +1935,30 @@ dialog::backdrop{background:transparent}
         </div>`;
       }).join('');
     }
-    return `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">Next</h2></div><div class="float list" id="nextlist" data-keep>${inner}</div></section>`;
+    return `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">Next</h2><button type="button" class="link" data-tab="tasks">All tasks</button></div><div class="float list" id="nextlist" data-keep>${inner}</div></section>`;
+  }
+  // the next meeting on its own: the one under way, or the next one coming (up to two months out)
+  function vMeet(cls) {
+    const tk = todayKey(), nm = nowMin(), yk = addDays(tk, -1);
+    const mtgs = [];
+    for (let i = -1, k = yk; i < 60; i++, k = addDays(k, 1)) for (const m of dayItems(k)) if (m.kind === 'meeting' && m.time) mtgs.push(m);
+    const endOf = m => toMin(m.time) + effMins(m);
+    const live = mtgs.find(m => (m.date === tk && toMin(m.time) <= nm && nm < endOf(m)) || (m.date === yk && nm + 1440 < endOf(m)));
+    const next = live || mtgs.filter(m => m.date > tk || (m.date === tk && toMin(m.time) > nm)).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))[0];
+    let inner;
+    if (!S.loaded) inner = notReady();
+    else if (!next) inner = '<p class="empty">No meetings coming up.</p>';
+    else {
+      const s0 = toMin(next.time), e0 = endOf(next), pts = (next.agenda || []).filter(a => !a.done && (a.text || '').trim());
+      const when = live ? `Now · ends ${fmtTime(e0 % 1440)}` : `${dayLabel(next.date)} · ${fmtRange(s0, e0)}`;
+      const id = next.occ ? next.sid : next.id;
+      inner = `<button type="button" class="nm${live ? ' live' : ''}" data-act="meeting" data-id="${esc(id)}">
+        <span class="nm-when">${live ? '<span class="live-dot" aria-hidden="true"></span>' : `<span class="cal-ic" aria-hidden="true">${ICON.people}</span>`}<span>${esc(when)}</span></span>
+        <span class="nm-title">${esc(next.title)}</span>
+        ${pts.length ? `<span class="nm-pts">${pts.slice(0, 6).map(a => `<span>${esc(a.text)}</span>`).join('')}${pts.length > 6 ? `<span class="nm-more">${pts.length - 6} more to talk about</span>` : ''}</span>` : '<span class="meta">Nothing to talk about yet. Tap to add talking points.</span>'}
+      </button>`;
+    }
+    return `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">Next meeting</h2><button type="button" class="link" data-tab="meetings">All meetings</button></div><div class="float">${inner}</div></section>`;
   }
 
   function vHome() {
@@ -1942,7 +1973,7 @@ dialog::backdrop{background:transparent}
         ${vWeatherMini()}
       </section>
       ${vWeather('g-wx')}
-      ${vNext('g-next')}
+      <div class="g-mid">${vNext('g-next')}${vMeet('g-meet')}</div>
       ${vDayCal('g-cal')}
     </div>`;
   }
@@ -2193,6 +2224,8 @@ dialog::backdrop{background:transparent}
       ...dayItems(kp).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane) && toMin(t.time) + effMins(t) > 1440).map(t => ({ t, s: 0, e: toMin(t.time) + effMins(t) - 1440, from: toMin(t.time) })),
       ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === kp && !g.allDay && g.start && gEnd(g) > 1440).map(g => ({ g, s: 0, e: gEnd(g) - 1440, from: toMin(g.start) }))),
     ].map(x => ({ ...x, e: Math.min(x.e, 1440) , full: x.e })));
+    // happening now: on today, or started the day before and still going past midnight
+    const liveAt = x => (k === tk && x.s <= nm && nm < x.full) || (addDays(k, 1) === tk && nm + 1440 < x.full);
     const blocks = items.map(x => {
       const len = x.e - x.s;
       if (x.from != null) {
@@ -2205,16 +2238,16 @@ dialog::backdrop{background:transparent}
       const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       if (x.g) {
         const when = fmtRange(x.s, x.s + (x.g.mins || 30));
-        return `<button type="button" class="blk evt${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
+        return `<button type="button" class="blk evt${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${liveAt(x) ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
       }
       const t = x.t;
       const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (t.kind !== 'task') {
         // events and meetings: no done circle; tapping opens the edit sheet
-        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.full), live = k === tk && x.s <= nm && nm < x.e;
+        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.full), live = liveAt(x);
         return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
       }
-      const live = k === tk && !t.done && x.s <= nm && nm < x.e;
+      const live = !t.done && liveAt(x);
       const cls = ['blk', x.full > 1440 ? 'spills' : '', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', isTight(len) ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
       const when = t.mins ? fmtRange(x.s, x.full) : `${fmtTime(x.s)} · no estimate`;
       const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
@@ -4344,7 +4377,7 @@ dialog::backdrop{background:transparent}
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
-    if (window.POSKeys) window.POSKeys({ scope: '#sheet' });
+    if (window.POSKeys) window.POSKeys();
     if (window.POSNotes) NOTES = window.POSNotes({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSLights) LIGHTS = window.POSLights({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks });

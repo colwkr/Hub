@@ -187,3 +187,5 @@
 /* the sheet moves up to sit above it */
 html.osk-on dialog[open]{margin:12px auto calc(var(--osk-h, 300px) + 12px);max-height:calc(100% - var(--osk-h, 300px) - 24px)}
 @media (prefers-reduced-motion:reduce){ .osk .k{transition:none} }
+/* typing in the page itself (notes, meetings, search): the page makes room above the keyboard */
+html.osk-on .app{padding-bottom:calc(var(--osk-h, 300px) + 12px)}

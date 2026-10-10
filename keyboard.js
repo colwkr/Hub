@@ -1,11 +1,12 @@
-// POS keyboard: on the iPad and phone, text fields in the task sheet use this keyboard instead of the system one.
-// It docks at the bottom, the sheet moves up above it, and the globe key hands that field back to the system keyboard
-// (for dictation or autocorrect) until you leave it. Computers and iPads with a keyboard attached keep typing normally.
+// POS keyboard: on the iPad and phone, every text field in POS uses this keyboard instead of the system one.
+// It docks at the bottom, whatever you're typing in moves up above it, and the globe key hands that field back to the
+// system keyboard (for dictation or autocorrect) until you leave it. Number and money fields get a number pad.
+// Computers and iPads with a keyboard attached keep typing normally. A field can opt out with data-osk="off".
 window.POSKeys = function (opts) {
-  const scope = (opts && opts.scope) || '#sheet';
+  const scope = (opts && opts.scope) || 'body';
   const mq = window.matchMedia ? matchMedia('(hover: none) and (pointer: coarse)') : null;
   const on = () => !!(mq && mq.matches);
-  const SEL = 'input[type="text"], input[type="number"], input[type="search"], input:not([type]), textarea';
+  const SEL = 'input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input:not([type]), textarea';
   const svg = d => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
   const IC = {
     back: svg('<path d="M9 6.5h10a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H9L3.5 12z"/><path d="m11.5 10 4 4M15.5 10l-4 4"/>'),
@@ -35,6 +36,7 @@ window.POSKeys = function (opts) {
       [['abc', 1.6, 'ABC'], ['globe', 1.1], ['space', 6.4], ['abc', 1.6, 'ABC'], ['hide', 1.3]],
     ],
     pad: [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], [['hide', 1], '0', ['back', 1]]],
+    money: [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['.', '0', ['back', 1]], [['hide', 1], ['enter', 2]]],
   };
   // phones: the narrower layout, Backspace beside M and Return on the bottom row
   const PHONE = {
@@ -60,6 +62,7 @@ window.POSKeys = function (opts) {
 
   let kb = null, target = null, mode = 'abc', shift = 'off', lastShift = 0, rep = null, held = null, native = null;
   const isNum = el => el && el.type === 'number';
+  const padOf = el => (isNum(el) || el.dataset.oskMode === 'numeric' ? 'pad' : el.dataset.oskMode === 'decimal' ? 'money' : null);
   const isArea = el => el && el.tagName === 'TEXTAREA';
   const phone = () => window.innerWidth < 600;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -98,7 +101,7 @@ window.POSKeys = function (opts) {
   }
   function draw() {
     if (!kb || !target) return;
-    const pad = isNum(target), rows = pad ? L.pad : (phone() ? PHONE : L)[mode];
+    const pad = padOf(target), rows = pad ? L[pad] : (phone() ? PHONE : L)[mode];
     kb.classList.toggle('pad', pad);
     kb.classList.toggle('phone', phone());
     kb.innerHTML = `<div class="osk-in">${rows.map(r => `<div class="osk-row">${r.map(keyHTML).join('')}</div>`).join('')}</div>`;
@@ -110,9 +113,10 @@ window.POSKeys = function (opts) {
     const el = target;
     if (!el) return;
     if (isNum(el)) {
-      if (!/^\d$/.test(text) || el.value.length >= 4) return;
+      if (!/^\d$/.test(text) || el.value.length >= 6) return;
       el.value = el.value + text; fire(el, 'insertText'); return;
     }
+    if (padOf(el) === 'money' && text === '.' && el.value.includes('.')) return;
     const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? s;
     if (el.maxLength > 0 && el.value.length - (e - s) + text.length > el.maxLength) return;
     el.setRangeText(text, s, e, 'end');
@@ -159,7 +163,11 @@ window.POSKeys = function (opts) {
       autoShift();
       return;
     }
-    if (act === 'back') { erase(); autoShift(); rep = setTimeout(function again() { erase(); autoShift(); rep = setTimeout(again, 70); }, 420); }
+    if (act === 'back') {
+      if (!sendKey('Backspace')) return;
+      erase(); autoShift();
+      rep = setTimeout(function again() { if (!target) return; erase(); autoShift(); rep = setTimeout(again, 70); }, 420);
+    }
     else if (act === 'space') {
       insert(' ');
       if (mode !== 'abc') { mode = 'abc'; draw(); }
@@ -170,10 +178,18 @@ window.POSKeys = function (opts) {
       lastShift = now; draw();
     } else if (act === 'num' || act === 'sym' || act === 'abc') { mode = act; draw(); }
     else if (act === 'enter') {
+      if (!sendKey('Enter')) return;
       if (isArea(target)) { insert('\n'); autoShift(); }
       else { const el = target; hide(); el.blur(); }
     } else if (act === 'hide') { const el = target; hide(); el.blur(); }
     // the globe waits for the finger to lift: the system keyboard only opens from a finished tap
+  }
+  // a key event the page can act on first; false when it did (and so the keyboard does nothing more)
+  function sendKey(key) {
+    const el = target, ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    if (ev.defaultPrevented) { setTimeout(() => { const a = document.activeElement; if (a !== el && wants(a)) show(a); else if (a !== el) hide(); }, 0); return false; }
+    return true;
   }
   function release(e) {
     stopRepeat();
@@ -251,5 +267,8 @@ window.POSKeys = function (opts) {
   window.addEventListener('resize', () => { if (target) { draw(); document.documentElement.style.setProperty('--osk-h', kb.offsetHeight + 'px'); } });
   if (mq && mq.addEventListener) mq.addEventListener('change', () => { if (!on()) { hide(); for (const f of document.querySelectorAll(`${scope} [inputmode="none"]`)) f.setAttribute('inputmode', f.dataset.oskMode || 'text'); } else claim(); });
   claim();
+  let claimT = null;
+  new MutationObserver(() => { if (on() && !claimT) claimT = requestAnimationFrame(() => { claimT = null; claim(); }); })
+    .observe(document.body, { childList: true, subtree: true });
   return { claim, hide, active: () => !!target };
 };
