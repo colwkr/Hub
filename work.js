@@ -1,5 +1,5 @@
-// POS Work: the weekly CG checklist. Every campus's CG machine gets its graphics put in by Sunday; Simpsonville has three
-// (CG1, CG2 and the North Auditorium). A week runs Monday to Sunday, so Monday at midnight starts a fresh list due the
+// POS Work: the weekly CG checklist. Every campus's CG machine gets its graphics put in by Sunday, one list top to bottom
+// in alphabetical order; Simpsonville has three (CG1, then CG2 and the North Auditorium tucked in under it). A week runs Monday to Sunday, so Monday at midnight starts a fresh list due the
 // next Sunday. Records: kind "cg-week", id "cg-<Sunday>", { due: 'YYYY-MM-DD', done: { <machine id>: when } }.
 window.POSWork = function (ctx) {
   const { esc } = ctx;
@@ -10,15 +10,15 @@ window.POSWork = function (ctx) {
     { id: 'anderson', name: 'Anderson' },
     { id: 'fiveforks', name: 'Five Forks' },
     { id: 'fountaininn', name: 'Fountain Inn' },
-    { id: 'greenville', name: 'Greenville' },
     { id: 'gcc', name: 'GCC' },
+    { id: 'greenville', name: 'Greenville' },
     { id: 'harrisonbridge', name: 'Harrison Bridge' },
     { id: 'laurens', name: 'Laurens' },
     { id: 'mauldin', name: 'Mauldin' },
+    { id: 'simp-cg1', name: 'Simpsonville – CG1' },
+    { id: 'simp-cg2', name: 'Simpsonville – CG2', sub: true },
+    { id: 'simp-north', name: 'Simpsonville – NA', sub: true, label: 'Simpsonville North Auditorium' },
     { id: 'union', name: 'Union' },
-    { id: 'simp-cg1', name: 'CG1', group: 'Simpsonville' },
-    { id: 'simp-cg2', name: 'CG2', group: 'Simpsonville' },
-    { id: 'simp-north', name: 'North Auditorium', group: 'Simpsonville' },
   ];
   const svg = d => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
   const ICON = { check: svg('<path d="m6 12.5 4 4 8-9"/>') };
@@ -70,9 +70,9 @@ window.POSWork = function (ctx) {
     const days = Math.round((d - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 864e5);
     return days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due in ${days} days`;
   }
-  function tile(m, done) {
+  function row(m, done) {
     const on = !!done[m.id];
-    return `<button type="button" class="wk-t${on ? ' on' : ''}" data-act="wk-cg" data-id="${m.id}" aria-pressed="${on}"><span class="wk-c">${ICON.check}</span><span class="wk-tx"><span class="name">${esc(m.name)}</span><span class="meta">${on ? 'Put in' : 'Not started'}</span></span></button>`;
+    return `<button type="button" class="wk-r${on ? ' on' : ''}${m.sub ? ' sub' : ''}" data-act="wk-cg" data-id="${m.id}" aria-pressed="${on}" aria-label="${esc(m.label || m.name)}, ${on ? 'put in' : 'not started'}"><span class="wk-c">${ICON.check}</span><span class="name">${esc(m.name)}</span><span class="meta">${on ? 'Put in' : 'Not started'}</span></button>`;
   }
   function cgCard() {
     if (S.failed) return '<section class="float wk-cg"><p class="empty">CG list did not load. POS tries again when you come back to it.</p></section>';
@@ -80,15 +80,13 @@ window.POSWork = function (ctx) {
     const due = dueDate(), done = doneMap();
     const n = MACHINES.filter(m => done[m.id]).length, left = MACHINES.length - n;
     const late = left && dueText(due) === 'Due today';
-    const main = MACHINES.filter(m => !m.group), simp = MACHINES.filter(m => m.group === 'Simpsonville');
     return `<section class="float wk-cg${left ? '' : ' all'}">
       <div class="wk-h">
         <div class="wk-when"><span class="lab">CG · ${dueText(due)}</span><span class="wk-due">${esc(fmtDue(due))}</span></div>
         <div class="wk-big${late ? ' late' : ''}">${left ? `<b>${left}</b><span>left</span>` : `<span class="wk-allc">${ICON.check}</span><span>All put in</span>`}</div>
       </div>
       <div class="wk-bar" role="progressbar" aria-label="CG put in" aria-valuemin="0" aria-valuemax="${MACHINES.length}" aria-valuenow="${n}"><i style="width:${(n / MACHINES.length * 100).toFixed(1)}%"></i></div>
-      <div class="wk-tiles">${main.map(m => tile(m, done)).join('')}</div>
-      <div class="wk-sub"><span class="lab">Simpsonville</span><div class="wk-tiles">${simp.map(m => tile(m, done)).join('')}</div></div>
+      <div class="wk-list">${MACHINES.map(m => row(m, done)).join('')}</div>
     </section>`;
   }
   function act(name, b) {
