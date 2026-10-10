@@ -1,11 +1,12 @@
 // POS Lights: rooms, and the lights in each. Pick one light or the whole room, then set it on or off, its brightness,
-// a white from warm to cool (2000–10000K) or a color. Controls only for now: nothing talks to the bulbs yet.
-// Records: kind "room" { name, createdAt }, kind "light" { roomId, name, type, brand, on, level 0-100, mode 'white'|'color', kelvin, hue, createdAt }.
+// and its tone from deep red to daylight (1000–6500K). A light with a node is a real Oasis light: POS reads and sets it
+// through the lights edge function (which holds the Oasis key); a light without one is just controls.
+// Records: kind "room" { name, createdAt }, kind "light" { roomId, name, type, brand, node, on, level 0-100, mode 'white'|'color', kelvin, hue, createdAt }.
 window.POSLights = function (ctx) {
   const { esc, toast } = ctx;
-  const R = window.POSRecords(ctx, ['room', 'light'], 'pos-lights');
+  const R = window.POSRecords({ ...ctx, onLoad: () => overlay() }, ['room', 'light'], 'pos-lights');
   const S = R.S;
-  const KMIN = 2000, KMAX = 10000;
+  const KMIN = 1000, KMAX = 6500;
   const TYPES = [['uplight', 'Wall uplight'], ['bulb', 'Lamp bulb'], ['ceiling', 'Ceiling light'], ['strip', 'Light strip'], ['other', 'Other']];
   const HUES = [[0, 'Red'], [22, 'Orange'], [40, 'Amber'], [56, 'Yellow'], [95, 'Lime'], [135, 'Green'], [170, 'Teal'], [192, 'Cyan'], [218, 'Blue'], [250, 'Indigo'], [280, 'Purple'], [305, 'Magenta'], [330, 'Pink']];
   const svg = d => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
@@ -41,9 +42,9 @@ window.POSLights = function (ctx) {
   }
   const rgbOf = l => (l.mode === 'color' ? hRGB(l.hue || 0, l.sat ?? 100) : kRGB(l.kelvin || 2700));
   const css = (c, a) => (a == null ? `rgb(${c.join(',')})` : `rgba(${c.join(',')},${a})`);
-  const kName = k => (k < 2500 ? 'Candlelight' : k < 3200 ? 'Warm white' : k < 4200 ? 'Neutral white' : k < 5500 ? 'Cool white' : k < 7000 ? 'Daylight' : 'Blue sky');
+  const kName = k => (k < 1300 ? 'Deep red' : k < 1800 ? 'Amber' : k < 2500 ? 'Candlelight' : k < 3200 ? 'Warm white' : k < 4200 ? 'Neutral white' : k < 5500 ? 'Cool white' : 'Daylight');
   const hName = h => HUES.reduce((best, x) => { const d = Math.min(Math.abs(x[0] - h), 360 - Math.abs(x[0] - h)); return d < best.d ? { d, n: x[1] } : best; }, { d: 999, n: '' }).n;
-  const K_TRACK = `linear-gradient(90deg,${[2000, 2700, 3500, 4500, 5500, 6500, 8000, 10000].map(k => css(kRGB(k))).join(',')})`;
+  const K_TRACK = `linear-gradient(90deg,${[1000, 1500, 2000, 2700, 3500, 4500, 5500, 6500].map(k => css(kRGB(k))).join(',')})`;
   const H_TRACK = `linear-gradient(90deg,${[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360].map(h => css(hRGB(h))).join(',')})`;
 
   /* ---------- state ---------- */
@@ -60,8 +61,87 @@ window.POSLights = function (ctx) {
   const lead = list => list.find(isOn) || list[0];
   const selOf = room => { const id = UI.sel[room.id]; return id && lightById(id) && lightById(id).roomId === room.id ? lightById(id) : null; };
 
+  /* ---------- the real lights (Oasis cloud, through the lights function) ---------- */
+  // what each light last told us, by node; a light we just changed keeps our values for a few seconds
+  // (the cloud takes a moment to catch up, and an older answer would flick the controls back)
+  const CL = { nodes: new Map(), at: 0, asking: false, expired: false, down: false };
+  const held = new Map();
+  const nodeOf = l => (l && l.node ? CL.nodes.get(l.node) : null);
+  const offline = l => { const n = nodeOf(l); return !!(n && n.online === false); };
+  function overlay() {
+    for (const l of S.light) {
+      const n = nodeOf(l);
+      if (!n || (held.get(l.node) || 0) > Date.now()) continue;
+      l.on = n.on;
+      if (Number.isFinite(n.level)) l.level = n.level;
+      if (Number.isFinite(n.kelvin)) { l.kelvin = Math.max(KMIN, Math.min(KMAX, n.kelvin)); l.mode = 'white'; }
+    }
+  }
+  const call = async body => {
+    const { data, error } = await ctx.sb.functions.invoke('lights', { body });
+    if (error) throw error;
+    return data || {};
+  };
+  async function pull() {
+    if (CL.asking || !ctx.canSave() || !S.light.some(l => l.node)) return;
+    CL.asking = true;
+    try {
+      const d = await call({ action: 'state' });
+      CL.expired = !!d.expired; CL.down = false; CL.at = Date.now();
+      if (Array.isArray(d.nodes)) { CL.nodes = new Map(d.nodes.map(n => [n.id, n])); overlay(); }
+    } catch (e) { CL.down = true; CL.at = Date.now(); }
+    CL.asking = false;
+    ctx.rerender();
+  }
+  // what a light needs sent: only what differs from what it last said
+  function paramsFor(l) {
+    const n = nodeOf(l) || {}, p = {};
+    if (!isOn(l)) { if (n.on !== false) p.Power = false; return p; }
+    if (n.on !== true) p.Power = true;
+    const lv = Math.max(1, Math.min(100, Math.round(l.level ?? 100))), k = Math.max(KMIN, Math.min(KMAX, Math.round(l.kelvin || 2700)));
+    if (n.level !== lv) p.Brightness = lv;
+    if (n.kelvin !== k) p.CCT = k;
+    return p;
+  }
+  let sending = false, queued = null;
+  async function push(list) {
+    list = list.filter(l => l && l.node);
+    if (!list.length || !ctx.canSave()) return;
+    if (sending) { queued = new Set([...(queued || []), ...list]); return; }
+    const items = list.map(l => ({ id: l.node, params: paramsFor(l), l })).filter(x => Object.keys(x.params).length);
+    if (!items.length) return;
+    sending = true;
+    for (const x of items) {
+      held.set(x.id, Date.now() + 8000);
+      const n = CL.nodes.get(x.id) || { id: x.id };
+      CL.nodes.set(x.id, { ...n, ...(x.params.Power !== undefined ? { on: x.params.Power } : {}), ...(x.params.Brightness !== undefined ? { level: x.params.Brightness } : {}), ...(x.params.CCT !== undefined ? { kelvin: x.params.CCT } : {}) });
+    }
+    try {
+      const d = await call({ action: 'set', items: items.map(({ id, params }) => ({ id, params })) });
+      if (d.expired) { CL.expired = true; toast("The lights' sign-in ran out."); ctx.rerender(); }
+      else if (CL.expired || CL.down) { CL.expired = false; CL.down = false; ctx.rerender(); }
+    } catch (e) {
+      CL.down = true; toast("The lights didn't answer.");
+      for (const x of items) held.delete(x.id);
+      CL.at = 0; ctx.rerender();
+    }
+    sending = false;
+    if (queued) { const q = [...queued]; queued = null; push(q); }
+  }
+  // while a slider is held, send at most every 0.4s
+  let pushT = null, pushList = null;
+  function pushSoon(list) {
+    pushList = list;
+    if (pushT) return;
+    pushT = setTimeout(() => { pushT = null; const l = pushList; pushList = null; push(l); }, 400);
+  }
+  // ask again every 20s while the lights are on screen
+  let pollT = null;
+  const poll = () => { if (document.visibilityState === 'visible' && document.querySelector('.lights') && Date.now() - CL.at > 15000) pull(); };
+
   /* ---------- markup ---------- */
   function stateText(l) {
+    if (offline(l)) return 'Offline';
     if (!isOn(l)) return 'Off';
     return `${l.level ?? 100}% · ${l.mode === 'color' ? hName(l.hue || 0) : `${l.kelvin || 2700}K`}`;
   }
@@ -90,6 +170,7 @@ window.POSLights = function (ctx) {
     const on = one ? isOn(one) : list.some(isOn);
     const level = l.level ?? 100, kelvin = l.kelvin || 2700, hue = l.hue || 0, color = l.mode === 'color';
     const type = one ? (TYPES.find(t => t[0] === one.type) || TYPES[4])[1] : null;
+    const real = (one ? [one] : list).some(x => x.node); // the Oasis lights take a tone, not a color
     return `<div class="lt-panel" data-room="${esc(room.id)}" data-light="${one ? esc(one.id) : ''}" style="${glowVars({ ...l, on })};--k-track:${K_TRACK};--h-track:${H_TRACK}">
       <div class="lt-ph">
         <div class="lt-pt"><span class="lab">${one ? esc([one.brand, type].filter(Boolean).join(' · ')) : `${list.length} ${list.length === 1 ? 'light' : 'lights'}`}</span><span class="lt-pn">${esc(one ? one.name : 'Whole room')}</span></div>
@@ -97,10 +178,10 @@ window.POSLights = function (ctx) {
         <button type="button" class="switch lt-sw" role="switch" aria-checked="${on}" data-act="lt-power" ${one ? `data-id="${esc(one.id)}"` : `data-room="${esc(room.id)}"`} aria-label="${on ? 'Turn off' : 'Turn on'}"><span class="sw" aria-hidden="true"></span></button>
       </div>
       <div class="lt-ctl"><div class="lt-row"><span class="lab">Brightness</span><span class="fig" data-out="level">${on ? level + '%' : 'Off'}</span></div>${slider('level', 'Brightness', on ? level : 0, 0, 100, 1)}</div>
-      <div class="lt-ctl${!color ? ' act' : ''}" data-mode="white"><div class="lt-row"><span class="lab">White</span><span class="meta" data-out="kelvin">${kelvin}K · ${kName(kelvin)}</span></div>${slider('kelvin', 'Color temperature', kelvin, KMIN, KMAX, 100)}<div class="lt-ends"><span>Warm</span><span>Cool</span></div></div>
-      <div class="lt-ctl${color ? ' act' : ''}" data-mode="color"><div class="lt-row"><span class="lab">Color</span><span class="meta" data-out="hue">${color ? esc(hName(hue)) : 'Pick a color'}</span></div>
+      <div class="lt-ctl${!color || real ? ' act' : ''}" data-mode="white"><div class="lt-row"><span class="lab">${real ? 'Tone' : 'White'}</span><span class="meta" data-out="kelvin">${kelvin}K · ${kName(kelvin)}</span></div>${slider('kelvin', 'Color temperature', kelvin, KMIN, KMAX, 100)}<div class="lt-ends"><span>Red</span><span>Daylight</span></div></div>
+      ${real ? '' : `<div class="lt-ctl${color ? ' act' : ''}" data-mode="color"><div class="lt-row"><span class="lab">Color</span><span class="meta" data-out="hue">${color ? esc(hName(hue)) : 'Pick a color'}</span></div>
         <div class="lt-pal" role="group" aria-label="Colors">${HUES.map(([h, n]) => `<button type="button" class="lt-sw8" data-act="lt-hue" data-hue="${h}" style="--c:${css(hRGB(h))}" aria-pressed="${color && hName(hue) === n}" aria-label="${n}" title="${n}"></button>`).join('')}</div>
-        ${slider('hue', 'Hue', hue, 0, 359, 1)}</div>
+        ${slider('hue', 'Hue', hue, 0, 359, 1)}</div>`}
     </div>`;
   }
   function roomCard(room) {
@@ -129,7 +210,10 @@ window.POSLights = function (ctx) {
         + (extra.length ? `<section class="sec"><div class="sec-head"><span class="lab">Not in a room</span></div><div class="lt-tiles">${extra.map(l => tile(l, false)).join('')}</div></section>` : '')
         + (ctx.canSave() ? '<div><button type="button" class="btn" data-act="lt-room-edit">Add a room</button></div>' : '');
     }
-    return `<div class="lights"><p class="lt-note">Controls only for now. The bulbs aren't connected yet.</p><div class="lights-scroll" id="lightsScroll" data-keep>${body}</div></div>`;
+    if (S.loaded && ctx.canSave() && Date.now() - CL.at > 15000) setTimeout(pull, 0);
+    const note = !S.light.some(l => l.node) ? '' : CL.expired ? "<p class=\"lt-note warn\">The lights' sign-in ran out. They'll answer again once the new key is in.</p>"
+      : CL.down ? "<p class=\"lt-note warn\">The lights aren't answering right now.</p>" : '';
+    return `<div class="lights">${note}<div class="lights-scroll" id="lightsScroll" data-keep>${body}</div></div>`;
   }
 
   /* ---------- changing lights ---------- */
@@ -143,6 +227,8 @@ window.POSLights = function (ctx) {
   const targetsOf = el => { const p = el.closest('.lt-panel'); return p.dataset.light ? [lightById(p.dataset.light)].filter(Boolean) : lightsIn(p.dataset.room); };
   async function commit(list, keys) {
     if (!ctx.canSave() || !list.length) return;
+    clearTimeout(pushT); pushT = null; pushList = null;
+    push(list);
     const ok = (await Promise.all(list.map(l => R.save(R.db.update('light', l.id, Object.fromEntries(keys.map(k => [k, l[k]]))))))).every(Boolean);
     if (!ok) R.load();
   }
@@ -167,9 +253,10 @@ window.POSLights = function (ctx) {
     p.querySelector('.lt-ph .lt-sw').setAttribute('aria-checked', on);
     p.querySelector('[data-out="level"]').textContent = on ? level + '%' : 'Off';
     p.querySelector('[data-out="kelvin"]').textContent = `${kelvin}K · ${kName(kelvin)}`;
-    p.querySelector('[data-out="hue"]').textContent = color ? hName(hue) : 'Pick a color';
-    p.querySelector('[data-mode="white"]').classList.toggle('act', !color);
-    p.querySelector('[data-mode="color"]').classList.toggle('act', color);
+    const hueOut = p.querySelector('[data-out="hue"]'), colorCtl = p.querySelector('[data-mode="color"]');
+    if (hueOut) hueOut.textContent = color ? hName(hue) : 'Pick a color';
+    p.querySelector('[data-mode="white"]').classList.toggle('act', !color || !colorCtl);
+    if (colorCtl) colorCtl.classList.toggle('act', color);
     for (const b of p.querySelectorAll('.lt-sw8')) b.setAttribute('aria-pressed', color && hName(hue) === b.title);
     const put = (key, v) => { const s = p.querySelector(`[data-lt="${key}"]`); if (s && s !== drag?.el) { s.style.setProperty('--p', ((v - +s.dataset.min) / (+s.dataset.max - +s.dataset.min)).toFixed(4)); s.setAttribute('aria-valuenow', v); } };
     put('level', on ? level : 0); put('kelvin', kelvin); put('hue', hue);
@@ -180,8 +267,10 @@ window.POSLights = function (ctx) {
     el.style.setProperty('--p', ((v - min) / (max - min)).toFixed(4));
     el.setAttribute('aria-valuenow', v);
     const key = el.dataset.lt;
-    for (const l of targetsOf(el)) Object.assign(l, patchFor(l, key, v));
+    const list = targetsOf(el);
+    for (const l of list) Object.assign(l, patchFor(l, key, v));
     paintRoom(el.closest('.lt-room'));
+    if (drag && drag.el === el) pushSoon(list);
   }
   const valueAt = (el, x) => {
     const r = el.getBoundingClientRect(), min = +el.dataset.min, max = +el.dataset.max, step = +el.dataset.step;
@@ -295,5 +384,7 @@ window.POSLights = function (ctx) {
     else if (name === 'lt-room-edit') openRoom(b.dataset.id);
   }
   const add = () => (S.room.length ? openLight(null, rooms()[0].id) : openRoom(null));
-  return { view, act, add, busy, start: R.start, stop: R.stop };
+  function start() { R.start(); clearInterval(pollT); pollT = setInterval(poll, 5000); CL.at = 0; }
+  function stop() { R.stop(); clearInterval(pollT); pollT = null; CL.nodes = new Map(); CL.at = 0; CL.expired = false; CL.down = false; }
+  return { view, act, add, busy, start, stop };
 };
