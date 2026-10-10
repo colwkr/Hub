@@ -140,16 +140,43 @@ window.POSCar = function (ctx) {
   const badge = () => { if (!S.loaded) return 0; const d = oilDue(); return d && d.st !== 'ok' ? 1 : 0; };
 
   /* ---------- the page ---------- */
-  // a plain side view of a compact SUV, facing left; the wheels light up when the shop flagged the tires
-  function drawing(flagTires) {
-    const wheel = cx => `<g class="wh${flagTires ? ' flag' : ''}"><circle cx="${cx}" cy="115" r="23"/><circle cx="${cx}" cy="115" r="14"/><circle cx="${cx}" cy="115" r="3.2"/></g>`;
-    return `<svg class="car-art" viewBox="0 0 360 146" role="img" aria-label="Side view of the CR-V${flagTires ? ', tires flagged' : ''}">
-      <path class="ground" d="M10 139h340"/>
-      <path class="body" d="M26 117 24 94q0-14 12-17l74-11 36-30q5-4 12-4h124q14 0 21 11l18 30 5 34q0 10-8 10h-10a28 28 0 0 0-56 0H108a28 28 0 0 0-56 0H34q-8 0-8-6z"/>
-      <path class="win" d="M120 66 150 41q3-3 8-3h52v28zM216 38h66q10 0 15 8l12 20h-93z"/>
-      <path class="trim" d="M213 36v80M30 94l298-7M195 77h11M282 75h11"/>
-      <path class="trim" d="M25 84l20-3 3-6-17 2zM309 57h4l10 19-5 2zM121 65h-9l-3-7 9-2z"/>
-      ${wheel(80)}${wheel(280)}
+  // The 2017 CR-V's side, drawn to its published measurements at 2 units an inch: 180.6 in long, 104.7 in between
+  // the axles, about 66.5 in tall (AWD), 235/60R18 tires (29.1 in across), facing left. Painted in your car's color.
+  const PAINTS = {
+    'White Diamond Pearl': '#e9e9e6', 'Lunar Silver Metallic': '#b7bbbf', 'Modern Steel Metallic': '#6f747a', 'Gunmetal Metallic': '#4c4f53',
+    'Crystal Black Pearl': '#1d1e21', 'Basque Red Pearl II': '#7e1d22', 'Molten Lava Pearl': '#9a3b1f', 'Dark Olive Metallic': '#4e5040', 'Obsidian Blue Pearl': '#23304a',
+  };
+  function drawing(flagTires, paint) {
+    const X = inch => (10 + inch * 2).toFixed(1), Y = h => (150 - h * 2).toFixed(1);
+    const P = pts => pts.map(([x, h], i) => `${i ? 'L' : 'M'}${X(x)} ${Y(h)}`).join('');
+    const color = PAINTS[paint] || '';
+    const fx = 37, rx = 37 + 104.7, tire = 14.55, rim = 9;
+    // body: bumper, hood, windshield, roof, hatch, tail, then along the bottom through both wheel arches
+    const body = `M${X(3)} ${Y(13)}L${X(0.5)} ${Y(21)}Q${X(-0.2)} ${Y(27)} ${X(1.5)} ${Y(32.5)}L${X(7)} ${Y(36.5)}L${X(47)} ${Y(41.8)}`
+      + `L${X(76)} ${Y(62.6)}Q${X(82)} ${Y(66.4)} ${X(96)} ${Y(66.5)}L${X(150)} ${Y(65.6)}Q${X(160)} ${Y(65.2)} ${X(163.5)} ${Y(62.5)}`
+      + `L${X(171.5)} ${Y(49.5)}Q${X(176.5)} ${Y(44)} ${X(178.4)} ${Y(37)}L${X(180.6)} ${Y(29.5)}L${X(180.2)} ${Y(18)}Q${X(179.5)} ${Y(13.5)} ${X(176)} ${Y(13)}`
+      + `L${X(rx + 17)} ${Y(13)}A34 34 0 0 0 ${X(rx - 17)} ${Y(13)}L${X(rx - 18.5)} ${Y(9.3)}L${X(fx + 18.5)} ${Y(9.3)}L${X(fx + 17)} ${Y(13)}A34 34 0 0 0 ${X(fx - 17)} ${Y(13)}Z`;
+    const glass = P([[51, 44.2], [75.5, 61.6], [96.4, 62.6], [96.4, 45]]) + 'Z' + P([[99.6, 62.6], [131.5, 62.2], [134, 47.4], [99.6, 45.4]]) + 'Z'
+      + P([[137, 61.6], [155.5, 60.6], [162.5, 53], [138.2, 47.8]]) + 'Z';
+    const doors = P([[98, 63.5], [98, 11]]) + P([[49.5, 41.8], [53, 30], [54.5, 13.5]]) + P([[135, 63], [136.5, 40], [128, 28]]);
+    const crease = `M${X(10)} ${Y(33.2)}Q${X(95)} ${Y(37.4)} ${X(176)} ${Y(41)}`;
+    const cladding = `M${X(fx - 17)} ${Y(13)}A34 34 0 0 1 ${X(fx + 17)} ${Y(13)}M${X(rx - 17)} ${Y(13)}A34 34 0 0 1 ${X(rx + 17)} ${Y(13)}M${X(fx + 18.5)} ${Y(10.6)}L${X(rx - 18.5)} ${Y(10.6)}`;
+    const head = P([[2, 33], [19, 36.3], [20, 34.6], [4.5, 31.2]]) + 'Z', tail = P([[170.4, 50.3], [171.8, 49.2], [177.4, 37.5], [176.6, 33.6], [171.6, 41.8]]) + 'Z';
+    const mirror = P([[50, 44.8], [55.6, 46.6], [56.4, 43.2], [51.2, 42.4]]) + 'Z';
+    const handles = `M${X(86)} ${Y(41.3)}h10M${X(123)} ${Y(42.4)}h10`;
+    const wheel = cx => {
+      const cxx = X(cx), cy = Y(tire), spokes = Array.from({ length: 5 }, (_, i) => { const a = (i / 5) * Math.PI * 2 - Math.PI / 2; return `M${cxx} ${cy}m${(Math.cos(a) * 4).toFixed(1)} ${(Math.sin(a) * 4).toFixed(1)}l${(Math.cos(a) * 13).toFixed(1)} ${(Math.sin(a) * 13).toFixed(1)}`; }).join('');
+      return `<g class="wh${flagTires ? ' flag' : ''}"><circle class="tire" cx="${cxx}" cy="${cy}" r="${(tire * 2).toFixed(1)}"/><circle class="rim" cx="${cxx}" cy="${cy}" r="${(rim * 2).toFixed(1)}"/><path class="spk" d="${spokes}"/><circle class="hub" cx="${cxx}" cy="${cy}" r="3.4"/></g>`;
+    };
+    return `<svg class="car-art${color ? ' painted' : ''}" viewBox="0 0 382 156" role="img" aria-label="Side view of the CR-V${paint ? ', ' + esc(paint) : ''}${flagTires ? ', tires flagged' : ''}"${color ? ` style="--paint:${color}"` : ''}>
+      <defs><linearGradient id="carShade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
+      <ellipse class="shadow" cx="${X(90)}" cy="151" rx="182" ry="4.5"/>
+      <path class="body" d="${body}"/><path class="body-shade" d="${body}"/>
+      <path class="clad" d="${cladding}"/>
+      <path class="win" d="${glass}"/>
+      <path class="trim" d="${doors}"/><path class="crease" d="${crease}"/><path class="trim" d="${handles}"/>
+      <path class="lamp head" d="${head}"/><path class="lamp tail" d="${tail}"/><path class="mirror" d="${mirror}"/>
+      ${wheel(fx)}${wheel(rx)}
     </svg>`;
   }
   function oilCard() {
@@ -187,10 +214,33 @@ window.POSCar = function (ctx) {
     return `<article class="float car-hero">
       <div class="a-head"><div><span class="lab">${v && v.year ? esc(String(v.year)) : 'Car'}</span><h2 class="car-name">${title}</h2></div>
         ${canSave() ? `<button type="button" class="circle" data-act="car-form" data-form="vehicle" aria-label="Edit car details">${ICON.edit}</button>` : ''}</div>
-      ${drawing(flag)}
+      ${drawing(flag, v && v.paint)}
       ${flag ? `<p class="car-flag">${ICON.warn}Tires: rotate and balance recommended</p>` : ''}
       ${odoLine}
     </article>`;
+  }
+  // what the car costs: the loan left (just the number), the monthly payment and insurance, gas and upkeep
+  function moneyCard() {
+    const m = ctx.fin ? ctx.fin() : null;
+    const year = new Date().getFullYear(), y0 = new Date(year, 0, 1).getTime(), mo0 = new Date(year, new Date().getMonth(), 1).getTime();
+    const upkeepYear = S.service.filter(s => s.at >= y0).reduce((t, s) => t + (s.cost || 0), 0);
+    const upkeepMonth = S.service.filter(s => s.at >= mo0).reduce((t, s) => t + (s.cost || 0), 0);
+    if (!m) return '';
+    const fixed = (m.loan && m.loan.payment || 0) + (m.insurance && m.insurance.amount || 0), month = new Intl.DateTimeFormat(undefined, { month: 'long' }).format(new Date());
+    const ord = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+    const tile = (lab, fig, sub) => `<div class="m-tile"><span class="lab">${lab}</span><span class="fig md">${fig}</span>${sub ? `<span class="meta">${sub}</span>` : ''}</div>`;
+    return `<section class="sec"><div class="sec-head"><span class="lab">Money</span><button type="button" class="link" data-tab="finance">Finance</button></div>
+      <article class="float car-money">
+        ${m.loan ? `<div class="m-loan"><span class="lab">Loan left${m.loan.lender ? ' · ' + esc(m.loan.lender) : ''}</span><span class="fig lg">${m.loan.left != null ? esc(fmt(m.loan.left)) : '—'}</span></div>` : ''}
+        <div class="m-tiles">
+          ${m.loan && m.loan.payment ? tile('Car payment', esc(fmt(m.loan.payment)), m.loan.day ? `the ${ord(m.loan.day)} of each month` : 'a month') : ''}
+          ${m.insurance ? tile('Insurance', m.insurance.amount ? esc(fmt(m.insurance.amount)) : '—', `${esc(m.insurance.name)}${m.insurance.day ? `, the ${ord(m.insurance.day)}` : ''}`) : ''}
+          ${m.gas ? tile('Gas this month', esc(fmt(m.gas.spent)), m.gas.count ? `${m.gas.count} ${m.gas.count === 1 ? 'fill-up' : 'fill-ups'}` : 'none yet') : ''}
+          ${tile('Upkeep this year', esc(fmt(upkeepYear)), 'oil changes and service')}
+        </div>
+        <p class="meta m-total">The car costs <b>${esc(fmt(fixed))}</b> a month before gas (payment and insurance)${m.gas ? `, plus <b>${esc(fmt(m.gas.spent + upkeepMonth))}</b> on gas${upkeepMonth ? ' and service' : ''} so far in ${esc(month)}` : ''}.</p>
+      </article>
+    </section>`;
   }
   function recList() {
     const r = recs();
@@ -240,7 +290,8 @@ window.POSCar = function (ctx) {
   }
   function details(v) {
     if (!v) return '';
-    const rows = [['VIN', v.vin, true], ['Plate', v.plate], ['Engine', v.engine], ['Oil', [v.oil, v.oilQts ? v.oilQts + ' qt with filter' : null].filter(Boolean).join(', ')], ['Oil filter', v.filter],
+    const rows = [['VIN', v.vin, true], ['Plate', v.plate], ['Color', v.paint], ['Drive', v.drive], ['Engine', v.engine], ['Fuel', [v.fuel, v.tank ? v.tank + ' gal tank' : null].filter(Boolean).join(', ')],
+      ['Gas mileage', v.mpg], ['Tires', v.tires], ['Tire pressure', v.psi], ['Oil', [v.oil, v.oilQts ? v.oilQts + ' qt with filter' : null].filter(Boolean).join(', ')], ['Oil filter', v.filter],
       ['Oil change every', `${mi(interval().miles)} mi or ${Math.round(interval().days / 30)} months`]].filter(r => r[1]);
     return `<section class="sec"><div class="sec-head"><span class="lab">Details</span></div>
       <div class="float list">${rows.map(([k, val, copy]) => `<div class="kv"><span class="meta">${k}</span>${copy ? `<button type="button" class="kv-v mono" data-act="car-copy" data-v="${esc(val)}" title="Copy">${esc(val)}</button>` : `<span class="kv-v">${esc(val)}</span>`}</div>`).join('')}</div>
@@ -252,7 +303,7 @@ window.POSCar = function (ctx) {
     else if (!S.loaded) body = '<p class="empty">Loading your car…</p>';
     else {
       const v = car();
-      body = `<div class="car-grid"><div class="car-col">${hero(v)}${oilCard()}</div><div class="car-col">${recList()}${history()}${notes()}${details(v)}</div></div>`;
+      body = `<div class="car-grid"><div class="car-col">${hero(v)}${oilCard()}${moneyCard()}</div><div class="car-col">${recList()}${history()}${notes()}${details(v)}</div></div>`;
     }
     return `<div class="car"><div class="car-scroll" id="carScroll" data-keep>${body}</div></div>`;
   }
@@ -322,7 +373,9 @@ window.POSCar = function (ctx) {
           + `<div class="two">${field('Make', `<input id="cf_make" maxlength="30" value="${esc(v.make || '')}">`)}${field('Model', `<input id="cf_model" maxlength="30" value="${esc(v.model || '')}">`)}</div>`
           + field('VIN', `<input id="cf_vin" autocapitalize="characters" maxlength="17" value="${esc(v.vin || '')}">`)
           + field('Plate', `<input id="cf_plate" autocapitalize="characters" maxlength="12" value="${esc(v.plate || '')}">`)
+          + field('Color', `<select id="cf_paint"><option value="">Not set</option>${Object.keys(PAINTS).map(n => `<option${v.paint === n ? ' selected' : ''}>${n}</option>`).join('')}</select>`, 'Paints the drawing.')
           + field('Engine', `<input id="cf_engine" maxlength="80" value="${esc(v.engine || '')}">`)
+          + `<div class="two">${field('Tires', `<input id="cf_tires" maxlength="30" value="${esc(v.tires || '')}">`)}${field('Tire pressure', `<input id="cf_psi" maxlength="40" value="${esc(v.psi || '')}">`)}</div>`
           + `<div class="two">${field('Oil', `<input id="cf_oil" maxlength="40" value="${esc(v.oil || '')}">`)}${field('Oil filter', `<input id="cf_filter" maxlength="30" value="${esc(v.filter || '')}">`)}</div>`
           + `<div class="two">${field('Oil change every (miles)', `<input id="cf_iv_miles" inputmode="numeric" value="${mi(iv.miles)}">`)}${field('or (months)', `<input id="cf_iv_months" inputmode="numeric" value="${Math.round(iv.days / 30)}">`)}</div>`,
       };
@@ -379,7 +432,7 @@ window.POSCar = function (ctx) {
       if (year != null && !(year > 1900 && year < 2100)) return fail('Year should look like 2017.');
       if (!ivm || Number.isNaN(ivm) || !ivmo || Number.isNaN(ivmo)) return fail('Oil change interval needs miles and months.');
       const d = { year, make: val('cf_make'), model: val('cf_model'), trim: val('cf_trim'), vin: val('cf_vin').toUpperCase(), plate: val('cf_plate').toUpperCase(),
-        engine: val('cf_engine'), oil: val('cf_oil'), filter: val('cf_filter'), interval: { miles: ivm, days: ivmo * 30 } };
+        engine: val('cf_engine'), oil: val('cf_oil'), filter: val('cf_filter'), interval: { miles: ivm, days: ivmo * 30 }, paint: val('cf_paint'), tires: val('cf_tires'), psi: val('cf_psi') };
       return save(v ? db.update('vehicle', v.id, d) : db.set('vehicle', newId('car'), { ...d, createdAt: Date.now() }));
     },
   };

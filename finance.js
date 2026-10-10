@@ -1304,5 +1304,18 @@ window.POSFinance = function (ctx) {
   }
   const sheetOpen = () => sheet.open;
 
-  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill };
+  // the car's money, for the Car page: its loan, its insurance and gas this month (found by name)
+  function carMoney() {
+    if (!S.loaded) return null;
+    const loan = S.loans.find(l => /cr-?v|car|auto|exeter/i.test(`${l.name} ${l.lender || ''}`));
+    const insurance = S.bills.find(b => /progressive|geico|state farm|allstate|insurance/i.test(b.name));
+    const gas = kind('limit').find(l => /gas|fuel/i.test(l.name) && !/snack/i.test(l.name));
+    const payBill = loan && loan.billId ? billById(loan.billId) : null;
+    return {
+      loan: loan ? { name: loan.name, lender: loan.lender, left: loanNow(loan), payment: loan.payment || null, day: payBill ? payBill.day : null } : null,
+      insurance: insurance ? { name: insurance.name, amount: insurance.amount || null, day: insurance.day || null } : null,
+      gas: gas ? { spent: limitSpent(gas), monthly: gas.monthly || null, count: limitCharges(gas).length } : null,
+    };
+  }
+  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney };
 };

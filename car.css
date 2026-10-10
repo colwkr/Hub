@@ -14,15 +14,25 @@
 /* the car itself */
 .car-hero{padding:20px;display:flex;flex-direction:column;gap:16px}
 .car-name{font-size:26px;font-weight:300;letter-spacing:-.01em;line-height:1.1}
-.car-art{display:block;width:100%;max-width:440px;height:auto;margin:4px auto 0;overflow:visible}
-.car-art path,.car-art circle{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
-.car-art .ground{stroke:var(--hair);stroke-width:1.2}
-.car-art .win{stroke:var(--ink-2);fill:color-mix(in srgb,var(--ink) 6%,transparent)}
-.car-art .trim{stroke:var(--ink-3);stroke-width:1.2}
-.car-art .body{fill:color-mix(in srgb,var(--ink) 3%,transparent)}
-.car-art .wh circle:first-child{fill:var(--glass,transparent);stroke-width:2}
-.car-art .wh.flag circle{stroke:var(--warn)}
-.car-art .wh.flag circle:first-child{stroke-width:2.4;fill:color-mix(in srgb,var(--warn) 10%,transparent)}
+.car-art{display:block;width:100%;max-width:520px;height:auto;margin:4px auto 0;overflow:visible;--paint:color-mix(in srgb,var(--ink) 14%,transparent)}
+.car-art path,.car-art circle{stroke-linejoin:round;stroke-linecap:round}
+.car-art .shadow{fill:#000;opacity:.25}
+.car-art .body{fill:var(--paint);stroke:var(--ink);stroke-width:1.4}
+.car-art.painted .body{stroke:color-mix(in srgb,var(--paint) 55%,#000)}
+.car-art .body-shade{fill:url(#carShade);stroke:none}
+.car-art .clad{fill:none;stroke:#1a1b1d;stroke-width:3.2;stroke-linecap:butt}
+.car-art .win{fill:#20262e;stroke:color-mix(in srgb,var(--ink) 40%,transparent);stroke-width:1}
+.car-art .trim{fill:none;stroke:color-mix(in srgb,#000 45%,transparent);stroke-width:1}
+.car-art:not(.painted) .trim{stroke:var(--ink-3)}
+.car-art .crease{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1}
+.car-art .lamp{fill:#c9d3dc;stroke:rgba(0,0,0,.35);stroke-width:.8}
+.car-art .lamp.tail{fill:#a3262c}
+.car-art .mirror{fill:var(--paint);stroke:rgba(0,0,0,.4);stroke-width:.8}
+.car-art .tire{fill:#151618;stroke:#2c2e31;stroke-width:1}
+.car-art .rim{fill:#8e9398;stroke:#5d6166;stroke-width:1}
+.car-art .spk{fill:none;stroke:#3a3d41;stroke-width:3.2}
+.car-art .hub{fill:#2a2c2f}
+.car-art .wh.flag .tire{stroke:var(--warn);stroke-width:2.6}
 .car-flag{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--warn);margin-top:-6px;justify-content:center}
 .car-flag svg.i{width:15px;height:15px;stroke-width:2}
 .car .odo{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;padding-top:14px;box-shadow:inset 0 1px 0 var(--hair);flex-wrap:wrap}
@@ -48,6 +58,17 @@
 .car .pill.soonp{color:var(--warn)}
 .car .pill.late{color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad);background:none}
 .car-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* money */
+.car-money{padding:18px 20px;display:flex;flex-direction:column;gap:16px}
+.car .m-loan{display:flex;flex-direction:column;gap:4px}
+.car .m-loan .fig.lg{font-size:34px;font-weight:300}
+.car .m-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.car .m-tile{display:flex;flex-direction:column;gap:3px;min-width:0}
+.car .m-tile .meta{overflow-wrap:anywhere}
+.car .m-total{padding-top:12px;box-shadow:inset 0 1px 0 var(--hair);font-size:12.5px}
+.car .m-total b{color:var(--ink);font-weight:500}
+.car .sec-head .link{font-size:12px}
 
 /* lists */
 .car .rec-row{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px}

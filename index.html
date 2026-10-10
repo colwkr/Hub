@@ -35,13 +35,13 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010025714">
-<script src="finance.js?v=20261010025714"></script>
-<link rel="stylesheet" href="car.css?v=20261010025714">
-<script src="car.js?v=20261010025714"></script>
-<link rel="stylesheet" href="sections.css?v=20261010025714">
-<script src="records.js?v=20261010025714"></script>
-<script src="people.js?v=20261010025714"></script>
+<link rel="stylesheet" href="finance.css?v=20261010030050">
+<script src="finance.js?v=20261010030050"></script>
+<link rel="stylesheet" href="car.css?v=20261010030050">
+<script src="car.js?v=20261010030050"></script>
+<link rel="stylesheet" href="sections.css?v=20261010030050">
+<script src="records.js?v=20261010030050"></script>
+<script src="people.js?v=20261010030050"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1306,13 +1306,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010025714"></script>
+<script src="appearance.js?v=20261010030050"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010025714';
+  const VERSION = '20261010030050';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -4250,7 +4250,7 @@ dialog::backdrop{background:transparent}
     }
     sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
-    if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer });
+    if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     const { data } = await sb.auth.getSession();
     S.booted = true;
