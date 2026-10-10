@@ -35,16 +35,16 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010032310">
-<script src="finance.js?v=20261010032310"></script>
-<link rel="stylesheet" href="car.css?v=20261010032310">
-<script src="car.js?v=20261010032310"></script>
-<link rel="stylesheet" href="sections.css?v=20261010032310">
-<script src="records.js?v=20261010032310"></script>
-<script src="people.js?v=20261010032310"></script>
-<script src="notes.js?v=20261010032310"></script>
-<script src="lights.js?v=20261010032310"></script>
-<script src="pets.js?v=20261010032310"></script>
+<link rel="stylesheet" href="finance.css?v=20261010033306">
+<script src="finance.js?v=20261010033306"></script>
+<link rel="stylesheet" href="car.css?v=20261010033306">
+<script src="car.js?v=20261010033306"></script>
+<link rel="stylesheet" href="sections.css?v=20261010033306">
+<script src="records.js?v=20261010033306"></script>
+<script src="people.js?v=20261010033306"></script>
+<script src="notes.js?v=20261010033306"></script>
+<script src="lights.js?v=20261010033306"></script>
+<script src="pets.js?v=20261010033306"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -427,8 +427,13 @@ body[data-view="home"] .top{display:none}
 .achip2.done .bmain{text-decoration:line-through;color:var(--ink-3)}
 .daycal .tl{height:min(68vh,560px)}
 .tl-grid.one{grid-template-columns:52px minmax(0,1fr)}
-.daybreak{position:absolute;top:0;left:52px;right:0;height:0;box-shadow:0 -.5px 0 1px var(--ink-3);z-index:4;pointer-events:none}
-.daybreak span{position:absolute;top:6px;left:8px;padding:3px 9px;border-radius:999px;background:var(--lift-bg);box-shadow:var(--lift-sm);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.roll-win{position:relative;overflow:hidden;min-width:0}
+.roll-in{position:absolute;left:0;right:0}
+.roll-in .tl-col{display:block}
+.roll-in .daybreak{left:0}
+.daybreak{position:absolute;top:0;left:0;right:0;height:0;box-shadow:0 -.5px 0 1px var(--ink-3);z-index:4;pointer-events:none}
+.tl-hours span.h-day{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;color:var(--ink-2)}
+.tl-hours span.h-day b{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
 
 /* sign-in */
 .login{min-height:calc(100vh - 120px);display:grid;place-items:center;padding-block:24px}
@@ -778,6 +783,8 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .tl-col.today{background-color:var(--today-col)}
 .blk{position:absolute;z-index:1;border:0;padding:5px 8px;border-radius:12px;text-align:left;overflow:hidden;
   background:var(--panel-hi);box-shadow:var(--lift-sm),inset 0 0 0 1px var(--hair);display:flex;flex-direction:column;gap:1px;min-width:0}
+.blk.spills{border-bottom-left-radius:3px;border-bottom-right-radius:3px}
+.blk.cont{border-top-left-radius:3px;border-top-right-radius:3px}
 .blk b{font-size:12px;font-weight:500;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .blk small{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .blk.tight{flex-direction:row;align-items:center;gap:6px;padding-block:0}
@@ -1309,13 +1316,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010032310"></script>
+<script src="appearance.js?v=20261010033306"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010032310';
+  const VERSION = '20261010033306';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2177,30 +2184,41 @@ dialog::backdrop{background:transparent}
     const tk = todayKey(), nm = nowMin();
     // blocks are as tall as their time (5 minutes at least); short ones lay their words in a row, tiny ones drop them
     const hp = lane === 'tasks' ? 0 : hourPx(), minLen = 5, isTight = len => (lane === 'tasks' ? len < 12 : len / 60 * hp < 38);
+    // anything from the day before that runs past midnight carries on at the top of this day
+    const kp = addDays(k, -1), gEnd = g => toMin(g.start) + Math.max(15, g.mins || 30);
     const items = layout([
       ...dayItems(k).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane)).map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + effMins(t) })),
-      ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: toMin(g.start) + Math.max(15, g.mins || 30) }))),
-    ]);
+      ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === k && !g.allDay && g.start).map(g => ({ g, s: toMin(g.start), e: gEnd(g) }))),
+      ...dayItems(kp).filter(t => kindOf(t) === 'timed' && t.kind !== 'marker' && inLane(t, lane) && toMin(t.time) + effMins(t) > 1440).map(t => ({ t, s: 0, e: toMin(t.time) + effMins(t) - 1440, from: toMin(t.time) })),
+      ...(lane === 'tasks' ? [] : S.events.filter(g => g.date === kp && !g.allDay && g.start && gEnd(g) > 1440).map(g => ({ g, s: 0, e: gEnd(g) - 1440, from: toMin(g.start) }))),
+    ].map(x => ({ ...x, e: Math.min(x.e, 1440) , full: x.e })));
     const blocks = items.map(x => {
       const len = x.e - x.s;
+      if (x.from != null) {
+        // the part after midnight: tap it to open the whole thing
+        const src = x.t || x.g, kindCls = x.g ? ' evt' : x.t.kind === 'meeting' ? ' mtg' : x.t.kind !== 'task' ? ' evt lev' : x.t.done ? ' done' : '';
+        const when = fmtRange(x.from, x.e + 1440), live = k === tk && nm < x.e && !(x.t && x.t.done);
+        const st = `top:1px;height:max(4px, calc(var(--h) * ${(Math.max(len, 5) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
+        return `<button type="button" class="blk cont${kindCls}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${st}" ${x.g ? `data-act="event" data-ev="${esc(x.g.id)}"` : `data-act="edit" data-id="${esc(x.t.id)}"`} title="${esc(src.title)} · ${esc(when)}" aria-label="${esc(src.title)}, ${esc(when)}, from the day before"><b>${esc(src.title)}</b><small>${esc(when)}</small></button>`;
+      }
       const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       if (x.g) {
         const when = fmtRange(x.s, x.s + (x.g.mins || 30));
-        return `<button type="button" class="blk evt${isTight(len) ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
+        return `<button type="button" class="blk evt${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${k === tk && x.s <= nm && nm < x.e ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
       }
       const t = x.t;
-      const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
+      const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (t.kind !== 'task') {
         // events and meetings: no done circle; tapping opens the edit sheet
-        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.e), live = k === tk && x.s <= nm && nm < x.e;
-        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
+        const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.full), live = k === tk && x.s <= nm && nm < x.e;
+        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
       }
       const live = k === tk && !t.done && x.s <= nm && nm < x.e;
-      const cls = ['blk', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', isTight(len) ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
-      const when = t.mins ? fmtRange(x.s, x.e) : `${fmtTime(x.s)} · no estimate`;
+      const cls = ['blk', x.full > 1440 ? 'spills' : '', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', isTight(len) ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
+      const when = t.mins ? fmtRange(x.s, x.full) : `${fmtTime(x.s)} · no estimate`;
       const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       const inner = `<b>${esc(t.title)}</b><small>${esc(when)}</small>`;
-      const grip = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.e}"`, edges = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
+      const grip = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>`;
       return `<div class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>`;
     }).join('');
@@ -2215,23 +2233,65 @@ dialog::backdrop{background:transparent}
     const dims = sleepDims(k).map(([a, b]) => `<div class="dim" style="top:calc(var(--h) * ${(a / 60).toFixed(4)});height:calc(var(--h) * ${((b - a) / 60).toFixed(4)})" aria-hidden="true"></div>`).join('');
     return `<div class="tl-col${k === tk ? ' today' : ''}" data-act="slot" data-day="${k}"${lane ? ` data-lane="${lane}"` : ''} aria-label="${esc(shortFmt.format(fromKey(k)))}${lane === 'tasks' ? ' tasks' : ''} timeline">${dims}${blocks}${marks}${line}</div>`;
   }
-  // Home's calendar: the day, with the next day running on below it, so late at night you can still see through tomorrow.
-  // Arrows step a day at a time.
-  function vDayCal(cls) {
-    const k = S.homeDay, tk = todayKey(), k1 = addDays(k, 1);
+  // Home's calendar. On today it's a rolling window: the last two hours, then the next 24 (it runs on past midnight).
+  // Arrows step to other days, which show whole.
+  const ROLL_PAST = 2;
+  function anyChips(k) {
     const any = dayItems(k).filter(t => kindOf(t) === 'anytime' && t.kind !== 'task').sort(cmp);
-    const open = S.tasks.filter(t => t.date === k && !t.done).length;
     const allDay = S.events.filter(g => g.date === k && g.allDay), bills = billsOn(k), bdays = bdaysOn(k);
-    const nEv = S.events.filter(g => g.date === k).length + dayItems(k).filter(x => x.kind !== 'task' && x.kind !== 'marker').length;
-    const anyRow = any.length || allDay.length || bills.length || bdays.length ? `<div class="dc-any" data-day="${k}"><span class="lab">Anytime</span><div class="dc-chips">${bdays.map(x => bdayChip(x, 'achip2')).join('')}${bills.map(x => billChip(x, 'achip2')).join('')}${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}</div></div>` : '';
+    return `${bdays.map(x => bdayChip(x, 'achip2')).join('')}${bills.map(x => billChip(x, 'achip2')).join('')}${allDay.map(g => `<span class="achip2 evt"><button type="button" class="bmain" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button></span>`).join('')}${any.map(t => t.kind !== 'task' ? `<span class="achip2 evt${t.kind === 'meeting' ? ' mtg' : ''}"><button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button></span>` : `<span class="achip2${t.done ? ' done' : ''}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}">${esc(t.title)}</button></span>`).join('')}`;
+  }
+  const anyRow = (k, label) => { const c = anyChips(k); return c ? `<div class="dc-any" data-day="${k}"><span class="lab">${esc(label)}</span><div class="dc-chips">${c}</div></div>` : ''; };
+  // the hours the rolling window covers, counted from today's midnight: from two whole hours back to 24 hours past the next hour
+  function rollSpan() {
+    const h = Math.floor(nowMin() / 60);
+    return { from: h - ROLL_PAST, to: h + 25 };
+  }
+  function vDayCal(cls) {
+    const k = S.homeDay, tk = todayKey();
+    const nav = `<div class="cal-nav"><button type="button" class="circle" data-act="hd-prev" aria-label="Previous day">${ICON.left}</button>${k !== tk ? '<button type="button" class="btn" data-act="hd-today">Now</button>' : ''}<button type="button" class="circle" data-act="hd-next" aria-label="Next day">${ICON.right}</button></div>`;
+    const err = S.evErr ? `<p class="meta stale-note">Google Calendar: ${esc(S.evErr)}</p>` : '';
+    if (k !== tk) {
+      const open = S.tasks.filter(t => t.date === k && !t.done).length;
+      const nEv = S.events.filter(g => g.date === k).length + dayItems(k).filter(x => x.kind !== 'task' && x.kind !== 'marker').length;
+      const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
+      return `<section class="float daycal ${cls}" aria-label="Day calendar">
+        <div class="dc-head"><div><span class="lab">${esc(dayLabel(k))}</span><p class="name">${esc(longFmt.format(fromKey(k)))}</p><p class="meta">${S.loaded ? esc(counts) : ''}</p>${err}</div>${nav}</div>
+        ${anyRow(k, 'Anytime')}
+        <div class="tl" id="hometl" data-keep><div class="tl-grid one">${hoursCol()}${dayColumn(k, true)}</div></div>
+      </section>`;
+    }
+    // today: the window, built from whole days stacked one above the other and clipped to the hours that matter
+    const { from, to } = rollSpan(), n = to - from, first = from < 0 ? -1 : 0, days = [];
+    for (let d = first; d * 24 < to; d++) days.push(addDays(tk, d));
+    // keep the same hours on screen when the window moves on by an hour while you're scrolled
+    const startMs = fromKey(tk).getTime() + from * 3600e3, el = document.getElementById('hometl');
+    if (S.homeWin && S.homeWin !== startMs && el && S.aim.hometl == null) S.aim.hometl = Math.max(0, el.scrollTop - (startMs - S.homeWin) / 3600e3 * hourPx());
+    S.homeWin = startMs;
+    // what's in the window
+    let open = 0, nEv = 0;
+    days.forEach((kd, i) => {
+      const off = (first + i) * 1440, inWin = m => m + off >= from * 60 && m + off < to * 60;
+      for (const t of dayItems(kd)) if (kindOf(t) === 'timed' && t.kind !== 'marker' && inWin(toMin(t.time))) { if (t.kind !== 'task') nEv++; else if (!t.done) open++; }
+      for (const g of S.events) if (g.date === kd && !g.allDay && g.start && inWin(toMin(g.start))) nEv++;
+    });
     const counts = [open ? `${open} open ${open === 1 ? 'task' : 'tasks'}` : 'No open tasks', nEv ? `${nEv} ${nEv === 1 ? 'event' : 'events'}` : ''].filter(Boolean).join(' · ');
-    return `<section class="float daycal ${cls}" aria-label="Day calendar">
-      <div class="dc-head">
-        <div><span class="lab">${esc(dayLabel(k))}</span><p class="name">${esc(longFmt.format(fromKey(k)))}</p><p class="meta">${S.loaded ? esc(counts) : ''}</p>${S.evErr ? `<p class="meta stale-note">Google Calendar: ${esc(S.evErr)}</p>` : ''}</div>
-        <div class="cal-nav"><button type="button" class="circle" data-act="hd-prev" aria-label="Previous day">${ICON.left}</button>${k !== tk ? '<button type="button" class="btn" data-act="hd-today">Today</button>' : ''}<button type="button" class="circle" data-act="hd-next" aria-label="Next day">${ICON.right}</button></div>
-      </div>
-      ${anyRow}
-      <div class="tl" id="hometl" data-keep><div class="tl-grid one">${hoursCol(false, 'first')}${dayColumn(k, true)}</div><div class="tl-grid one tl-next">${hoursCol(false, 'next')}${dayColumn(k1, true)}<div class="daybreak" aria-hidden="true"><span>${esc(dayLabel(k1) === 'Tomorrow' ? `Tomorrow · ${shortFmt.format(fromKey(k1))}` : shortFmt.format(fromKey(k1)))}</span></div></div></div>
+    let hrs = '';
+    for (let i = 0; i <= n; i++) {
+      const hod = (((from + i) % 24) + 24) % 24, hr = esc(hourFmt.format(new Date(2000, 0, 1, hod)));
+      // where a new day starts, the hour says which day
+      if (hod === 0 && i > 0 && i < n) hrs += `<span class="h-day" style="top:calc(var(--h) * ${i})"><b>${esc(wdFmt.format(fromKey(addDays(tk, Math.floor((from + i) / 24)))))}</b>${hr}</span>`;
+      else hrs += `<span${i === 0 ? ' class="h-top"' : i === n ? ' class="h-bot"' : ''} style="top:calc(var(--h) * ${i})">${hr}</span>`;
+    }
+    const breaks = days.slice(1).map((kd, i) => `<div class="daybreak" style="top:calc(var(--h) * ${(i + 1) * 24})" aria-hidden="true"></div>`).join('');
+    const tom = addDays(tk, 1);
+    return `<section class="float daycal ${cls}" aria-label="Next 24 hours">
+      <div class="dc-head"><div><span class="lab">Next 24 hours</span><p class="name">${esc(longFmt.format(fromKey(tk)))}</p><p class="meta">${S.loaded ? esc(counts) : ''}</p>${err}</div>${nav}</div>
+      ${anyRow(tk, 'Today')}${anyRow(tom, 'Tomorrow')}
+      <div class="tl" id="hometl" data-keep data-hours="${n}"><div class="tl-grid one roll">
+        <div class="tl-hours" style="height:calc(var(--h) * ${n})">${hrs}</div>
+        <div class="roll-win" style="height:calc(var(--h) * ${n})"><div class="roll-in" style="top:calc(var(--h) * ${-(from - first * 24)})">${days.map(kd => dayColumn(kd, true)).join('')}${breaks}</div></div>
+      </div></div>
     </section>`;
   }
 
@@ -2412,8 +2472,8 @@ dialog::backdrop{background:transparent}
     S.aim.tl = at * hourPx();
   }
   function aimHome() {
-    const at = S.homeDay === todayKey() ? Math.max(0, nowMin() / 60 - 1) : 7;
-    S.aim.hometl = at * hourPx();
+    S.aim.hometl = S.homeDay === todayKey() ? 0 : 7 * hourPx(); // today's window already starts two hours back
+
   }
   function shiftHome(dir) {
     slideNav(dir, () => { S.homeDay = addDays(S.homeDay, dir); render(); });
@@ -2569,11 +2629,7 @@ dialog::backdrop{background:transparent}
     const m = nowMin(), d = todayKey();
     if (m === lastMinute && d === lastDay) return;
     if (d !== lastDay && S.calDay === lastDay) S.calDay = d;
-    if (d !== lastDay && S.homeDay === lastDay) {
-      S.homeDay = d;
-      const el = document.getElementById('hometl');
-      if (el) S.aim.hometl = Math.max(0, el.scrollTop - 24 * hourPx()); // yesterday's tomorrow is today now: same hours on screen
-    }
+    if (d !== lastDay && S.homeDay === lastDay) S.homeDay = d;
     if (S.tab === 'home' && S.homeDay === d && Date.now() - homeTouchedAt > 5 * 60e3) aimHome();
     if (d !== lastDay) split();
     lastMinute = m; lastDay = d;
@@ -3296,8 +3352,15 @@ dialog::backdrop{background:transparent}
     const h = tl && tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx();
     return h >= 140 ? 5 : h >= 90 ? 10 : h >= 45 ? 15 : 30;
   }
-  const slotAt = (col, y) => { const st = stepOf(col), r = col.getBoundingClientRect(); return clamp(Math.floor((y - r.top) / r.height * 1440 / st) * st, 0, 1440 - st); };
-  function markRange() { const st = stepOf(mk.col), c = slotAt(mk.col, mk.y); return { lo: Math.min(mk.a, c), hi: Math.max(mk.a, c) + st }; }
+  function roomOf(col) {
+    const cols = [...col.closest('.tl').querySelectorAll('.tl-col')].filter(c => c.dataset.lane === col.dataset.lane);
+    const nx = cols[cols.indexOf(col) + 1];
+    if (!nx) return 1440;
+    const a = col.getBoundingClientRect(), b = nx.getBoundingClientRect();
+    return Math.abs(a.left - b.left) < 1 && Math.abs(a.bottom - b.top) < 2 ? 2880 : 1440;
+  }
+  const slotAt = (col, y) => { const st = stepOf(col), r = col.getBoundingClientRect(); return clamp(Math.floor((y - r.top) / r.height * 1440 / st) * st, 0, (mk && mk.col === col ? mk.room : 1440) - st); };
+  function markRange() { const st = stepOf(mk.col), c = slotAt(mk.col, mk.y); return { lo: Math.min(mk.a, c), hi: Math.min(Math.max(mk.a, c) + st, Math.min(mk.a, c) + 1440) }; }
   function drawMark() {
     const { lo, hi } = markRange();
     if (lo === mk.lo && hi === mk.hi) return;
@@ -3348,7 +3411,8 @@ dialog::backdrop{background:transparent}
     if (!col || e.target.closest('.blk, button') || !S.canSave || !e.isPrimary) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const touch = e.pointerType !== 'mouse';
-    mk = { col, tl: col.closest('.tl'), day: col.dataset.day, pid: e.pointerId, x0: e.clientX, y0: e.clientY, y: e.clientY, a: slotAt(col, e.clientY), on: false, touch, lo: -1, hi: -1 };
+    mk = { col, tl: col.closest('.tl'), day: col.dataset.day, pid: e.pointerId, x0: e.clientX, y0: e.clientY, y: e.clientY, a: 0, room: roomOf(col), on: false, touch, lo: -1, hi: -1 };
+    mk.a = Math.min(slotAt(col, e.clientY), 1440 - stepOf(col)); // it starts on this day; it can end on the next
     if (touch) mk.hold = setTimeout(startMark, 320);
   });
   document.addEventListener('pointermove', e => {
@@ -3377,7 +3441,7 @@ dialog::backdrop{background:transparent}
     for (const tl of document.querySelectorAll('#view .tl:not(.tl-zoom)')) {
       if (!tl.offsetParent) continue;
       const cs = getComputedStyle(tl);
-      need = Math.max(need, (tl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / 24);
+      need = Math.max(need, (tl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / (+tl.dataset.hours || 24));
     }
     return need;
   }
@@ -3533,7 +3597,7 @@ dialog::backdrop{background:transparent}
       const st = stepOf(m.col), at = Math.round(minAt(m.col, m.y) / st) * st;
       const tl = m.col.closest('.tl'), hp = tl && tl.classList.contains('tl-zoom') ? parseFloat(tl.style.getPropertyValue('--h')) || 200 : hourPx();
       if (m.mode === 'top') { m.ns = clamp(at, 0, m.e0 - st); m.nlen = m.e0 - m.ns; }
-      else { m.ns = m.s0; m.nlen = clamp(at, m.s0 + st, 1440) - m.s0; }
+      else { m.ns = m.s0; m.nlen = clamp(at, m.s0 + st, Math.min(m.room, m.s0 + 1440)) - m.s0; }
       m.blk.style.top = topAt(m.ns);
       m.blk.style.height = `max(4px, calc(var(--h) * ${(Math.max(m.nlen, 5) / 60).toFixed(4)} - 2px))`;
       m.blk.classList.toggle('tight', m.nlen / 60 * hp < 38);
@@ -3586,7 +3650,7 @@ dialog::backdrop{background:transparent}
     const s0 = id ? +blk.dataset.s : 0, e0 = id ? +blk.dataset.e : 0;
     mv = { blk, col, cols: [...col.closest('.tl').querySelectorAll('.tl-col')].filter(c => c.dataset.lane === col.dataset.lane), tl: col.closest('.tl'), id, ev: !id, marker: blk.classList.contains('mark'), pid: e.pointerId,
       x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, mouse, on: false, mode: rz ? (rz.classList.contains('rz-t') ? 'top' : 'bot') : 'move',
-      s0, e0, grab: minAt(col, e.clientY) - s0, ns: s0, nd: col.dataset.day, nlen: e0 - s0 };
+      s0, e0, grab: minAt(col, e.clientY) - s0, ns: s0, nd: col.dataset.day, nlen: e0 - s0, room: roomOf(col) };
     // a finger holds still to pick it up; a mouse picks it up by moving, or by holding a moment
     if (mv.mode === 'move' && !(mouse && mv.ev)) mv.hold = setTimeout(startMove, mouse ? 350 : 420);
   });
