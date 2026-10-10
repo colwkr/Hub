@@ -16,6 +16,7 @@ window.POSLights = function (ctx) {
     ceiling: svg('<path d="M12 3.5v4M5.5 14a6.5 6.5 0 0 1 13 0z"/><path d="M10.3 17a1.7 1.7 0 0 0 3.4 0"/>'),
     strip: svg('<rect x="3.5" y="9.5" width="17" height="5" rx="2.5"/><path d="M7.5 12h.01M12 12h.01M16.5 12h.01"/>'),
     other: svg('<circle cx="12" cy="12" r="4"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>'),
+    house: svg('<path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9.5h11V10"/><path d="M10.5 19.5v-5h3v5"/>'),
     room: svg('<path d="M6.5 20.5v-15A1.5 1.5 0 0 1 8 4h8a1.5 1.5 0 0 1 1.5 1.5v15M4.5 20.5h15M14 12.5v.01"/>'),
     bed: svg('<path d="M3.5 18.5v-6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v6M3.5 15.5h17M6.5 10.5V8a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 17.5 8v2.5"/>'),
     power: svg('<path d="M12 4v7"/><path d="M7.3 7.3a6.5 6.5 0 1 0 9.4 0"/>'),
@@ -53,13 +54,20 @@ window.POSLights = function (ctx) {
   const lightsIn = id => S.light.filter(l => l.roomId === id).sort(byCreated);
   const loose = () => S.light.filter(l => !S.room.some(r => r.id === l.roomId)).sort(byCreated);
   const lightById = id => S.light.find(l => l.id === id);
-  const UI = { shut: new Set(), sel: {} };
+  const UI = { shut: new Set(), pick: 'house' };
   try { UI.shut = new Set(JSON.parse(localStorage.getItem('pos.lights.shut') || '[]')); } catch (e) {}
   const keepShut = () => { try { localStorage.setItem('pos.lights.shut', JSON.stringify([...UI.shut])); } catch (e) {} };
   const isOn = l => !!l.on && (l.level ?? 100) > 0;
   // what the room's controls show: the first light that's on, or the first light
   const lead = list => list.find(isOn) || list[0];
-  const selOf = room => { const id = UI.sel[room.id]; return id && lightById(id) && lightById(id).roomId === room.id ? lightById(id) : null; };
+  // what the controls are set to: the whole house, one room, or one light
+  function pickOf() {
+    const p = UI.pick || 'house';
+    if (p.startsWith('light:')) { const l = lightById(p.slice(6)); if (l) return { kind: 'light', key: p, one: l, list: [l], name: l.name }; }
+    if (p.startsWith('room:')) { const r = S.room.find(x => x.id === p.slice(5)); if (r) return { kind: 'room', key: p, room: r, list: lightsIn(r.id), name: r.name }; }
+    return { kind: 'house', key: 'house', list: S.light.slice().sort(byCreated), name: 'Whole house' };
+  }
+  const countText = list => (!list.length ? 'No lights yet' : list.some(isOn) ? `${list.filter(isOn).length} of ${list.length} on` : 'All off');
 
   /* ---------- the real lights (Oasis cloud, through the lights function) ---------- */
   // what each light last told us, by node; a light we just changed keeps our values for a few seconds
@@ -100,7 +108,7 @@ window.POSLights = function (ctx) {
     if (n.on !== true) p.Power = true;
     const lv = Math.max(1, Math.min(100, Math.round(l.level ?? 100))), k = Math.max(KMIN, Math.min(KMAX, Math.round(l.kelvin || 2700)));
     if (n.level !== lv) p.Brightness = lv;
-    if (n.kelvin !== k) p.CCT = k;
+    if (n.kelvin !== k) { p.CCT = k; p['Light Mode'] = 2; }
     return p;
   }
   let sending = false, queued = null;
@@ -152,30 +160,34 @@ window.POSLights = function (ctx) {
   function tile(l, sel) {
     const on = isOn(l);
     return `<div class="lt-tile${on ? ' on' : ''}${sel ? ' sel' : ''}" data-light="${esc(l.id)}" style="${glowVars(l)}">
-      <button type="button" class="lt-pick" data-act="lt-pick" data-room="${esc(l.roomId)}" data-id="${esc(l.id)}" aria-pressed="${sel}"><span class="lt-dot">${ICON[l.type] || ICON.other}</span><span class="lt-tx"><span class="name">${esc(l.name)}</span><span class="meta" data-st>${esc(stateText(l))}</span></span></button>
+      <button type="button" class="lt-pick" data-act="lt-pick" data-pick="light:${esc(l.id)}" aria-pressed="${sel}"><span class="lt-dot">${ICON[l.type] || ICON.other}</span><span class="lt-tx"><span class="name">${esc(l.name)}</span><span class="meta" data-st>${esc(stateText(l))}</span></span></button>
       <button type="button" class="lt-pow" data-act="lt-power" data-id="${esc(l.id)}" aria-pressed="${on}" aria-label="${esc(l.name)} ${on ? 'off' : 'on'}">${ICON.power}</button>
     </div>`;
   }
-  function roomTile(room, list, sel) {
-    const n = list.filter(isOn).length, l = lead(list) || {};
-    return `<div class="lt-tile all${n ? ' on' : ''}${sel ? ' sel' : ''}" style="${list.length ? glowVars(n ? l : { ...l, on: false }) : ''}">
-      <button type="button" class="lt-pick" data-act="lt-pick" data-room="${esc(room.id)}" data-id="" aria-pressed="${sel}"><span class="lt-dot">${/bed/i.test(room.name) ? ICON.bed : ICON.room}</span><span class="lt-tx"><span class="name">Whole room</span><span class="meta" data-st>${list.length ? `${n} of ${list.length} on` : 'No lights yet'}</span></span></button>
-      ${list.length ? `<button type="button" class="lt-pow" data-act="lt-power" data-room="${esc(room.id)}" aria-pressed="${!!n}" aria-label="Whole room ${n ? 'off' : 'on'}">${ICON.power}</button>` : ''}
-    </div>`;
+  const roomIcon = room => (/bed/i.test(room.name) ? ICON.bed : ICON.room);
+  const sw = (on, attrs, label) => `<button type="button" class="switch lt-sw" role="switch" aria-checked="${on}" data-act="lt-power" ${attrs} aria-label="${esc(label)} ${on ? 'off' : 'on'}"><span class="sw" aria-hidden="true"></span></button>`;
+  function houseBar(sel) {
+    const all = S.light, n = all.some(isOn);
+    return `<section class="float lt-house"><div class="lt-rh">
+      <button type="button" class="lt-open${sel ? ' sel' : ''}" data-act="lt-pick" data-pick="house" aria-pressed="${sel}"><span class="lt-ric">${ICON.house}</span><span class="lt-tx"><span class="lt-rn">Whole house</span><span class="meta" data-hst>${countText(all)}</span></span></button>
+      ${all.length ? sw(n, 'data-house="1"', 'Whole house') : ''}
+    </div></section>`;
   }
   const slider = (key, label, val, min, max, step) => `<div class="lt-sl lt-${key}" role="slider" tabindex="0" aria-label="${label}" data-lt="${key}" data-min="${min}" data-max="${max}" data-step="${step}" aria-valuemin="${min}" aria-valuemax="${max}" aria-valuenow="${val}" style="--p:${((val - min) / (max - min)).toFixed(4)}"><i></i></div>`;
-  function panel(room, list) {
-    const one = selOf(room), l = one || lead(list);
-    if (!l) return '';
+  // one set of controls for whatever is picked
+  function panel(p) {
+    const { one, list } = p, l = one || lead(list);
+    if (!l) return `<div class="lt-panel"><div class="lt-pt"><span class="lab">${esc(p.name)}</span><span class="meta">No lights yet</span></div></div>`;
     const on = one ? isOn(one) : list.some(isOn);
     const level = l.level ?? 100, kelvin = l.kelvin || 2700, hue = l.hue || 0, color = l.mode === 'color';
     const type = one ? (TYPES.find(t => t[0] === one.type) || TYPES[4])[1] : null;
-    const real = (one ? [one] : list).some(x => x.node); // the Oasis lights take a tone, not a color
-    return `<div class="lt-panel" data-room="${esc(room.id)}" data-light="${one ? esc(one.id) : ''}" style="${glowVars({ ...l, on })};--k-track:${K_TRACK};--h-track:${H_TRACK}">
+    const real = list.some(x => x.node); // the Oasis lights take a tone, not a color
+    const scope = one ? `data-id="${esc(one.id)}"` : p.room ? `data-room="${esc(p.room.id)}"` : 'data-house="1"';
+    return `<div class="lt-panel" data-pick="${esc(p.key)}" style="${glowVars({ ...l, on })};--k-track:${K_TRACK};--h-track:${H_TRACK}">
       <div class="lt-ph">
-        <div class="lt-pt"><span class="lab">${one ? esc([one.brand, type].filter(Boolean).join(' · ')) : `${list.length} ${list.length === 1 ? 'light' : 'lights'}`}</span><span class="lt-pn">${esc(one ? one.name : 'Whole room')}</span></div>
+        <div class="lt-pt"><span class="lab">${one ? esc([one.brand, type].filter(Boolean).join(' · ')) : `${list.length} ${list.length === 1 ? 'light' : 'lights'}`}</span><span class="lt-pn">${esc(p.name)}</span></div>
         ${one && ctx.canSave() ? `<button type="button" class="circle" data-act="lt-edit" data-id="${esc(one.id)}" aria-label="Edit ${esc(one.name)}">${ICON.edit}</button>` : ''}
-        <button type="button" class="switch lt-sw" role="switch" aria-checked="${on}" data-act="lt-power" ${one ? `data-id="${esc(one.id)}"` : `data-room="${esc(room.id)}"`} aria-label="${on ? 'Turn off' : 'Turn on'}"><span class="sw" aria-hidden="true"></span></button>
+        ${sw(on, scope, p.name)}
       </div>
       <div class="lt-ctl"><div class="lt-row"><span class="lab">Brightness</span><span class="fig" data-out="level">${on ? level + '%' : 'Off'}</span></div>${slider('level', 'Brightness', on ? level : 0, 0, 100, 1)}</div>
       <div class="lt-ctl${!color || real ? ' act' : ''}" data-mode="white"><div class="lt-row"><span class="lab">${real ? 'Tone' : 'White'}</span><span class="meta" data-out="kelvin">${kelvin}K · ${kName(kelvin)}</span></div>${slider('kelvin', 'Color temperature', kelvin, KMIN, KMAX, 100)}<div class="lt-ends"><span>Red</span><span>Daylight</span></div></div>
@@ -184,19 +196,17 @@ window.POSLights = function (ctx) {
         ${slider('hue', 'Hue', hue, 0, 359, 1)}</div>`}
     </div>`;
   }
-  function roomCard(room) {
-    const list = lightsIn(room.id), open = !UI.shut.has(room.id), one = selOf(room), n = list.filter(isOn).length;
+  function roomCard(room, key) {
+    const list = lightsIn(room.id), open = !UI.shut.has(room.id), sel = key === 'room:' + room.id;
     return `<section class="float lt-room${open ? ' open' : ''}" data-room-card="${esc(room.id)}">
       <div class="lt-rh">
-        <button type="button" class="lt-open" data-act="lt-room" data-id="${esc(room.id)}" aria-expanded="${open}"><span class="lt-ric">${/bed/i.test(room.name) ? ICON.bed : ICON.room}</span><span class="lt-tx"><span class="lt-rn">${esc(room.name)}</span><span class="meta" data-rst>${list.length ? `${n ? `${n} of ${list.length} on` : 'All off'}` : 'No lights yet'}</span></span><span class="lt-chev">${ICON.chev}</span></button>
+        <button type="button" class="lt-open${sel ? ' sel' : ''}" data-act="lt-pick" data-pick="room:${esc(room.id)}" aria-pressed="${sel}"><span class="lt-ric">${roomIcon(room)}</span><span class="lt-tx"><span class="lt-rn">${esc(room.name)}</span><span class="meta" data-rst>${countText(list)}</span></span></button>
+        <button type="button" class="circle lt-fold" data-act="lt-room" data-id="${esc(room.id)}" aria-expanded="${open}" aria-label="${open ? 'Hide' : 'Show'} the lights in ${esc(room.name)}"><span class="lt-chev">${ICON.chev}</span></button>
         ${ctx.canSave() ? `<button type="button" class="circle" data-act="lt-room-edit" data-id="${esc(room.id)}" aria-label="Edit ${esc(room.name)}">${ICON.edit}</button>` : ''}
-        ${list.length ? `<button type="button" class="switch lt-sw" role="switch" aria-checked="${!!n}" data-act="lt-power" data-room="${esc(room.id)}" aria-label="${esc(room.name)} ${n ? 'off' : 'on'}"><span class="sw" aria-hidden="true"></span></button>` : ''}
+        ${list.length ? sw(list.some(isOn), `data-room="${esc(room.id)}"`, room.name) : ''}
       </div>
-      ${open ? `<div class="lt-body">
-        <div class="lt-side"><div class="lt-tiles">${roomTile(room, list, !one)}${list.map(l => tile(l, one && one.id === l.id)).join('')}</div>
-          ${ctx.canSave() ? `<button type="button" class="btn lt-add" data-act="lt-add" data-room="${esc(room.id)}">${ICON.plus}Add a light</button>` : ''}</div>
-        ${panel(room, list)}
-      </div>` : ''}
+      ${open ? `<div class="lt-body"><div class="lt-tiles">${list.map(l => tile(l, key === 'light:' + l.id)).join('')}</div>
+        ${ctx.canSave() ? `<button type="button" class="btn lt-add" data-act="lt-add" data-room="${esc(room.id)}">${ICON.plus}Add a light</button>` : ''}</div>` : ''}
     </section>`;
   }
   function view() {
@@ -205,10 +215,12 @@ window.POSLights = function (ctx) {
     else if (!S.loaded) body = '<p class="empty">Loading…</p>';
     else if (!S.room.length) body = `<p class="empty">No rooms yet. Add a room, then the lights in it.</p>${ctx.canSave() ? '<div><button type="button" class="btn solid" data-act="lt-room-edit">Add a room</button></div>' : ''}`;
     else {
-      const extra = loose();
-      body = rooms().map(roomCard).join('')
-        + (extra.length ? `<section class="sec"><div class="sec-head"><span class="lab">Not in a room</span></div><div class="lt-tiles">${extra.map(l => tile(l, false)).join('')}</div></section>` : '')
-        + (ctx.canSave() ? '<div><button type="button" class="btn" data-act="lt-room-edit">Add a room</button></div>' : '');
+      const p = pickOf(), extra = loose();
+      body = `<div class="lt-grid">${houseBar(p.key === 'house')}<aside class="float lt-aside">${panel(p)}</aside><div class="lt-rooms">`
+        + rooms().map(r => roomCard(r, p.key)).join('')
+        + (extra.length ? `<section class="sec lt-loose"><div class="sec-head"><span class="lab">Not in a room</span></div><div class="lt-tiles">${extra.map(l => tile(l, p.key === 'light:' + l.id)).join('')}</div></section>` : '')
+        + (ctx.canSave() ? '<div><button type="button" class="btn" data-act="lt-room-edit">Add a room</button></div>' : '')
+        + '</div></div>';
     }
     if (S.loaded && ctx.canSave() && Date.now() - CL.at > 15000) setTimeout(pull, 0);
     const note = !S.light.some(l => l.node) ? '' : CL.expired ? "<p class=\"lt-note warn\">The lights' sign-in ran out. They'll answer again once the new key is in.</p>"
@@ -224,7 +236,7 @@ window.POSLights = function (ctx) {
     if (key === 'hue') return { hue: v, sat: 100, mode: 'color', on: true, level: l.level || 100 };
     return {};
   }
-  const targetsOf = el => { const p = el.closest('.lt-panel'); return p.dataset.light ? [lightById(p.dataset.light)].filter(Boolean) : lightsIn(p.dataset.room); };
+  const targetsOf = () => pickOf().list;
   async function commit(list, keys) {
     if (!ctx.canSave() || !list.length) return;
     clearTimeout(pushT); pushT = null; pushList = null;
@@ -238,27 +250,36 @@ window.POSLights = function (ctx) {
     await commit(list, KEYS);
   }
   // while a slider moves, repaint in place (a full redraw would drop the drag); saved when it's let go
-  function paintRoom(card) {
-    const room = S.room.find(r => r.id === card.dataset.roomCard);
-    if (!room) return;
-    const list = lightsIn(room.id), n = list.filter(isOn).length, one = selOf(room);
-    card.querySelector('[data-rst]').textContent = n ? `${n} of ${list.length} on` : 'All off';
-    for (const sw of card.querySelectorAll('.lt-rh .lt-sw')) sw.setAttribute('aria-checked', !!n);
-    const tiles = card.querySelector('.lt-tiles');
-    if (tiles) tiles.innerHTML = roomTile(room, list, !one) + list.map(l => tile(l, one && one.id === l.id)).join('');
-    const p = card.querySelector('.lt-panel');
-    if (!p) return;
-    const l = one || lead(list), on = one ? isOn(one) : !!n, level = l.level ?? 100, kelvin = l.kelvin || 2700, hue = l.hue || 0, color = l.mode === 'color';
-    p.setAttribute('style', `${glowVars({ ...l, on })};--k-track:${K_TRACK};--h-track:${H_TRACK}`);
-    p.querySelector('.lt-ph .lt-sw').setAttribute('aria-checked', on);
-    p.querySelector('[data-out="level"]').textContent = on ? level + '%' : 'Off';
-    p.querySelector('[data-out="kelvin"]').textContent = `${kelvin}K · ${kName(kelvin)}`;
-    const hueOut = p.querySelector('[data-out="hue"]'), colorCtl = p.querySelector('[data-mode="color"]');
+  function paint() {
+    const root = document.querySelector('.lights');
+    if (!root) return;
+    const p = pickOf(), sel = l => p.key === 'light:' + l.id;
+    const hs = root.querySelector('[data-hst]');
+    if (hs) hs.textContent = countText(S.light);
+    for (const x of root.querySelectorAll('.lt-house .lt-sw')) x.setAttribute('aria-checked', S.light.some(isOn));
+    for (const card of root.querySelectorAll('[data-room-card]')) {
+      const list = lightsIn(card.dataset.roomCard);
+      card.querySelector('[data-rst]').textContent = countText(list);
+      for (const x of card.querySelectorAll('.lt-rh .lt-sw')) x.setAttribute('aria-checked', list.some(isOn));
+      const tiles = card.querySelector('.lt-tiles');
+      if (tiles) tiles.innerHTML = list.map(l => tile(l, sel(l))).join('');
+    }
+    const lt = root.querySelector('.lt-loose .lt-tiles');
+    if (lt) lt.innerHTML = loose().map(l => tile(l, sel(l))).join('');
+    const el = root.querySelector('.lt-panel');
+    const l = p.one || lead(p.list);
+    if (!el || !l || !el.querySelector('.lt-ph')) return;
+    const on = p.one ? isOn(p.one) : p.list.some(isOn), level = l.level ?? 100, kelvin = l.kelvin || 2700, hue = l.hue || 0, color = l.mode === 'color';
+    el.setAttribute('style', `${glowVars({ ...l, on })};--k-track:${K_TRACK};--h-track:${H_TRACK}`);
+    el.querySelector('.lt-ph .lt-sw').setAttribute('aria-checked', on);
+    el.querySelector('[data-out="level"]').textContent = on ? level + '%' : 'Off';
+    el.querySelector('[data-out="kelvin"]').textContent = `${kelvin}K · ${kName(kelvin)}`;
+    const hueOut = el.querySelector('[data-out="hue"]'), colorCtl = el.querySelector('[data-mode="color"]');
     if (hueOut) hueOut.textContent = color ? hName(hue) : 'Pick a color';
-    p.querySelector('[data-mode="white"]').classList.toggle('act', !color || !colorCtl);
+    el.querySelector('[data-mode="white"]').classList.toggle('act', !color || !colorCtl);
     if (colorCtl) colorCtl.classList.toggle('act', color);
-    for (const b of p.querySelectorAll('.lt-sw8')) b.setAttribute('aria-pressed', color && hName(hue) === b.title);
-    const put = (key, v) => { const s = p.querySelector(`[data-lt="${key}"]`); if (s && s !== drag?.el) { s.style.setProperty('--p', ((v - +s.dataset.min) / (+s.dataset.max - +s.dataset.min)).toFixed(4)); s.setAttribute('aria-valuenow', v); } };
+    for (const b of el.querySelectorAll('.lt-sw8')) b.setAttribute('aria-pressed', color && hName(hue) === b.title);
+    const put = (key, v) => { const s = el.querySelector(`[data-lt="${key}"]`); if (s && s !== drag?.el) { s.style.setProperty('--p', ((v - +s.dataset.min) / (+s.dataset.max - +s.dataset.min)).toFixed(4)); s.setAttribute('aria-valuenow', v); } };
     put('level', on ? level : 0); put('kelvin', kelvin); put('hue', hue);
   }
   function move(el, v) {
@@ -269,7 +290,7 @@ window.POSLights = function (ctx) {
     const key = el.dataset.lt;
     const list = targetsOf(el);
     for (const l of list) Object.assign(l, patchFor(l, key, v));
-    paintRoom(el.closest('.lt-room'));
+    paint();
     if (drag && drag.el === el) pushSoon(list);
   }
   const valueAt = (el, x) => {
@@ -349,7 +370,7 @@ window.POSLights = function (ctx) {
       body: f('Name', `<input id="ll_name" maxlength="40" autocomplete="off" placeholder="Desk lamp" value="${esc(l ? l.name : '')}">`)
         + `<div class="two">${f('Kind', `<select id="ll_type">${TYPES.map(([k, t]) => opt(k, t, l ? l.type === k : k === 'bulb')).join('')}</select>`)}${f('Brand', `<input id="ll_brand" maxlength="30" placeholder="Oasis" value="${esc(l ? l.brand || '' : 'Oasis')}">`)}</div>`
         + f('Room', `<select id="ll_room">${rooms().map(r => opt(r.id, r.name, r.id === rid)).join('')}</select>`),
-      remove: l ? async () => { const ok = await R.save(R.db.remove('light', l.id)); if (ok) { toast(`${l.name} removed`); if (UI.sel[l.roomId] === l.id) UI.sel[l.roomId] = ''; } return ok; } : null,
+      remove: l ? async () => { const ok = await R.save(R.db.remove('light', l.id)); if (ok) { toast(`${l.name} removed`); if (UI.pick === 'light:' + l.id) UI.pick = 'house'; } return ok; } : null,
       submit: async () => {
         const name = val('ll_name'), roomId2 = val('ll_room');
         if (!name) return 'Give the light a name.';
@@ -370,15 +391,15 @@ window.POSLights = function (ctx) {
       if (UI.shut.has(id)) UI.shut.delete(id); else UI.shut.add(id);
       keepShut(); ctx.rerender();
     } else if (name === 'lt-pick') {
-      UI.sel[b.dataset.room] = b.dataset.id || ''; ctx.rerender();
+      UI.pick = b.dataset.pick || 'house'; ctx.rerender();
     } else if (!ctx.canSave()) {
       return;
     } else if (name === 'lt-power') {
       if (b.dataset.id) { const l = lightById(b.dataset.id); if (l) { const on = !isOn(l); setLights([l], x => ({ on, level: on && !x.level ? 100 : x.level })); } }
-      else { const list = lightsIn(b.dataset.room), on = !list.some(isOn); setLights(list, x => ({ on, level: on && !x.level ? 100 : x.level })); }
+      else { const list = b.dataset.house ? S.light.slice() : lightsIn(b.dataset.room), on = !list.some(isOn); setLights(list, x => ({ on, level: on && !x.level ? 100 : x.level })); }
     } else if (name === 'lt-hue') {
-      const p = b.closest('.lt-panel'), hue = +b.dataset.hue;
-      setLights(p.dataset.light ? [lightById(p.dataset.light)].filter(Boolean) : lightsIn(p.dataset.room), l => patchFor(l, 'hue', hue));
+      const hue = +b.dataset.hue;
+      setLights(targetsOf(), l => patchFor(l, 'hue', hue));
     } else if (name === 'lt-edit') openLight(b.dataset.id);
     else if (name === 'lt-add') openLight(null, b.dataset.room);
     else if (name === 'lt-room-edit') openRoom(b.dataset.id);
