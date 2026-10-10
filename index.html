@@ -35,20 +35,21 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261010210838">
-<script src="finance.js?v=20261010210838"></script>
-<link rel="stylesheet" href="car.css?v=20261010210838">
-<script src="car.js?v=20261010210838"></script>
-<link rel="stylesheet" href="sections.css?v=20261010210838">
-<script src="records.js?v=20261010210838"></script>
-<script src="people.js?v=20261010210838"></script>
-<script src="wheels.js?v=20261010210838"></script>
-<script src="keyboard.js?v=20261010210838"></script>
-<script src="notes.js?v=20261010210838"></script>
-<script src="lights.js?v=20261010210838"></script>
-<script src="health.js?v=20261010210838"></script>
-<script src="pets.js?v=20261010210838"></script>
-<script src="places.js?v=20261010210838"></script>
+<link rel="stylesheet" href="finance.css?v=20261010212427">
+<script src="finance.js?v=20261010212427"></script>
+<link rel="stylesheet" href="car.css?v=20261010212427">
+<script src="car.js?v=20261010212427"></script>
+<link rel="stylesheet" href="sections.css?v=20261010212427">
+<script src="records.js?v=20261010212427"></script>
+<script src="people.js?v=20261010212427"></script>
+<script src="wheels.js?v=20261010212427"></script>
+<script src="keyboard.js?v=20261010212427"></script>
+<script src="notes.js?v=20261010212427"></script>
+<script src="lights.js?v=20261010212427"></script>
+<script src="work.js?v=20261010212427"></script>
+<script src="health.js?v=20261010212427"></script>
+<script src="pets.js?v=20261010212427"></script>
+<script src="places.js?v=20261010212427"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -194,9 +195,9 @@ body[data-auth="out"] #view{overflow-y:auto}
 .cal{flex:1;min-height:0;display:flex;flex-direction:column}
 .cal .tl{height:auto;flex:1 1 0;min-height:0}
 .cal-hint{display:none}
-.fin,.car,.pets,.lights,.notes,.health{flex:1;min-height:0}
-.fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
-.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.lights-scroll::-webkit-scrollbar,.health-scroll::-webkit-scrollbar,.g-next .list::-webkit-scrollbar{display:none}
+.fin,.car,.pets,.lights,.notes,.health,.work{flex:1;min-height:0}
+.fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll,.work-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.lights-scroll::-webkit-scrollbar,.work-scroll::-webkit-scrollbar,.health-scroll::-webkit-scrollbar,.g-next .list::-webkit-scrollbar{display:none}
 @media (min-width:760px){ .app{padding-inline:32px;padding-block:28px 116px} }
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink-2);min-height:36px;text-shadow:var(--halo)}
 .top .right{display:flex;align-items:center;gap:14px}
@@ -545,7 +546,9 @@ body[data-auth="out"] #rail,body[data-auth="out"] #fab,body[data-auth="out"] #gr
 .len-row .f-rep{flex:1 1 160px;min-width:0}
 .len-row .f-rep .f-h{min-height:26px;display:flex;align-items:center}
 #sheet[data-sheet-kind="task"] .f-rep,#sheet[data-sheet-kind="none"] .f-rep{display:none}
-#sheet:not([data-sheet-kind="task"]) .f-list,#sheet:not([data-sheet-kind="task"]) .f-tag,#sheet:not([data-sheet-kind="task"]) .f-after{display:none}
+#sheet:not([data-sheet-kind="task"]) .f-list,#sheet:not([data-sheet-kind="task"]):not([data-sheet-kind="meeting"]) .f-tag,#sheet:not([data-sheet-kind="task"]) .f-after{display:none}
+#sheet[data-sheet-kind="meeting"] .f-tag [data-tag=""]{display:none}
+#sheet[data-sheet-kind="meeting"] .f-tag .seg3{grid-template-columns:repeat(2,minmax(0,1fr))}
 #sheet .f select,.mt-when-row select{border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;width:100%;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);-webkit-appearance:none;appearance:none;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
 #sheet .f select:disabled,.mt-when-row select:disabled{opacity:.5}
@@ -600,6 +603,7 @@ svg.i.rep-i{display:inline-block;width:11px;height:11px;margin-left:5px;vertical
 
 /* meetings: the list, and one meeting's talking points and notes */
 .mtg{flex:1;min-height:0;display:flex;flex-direction:column}
+.mt-tag{grid-template-columns:repeat(2,minmax(0,1fr));max-width:280px}
 .mt-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;display:flex;flex-direction:column;gap:22px;margin:-6px -18px 0;padding:6px 18px 24px}
 .mt-list::-webkit-scrollbar{display:none}
 .mt-new{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding-inline:14px 18px}
@@ -1057,7 +1061,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .cal .tl,.daycal .tl{height:auto;flex:1 1 0;min-height:0}
   .cal-hint{display:none}
   .cols{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr);overflow:visible;margin:0;padding:0}
-  .fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
+  .fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll,.work-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col::-webkit-scrollbar{display:none}
   /* the add button lives at the foot of the rail, so nothing sits in the bottom-right corner */
@@ -1198,6 +1202,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="home" aria-label="Home" title="Home"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="tasks" aria-label="Tasks" title="Tasks"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg></span><span class="pip" id="railBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="calendar" aria-label="Calendar" title="Calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span></button>
+  <button type="button" class="r-btn" data-tab="work" aria-label="Work" title="Work"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="meetings" aria-label="Meetings" title="Meetings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="health" aria-label="Health" title="Health"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg></span></button>
@@ -1223,6 +1228,7 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg><span>Home</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="tasks"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg><span>Tasks</span><span class="badge" id="taskBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" data-tab="work"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg><span>Work</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg><span>Health</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
@@ -1384,13 +1390,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261010210838"></script>
+<script src="appearance.js?v=20261010212427"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261010210838';
+  const VERSION = '20261010212427';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1487,7 +1493,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- state ---------- */
-  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', meetings: 'Meetings', finance: 'Finance', health: 'Health', car: 'Car', pets: 'Pets', lights: 'Lights', notes: 'Notes' };
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', work: 'Work', meetings: 'Meetings', finance: 'Finance', health: 'Health', car: 'Car', pets: 'Pets', lights: 'Lights', notes: 'Notes' };
   const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
   function savedCalView() {
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
@@ -1508,7 +1514,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, NOTES = null, HEALTH = null;
+  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, NOTES = null, HEALTH = null, WORK = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2127,6 +2133,10 @@ dialog::backdrop{background:transparent}
           <p class="where" id="mtWhen">${whenNote(m)}</p>
         </div>
         <div class="mt-sec">
+          <span class="lab" id="mtTagH">Work or personal</span>
+          <div class="seg3 mt-tag" role="radiogroup" aria-labelledby="mtTagH">${[['work', 'Work'], ['personal', 'Personal']].map(([v, l]) => `<button type="button" role="radio" data-act="mtg-tag" data-tag="${v}" aria-checked="${(m.tag === 'personal' ? 'personal' : 'work') === v}">${l}</button>`).join('')}</div>
+        </div>
+        <div class="mt-sec">
           <span class="lab">Talking points</span>
           <ul class="mt-pts" id="mtPts">${m.agenda.map(ptRow).join('')}</ul>
           <label class="mt-add"><span class="add-ic">${ICON.plus}</span><input id="mtAdd" placeholder="Add a talking point" maxlength="300" enterkeyhint="enter" autocomplete="off"></label>
@@ -2139,6 +2149,25 @@ dialog::backdrop{background:transparent}
       </div>
     </section>`;
   }
+  // a meeting in a list: name, when, what's left to talk about; personal ones say so (work is the usual)
+  function mtgRow(m, on) {
+    const left = m.agenda.filter(a => !a.done).length;
+    return `<button type="button" class="mrow${on ? ' on' : ''}" data-act="meeting" data-id="${esc(m.id)}"${on ? ' aria-current="true"' : ''}><span class="cal-ic" aria-hidden="true">${ICON.people}</span><span class="tmain"><span class="name">${esc(m.title)}${m.tag === 'personal' ? tagPill(m) : ''}</span><span class="meta"><span>${esc(mtgWhen(m))}</span>${m.agenda.length ? `<span>${left ? `${left} to talk about` : 'All covered'}</span>` : ''}${m.notes ? '<span>Notes</span>' : ''}</span></span>${ICON.chev}</button>`;
+  }
+  // Work: the CG list for Sunday, and the work meetings coming up
+  function vWork() {
+    if (!S.loaded) return notReady();
+    const mine = S.items.filter(x => x.kind === 'meeting' && x.tag !== 'personal');
+    const up = mine.filter(m => m.date && !mtgEnded(m)).sort(cmp).slice(0, 8);
+    const plan = mine.filter(m => !m.date).sort(byNew).slice(0, 5);
+    return `<div class="work"><div class="work-scroll" id="workScroll" data-keep><div class="wk-grid">
+      <div class="wk-main">${WORK ? WORK.cgCard() : ''}</div>
+      <div class="wk-side">
+        ${sec('Work meetings', up.length ? up.map(m => mtgRow(m, false)).join('') : '<p class="empty">No work meetings coming up.</p>', '<button type="button" class="link" data-tab="meetings">All meetings</button>')}
+        ${plan.length ? sec('Not scheduled', plan.map(m => mtgRow(m, false)).join('')) : ''}
+      </div>
+    </div></div></div>`;
+  }
   function vMeetings() {
     if (!S.loaded) return notReady();
     const all = S.items.filter(x => x.kind === 'meeting');
@@ -2147,10 +2176,7 @@ dialog::backdrop{background:transparent}
     const up = all.filter(m => m.date && !mtgEnded(m)).sort(cmp);
     const plan = all.filter(m => !m.date).sort(byNew);
     const past = all.filter(mtgEnded).sort((a, b) => cmp(b, a));
-    const rowM = m => {
-      const left = m.agenda.filter(a => !a.done).length;
-      return `<button type="button" class="mrow${sel && m.id === sel.id ? ' on' : ''}" data-act="meeting" data-id="${esc(m.id)}"${sel && m.id === sel.id ? ' aria-current="true"' : ''}><span class="cal-ic" aria-hidden="true">${ICON.people}</span><span class="tmain"><span class="name">${esc(m.title)}</span><span class="meta"><span>${esc(mtgWhen(m))}</span>${m.agenda.length ? `<span>${left ? `${left} to talk about` : 'All covered'}</span>` : ''}${m.notes ? '<span>Notes</span>' : ''}</span></span>${ICON.chev}</button>`;
-    };
+    const rowM = m => mtgRow(m, sel && m.id === sel.id);
     const list = `<div class="mt-list" id="mtList" data-keep>
         <button type="button" class="btn solid mt-new" data-act="mtg-new">${ICON.plus}<span>New meeting</span></button>
         ${sec('Coming up', up.length ? up.map(rowM).join('') : '<p class="empty">No meetings on the calendar.</p>')}
@@ -2658,7 +2684,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, work: vWork, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -2975,6 +3001,8 @@ dialog::backdrop{background:transparent}
     $('#h_mins').textContent = tx ? tx.len : 'How long';
     $('#f_kindNote').textContent = tx ? tx.note : 'Pick one so it lands in the right place.';
     $('#sheet').dataset.sheetKind = F.kind || 'none';
+    // a meeting is a work meeting unless you make it personal
+    if (F.kind === 'meeting' && F.tag !== 'personal') { F.tag = 'work'; for (const bt of document.querySelectorAll('#sheetBody [data-tag]')) bt.setAttribute('aria-checked', String(bt.dataset.tag === F.tag)); }
     if (sheet.open) requestAnimationFrame(() => POSWheels.sync()); // a wheel that just appeared needs placing
     $('#sheetDone').hidden = !(F.id && F.kind === 'task');
     $('#sheetNotes').hidden = !(F.id && F.kind === 'meeting');
@@ -3154,6 +3182,7 @@ dialog::backdrop{background:transparent}
         if (!t0 || (t0.parentId || null) !== par) body.pos = null;
       }
     }
+    if (kind === 'meeting') body.tag = F.tag === 'personal' ? 'personal' : 'work';
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const freq = kind !== 'task' && body.date ? ($('#f_repeat').value || null) : null;
     if (F.occ) {
@@ -3314,7 +3343,7 @@ dialog::backdrop{background:transparent}
     if (!S.canSave) return;
     const id = window.crypto && crypto.randomUUID ? crypto.randomUUID() : null;
     if (!id) { openTask(null, {}, 'meeting'); return; }
-    const ok = await save(store.add({ id, kind: 'meeting', title: 'New meeting', date: null, time: null, mins: null, done: false, doneAt: null, notes: '', agenda: [] }));
+    const ok = await save(store.add({ id, kind: 'meeting', title: 'New meeting', date: null, time: null, mins: null, done: false, doneAt: null, notes: '', agenda: [], tag: 'work' }));
     if (!ok) return;
     S.mtgId = id;
     if (S.tab !== 'meetings') setTab('meetings'); else render();
@@ -3415,6 +3444,12 @@ dialog::backdrop{background:transparent}
       const rs = box.querySelector('[data-mf="repeat"]'); rs.value = ''; rs.disabled = true;
       for (const f of ['date', 'time']) box.querySelector(`[data-mf="${f}"]`).value = '';
       $('#mtWhen').innerHTML = whenNote(t);
+    } else if (act === 'mtg-tag') {
+      const tag = b.dataset.tag === 'personal' ? 'personal' : 'work';
+      mtQueue(id, { tag }, 0);
+      for (const x of box.querySelectorAll('[data-act="mtg-tag"]')) x.setAttribute('aria-checked', String(x.dataset.tag === tag));
+      const nm = document.querySelector(`#mtList [data-id="${CSS.escape(id)}"] .name`);
+      if (nm) nm.innerHTML = esc(t.title) + (tag === 'personal' ? tagPill(t) : '');
     } else if (act === 'pt-done' || act === 'pt-del') {
       const li = b.closest('[data-pt]'), pid = li.dataset.pt;
       if (act === 'pt-del') { mtQueue(id, { agenda: t.agenda.filter(a => a.id !== pid) }, 0); li.remove(); }
@@ -4316,7 +4351,7 @@ dialog::backdrop{background:transparent}
     if (S.tab === 'lights') { if (LIGHTS && S.canSave) LIGHTS.add(); return; }
     if (S.tab === 'notes') { if (NOTES && S.canSave) NOTES.add(); return; }
     if (S.tab === 'health') { if (HEALTH && S.canSave) HEALTH.add(); return; }
-    if (S.tab === 'meetings') { newMeeting(); return; }
+    if (S.tab === 'meetings' || S.tab === 'work') { newMeeting(); return; }
     openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}, S.tab === 'tasks' ? 'task' : null);
   }
   $('#fab').addEventListener('click', addNew);
@@ -4333,6 +4368,7 @@ dialog::backdrop{background:transparent}
     if (act.startsWith('bday-')) { if (PEOPLE) PEOPLE.act(act, b, e); return; }
     if (act.startsWith('pet-')) { if (PETS) PETS.act(act, b, e); return; }
     if (act.startsWith('lt-')) { if (LIGHTS) LIGHTS.act(act, b, e); return; }
+    if (act.startsWith('wk-')) { if (WORK) WORK.act(act, b, e); return; }
     if (act.startsWith('nt-')) { if (NOTES) NOTES.act(act, b, e); return; }
     if (act.startsWith('hl-')) { if (HEALTH) HEALTH.act(act, b, e); return; }
     if (act === 'edit') openTask(b.dataset.id);
@@ -4459,13 +4495,14 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (WORK) WORK.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
       if (PEOPLE) PEOPLE.stop();
       if (PETS) PETS.stop();
       if (LIGHTS) LIGHTS.stop();
+      if (WORK) WORK.stop();
       if (NOTES) NOTES.stop();
       if (HEALTH) HEALTH.stop();
       if (channel) { sb.removeChannel(channel); channel = null; }
@@ -4624,7 +4661,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (WORK) WORK.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);
@@ -4654,6 +4691,7 @@ dialog::backdrop{background:transparent}
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
     if (window.POSNotes) NOTES = window.POSNotes({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSLights) LIGHTS = window.POSLights({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
+    if (window.POSWork) WORK = window.POSWork({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
     const { data } = await sb.auth.getSession();
     S.booted = true;
