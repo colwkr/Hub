@@ -82,7 +82,8 @@ window.POSFinance = function (ctx) {
     for (const k of KINDS) S[k] = [];
     for (const r of data) if (S[r.kind]) S[r.kind].push({ ...r.data, id: r.id });
     rerender();
-    if (S.bills.length) autoPay();
+    if (S.bills.length) await autoPay();
+    autoSort();
   }
   function start() {
     load();
@@ -226,11 +227,11 @@ window.POSFinance = function (ctx) {
   }
   // unpaid bills a charge could be (its name shows, or about its price), nearest first: offered when you approve it
   function billsNear(t) {
-    const could = b => namedIn(b, t) || (b.amount && sameAcct(b, t) && Math.abs(t.amount - b.amount) <= Math.max(150, Math.round(b.amount * 0.1)));
-    return S.bills.filter(b => b.day && could(b))
-      .map(b => ({ b, mk: nearestMonth(b, t.at) }))
+    const priced = b => b.amount && sameAcct(b, t) && Math.abs(t.amount - b.amount) <= Math.max(100, Math.round(b.amount * 0.05));
+    return S.bills.filter(b => b.day && (namedIn(b, t) || priced(b)))
+      .map(b => ({ b, mk: nearestMonth(b, t.at), named: namedIn(b, t) }))
       .map(x => ({ ...x, due: dueOn(x.b, +x.mk.slice(0, 4), +x.mk.slice(5) - 1) }))
-      .filter(x => !paidIn(x.b, x.mk) && Math.abs(x.due - t.at) <= 10 * DAY)
+      .filter(x => !paidIn(x.b, x.mk) && (x.named ? Math.abs(x.due - t.at) <= 10 * DAY : t.at >= x.due - 2 * DAY && t.at <= x.due + 4 * DAY))
       .sort((x, y) => Math.abs(x.due - t.at) - Math.abs(y.due - t.at)).map(x => x.b);
   }
 
@@ -315,7 +316,7 @@ window.POSFinance = function (ctx) {
       `<button type="button" class="chip bill" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="bill:${esc(b.id)}">${esc(b.name)}<span>${b.amount ? fmt(b.amount) + ' ' : ''}${groupOf(b) === 'sub' ? 'subscription' : 'bill'}</span></button>`);
     const chips = billChips.concat(kind('limit').map(l => {
       const left = (l.monthly || 0) - limitSpent(l);
-      return `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}">${esc(l.name)}<span>${left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
+      return `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}">${esc(l.name)}<span>${!l.monthly ? fmt(limitSpent(l)) + ' this month' : left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
     })).concat(kind('goal').filter(g => g.accountId === t.accountId).map(g =>
       `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(g.id)}">${esc(g.name)}<span>${fmt(catLeft(g))}</span></button>`
     ));
@@ -578,6 +579,17 @@ window.POSFinance = function (ctx) {
   function limitRow(l) {
     const charges = limitCharges(l);
     const spent = charges.reduce((s, t) => s + t.amount, 0);
+    if (!l.monthly) {
+      const open = S.open.has(l.id);
+      return `<div class="row limit track">
+        <div class="l-head"><div><span class="name">${esc(l.name)}${exTag(l)}</span><span class="meta">This month · no limit set</span></div><span class="fig lg">${fmt(spent)}</span></div>
+        <div class="l-foot">
+          ${charges.length ? `<button type="button" class="link" data-act="fin-toggle" data-id="${esc(l.id)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${charges.length} ${charges.length === 1 ? 'charge' : 'charges'}</button>` : '<span>No charges this month</span>'}
+          <button type="button" class="link" data-act="fin-form" data-form="limit" data-id="${esc(l.id)}">Edit</button>
+        </div>
+        ${open && charges.length ? `<div class="mini">${charges.map(t => `<div><span>${esc(t.merchant)} · ${esc(shortDay.format(t.at))}</span><span class="num">${fmt(t.amount)}</span></div>`).join('')}</div>` : ''}
+      </div>`;
+    }
     const left = (l.monthly || 0) - spent;
     const ratio = l.monthly ? spent / l.monthly : 0;
     const state = left < 0 ? 'over' : ratio >= 0.85 ? 'near' : '';
@@ -602,7 +614,7 @@ window.POSFinance = function (ctx) {
     const now = new Date();
     const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
     return `<div class="fin-page"><section class="sec"><span class="lab">${esc(monthFmt.format(now))} · ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left</span>
-      <div class="float list">${limits.map(limitRow).join('')}${canSave() ? `<button type="button" class="add-row" data-act="fin-form" data-form="limit"><span>New limit</span>${ICON.plus}</button>` : ''}</div></section></div>`;
+      <div class="float list">${limits.map(limitRow).join('')}${canSave() ? `<button type="button" class="add-row" data-act="fin-form" data-form="limit"><span>New category</span>${ICON.plus}</button>` : ''}</div></section></div>`;
   }
 
   function vActivity() {
@@ -648,12 +660,36 @@ window.POSFinance = function (ctx) {
     catch (e) { toast('That did not save. Check your connection and try again.'); return false; }
   }
   const billIdOf = bucketId => (String(bucketId || '').startsWith('bill:') ? bucketId.slice(5) : null);
+  // "QT 1140 Outside" -> "qt outside": the place, without store numbers, so every visit matches
+  const merchantKey = m => String(m || '').toLowerCase().replace(/[^a-z' -]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const GENERIC = /^(charge|deposit|card or withdrawal|transfer (sent|received))$/;
+  async function learnMerchant(bucketId, t) {
+    const g = bucket(bucketId), key = merchantKey(t.merchant);
+    if (!g || !key || GENERIC.test(key)) return;
+    // one place belongs to one category: take it off any other
+    for (const o of S.buckets.filter(x => x.id !== g.id && (x.merchants || []).includes(key))) await save(refs.buckets.doc(o.id).update({ merchants: o.merchants.filter(k => k !== key) }));
+    if (!(g.merchants || []).includes(key)) await save(refs.buckets.doc(g.id).update({ merchants: [...(g.merchants || []), key] }));
+  }
+  let sortBusy = false;
+  async function autoSort() {
+    if (sortBusy || !canSave()) return;
+    sortBusy = true;
+    try {
+      for (const t of inbox()) {
+        const key = merchantKey(t.merchant), g = key && S.buckets.find(b => (b.merchants || []).includes(key));
+        if (!g) continue;
+        if (!(await save(refs.txns.doc(t.id).update({ bucketId: g.id })))) break;
+        toast(`${t.merchant}, ${fmt(t.amount)}: sorted to ${g.name}`);
+      }
+    } finally { sortBusy = false; }
+  }
   async function sortTxn(id, bucketId) {
     const t = S.txns.find(x => x.id === id);
     if (!t) return;
     const prev = t.bucketId || null, bid = billIdOf(bucketId);
     const name = bucketId === '_none' ? 'Not spending' : bid ? (billById(bid) || {}).name : (bucket(bucketId) || {}).name;
     if (!(await save(refs.txns.doc(id).update({ bucketId })))) return;
+    if (!bid && bucketId !== '_none') learnMerchant(bucketId, t);
     const learned = bid ? await linkBill(bid, t, false) : null;
     toast(bid ? `${name}: charge confirmed${learned && learned.length ? `. Now ${learned.join(', ')}` : ''}` : 'Approved to ' + name, async () => {
       if (await save(refs.txns.doc(id).update({ bucketId: prev }))) { if (bid) await unlinkBill(bid, id); }
@@ -749,7 +785,7 @@ window.POSFinance = function (ctx) {
   }
   function bucketOptions(accountId, current) {
     return [opt('', 'Approve it later', !current)]
-      .concat(kind('limit').map(l => opt(l.id, l.name + ' (limit)', current === l.id)))
+      .concat(kind('limit').map(l => opt(l.id, l.name + ' (spending)', current === l.id)))
       .concat(kind('goal').filter(g => g.accountId === accountId).map(g => opt(g.id, g.name + ' (savings)', current === g.id)))
       .concat(S.bills.slice().sort(byDay).map(b => opt('bill:' + b.id, b.name + (groupOf(b) === 'sub' ? ' (subscription)' : ' (bill)'), current === 'bill:' + b.id)))
       .concat([opt('_none', 'Not spending (transfer or payment)', current === '_none')]).join('');
@@ -866,9 +902,10 @@ window.POSFinance = function (ctx) {
     limit(id) {
       const l = id ? bucket(id) : null;
       return {
-        title: l ? l.name : 'New limit', del: !!l,
+        title: l ? l.name : 'New spending category', del: !!l,
         body: field('Spending on', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Gas" value="${l ? esc(l.name) : ''}">`)
-          + field('Limit each month', `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="200.00" value="${l ? plain(l.monthly) : ''}">`),
+          + field('Limit each month', `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="No limit" value="${l && l.monthly ? plain(l.monthly) : ''}">`, 'Leave it blank to just track what goes here.')
+          + (l && (l.merchants || []).length ? `<p class="where">Charges from <b>${esc(l.merchants.join(', '))}</b> sort here on their own.</p>` : ''),
       };
     },
   };
@@ -937,6 +974,7 @@ window.POSFinance = function (ctx) {
       if (!(await (F.id ? save(refs.txns.doc(id).update(data)) : save(refs.txns.doc(id).set({ ...data, source: 'manual', createdAt: Date.now() }))))) return false;
       if (was && was !== now) await unlinkBill(was, id);
       if (now) await linkBill(now, { ...data, id }, false);
+      if (data.bucketId && !now && data.bucketId !== '_none' && (!old || old.bucketId !== data.bucketId)) learnMerchant(data.bucketId, data);
       return true;
     },
     async account() {
@@ -1064,8 +1102,8 @@ window.POSFinance = function (ctx) {
     async limit() {
       const name = val('ff_name').trim();
       if (!name) return fail('Say what the limit is for.');
-      const monthly = parseMoney(val('ff_monthly'));
-      if (!monthly) return fail('Enter the monthly limit, like 200.');
+      const monthlyText = val('ff_monthly').trim(), monthly = monthlyText ? parseMoney(monthlyText) : null;
+      if (monthlyText && !monthly) return fail('Enter the monthly limit, like 200, or leave it blank.');
       return F.id ? save(refs.buckets.doc(F.id).update({ name, monthly, example: false }))
         : save(refs.buckets.doc().set({ kind: 'limit', name, monthly, createdAt: Date.now(), example: false }));
     },

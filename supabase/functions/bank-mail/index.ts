@@ -24,6 +24,12 @@ const cents = (s: string) => Math.round(parseFloat(s.replace(/,/g, "")) * 100);
 // security and settings notices, not money
 const NOTICE = /verify|log ?in|new device|preference|password|one-time|security code|passcode|profile|paperless|statement is (?:ready|available)|enroll/i;
 
+// "CHICK-FIL-A #00713" -> "Chick-Fil-A", "ANTHROPIC* CLAUDE SUB" -> "Anthropic Claude Sub"; two-letter names (QT) stay as they are
+export function tidyMerchant(m: string) {
+  return m.replace(/#\s?\d+/g, " ").replace(/\*/g, " ").replace(/\s+/g, " ").replace(/[.,]$/, "").trim()
+    .split(" ").map((w) => (w.length <= 2 ? w : w.toLowerCase().replace(/(^|[-'])([a-z])/g, (_, p, c) => p + c.toUpperCase()))).join(" ");
+}
+
 export function parse(subject: string, body: string): Parsed {
   const s = (subject || "").trim();
   if (NOTICE.test(s)) return { type: "skip", why: "account notice" };
@@ -52,12 +58,12 @@ export function parse(subject: string, body: string): Parsed {
     const m = all.match(new RegExp(String.raw`(?:amount|of|for|totaling)\s*:?\s*` + MONEY, "i")) || all.match(new RegExp(MONEY));
     if (m) amount = cents(m[1]);
   }
-  const l4 = all.match(/(?:ending(?:\s+in|\s+with)?|ending:|last four(?: digits)?(?: of)?|x{2,}|\*{2,}|#)\s*:?\s*(\d{4})\b/i)
+  const l4 = all.match(/(?:ending(?:\s+in|\s+with)?|ending:|last four(?: digits)?(?: of)?|x{2,}|\*{2,}|#)\s*:?\s*\*?(\d{4})\b/i)
     || all.match(/(?:account|acct|card)[^\d$\n]{0,30}(\d{4})\b/i);
-  const mer = all.match(/(?:merchant|description|payee|location)\s*(?:name)?\s*:\s*([^\n$]{2,60})/i)
+  // Regions card alerts put the merchant on its own line: "From: CHICK-FIL-A #00713"
+  const mer = all.match(/(?:^|\n)\s*(?:from|to|at|merchant|description|payee|location)\s*(?:name)?\s*:\s*([^\n$]{2,60})/i)
     || all.match(/\b(?:at|to|from)\s+([A-Z0-9][A-Za-z0-9 &*'#.,\-\/]{2,40}?)(?=\s+(?:on|for|in the amount|was|has)\b|\.\s|\n|$)/);
-  const merchant = transfer ? (type === "out" ? "Transfer sent" : "Transfer received")
-    : mer ? mer[1].replace(/\s+/g, " ").replace(/[.,]$/, "").trim() : undefined;
+  const merchant = transfer ? (type === "out" ? "Transfer sent" : "Transfer received") : mer ? tidyMerchant(mer[1]) : undefined;
   return { type, amount, last4: l4 ? l4[1] : undefined, merchant, ...(transfer ? { transfer: true } : {}) };
 }
 
