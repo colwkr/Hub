@@ -3,9 +3,11 @@
 // Places come from OpenStreetMap (Nominatim, with Photon as a fallback); the drive comes from the OSRM router.
 // A task's place is saved on it: { q, name, addr, lat, lon, mi, drive, from }, drive in minutes, rounded up to 5.
 // Known places (records kind "place", like the church) answer to their name and nicknames before any search.
+// Where you are: your phone shares its location (records place-me, only the latest point is kept) while POS is open on
+// it, and every device reads that, so the iPad and the computer know where the phone is too.
 window.POSPlaces = function (ctx) {
   const { sb } = ctx;
-  let home = null, known = [];
+  let home = null, known = [], me = null, onMe = null;
   const R = 3958.8; // miles
   const rad = d => d * Math.PI / 180;
   function miles(a, b) {
@@ -20,8 +22,61 @@ window.POSPlaces = function (ctx) {
     if (error) return home;
     const hr = (data || []).find(r => r.id === 'place-home'), d = hr && hr.data;
     home = d && Number.isFinite(d.lat) && Number.isFinite(d.lon) ? d : null;
-    known = (data || []).filter(r => r.id !== 'place-home' && r.data && Number.isFinite(r.data.lat) && Number.isFinite(r.data.lon)).map(r => ({ id: r.id, ...r.data }));
+    known = (data || []).filter(r => r.id !== 'place-home' && r.id !== 'place-me' && r.data && Number.isFinite(r.data.lat) && Number.isFinite(r.data.lon)).map(r => ({ id: r.id, ...r.data }));
+    const mr = (data || []).find(r => r.id === 'place-me');
+    if (mr && mr.data && Number.isFinite(mr.data.lat) && (!me || (mr.data.at || 0) > (me.at || 0))) me = mr.data;
+    listen(); track();
     return home;
+  }
+
+  /* ---------- where you are: the phone's location, shared ---------- */
+  const SRC = 'pos.locSource';
+  // the phone is the one that knows; on its own, a phone-sized touch screen counts as the phone (Settings can change it)
+  function isSource() {
+    try { const v = localStorage.getItem(SRC); if (v === '1') return true; if (v === '0') return false; } catch (e) { /* use the screen */ }
+    return window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches;
+  }
+  function setSource(on) { try { localStorage.setItem(SRC, on ? '1' : '0'); } catch (e) { /* this visit only */ } track(); }
+  let chan = null;
+  function listen() {
+    if (chan) return;
+    chan = sb.channel('pos-place-me').on('postgres_changes', { event: '*', schema: 'public', table: 'records', filter: 'id=eq.place-me' }, p => {
+      const d = p && p.new && p.new.data;
+      if (d && Number.isFinite(d.lat) && (!me || (d.at || 0) >= (me.at || 0))) { me = d; if (onMe) onMe(); }
+    }).subscribe();
+  }
+  let watchId = null, tick = null, sent = null, saving = false;
+  function track() {
+    const want = isSource() && document.visibilityState === 'visible' && !!navigator.geolocation;
+    if (want && watchId == null) {
+      watchId = navigator.geolocation.watchPosition(onFix, () => {}, { enableHighAccuracy: true, maximumAge: 60000, timeout: 30000 });
+      tick = setInterval(() => navigator.geolocation.getCurrentPosition(onFix, () => {}, { enableHighAccuracy: true, maximumAge: 60000, timeout: 30000 }), 3 * 60e3);
+    } else if (!want && watchId != null) {
+      navigator.geolocation.clearWatch(watchId); clearInterval(tick); watchId = null; tick = null;
+    }
+  }
+  document.addEventListener('visibilitychange', () => track());
+  // a new fix: shared when you've moved (about 100 m), or every couple of minutes so it stays fresh
+  async function onFix(p) {
+    const c = p && p.coords;
+    if (!c || (c.accuracy || 0) > 1500) return;
+    const pt = { lat: +c.latitude.toFixed(5), lon: +c.longitude.toFixed(5), acc: Math.round(c.accuracy || 0), at: Date.now() };
+    if (sent && miles(sent, pt) < 0.06 && pt.at - sent.at < 120000) return;
+    me = pt; sent = pt;
+    if (onMe) onMe();
+    if (saving) return;
+    saving = true;
+    try {
+      const { data: rows } = await sb.from('records').select('id').eq('id', 'place-me');
+      if (rows && rows.length) await sb.from('records').update({ data: me }).eq('id', 'place-me');
+      else await sb.from('records').insert({ id: 'place-me', kind: 'place', data: me });
+    } catch (e) { /* tries again with the next fix */ } finally { saving = false; }
+  }
+  // home or a known place you're at (within about 250 m)
+  function nearKnown(pt) {
+    if (!pt) return null;
+    const all = (home ? [{ id: 'place-home', ...home, name: 'Home' }] : []).concat(known);
+    return all.map(p => ({ p, d: miles(pt, p) })).filter(x => x.d < 0.16).sort((a, b) => a.d - b.d).map(x => x.p)[0] || null;
   }
   const squash = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const knownFor = q => { const n = squash(q); return n ? known.find(p => squash(p.name) === n || (p.aliases || []).some(a => squash(a) === n)) : null; };
@@ -139,5 +194,6 @@ window.POSPlaces = function (ctx) {
     }
     return ceil5(miles(a, b) * 1.3 / 30 * 60);
   }
-  return { home: () => home, loadHome, setHomeHere, resolve, stale, miles, legMins, onLeg: fn => { onLeg = fn; }, here };
+  return { home: () => home, loadHome, setHomeHere, resolve, stale, miles, legMins, onLeg: fn => { onLeg = fn; }, here,
+    me: () => me, onMe: fn => { onMe = fn; }, nearKnown, isSource, setSource };
 };

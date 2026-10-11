@@ -35,22 +35,22 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261011004620">
-<script src="finance.js?v=20261011004620"></script>
-<link rel="stylesheet" href="car.css?v=20261011004620">
-<script src="car.js?v=20261011004620"></script>
-<link rel="stylesheet" href="sections.css?v=20261011004620">
-<script src="records.js?v=20261011004620"></script>
-<script src="people.js?v=20261011004620"></script>
-<script src="wheels.js?v=20261011004620"></script>
-<script src="keyboard.js?v=20261011004620"></script>
-<script src="notes.js?v=20261011004620"></script>
-<script src="reminders.js?v=20261011004620"></script>
-<script src="lights.js?v=20261011004620"></script>
-<script src="work.js?v=20261011004620"></script>
-<script src="health.js?v=20261011004620"></script>
-<script src="pets.js?v=20261011004620"></script>
-<script src="places.js?v=20261011004620"></script>
+<link rel="stylesheet" href="finance.css?v=20261011010522">
+<script src="finance.js?v=20261011010522"></script>
+<link rel="stylesheet" href="car.css?v=20261011010522">
+<script src="car.js?v=20261011010522"></script>
+<link rel="stylesheet" href="sections.css?v=20261011010522">
+<script src="records.js?v=20261011010522"></script>
+<script src="people.js?v=20261011010522"></script>
+<script src="wheels.js?v=20261011010522"></script>
+<script src="keyboard.js?v=20261011010522"></script>
+<script src="notes.js?v=20261011010522"></script>
+<script src="reminders.js?v=20261011010522"></script>
+<script src="lights.js?v=20261011010522"></script>
+<script src="work.js?v=20261011010522"></script>
+<script src="health.js?v=20261011010522"></script>
+<script src="pets.js?v=20261011010522"></script>
+<script src="places.js?v=20261011010522"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1360,6 +1360,12 @@ dialog::backdrop{background:transparent}
       <div class="set-row"><button type="button" class="btn" id="homeBtn" data-act="home-here">Use where I am now</button></div>
     </section>
     <i class="set-line"></i>
+    <section class="set-sec" aria-labelledby="meLab">
+      <div class="set-head"><span class="lab" id="meLab">Where you are</span><span class="set-note" id="meNote"></span></div>
+      <p class="set-note">Your phone tells every device where you are, so the next drive on the calendar starts from there. It updates while POS is open on the phone.</p>
+      <div class="set-row"><button type="button" class="switch" id="meSrc" data-act="me-src" role="switch" aria-checked="false"><span>This is my phone</span><span class="sw" aria-hidden="true"></span></button></div>
+    </section>
+    <i class="set-line"></i>
     <form id="setForm" class="set-sec" novalidate>
       <label class="f"><span class="lab">Google Calendar</span><input id="s_gcal" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" aria-describedby="gcalHelp"></label>
       <p class="where" id="gcalHelp">On a computer, open Google Calendar, then Settings. Pick your calendar on the left, scroll to <b>Integrate calendar</b>, and copy <b>Secret address in iCal format</b>. Paste it here. Keep it private: anyone with it can read that calendar.</p>
@@ -1404,13 +1410,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261011004620"></script>
+<script src="appearance.js?v=20261011010522"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261011004620';
+  const VERSION = '20261011010522';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2270,6 +2276,21 @@ dialog::backdrop{background:transparent}
   // A day's drives. Each place is driven to from home, or from the place before it when there isn't time to go home
   // in between; something during a stretch you spend at a place (office hours) starts from there and returns there;
   // after the last place of a run, the drive home.
+  // Where you are now: your phone's last fix while it's fresh (under 45 minutes), else wherever the calendar has you
+  // (inside something with a place), else the phone's fix from earlier today. Near home or a known place, it's that place.
+  function whereNow() {
+    if (!PLACES) return null;
+    const m = PLACES.me(), age = m ? Date.now() - (m.at || 0) : Infinity;
+    const at = (pt, src) => { const k = PLACES.nearKnown(pt); return k ? { lat: k.lat, lon: k.lon, name: k.name, src } : { lat: +(+pt.lat).toFixed(3), lon: +(+pt.lon).toFixed(3), name: null, src }; };
+    if (m && age < 45 * 60e3) return at(m, 'phone');
+    const nm = nowMin();
+    const cur = dayItems(todayKey()).filter(t => t.time && t.place && Number.isFinite(t.place.lat))
+      .map(t => ({ t, s: toMin(t.time), e: toMin(t.time) + (t.kind === 'marker' ? t.mins || 0 : effMins(t)) }))
+      .filter(x => x.s <= nm && x.e > nm).sort((a, b) => b.s - a.s)[0];
+    if (cur) return { lat: cur.t.place.lat, lon: cur.t.place.lon, name: cur.t.place.name || cur.t.place.q, src: 'calendar', until: cur.e };
+    if (m && age < 4 * 3600e3) return at(m, 'phone');
+    return null;
+  }
   function tripsOn(k) {
     if (!PLACES) return [];
     const stops = dayItems(k).filter(t => t.time && t.place && Number.isFinite(t.place.lat) && t.place.drive && (t.kind === 'marker' || kindOf(t) === 'timed'))
@@ -2277,9 +2298,25 @@ dialog::backdrop{background:transparent}
       .sort((a, b) => a.s - b.s || b.e - a.e);
     const leg = (a, b) => PLACES.legMins(a.p, b.p);
     const chained = (a, b) => b.s - a.e < a.p.drive + b.p.drive + 30;
+    // today, the next place on the calendar is driven to from wherever you are right now (none if you're already there);
+    // the rest of the day, and other days, keep the plan
+    // (known only from the calendar, that holds for what comes during or soon after where it has you)
+    const live = k === todayKey() ? whereNow() : null;
+    let nextI = live ? stops.findIndex(X => X.s > nowMin()) : -1;
+    if (nextI >= 0 && live.src === 'calendar' && stops[nextI].s > live.until + 30) nextI = -1;
     const out = [];
     stops.forEach((X, i) => {
       const earlier = stops.slice(0, i);
+      if (i === nextI) {
+        const d = PLACES.legMins(live, X.p);
+        if (d > 0) out.push({ t: X.t, s: X.s - d, e: X.s, mins: d, kind: 'live', other: live.name || 'where you are' });
+        const outer0 = earlier.filter(C => C.s <= X.s && C.e > X.e).pop();
+        if (outer0) { const d2 = leg(X, outer0); if (d2 > 0) out.push({ t: X.t, s: X.e, e: X.e + d2, mins: d2, kind: 'return', other: outer0.p.name }); return; }
+        const next0 = stops.slice(i + 1).filter(N => N.s >= X.e).sort((a, b) => a.s - b.s)[0];
+        if (next0 && chained(X, next0)) return;
+        out.push({ t: X.t, s: X.e, e: X.e + X.p.drive, mins: X.p.drive, kind: 'home' });
+        return;
+      }
       const within = earlier.filter(C => C.s <= X.s && C.e > X.s).pop() || null;
       const ended = earlier.filter(P => P.e <= X.s).sort((a, b) => b.e - a.e)[0] || null;
       const from = within || (ended && chained(ended, X) ? ended : null);
@@ -2358,7 +2395,7 @@ dialog::backdrop{background:transparent}
       if (x.dv) {
         const d = x.dv, to = d.t.place.name || d.t.place.q, st = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(len / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
         const head = d.kind === 'home' ? `Drive home ${d.mins} min` : `Drive ${d.mins} min`;
-        const sub = d.kind === 'to' ? `Leave ${fmtTime(d.s)}` : d.kind === 'between' ? `From ${d.other}` : d.kind === 'back' ? `From ${d.other}` : d.kind === 'return' ? `Back to ${d.other}` : `Home ${fmtTime(d.e % 1440)}`;
+        const sub = d.kind === 'to' || d.kind === 'live' ? `Leave ${fmtTime(d.s)}` : d.kind === 'between' ? `From ${d.other}` : d.kind === 'back' ? `From ${d.other}` : d.kind === 'return' ? `Back to ${d.other}` : `Home ${fmtTime(d.e % 1440)}`;
         const label = d.kind === 'home' ? `Drive home from ${to}, ${d.mins} minutes` : d.kind === 'return' ? `Drive back to ${d.other} from ${to}, ${d.mins} minutes` : `Drive to ${to}${d.other ? ` from ${d.other}` : ''}, ${d.mins} minutes, leave at ${fmtTime(d.s)}`;
         return `<button type="button" class="blk drive ${d.kind === 'home' || d.kind === 'return' ? 'after' : 'before'}${isTight(len) ? ' tight' : ''}" style="${st}" data-act="edit" data-id="${esc(d.t.id)}" aria-label="${esc(label)}"><b>${ICON.car}${esc(head)}</b><small>${esc(sub)}</small></button>`;
       }
@@ -4416,6 +4453,7 @@ dialog::backdrop{background:transparent}
     else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
     else if (act === 'settings') openSettings();
     else if (act === 'home-here') setHome();
+    else if (act === 'me-src') { if (PLACES) { PLACES.setSource(!PLACES.isSource()); fillMe(); toast(PLACES.isSource() ? 'This device now shares where you are' : 'This device no longer shares where you are'); } }
     else if (act === 'auth-mode') { S.authMode = S.authMode === 'up' ? 'in' : 'up'; S.loginNote = ''; S.loginRedraw = true; render(); }
     else if (act === 'show-done') { S.showDone = !S.showDone; render(); }
     else if (act === 'list-toggle') {
@@ -4486,6 +4524,16 @@ dialog::backdrop{background:transparent}
     const h = PLACES && PLACES.home(), n = $('#homeNote');
     if (n) n.textContent = h ? `Set ${shortFmt.format(new Date(h.at || Date.now()))}${h.acc ? `, to within ${h.acc} m` : ''}` : 'Not set yet';
     const b = $('#homeBtn'); if (b) b.textContent = h ? 'Move home to where I am now' : 'Use where I am now';
+    fillMe();
+  }
+  function fillMe() {
+    if (!PLACES) return;
+    const m = PLACES.me(), n = $('#meNote'), sw = $('#meSrc');
+    if (sw) sw.setAttribute('aria-checked', String(PLACES.isSource()));
+    if (!n) return;
+    if (!m) { n.textContent = 'Not shared yet'; return; }
+    const k = PLACES.nearKnown(m), mins = Math.round((Date.now() - (m.at || 0)) / 60e3);
+    n.textContent = `${k ? 'At ' + k.name : 'Away'} · ${mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : shortFmt.format(new Date(m.at))}`;
   }
   // tasks that now live in Finance as lists (To buy, For the apartment, Sell or give away, moved Oct 10, 2026): they leave Tasks
   const MOVED_TO_FINANCE = ['60c070cb-05eb-46aa-bae2-f52e60e45c63', '4d9263e7-d611-4de3-953d-fa3dcb12ef6a', 'beefab3b-8525-41ce-8b3c-b4bd80209916', '84241382-b05a-4762-8f42-618ef0f88cc1',
@@ -4705,7 +4753,7 @@ dialog::backdrop{background:transparent}
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSKeys) window.POSKeys();
     if (window.POSWheels) { POSWheels.mount($('#sheet')); POSWheels.mount($('#cfSheet')); }
-    if (window.POSPlaces) { PLACES = window.POSPlaces({ sb }); PLACES.onLeg(() => render()); }
+    if (window.POSPlaces) { PLACES = window.POSPlaces({ sb }); PLACES.onLeg(() => render()); PLACES.onMe(() => { fillMe(); render(); }); }
     if (window.POSHealth) HEALTH = window.POSHealth({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave,
       goals: re => (FIN && FIN.goals ? FIN.goals(re) : []),
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
