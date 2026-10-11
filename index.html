@@ -35,23 +35,23 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261011012328">
-<script src="finance.js?v=20261011012328"></script>
-<link rel="stylesheet" href="car.css?v=20261011012328">
-<script src="car.js?v=20261011012328"></script>
-<link rel="stylesheet" href="sections.css?v=20261011012328">
-<script src="records.js?v=20261011012328"></script>
-<script src="people.js?v=20261011012328"></script>
-<script src="wheels.js?v=20261011012328"></script>
-<script src="keyboard.js?v=20261011012328"></script>
-<script src="notes.js?v=20261011012328"></script>
-<script src="reminders.js?v=20261011012328"></script>
-<script src="lights.js?v=20261011012328"></script>
-<script src="work.js?v=20261011012328"></script>
-<script src="health.js?v=20261011012328"></script>
-<script src="pets.js?v=20261011012328"></script>
-<script src="places.js?v=20261011012328"></script>
-<script src="placestab.js?v=20261011012328"></script>
+<link rel="stylesheet" href="finance.css?v=20261011133029">
+<script src="finance.js?v=20261011133029"></script>
+<link rel="stylesheet" href="car.css?v=20261011133029">
+<script src="car.js?v=20261011133029"></script>
+<link rel="stylesheet" href="sections.css?v=20261011133029">
+<script src="records.js?v=20261011133029"></script>
+<script src="people.js?v=20261011133029"></script>
+<script src="wheels.js?v=20261011133029"></script>
+<script src="keyboard.js?v=20261011133029"></script>
+<script src="notes.js?v=20261011133029"></script>
+<script src="reminders.js?v=20261011133029"></script>
+<script src="lights.js?v=20261011133029"></script>
+<script src="work.js?v=20261011133029"></script>
+<script src="health.js?v=20261011133029"></script>
+<script src="pets.js?v=20261011133029"></script>
+<script src="places.js?v=20261011133029"></script>
+<script src="placestab.js?v=20261011133029"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1413,13 +1413,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261011012328"></script>
+<script src="appearance.js?v=20261011133029"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261011012328';
+  const VERSION = '20261011133029';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2131,6 +2131,8 @@ dialog::backdrop{background:transparent}
     if (n === tk && m.time && toMin(m.time) + effMins(m) <= nowMin()) return nextOcc(m, addDays(tk, 1));
     return n;
   }
+  // coming-up order: a repeating meeting goes by the next time it meets
+  const byNextMeet = (a, b) => ((a.repeat ? nextMeet(a) : a.date) || '~').localeCompare((b.repeat ? nextMeet(b) : b.date) || '~') || (a.time || '~').localeCompare(b.time || '~') || cmp(a, b);
   const mtgEnded = m => { const tk = todayKey(); if (m.repeat) return !nextMeet(m); return !!m.date && (m.date < tk || (m.date === tk && !!m.time && toMin(m.time) + effMins(m) <= nowMin())); };
   const ptRow = a => `<li class="mt-pt${a.done ? ' done' : ''}" data-pt="${esc(a.id)}"><button type="button" class="chk" data-act="pt-done" aria-pressed="${a.done ? 'true' : 'false'}" aria-label="${a.done ? 'Not covered yet' : 'Covered'}">${ICON.check}</button><input class="pt-text" data-pt-text value="${esc(a.text)}" maxlength="300" aria-label="Talking point" enterkeyhint="next"><button type="button" class="pt-x" data-act="pt-del" aria-label="Remove talking point">${ICON.x}</button></li>`;
   function whenNote(m) {
@@ -2161,6 +2163,7 @@ dialog::backdrop{background:transparent}
         </div>
         <div class="mt-sec">
           <span class="lab">Talking points</span>
+          ${m.repeat || m.seriesId ? `<p class="meta mt-week" id="mtWeek">${m.repeat ? (nextMeet(m) ? `For ${esc(dayLabel(nextMeet(m)))} only. Each week starts clean.` : '') : `For ${esc(dayLabel(m.date))}. Next week starts clean.`}</p>` : ''}
           <ul class="mt-pts" id="mtPts">${m.agenda.map(ptRow).join('')}</ul>
           <label class="mt-add"><span class="add-ic">${ICON.plus}</span><input id="mtAdd" placeholder="Add a talking point" maxlength="300" enterkeyhint="enter" autocomplete="off"></label>
         </div>
@@ -2181,7 +2184,7 @@ dialog::backdrop{background:transparent}
   function vWork() {
     if (!S.loaded) return notReady();
     const mine = S.items.filter(x => x.kind === 'meeting' && x.tag !== 'personal');
-    const up = mine.filter(m => m.date && !mtgEnded(m)).sort(cmp).slice(0, 8);
+    const up = mine.filter(m => m.date && !mtgEnded(m)).sort(byNextMeet).slice(0, 8);
     const plan = mine.filter(m => !m.date).sort(byNew).slice(0, 5);
     return `<div class="work"><div class="work-scroll" id="workScroll" data-keep><div class="wk-grid">
       <div class="wk-main">${WORK ? WORK.cgCard() : ''}</div>
@@ -2196,7 +2199,7 @@ dialog::backdrop{background:transparent}
     const all = S.items.filter(x => x.kind === 'meeting');
     const sel = all.find(m => m.id === S.mtgId) || null;
     if (!sel) S.mtgId = null;
-    const up = all.filter(m => m.date && !mtgEnded(m)).sort(cmp);
+    const up = all.filter(m => m.date && !mtgEnded(m)).sort(byNextMeet);
     const plan = all.filter(m => !m.date).sort(byNew);
     const past = all.filter(mtgEnded).sort((a, b) => cmp(b, a));
     const rowM = m => mtgRow(m, sel && m.id === sel.id);
@@ -3412,7 +3415,32 @@ dialog::backdrop{background:transparent}
   let mtPend = null, mtT = null;
   const mtEl = () => document.querySelector('.mt-detail[data-mtg]');
   function mtSaved(text) { const el = $('#mtSaved'); if (el) el.textContent = text; }
+  // A repeating meeting's talking points and notes belong to one week. The first one written gives the next time it
+  // meets its own copy (that day comes off the series) and the writing carries on there; the week after starts clean.
+  let mtReady = Promise.resolve();
+  function mtWeekOf(id, patch) {
+    const t = task(id);
+    if (!t || !t.repeat || !('notes' in patch || 'agenda' in patch)) return id;
+    const k = nextMeet(t), id2 = newUid();
+    if (!k || !id2) return id;
+    const copy = { id: id2, kind: t.kind, title: t.title, date: k, time: t.time, mins: t.mins, notes: '', agenda: [], tag: t.tag || null, place: t.place || null, seriesId: t.id, origDay: k, repeat: null, done: false, doneAt: null };
+    const repeat = { ...t.repeat, skip: [...new Set([...t.repeat.skip, k])] };
+    S.all.push({ ...copy, createdAt: Date.now() });
+    t.repeat = repeat;
+    split();
+    mtReady = (async () => {
+      must(await sb.from('tasks').insert(toRow(copy)));
+      must(await sb.from('tasks').update(toRow({ repeat })).eq('id', t.id));
+    })().catch(() => { toast('That did not save. Check your connection and try again.'); reloadTasks(); });
+    const box = mtEl(); if (box && box.dataset.mtg === id) box.dataset.mtg = id2;
+    S.mtgId = id2;
+    const note = $('#mtWhen'), wk = $('#mtWeek');
+    if (note) note.innerHTML = whenNote(task(id2));
+    if (wk) wk.textContent = `For ${dayLabel(k)}. Next week starts clean.`;
+    return id2;
+  }
   function mtQueue(id, patch, wait = 650) {
+    id = mtWeekOf(id, patch);
     if (mtPend && mtPend.id !== id) mtFlush();
     mtPend = { id, patch: { ...(mtPend ? mtPend.patch : {}), ...patch } };
     const t = task(id); if (t) Object.assign(t, patch); // keep what's on screen and in memory together
@@ -3424,6 +3452,7 @@ dialog::backdrop{background:transparent}
     clearTimeout(mtT);
     const p = mtPend; mtPend = null;
     if (!p) return;
+    await mtReady;
     const ok = await save(store.update(p.id, p.patch, true));
     mtSaved(ok ? 'Saved' : 'Not saved');
   }
