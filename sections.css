@@ -332,3 +332,31 @@ html.osk-on .app{padding-bottom:calc(var(--osk-h, 300px) + 12px)}
 .rm-row.done .rm-lines{display:none}
 .rm-donebtn{align-self:flex-start}
 @media (max-width:520px){ .rm-add{flex-wrap:wrap;border-radius:24px;padding:10px 12px} .rm-add #rm_text{flex-basis:calc(100% - 40px)} .rm-add #rm_on{flex:1;max-width:none} }
+
+/* places */
+.plc{display:flex;flex-direction:column;gap:12px}
+.plc-scroll{display:flex;flex-direction:column;gap:22px}
+.plc-scroll > *{max-width:980px}
+.plc-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.plc-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:20px 22px}
+.plc-ic{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--well);color:var(--ink-2)}
+.plc-ic svg.i{width:20px;height:20px}
+.plc-big{font-size:30px;font-weight:300;letter-spacing:-.015em;line-height:1.1;padding-right:48px}
+.plc-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.plc-acts .btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+.plc-acts .btn svg.i{width:17px;height:17px}
+.plc-list{padding:4px 0}
+.plc-row{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);text-align:left;padding:10px 14px}
+.plc-row + .plc-row{box-shadow:inset 0 1px 0 var(--hair)}
+.plc-ric{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--well);color:var(--ink-2)}
+.plc-ric svg.i{width:18px;height:18px}
+.plc-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.plc-tx .name{font-size:16px}
+.plc-tx .meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plc-d{flex:none;font-size:15px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.plc-row > svg.i{width:16px;height:16px;color:var(--ink-3);flex:none}
+.plc-links{display:flex;gap:8px}
+.plc-links .btn{flex:1;text-align:center;text-decoration:none}
+@media (max-width:520px){ .plc-big{font-size:26px} }
+.plc .add-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:14px 20px 14px 18px;font-size:14px;color:var(--ink-2);text-align:left;box-shadow:inset 0 1px 0 var(--hair)}
+.plc .add-row svg.i{width:16px;height:16px}

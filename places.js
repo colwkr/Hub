@@ -1,20 +1,23 @@
 // POS places: where home is, finding a place near it ("Publix" means the nearest Publix), and the drive there.
 // Home is set once from the device's location (the iPad on the wall is at home) and kept in records as place-home.
 // Places come from OpenStreetMap (Nominatim, with Photon as a fallback); the drive comes from the OSRM router.
-// A task's place is saved on it: { q, name, addr, lat, lon, mi, drive, from }, drive in minutes, rounded up to 5.
+// A task's place is saved on it: { q, name, addr, lat, lon, mi, drive, from, v }, drive in exact minutes (no padding, no rounding to 5).
 // Known places (records kind "place", like the church) answer to their name and nicknames before any search.
 // Where you are: your phone shares its location (records place-me, only the latest point is kept) while POS is open on
 // it, and every device reads that, so the iPad and the computer know where the phone is too.
 window.POSPlaces = function (ctx) {
   const { sb } = ctx;
-  let home = null, known = [], me = null, onMe = null;
+  let home = null, known = [], me = null, onMe = null, car = null;
+  const SPECIAL = new Set(['place-home', 'place-me', 'place-car']);
   const R = 3958.8; // miles
   const rad = d => d * Math.PI / 180;
   function miles(a, b) {
     const x = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lon - a.lon) / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(x));
   }
-  const ceil5 = m => Math.max(5, Math.ceil(m / 5) * 5);
+  // drives are the router's own time, to the minute
+  const exact = m => Math.max(1, Math.round(m));
+  const V = 2; // places worked out before drives were exact (v 1) get worked out again
   const homeKey = h => `${h.lat.toFixed(4)},${h.lon.toFixed(4)}`;
 
   async function loadHome() {
@@ -22,7 +25,9 @@ window.POSPlaces = function (ctx) {
     if (error) return home;
     const hr = (data || []).find(r => r.id === 'place-home'), d = hr && hr.data;
     home = d && Number.isFinite(d.lat) && Number.isFinite(d.lon) ? d : null;
-    known = (data || []).filter(r => r.id !== 'place-home' && r.id !== 'place-me' && r.data && Number.isFinite(r.data.lat) && Number.isFinite(r.data.lon)).map(r => ({ id: r.id, ...r.data }));
+    known = (data || []).filter(r => !SPECIAL.has(r.id) && r.data && Number.isFinite(r.data.lat) && Number.isFinite(r.data.lon)).map(r => ({ id: r.id, ...r.data }));
+    const cr = (data || []).find(r => r.id === 'place-car');
+    car = cr && cr.data && Number.isFinite(cr.data.lat) ? cr.data : null;
     const mr = (data || []).find(r => r.id === 'place-me');
     if (mr && mr.data && Number.isFinite(mr.data.lat) && (!me || (mr.data.at || 0) > (me.at || 0))) me = mr.data;
     listen(); track();
@@ -37,12 +42,14 @@ window.POSPlaces = function (ctx) {
     return window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches;
   }
   function setSource(on) { try { localStorage.setItem(SRC, on ? '1' : '0'); } catch (e) { /* this visit only */ } track(); }
-  let chan = null;
+  let chan = null, reT = null;
   function listen() {
     if (chan) return;
-    chan = sb.channel('pos-place-me').on('postgres_changes', { event: '*', schema: 'public', table: 'records', filter: 'id=eq.place-me' }, p => {
-      const d = p && p.new && p.new.data;
-      if (d && Number.isFinite(d.lat) && (!me || (d.at || 0) >= (me.at || 0))) { me = d; if (onMe) onMe(); }
+    chan = sb.channel('pos-place-me').on('postgres_changes', { event: '*', schema: 'public', table: 'records', filter: 'kind=eq.place' }, p => {
+      const id = (p && p.new && p.new.id) || (p && p.old && p.old.id), d = p && p.new && p.new.data;
+      if (id === 'place-me') { if (d && Number.isFinite(d.lat) && (!me || (d.at || 0) >= (me.at || 0))) { me = d; if (onMe) onMe(); } return; }
+      // the car, a place added or changed on another device: read them all again
+      clearTimeout(reT); reT = setTimeout(() => loadHome().then(() => { if (onMe) onMe(); }), 400);
     }).subscribe();
   }
   let watchId = null, tick = null, sent = null, saving = false;
@@ -135,14 +142,14 @@ window.POSPlaces = function (ctx) {
     try {
       const j = await getJSON(`https://router.project-osrm.org/route/v1/driving/${h.lon},${h.lat};${p.lon},${p.lat}?overview=false`);
       const r = j && j.routes && j.routes[0];
-      if (r && Number.isFinite(r.duration)) return { mi: Math.round(r.distance / 1609.344 * 10) / 10, drive: ceil5(r.duration / 60 * 1.25) };
+      if (r && Number.isFinite(r.duration)) return { mi: Math.round(r.distance / 1609.344 * 10) / 10, drive: exact(r.duration / 60) };
     } catch (e) { /* falls through to the guess */ }
     const road = p.crow * 1.3;
-    return { mi: Math.round(road * 10) / 10, drive: ceil5(road / 30 * 60), guess: true };
+    return { mi: Math.round(road * 10) / 10, drive: exact(road / 30 * 60), guess: true };
   }
 
   // remembered for a month, per home
-  const MEM = 'pos.places', MONTH = 30 * 86400000;
+  const MEM = 'pos.places2', MONTH = 30 * 86400000;
   const mem = () => { try { return JSON.parse(localStorage.getItem(MEM) || '{}'); } catch (e) { return {}; } };
   function remember(key, v) { try { const m = mem(); m[key] = { v, at: Date.now() }; for (const k of Object.keys(m)) if (Date.now() - m[k].at > MONTH) delete m[k]; localStorage.setItem(MEM, JSON.stringify(m)); } catch (e) { /* nothing to keep it in */ } }
   const inflight = new Map();
@@ -156,22 +163,31 @@ window.POSPlaces = function (ctx) {
     if (inflight.has(key)) return inflight.get(key);
     const h = home, job = (async () => {
       const p = kp ? { ...kp, crow: miles(h, kp) } : await find(q, h);
-      const out = p ? { q, name: p.name || q, addr: p.addr || '', lat: +p.lat.toFixed(6), lon: +p.lon.toFixed(6), ...(await drive(h, p)), from: [h.lat, h.lon] }
-        : { q, missing: true, from: [h.lat, h.lon] };
+      const out = p ? { q, name: p.name || q, addr: p.addr || '', lat: +p.lat.toFixed(6), lon: +p.lon.toFixed(6), ...(await drive(h, p)), from: [h.lat, h.lon], v: V }
+        : { q, missing: true, from: [h.lat, h.lon], v: V };
       if (!out.guess) remember(key, out);
       return out;
     })().finally(() => inflight.delete(key));
     inflight.set(key, job);
     return job;
   }
-  // a saved place that still needs working out: never looked up, or looked up from an earlier home
+  // a place that's already been found only needs its drive worked out again (a new home, or exact drives);
+  // one never found is looked up
+  async function rework(p) {
+    if (!p || !home) return null;
+    if (!Number.isFinite(p.lat) || !Number.isFinite(p.lon)) return resolve(p.q);
+    const d = await drive(home, { ...p, crow: miles(home, p) });
+    if (d.guess) return null; // the router didn't answer: keep what it has until it does
+    return { ...p, ...d, from: [home.lat, home.lon], v: V };
+  }
+  // a saved place that still needs working out: never looked up, looked up from an earlier home, or before drives were exact
   function stale(p) {
     if (!p || !p.q || !home) return false;
-    if (!p.from) return true;
+    if (!p.from || (p.v || 1) < V) return true;
     return Math.abs(p.from[0] - home.lat) > 0.0005 || Math.abs(p.from[1] - home.lon) > 0.0005;
   }
   // the drive from one place to another (not home): answered from memory, else a straight-line guess while the router is asked
-  const LEGS = 'pos.legs', legs = new Map(), asking = new Set();
+  const LEGS = 'pos.legs2', legs = new Map(), asking = new Set();
   let onLeg = null;
   const ptKey = p => `${(+p.lat).toFixed(4)},${(+p.lon).toFixed(4)}`;
   function legMins(a, b) {
@@ -186,14 +202,55 @@ window.POSPlaces = function (ctx) {
       getJSON(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`).then(j => {
         const r = j && j.routes && j.routes[0];
         if (!r || !Number.isFinite(r.duration)) return;
-        const v = ceil5(r.duration / 60 * 1.25);
+        const v = exact(r.duration / 60);
         legs.set(key, v);
         try { const m = JSON.parse(localStorage.getItem(LEGS) || '{}'); m[key] = { v, at: Date.now() }; localStorage.setItem(LEGS, JSON.stringify(m)); } catch (e) { /* kept for this visit only */ }
         if (onLeg) onLeg();
       }).catch(() => {}).finally(() => asking.delete(key));
     }
-    return ceil5(miles(a, b) * 1.3 / 30 * 60);
+    return exact(miles(a, b) * 1.3 / 30 * 60);
+  }
+  /* ---------- your places, and the car ---------- */
+  async function putRecord(id, data) {
+    const { data: rows, error: e0 } = await sb.from('records').select('id').eq('id', id);
+    if (e0) throw e0;
+    const r = rows && rows.length ? await sb.from('records').update({ data }).eq('id', id) : await sb.from('records').insert({ id, kind: 'place', data });
+    if (r.error) throw r.error;
+  }
+  // the car is wherever this device is right now
+  async function parkHere() {
+    const c = await here();
+    car = { lat: +c.latitude.toFixed(6), lon: +c.longitude.toFixed(6), acc: Math.round(c.accuracy || 0), at: Date.now() };
+    await putRecord('place-car', car);
+    return car;
+  }
+  async function clearCar() {
+    const { error } = await sb.from('records').delete().eq('id', 'place-car');
+    if (error) throw error;
+    car = null;
+  }
+  async function saveKnown(id, data) {
+    const nid = id || 'place-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36));
+    await putRecord(nid, data);
+    known = known.filter(p => p.id !== nid).concat([{ id: nid, ...data }]);
+    return nid;
+  }
+  async function removeKnown(id) {
+    const { error } = await sb.from('records').delete().eq('id', id);
+    if (error) throw error;
+    known = known.filter(p => p.id !== id);
+  }
+  // an address or a name, anywhere around home (not only nearby): the closest match to home
+  async function geocode(q) {
+    const h = home || { lat: 34.77, lon: -82.2 }, d = 1.2;
+    const qs = new URLSearchParams({ q, format: 'jsonv2', addressdetails: '1', limit: '8', countrycodes: 'us', viewbox: `${h.lon - d},${h.lat + d},${h.lon + d},${h.lat - d}` });
+    let list = [];
+    try { list = await paced(() => getJSON('https://nominatim.openstreetmap.org/search?' + qs)); } catch (e) { list = []; }
+    const all = (list || []).map(r => ({ name: r.name || String(r.display_name || '').split(',')[0], addr: addrOf(r.address || {}), lat: +r.lat, lon: +r.lon })).filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon));
+    if (!all.length) { try { return (await photon(q, h))[0] || null; } catch (e) { return null; } }
+    return all.sort((a, b) => miles(h, a) - miles(h, b))[0];
   }
   return { home: () => home, loadHome, setHomeHere, resolve, stale, miles, legMins, onLeg: fn => { onLeg = fn; }, here,
-    me: () => me, onMe: fn => { onMe = fn; }, nearKnown, isSource, setSource };
+    me: () => me, onMe: fn => { onMe = fn; }, nearKnown, isSource, setSource,
+    rework, knownList: () => known.slice(), car: () => car, parkHere, clearCar, saveKnown, removeKnown, geocode };
 };
