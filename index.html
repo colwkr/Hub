@@ -35,22 +35,22 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261011010522">
-<script src="finance.js?v=20261011010522"></script>
-<link rel="stylesheet" href="car.css?v=20261011010522">
-<script src="car.js?v=20261011010522"></script>
-<link rel="stylesheet" href="sections.css?v=20261011010522">
-<script src="records.js?v=20261011010522"></script>
-<script src="people.js?v=20261011010522"></script>
-<script src="wheels.js?v=20261011010522"></script>
-<script src="keyboard.js?v=20261011010522"></script>
-<script src="notes.js?v=20261011010522"></script>
-<script src="reminders.js?v=20261011010522"></script>
-<script src="lights.js?v=20261011010522"></script>
-<script src="work.js?v=20261011010522"></script>
-<script src="health.js?v=20261011010522"></script>
-<script src="pets.js?v=20261011010522"></script>
-<script src="places.js?v=20261011010522"></script>
+<link rel="stylesheet" href="finance.css?v=20261011010851">
+<script src="finance.js?v=20261011010851"></script>
+<link rel="stylesheet" href="car.css?v=20261011010851">
+<script src="car.js?v=20261011010851"></script>
+<link rel="stylesheet" href="sections.css?v=20261011010851">
+<script src="records.js?v=20261011010851"></script>
+<script src="people.js?v=20261011010851"></script>
+<script src="wheels.js?v=20261011010851"></script>
+<script src="keyboard.js?v=20261011010851"></script>
+<script src="notes.js?v=20261011010851"></script>
+<script src="reminders.js?v=20261011010851"></script>
+<script src="lights.js?v=20261011010851"></script>
+<script src="work.js?v=20261011010851"></script>
+<script src="health.js?v=20261011010851"></script>
+<script src="pets.js?v=20261011010851"></script>
+<script src="places.js?v=20261011010851"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1410,13 +1410,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261011010522"></script>
+<script src="appearance.js?v=20261011010851"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261011010522';
+  const VERSION = '20261011010851';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2298,6 +2298,8 @@ dialog::backdrop{background:transparent}
       .sort((a, b) => a.s - b.s || b.e - a.e);
     const leg = (a, b) => PLACES.legMins(a.p, b.p);
     const chained = (a, b) => b.s - a.e < a.p.drive + b.p.drive + 30;
+    // a stretch (the Church marker) that something inside it runs to the end of (a campus all morning): that one goes home
+    const handedOff = X => stops.some(N => N !== X && N.s >= X.s && N.s < X.e && N.e >= X.e);
     // today, the next place on the calendar is driven to from wherever you are right now (none if you're already there);
     // the rest of the day, and other days, keep the plan
     // (known only from the calendar, that holds for what comes during or soon after where it has you)
@@ -2313,7 +2315,7 @@ dialog::backdrop{background:transparent}
         const outer0 = earlier.filter(C => C.s <= X.s && C.e > X.e).pop();
         if (outer0) { const d2 = leg(X, outer0); if (d2 > 0) out.push({ t: X.t, s: X.e, e: X.e + d2, mins: d2, kind: 'return', other: outer0.p.name }); return; }
         const next0 = stops.slice(i + 1).filter(N => N.s >= X.e).sort((a, b) => a.s - b.s)[0];
-        if (next0 && chained(X, next0)) return;
+        if ((next0 && chained(X, next0)) || handedOff(X)) return;
         out.push({ t: X.t, s: X.e, e: X.e + X.p.drive, mins: X.p.drive, kind: 'home' });
         return;
       }
@@ -2325,7 +2327,7 @@ dialog::backdrop{background:transparent}
       const outer = earlier.filter(C => C.s <= X.s && C.e > X.e).pop();
       if (outer) { const d2 = leg(X, outer); if (d2 > 0) out.push({ t: X.t, s: X.e, e: X.e + d2, mins: d2, kind: 'return', other: outer.p.name }); return; }
       const next = stops.slice(i + 1).filter(N => N.s >= X.e).sort((a, b) => a.s - b.s)[0];
-      if (next && chained(X, next)) return;
+      if ((next && chained(X, next)) || handedOff(X)) return;
       out.push({ t: X.t, s: X.e, e: X.e + X.p.drive, mins: X.p.drive, kind: 'home' });
     });
     return out;
