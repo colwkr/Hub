@@ -2,9 +2,10 @@
 // Home is set once from the device's location (the iPad on the wall is at home) and kept in records as place-home.
 // Places come from OpenStreetMap (Nominatim, with Photon as a fallback); the drive comes from the OSRM router.
 // A task's place is saved on it: { q, name, addr, lat, lon, mi, drive, from }, drive in minutes, rounded up to 5.
+// Known places (records kind "place", like the church) answer to their name and nicknames before any search.
 window.POSPlaces = function (ctx) {
   const { sb } = ctx;
-  let home = null;
+  let home = null, known = [];
   const R = 3958.8; // miles
   const rad = d => d * Math.PI / 180;
   function miles(a, b) {
@@ -15,12 +16,15 @@ window.POSPlaces = function (ctx) {
   const homeKey = h => `${h.lat.toFixed(4)},${h.lon.toFixed(4)}`;
 
   async function loadHome() {
-    const { data, error } = await sb.from('records').select('id,data').eq('id', 'place-home');
+    const { data, error } = await sb.from('records').select('id,data').eq('kind', 'place');
     if (error) return home;
-    const d = data && data[0] && data[0].data;
+    const hr = (data || []).find(r => r.id === 'place-home'), d = hr && hr.data;
     home = d && Number.isFinite(d.lat) && Number.isFinite(d.lon) ? d : null;
+    known = (data || []).filter(r => r.id !== 'place-home' && r.data && Number.isFinite(r.data.lat) && Number.isFinite(r.data.lon)).map(r => ({ id: r.id, ...r.data }));
     return home;
   }
+  const squash = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const knownFor = q => { const n = squash(q); return n ? known.find(p => squash(p.name) === n || (p.aliases || []).some(a => squash(a) === n)) : null; };
   function here() {
     return new Promise((res, rej) => {
       if (!navigator.geolocation) { rej(new Error('No location on this device')); return; }
@@ -91,11 +95,12 @@ window.POSPlaces = function (ctx) {
   async function resolve(q) {
     q = String(q || '').trim();
     if (!q || !home) return null;
-    const key = q.toLowerCase() + '|' + homeKey(home), m = mem()[key];
+    const kp = knownFor(q);
+    const key = (kp ? 'known:' + kp.id + ':' + kp.lat + ',' + kp.lon : q.toLowerCase()) + '|' + homeKey(home), m = mem()[key];
     if (m && Date.now() - m.at < MONTH) return { ...m.v, q };
     if (inflight.has(key)) return inflight.get(key);
     const h = home, job = (async () => {
-      const p = await find(q, h);
+      const p = kp ? { ...kp, crow: miles(h, kp) } : await find(q, h);
       const out = p ? { q, name: p.name || q, addr: p.addr || '', lat: +p.lat.toFixed(6), lon: +p.lon.toFixed(6), ...(await drive(h, p)), from: [h.lat, h.lon] }
         : { q, missing: true, from: [h.lat, h.lon] };
       if (!out.guess) remember(key, out);

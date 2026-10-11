@@ -82,7 +82,8 @@ window.POSFinance = function (ctx) {
     if (error) { S.failed = true; rerender(); return; }
     S.failed = false; S.loaded = true;
     for (const k of KINDS) S[k] = [];
-    for (const r of data) if (S[r.kind]) S[r.kind].push({ ...r.data, id: r.id });
+    const relabel = window.POSRelabel || (x => x);
+    for (const r of data) if (S[r.kind]) S[r.kind].push({ ...r.data, ...(r.kind === 'txns' && r.data.merchant ? { merchant: relabel(r.data.merchant) } : {}), id: r.id });
     rerender();
     if (S.bills.length) await autoPay();
     autoSort();

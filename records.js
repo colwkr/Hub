@@ -1,3 +1,8 @@
+// The church is Upstate Church now: anything that still says First Baptist (a bank deposit, a calendar invite) shows that.
+window.POSRelabel = s => (typeof s !== 'string' ? s : s
+  .replace(/\bFirst Baptist(?: Church)?(?: of)? Simpsonville\b/gi, 'Upstate Church Simpsonville')
+  .replace(/\bFirst Baptist(?: Church)?\b/gi, 'Upstate Church'));
+
 // POS records: storage and a form sheet shared by the smaller sections (birthdays, pets, lights, notes).
 // Everything lives in the Supabase table records (one row per thing, owner-only); each section asks for its own kinds.
 window.POSRecords = function (ctx, kinds, channelName) {
