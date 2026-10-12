@@ -84,6 +84,44 @@ main{position:relative;z-index:1;display:grid;gap:12px;padding:0 16px 24px;grid-
 .log div b{color:var(--ink);font-weight:600;min-width:52px}
 .saved{font-size:11.5px;color:var(--ink-3);min-height:1.2em}
 .assume{font-size:11.5px;color:var(--warn)}
+/* Operate: the phone is the camera. Full screen, 16:9, pan and tilt by moving the phone (or dragging), a thin zoom on the right */
+body.operating{overflow:hidden}
+body.operating .top,body.operating main{display:none}
+.op{position:fixed;inset:0;z-index:20;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.op[hidden]{display:none}
+.op .view{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,calc(100dvh * 16 / 9));aspect-ratio:16/9;border-radius:0;box-shadow:none;touch-action:none}
+.op-cross{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;pointer-events:none;opacity:.55}
+.op-cross::before,.op-cross::after{content:"";position:absolute;background:#fff}
+.op-cross::before{left:50%;top:0;bottom:0;width:1px}
+.op-cross::after{top:50%;left:0;right:0;height:1px}
+.op-safe{position:absolute;inset:5%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);pointer-events:none}
+.op-hud{position:absolute;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px max(14px,env(safe-area-inset-left)) 10px max(14px,env(safe-area-inset-right));pointer-events:none}
+.op-hud > *{pointer-events:auto}
+.op-top{top:0;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+.op-bot{bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.6));padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.op-tag{font-size:13px;font-weight:700;letter-spacing:.14em;padding:4px 9px;border-radius:5px;background:rgba(0,0,0,.6)}
+.op-tag.pgm{background:var(--pgm)}.op-tag.pvw{background:var(--pvw);color:#04140a}
+.op-cams{display:flex;gap:4px;margin:0 auto}
+.op-cams button{width:34px;height:30px;border:0;border-radius:8px;background:rgba(0,0,0,.5);color:var(--ink);font-size:13px;font-weight:600;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.op-cams button[aria-pressed="true"]{background:var(--ink);color:#0b0c0e}
+.op-cams button.out{opacity:.4}
+.op-x{width:38px;height:38px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:var(--ink);font-size:20px;line-height:1;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.op-f{font-size:28px;font-weight:200;font-variant-numeric:tabular-nums;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.op-f small{font-size:13px;margin-left:2px;color:var(--ink-2)}
+.op-shot{font-size:13px;color:var(--ink-2)}
+.op-bot .grow{flex:1}
+.op-btn{border:0;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;background:rgba(0,0,0,.55);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.op-btn[aria-pressed="true"]{background:var(--ink);color:#0b0c0e}
+/* the zoom: a thin rail down the right edge, T at the top and W at the bottom */
+.op-zoom{position:absolute;right:max(6px,env(safe-area-inset-right));top:56px;bottom:62px;width:40px;display:flex;flex-direction:column;align-items:center;gap:6px;touch-action:none}
+.op-zoom span{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--ink-2);text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.op-rail{position:relative;flex:1;width:40px;cursor:ns-resize}
+.op-rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;border-radius:2px;background:rgba(255,255,255,.28)}
+.op-fill{position:absolute;left:50%;bottom:0;width:3px;margin-left:-1.5px;border-radius:2px;background:#fff}
+.op-knob{position:absolute;left:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+.op-turn{position:absolute;left:50%;top:calc(50% + min(100vw, 100dvh * 16 / 9) * 9 / 32 + 18px);transform:translateX(-50%);font-size:13px;color:var(--ink-2);text-align:center;width:80%;display:none}
+@media (orientation:portrait){ .op-turn{display:block} }
+.op-go{background:var(--ink);color:#0b0c0e;box-shadow:none;font-weight:600}
 @media (max-width:600px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .big{grid-template-columns:1fr} .big .pgm-box{order:-1} .top h1{font-size:12px} .view .timer{font-size:18px} }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -105,7 +143,7 @@ main{position:relative;z-index:1;display:grid;gap:12px;padding:0 16px 24px;grid-
       <div class="view pgm-box" data-view="pgm"><span class="tag" id="pgmTag">PROGRAM</span><span class="timer" id="pgmTime">0:00</span><div class="lbl" id="pgmLbl"></div></div>
     </div>
     <div class="tiles" id="tiles"></div>
-    <div class="bar"><button class="cut" id="cutBtn">CUT</button><span class="keys">Tap a camera to preview it, double-tap to take it. Keys: 1–6 preview · Space cut</span></div>
+    <div class="bar"><button class="cut" id="cutBtn">CUT</button><button class="btn op-go" id="opBar">Operate</button><span class="keys">Tap a camera to preview it, double-tap to take it. Keys: 1–6 preview · Space cut</span></div>
   </section>
   <section class="plot" aria-label="Room">
     <div class="view" data-view="plot" id="plotView"><span class="hint" id="plotHint">Drag to look around · drag a camera to move it</span></div>
@@ -120,6 +158,13 @@ main{position:relative;z-index:1;display:grid;gap:12px;padding:0 16px 24px;grid-
     </div>
   </aside>
 </main>
+<div class="op" id="op" hidden aria-label="Operate a camera">
+  <div class="view" data-view="op" id="opView"><div class="op-safe"></div><div class="op-cross"></div></div>
+  <div class="op-hud op-top"><span class="op-tag" id="opTag">CAM 1</span><div class="op-cams" id="opCams"></div><button class="op-x" id="opX" aria-label="Stop operating">×</button></div>
+  <div class="op-zoom" id="opZoom" aria-label="Zoom"><span>T</span><div class="op-rail" id="opRail" role="slider" aria-label="Zoom" tabindex="0"><i class="op-fill" id="opFill"></i><i class="op-knob" id="opKnob"></i></div><span>W</span></div>
+  <div class="op-hud op-bot"><span class="op-f" id="opF">50<small>mm</small></span><span class="op-shot" id="opShot"></span><span class="grow"></span><button class="op-btn" id="opGyro" aria-pressed="true" hidden>Motion</button><button class="op-btn" id="opCenter">Recenter</button></div>
+  <p class="op-turn">Turn your phone sideways for the full 16:9 view. Move the phone to pan and tilt, or drag the picture.</p>
+</div>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -354,6 +399,7 @@ function tally() {
     const c = camByN(n); const l = t.querySelector('.lbl span'); if (c && l) l.textContent = lensLine(c);
   }
   const p = camByN(st.pgm), v = camByN(st.pvw);
+  $('#opBar').textContent = `Operate Cam ${st.sel}`;
   $('#pgmTag').textContent = `PROGRAM · CAM ${st.pgm}`; $('#pvwTag').textContent = `PREVIEW · CAM ${st.pvw}`;
   $('#pgmLbl').innerHTML = p ? `<b>CAM ${p.n}</b><span>${esc(lensLine(p))} · ${esc(shotName(p))}</span>` : '';
   $('#pvwLbl').innerHTML = v ? `<b>CAM ${v.n}</b><span>${esc(lensLine(v))} · ${esc(shotName(v))}</span>` : '';
@@ -418,6 +464,7 @@ function panel() {
   $('#camCard').innerHTML = `
     <div class="cam-h"><b>Camera ${c.n}</b>${c.out ? '<span class="pill out">Not in use</span>' : '<span class="pill on">In use</span>'}<span>${esc(c.body ? `${c.body.make} ${c.body.model}` : 'No body yet')}</span></div>
     <span class="shot">${esc(c.lens.name)} on ${esc(c.sensor)}${c.data.rig ? ` · ${esc(c.data.rig)}` : ''}</span>
+    <div class="btns"><button class="btn op-go" id="opBtn">Operate Camera ${c.n}</button></div>
     <div class="figs"><div><b id="fNum">${Math.round(c.plot.f)}</b><span>mm</span></div><div><b>${fovH.toFixed(1)}°</b><span>Angle of view</span></div><div><b>${Math.round(toSpk)}</b><span>ft to speaker</span></div></div>
     <span class="shot">At the ${esc(c.plot.aim || 'aim point')}: <b>${w.toFixed(1)} ft</b> across the frame, a <b>${esc(shotName(c))}</b>.</span>
     <div class="row"><label for="zoom">Zoom</label><input id="zoom" type="range" min="${c.lens.min}" max="${c.lens.max}" step="1" value="${Math.round(c.plot.f)}"><output>${Math.round(c.plot.f)} mm</output></div>
@@ -426,6 +473,7 @@ function panel() {
     <div class="btns">${[['speaker', 'Speaker'], ['center', 'Stage center'], ['band', 'Band'], ['host', 'Host']].map(([k, l]) => `<button class="btn" data-aim="${k}" aria-pressed="${c.plot.aim === k}">${l}</button>`).join('')}<button class="btn" id="aimBtn" aria-pressed="${st.aiming}">Tap to aim</button></div>
     ${assumed.length ? `<span class="assume">Assumed: ${esc(assumed.join(', '))}. Move it in the room view and it saves to Gear.</span>` : ''}
     <span class="saved" id="saved"></span>`;
+  $('#opBtn').addEventListener('click', () => openOp(c.n));
   $('#zoom').addEventListener('input', e => { c.plot.f = +e.target.value; place(c); e.target.nextElementSibling.textContent = `${c.plot.f} mm`; $('#fNum').textContent = c.plot.f; tally(); later(c); });
   $('#zoom').addEventListener('change', () => panel());
   $('#hgt').addEventListener('input', e => { c.plot.y = +e.target.value; place(c); e.target.nextElementSibling.textContent = `${c.plot.y.toFixed(1)} ft`; later(c); });
@@ -474,6 +522,129 @@ const endDrag = e => { if (!st.drag || e.pointerId !== st.drag.id) return; const
 $('#plotView').addEventListener('pointerup', endDrag);
 $('#plotView').addEventListener('pointercancel', endDrag);
 
+/* ---------- operate: be one camera's operator. The camera stays where it's placed; you pan and tilt by moving the phone
+   (like a handheld) or by dragging the picture, pinch or slide the thin rail to zoom. Practice only: nothing here saves.
+   The phone's motion sensors are read on the phone (an iPhone asks first); nothing about them leaves the phone. ---------- */
+const op = { on: false, c: null, cam: new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 600), f: 50, yaw: 0, pitch: 0, baseYaw: 0, basePitch: 0, dYaw: 0, dPitch: 0, ref: null, gyro: true, hasGyro: false, ptrs: new Map(), shotAt: 0 };
+op.cam.layers.enable(SHELL);
+if (location.hostname === '127.0.0.1') window.__op = op; // local tests only
+const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
+const devQ = new THREE.Quaternion(), devE = new THREE.Euler(), zee = new THREE.Vector3(0, 0, 1), q0 = new THREE.Quaternion(), qx = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+const screenAngle = () => (screen.orientation && typeof screen.orientation.angle === 'number' ? screen.orientation.angle : typeof window.orientation === 'number' ? window.orientation : 0);
+// the direction out of the back of the phone, as a camera would look (the standard device-orientation math)
+function deviceQuat(a, b, g) {
+  devE.set(THREE.MathUtils.degToRad(b), THREE.MathUtils.degToRad(a), -THREE.MathUtils.degToRad(g), 'YXZ');
+  devQ.setFromEuler(devE).multiply(qx).multiply(q0.setFromAxisAngle(zee, -THREE.MathUtils.degToRad(screenAngle())));
+  return devQ;
+}
+window.addEventListener('deviceorientation', e => {
+  if (!op.on || e.alpha == null || e.beta == null) return;
+  if (!op.hasGyro) { op.hasGyro = true; $('#opGyro').hidden = false; }
+  if (!op.gyro) return;
+  const eu = new THREE.Euler().setFromQuaternion(deviceQuat(e.alpha, e.beta, e.gamma), 'YXZ');
+  if (!op.ref) op.ref = { y: eu.y, x: eu.x };
+  op.dYaw = wrapA(eu.y - op.ref.y); op.dPitch = eu.x - op.ref.x;
+});
+function aimAt(c) { // where the camera points now, as pan and tilt
+  const t = new THREE.Object3D(); t.position.copy(c.cam.position); t.quaternion.copy(c.cam.quaternion);
+  const e = new THREE.Euler().setFromQuaternion(t.quaternion, 'YXZ');
+  op.baseYaw = e.y; op.basePitch = e.x; op.dYaw = 0; op.dPitch = 0; op.ref = null;
+}
+function openOp(n) {
+  const c = camByN(n); if (!c) return;
+  const first = !op.on;
+  op.c = c; op.f = c.plot.f;
+  op.cam.position.copy(c.cam.position);
+  aimAt(c); op.yaw = op.baseYaw; op.pitch = op.basePitch;
+  op.on = true; $('#op').hidden = false; document.body.classList.add('operating');
+  st.sel = n;
+  if (first) {
+    // full screen and sideways where the phone allows it; the motion sensors (an iPhone asks once)
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') DeviceOrientationEvent.requestPermission().then(r => { if (r !== 'granted') { op.gyro = false; opUi(); } }).catch(() => { op.gyro = false; opUi(); });
+  }
+  opUi();
+}
+function closeOp() {
+  op.on = false; op.ptrs.clear(); $('#op').hidden = true; document.body.classList.remove('operating');
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  try { screen.orientation && screen.orientation.unlock && screen.orientation.unlock(); } catch (e) {}
+  tally(); panel();
+}
+function opUi() {
+  const c = op.c; if (!c) return;
+  const tag = $('#opTag');
+  tag.textContent = `CAM ${c.n}`; tag.className = 'op-tag' + (c.n === st.pgm ? ' pgm' : c.n === st.pvw ? ' pvw' : '');
+  $('#opCams').innerHTML = cams.map(x => `<button data-n="${x.n}" class="${x.out ? 'out' : ''}" aria-pressed="${x.n === c.n}" aria-label="Camera ${x.n}">${x.n}</button>`).join('');
+  $('#opGyro').setAttribute('aria-pressed', String(op.gyro));
+  opZoomUi();
+}
+const zT = f => Math.log(f / op.c.lens.min) / Math.log(op.c.lens.max / op.c.lens.min); // 0 wide … 1 tele, on a log scale like a zoom rocker
+const zF = t => op.c.lens.min * Math.pow(op.c.lens.max / op.c.lens.min, clamp(t, 0, 1));
+function opZoomUi() {
+  const t = op.c.lens.max > op.c.lens.min ? zT(op.f) : 0;
+  $('#opKnob').style.top = `${(1 - t) * 100}%`; $('#opFill').style.height = `${t * 100}%`;
+  $('#opF').innerHTML = `${op.f < 10 ? op.f.toFixed(1) : Math.round(op.f)}<small>mm</small>`;
+  $('#opRail').setAttribute('aria-valuetext', `${Math.round(op.f)} mm`);
+}
+function setZoom(f) { op.f = clamp(f, op.c.lens.min, op.c.lens.max); opZoomUi(); }
+// every frame: ease toward where the phone (plus any drag) points; the horizon stays level, like a real head
+const opE = new THREE.Euler(0, 0, 0, 'YXZ'), hit = new THREE.Raycaster(), center = new THREE.Vector2(0, 0);
+function opStep(dt) {
+  const c = op.c; if (!c) return;
+  const k = 1 - Math.exp(-dt * 18);
+  const ty = op.baseYaw + op.dYaw, tp = clamp(op.basePitch + op.dPitch, -1.4, 1.4);
+  op.yaw += wrapA(ty - op.yaw) * k; op.pitch += (tp - op.pitch) * k;
+  op.cam.quaternion.setFromEuler(opE.set(op.pitch, op.yaw, 0, 'YXZ'));
+  const h = 2 * Math.atan(c.sensorW / (2 * op.f));
+  op.cam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(h / 2) / (16 / 9)));
+  // the shot size: how wide the frame is at whatever is in the middle of it
+  const now = performance.now();
+  if (now - op.shotAt > 250) {
+    op.shotAt = now;
+    hit.setFromCamera(center, op.cam); hit.layers.set(0);
+    const shown = o => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
+    const first = hit.intersectObjects(scene.children, true).find(x => x.object.isMesh && shown(x.object) && !(x.object.material && x.object.material.transparent));
+    if (first) {
+      const w = first.distance * c.sensorW / op.f;
+      const name = w < 2.6 ? 'extreme close-up' : w < 4.6 ? 'close-up' : w < 8 ? 'medium' : w < 16 ? 'full body' : w < 40 ? 'wide' : 'very wide';
+      $('#opShot').textContent = `${name} · ${w.toFixed(1)} ft across · ${Math.round(first.distance)} ft away`;
+    } else $('#opShot').textContent = '';
+  }
+}
+$('#opX').addEventListener('click', closeOp);
+$('#opBar').addEventListener('click', () => openOp(st.sel));
+$('#opCams').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if (b) openOp(+b.dataset.n); });
+$('#opCenter').addEventListener('click', () => { aimAt(op.c); });
+$('#opGyro').addEventListener('click', () => { op.gyro = !op.gyro; if (op.gyro) { op.baseYaw = op.yaw; op.basePitch = op.pitch; op.dYaw = 0; op.dPitch = 0; op.ref = null; } else { op.baseYaw += op.dYaw; op.basePitch += op.dPitch; op.dYaw = 0; op.dPitch = 0; } opUi(); });
+document.addEventListener('keydown', e => { if (op.on && e.key === 'Escape') closeOp(); }, true);
+// drag the picture to pan and tilt (it follows your finger); two fingers pinch to zoom
+const opView = $('#opView');
+opView.addEventListener('pointerdown', e => { op.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { opView.setPointerCapture(e.pointerId); } catch (err) {} if (op.ptrs.size === 2) { const [a, b] = [...op.ptrs.values()]; op.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), f: op.f }; } });
+opView.addEventListener('pointermove', e => {
+  const p = op.ptrs.get(e.pointerId); if (!p) return;
+  if (op.ptrs.size >= 2 && op.pinch) {
+    p.x = e.clientX; p.y = e.clientY;
+    const [a, b] = [...op.ptrs.values()];
+    setZoom(op.pinch.f * Math.hypot(a.x - b.x, a.y - b.y) / Math.max(20, op.pinch.d)); return;
+  }
+  const r = opView.getBoundingClientRect(), per = THREE.MathUtils.degToRad(op.cam.fov) / r.height;
+  op.baseYaw += (e.clientX - p.x) * per; op.basePitch = clamp(op.basePitch + (e.clientY - p.y) * per, -1.4 - op.dPitch, 1.4 - op.dPitch);
+  p.x = e.clientX; p.y = e.clientY;
+});
+const opUp = e => { op.ptrs.delete(e.pointerId); if (op.ptrs.size < 2) op.pinch = null; };
+opView.addEventListener('pointerup', opUp); opView.addEventListener('pointercancel', opUp);
+opView.addEventListener('wheel', e => { e.preventDefault(); setZoom(op.f * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+// the zoom rail: slide anywhere along it
+const rail = $('#opRail');
+const railAt = e => { const r = rail.getBoundingClientRect(); setZoom(zF(1 - (e.clientY - r.top) / r.height)); };
+rail.addEventListener('pointerdown', e => { try { rail.setPointerCapture(e.pointerId); } catch (err) {} rail.dataset.on = '1'; railAt(e); e.stopPropagation(); });
+rail.addEventListener('pointermove', e => { if (rail.dataset.on) railAt(e); });
+rail.addEventListener('pointerup', () => { delete rail.dataset.on; });
+rail.addEventListener('pointercancel', () => { delete rail.dataset.on; });
+rail.addEventListener('keydown', e => { if (e.key === 'ArrowUp') setZoom(op.f * 1.08); else if (e.key === 'ArrowDown') setZoom(op.f / 1.08); });
+
 /* ---------- saving: a camera's spot, aim and zoom go back to its Gear entry (and its distance to the speaker) ---------- */
 let sb = null, canSave = false;
 const saveT = new Map();
@@ -500,6 +671,7 @@ const views = () => [...document.querySelectorAll('.view[data-view]')];
 function cameraFor(el) {
   const v = el.dataset.view;
   if (v === 'plot') return plotCam;
+  if (v === 'op') return op.on ? op.cam : null;
   if (v === 'pgm') return (camByN(st.pgm) || {}).cam;
   if (v === 'pvw') return (camByN(st.pvw) || {}).cam;
   return (camByN(+el.dataset.n) || {}).cam;
@@ -525,13 +697,15 @@ function frame(now) {
   const W = renderer.domElement.clientWidth, H = renderer.domElement.clientHeight;
   if (renderer.domElement.width !== Math.floor(W * renderer.getPixelRatio()) || renderer.domElement.height !== Math.floor(H * renderer.getPixelRatio())) renderer.setSize(W, H, false);
   renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
-  for (const el of views()) {
+  if (op.on) opStep(dt);
+  for (const el of op.on ? [$('#opView')] : views()) {
     const r = el.getBoundingClientRect();
     if (r.bottom < 0 || r.top > H || r.right < 0 || r.left > W || r.width < 4) continue;
     const cam = cameraFor(el); if (!cam) continue;
     renderer.setViewport(r.left, H - r.bottom, r.width, r.height); renderer.setScissor(r.left, H - r.bottom, r.width, r.height);
     if (cam === plotCam) { cam.aspect = r.width / r.height; cam.updateProjectionMatrix(); }
     hemi.intensity = cam === plotCam ? 2.2 : 0.35; // house lights up for the room view only
+    if (cam === op.cam) { cam.aspect = r.width / r.height; cam.updateProjectionMatrix(); }
     renderer.render(scene, cam);
   }
   $('#pgmTime').textContent = mmss((now - st.since) / 1000);
