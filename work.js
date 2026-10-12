@@ -1,7 +1,6 @@
 // POS Work: the weekly CG checklist. Every campus's CG machine gets its graphics put in by Sunday, one list top to bottom
 // in alphabetical order; Simpsonville has three (CG1, then CG2 and the North Auditorium tucked in under it). A week runs
-// Monday to Sunday, so Monday at midnight starts a fresh list due the next Sunday. Checking or unchecking one asks first,
-// and Reset clears the whole week (after asking). Records: kind "cg-week", id "cg-<Sunday>", { due: 'YYYY-MM-DD', done: { <machine id>: when } }.
+// Monday to Sunday, so Monday at midnight starts a fresh list due the next Sunday. A tap checks or unchecks one (Undo in the toast). Records: kind "cg-week", id "cg-<Sunday>", { due: 'YYYY-MM-DD', done: { <machine id>: when } }.
 window.POSWork = function (ctx) {
   const { esc } = ctx;
   const KIND = 'cg-week';
@@ -68,53 +67,33 @@ window.POSWork = function (ctx) {
     });
   }
 
-  /* ---------- markup ---------- */
-  const fmtDue = d => d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-  function dueText(d) {
-    const days = Math.round((d - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 864e5);
-    return days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due in ${days} days`;
-  }
-  // a tap asks first: the row turns into its question, with the answer and Cancel; it lets go on its own after a bit
-  let armed = null, armT = null;
-  function arm(id) {
-    armed = id;
-    clearTimeout(armT);
-    if (id) armT = setTimeout(() => { armed = null; ctx.rerender(); }, 8000);
-    ctx.rerender();
-  }
-  function row(m, done) {
-    const on = !!done[m.id];
-    if (armed === m.id) return `<div class="wk-r ask${on ? ' on' : ''}${m.sub ? ' sub' : ''}" role="group" aria-label="${esc(m.label || m.name)}"><span class="wk-c">${ICON.check}</span><span class="name">${esc(m.name)}</span>
-      <button type="button" class="btn solid wk-yes" data-act="wk-yes" data-id="${m.id}">${on ? 'Mark not started' : 'Mark put in'}</button><button type="button" class="btn wk-no" data-act="wk-no">Cancel</button></div>`;
-    return `<button type="button" class="wk-r${on ? ' on' : ''}${m.sub ? ' sub' : ''}" data-act="wk-cg" data-id="${m.id}" aria-pressed="${on}" aria-label="${esc(m.label || m.name)}, ${on ? 'put in' : 'not started'}"><span class="wk-c">${ICON.check}</span><span class="name">${esc(m.name)}</span><span class="meta">${on ? 'Put in' : 'Not started'}</span></button>`;
-  }
-  function cgCard() {
-    if (S.failed) return '<section class="float wk-cg"><p class="empty">CG list did not load. POS tries again when you come back to it.</p></section>';
-    if (!S.loaded) return '<section class="float wk-cg"><p class="empty">Loading…</p></section>';
+  /* ---------- markup: a short list down the side of Work. A tap checks or unchecks; Undo is in the toast ---------- */
+  const SHORT = { 'simp-cg1': 'Simpsonville CG1', 'simp-cg2': 'CG2', 'simp-north': 'North Aud.' };
+  const fmtDue = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  function cgList() {
+    if (S.failed) return '<section class="cg"><span class="lab">CG</span><p class="empty">Did not load. POS tries again when you come back.</p></section>';
+    if (!S.loaded) return '<section class="cg"><span class="lab">CG</span><p class="empty">Loading…</p></section>';
     const due = dueDate(), done = doneMap();
-    const n = MACHINES.filter(m => done[m.id]).length, left = MACHINES.length - n;
-    const late = left && dueText(due) === 'Due today';
-    return `<section class="float wk-cg${left ? '' : ' all'}">
-      <div class="wk-h">
-        <div class="wk-when"><span class="lab">CG · ${dueText(due)}</span><span class="wk-due">${esc(fmtDue(due))}</span></div>
-        <div class="wk-big${late ? ' late' : ''}">${left ? `<b>${left}</b><span>left</span>` : `<span class="wk-allc">${ICON.check}</span><span>All put in</span>`}</div>
-      </div>
-      ${n && ctx.canSave() ? (armed === '_all'
-        ? `<div class="wk-reset ask" role="group" aria-label="Reset the week"><span>Uncheck all ${n}?</span><button type="button" class="btn solid wk-yes" data-act="wk-reset-yes">Reset all</button><button type="button" class="btn wk-no" data-act="wk-no">Cancel</button></div>`
-        : `<div class="wk-reset"><button type="button" class="btn wk-resetbtn" data-act="wk-reset">Reset all</button></div>`) : ''}
-      <div class="wk-bar" role="progressbar" aria-label="CG put in" aria-valuemin="0" aria-valuemax="${MACHINES.length}" aria-valuenow="${n}"><i style="width:${(n / MACHINES.length * 100).toFixed(1)}%"></i></div>
-      <div class="wk-list">${MACHINES.map(m => row(m, done)).join('')}</div>
+    const left = MACHINES.filter(m => !done[m.id]).length;
+    const today = dkey(due) === dkey(new Date());
+    const rows = MACHINES.map(m => {
+      const on = !!done[m.id];
+      return `<button type="button" class="cg-r${on ? ' on' : ''}${m.sub ? ' sub' : ''}" data-act="wk-cg" data-id="${m.id}" aria-pressed="${on}" aria-label="${esc(m.label || m.name)}, ${on ? 'put in' : 'not put in yet'}"><span class="wk-c">${ICON.check}</span><span class="name">${esc(SHORT[m.id] || m.name)}</span></button>`;
+    }).join('');
+    return `<section class="cg${left ? '' : ' all'}${left && today ? ' late' : ''}" aria-label="CG for ${esc(fmtDue(due))}">
+      <div class="cg-h"><span class="lab">CG · ${esc(fmtDue(due))}</span><div class="cg-n">${left ? `<b>${left}</b><span>left</span>` : `<b>${ICON.check}</b><span>All in</span>`}</div></div>
+      <div class="float cg-list">${rows}</div>
     </section>`;
   }
   function act(name, b) {
-    if (!ctx.canSave()) return;
-    if (name === 'wk-cg') arm(b.dataset.id);
-    else if (name === 'wk-reset') arm('_all');
-    else if (name === 'wk-no') arm(null);
-    else if (name === 'wk-yes') { const id = b.dataset.id; armed = null; clearTimeout(armT); const was = !!doneMap()[id]; toggle(id); const m = MACHINES.find(x => x.id === id); if (m) ctx.toast(`${m.label || m.name}: ${was ? 'not started' : 'put in'}`); }
-    else if (name === 'wk-reset-yes') { armed = null; clearTimeout(armT); saveDone({}); ctx.toast('CG reset: all unchecked'); }
+    if (!ctx.canSave() || name !== 'wk-cg') return;
+    const id = b.dataset.id, m = MACHINES.find(x => x.id === id);
+    if (!m) return;
+    const was = !!doneMap()[id];
+    toggle(id);
+    ctx.toast(`${m.label || m.name}: ${was ? 'not put in' : 'put in'}`, () => toggle(id));
   }
   // how many are left this week (for a badge)
   const left = () => (S.loaded ? MACHINES.filter(m => !doneMap()[m.id]).length : 0);
-  return { cgCard, act, left, start: R.start, stop: R.stop, dueDate };
+  return { cgList, act, left, start: R.start, stop: R.stop, dueDate };
 };

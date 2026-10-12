@@ -566,3 +566,63 @@ select.gr-in{-webkit-appearance:none;appearance:none}
 .clu-it.bad b{color:var(--bad)}
 .clu-it > small{grid-area:r;font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .clu.stale .clu-it b{opacity:.55}
+
+/* Work overview: the CG list down the left, the work list in the middle (most of the room), meetings on the right.
+   On a phone they stack and scroll together; on a tablet or computer each column scrolls on its own. */
+.wk-ov{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px;display:flex;flex-direction:column;gap:24px}
+.wk-ov::-webkit-scrollbar,.wk-ov > div::-webkit-scrollbar{display:none}
+.wk-ov > div{display:flex;flex-direction:column;gap:20px;min-width:0}
+@media (min-width:760px) and (min-height:500px){
+  .wk-ov{display:grid;overflow:hidden;margin:0;padding:0;gap:16px 24px;
+    grid-template-columns:minmax(170px,24%) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,auto);grid-template-areas:"cg tl" "cg mt"}
+  .wk-ov > div{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -10px 0;padding:6px 10px 28px}
+  .wk-cgcol{grid-area:cg}
+  .wk-tl{grid-area:tl}
+  .wk-mt{grid-area:mt;max-height:36vh}
+}
+@media (min-width:1000px) and (min-height:500px){
+  .wk-ov{grid-template-columns:minmax(180px,14%) minmax(0,1fr) minmax(250px,23%);grid-template-rows:minmax(0,1fr);grid-template-areas:"cg tl mt"}
+  .wk-mt{max-height:none}
+}
+/* CG: a count, then each machine with a check */
+.cg{display:flex;flex-direction:column;gap:10px}
+.cg-h{display:flex;flex-direction:column;gap:4px;padding:0 4px}
+.cg-n{display:flex;align-items:baseline;gap:6px;color:var(--ink)}
+.cg-n b{font-size:40px;font-weight:200;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cg-n span{font-size:13px;color:var(--ink-2)}
+.cg.late .cg-n b{color:var(--warn)}
+.cg.all .cg-n{color:var(--good);align-items:center}
+.cg.all .cg-n span{color:var(--good)}
+.cg.all .cg-n b svg.i{width:30px;height:30px;stroke-width:2.2;display:block}
+.cg-list{display:flex;flex-direction:column;padding:6px}
+.cg-r{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;border:0;background:none;color:var(--ink);text-align:left;padding:4px 8px;border-radius:12px;font-size:14.5px;line-height:1.2}
+.cg-r.sub{padding-left:28px}
+.cg-r:active{background:var(--active-sq)}
+.cg-r .wk-c{width:24px;height:24px}
+.cg-r .wk-c svg.i{width:14px;height:14px}
+.cg-r .name{flex:1;min-width:0}
+.cg-r.on .wk-c{background:var(--good);color:var(--chrome);box-shadow:none}
+.cg-r.on .name{color:var(--ink-2)}
+@media (max-width:759px){ .cg-list{display:grid;grid-template-columns:1fr 1fr} .cg-r.sub{padding-left:8px} }
+/* the work list */
+.wk-tlh{display:flex;align-items:center;gap:8px}
+.wk-cnt{display:flex;align-items:baseline;gap:7px;margin-right:auto}
+.wk-cnt b{font-size:40px;font-weight:200;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.wk-cnt span{font-size:13px;color:var(--ink-2)}
+.wk-tlh .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:14px}
+.wk-tlh .btn svg.i{width:16px;height:16px}
+.wk-ph{margin-bottom:-10px}
+.wkp .float{overflow:hidden}
+.wkp-h{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;text-align:left;color:var(--ink);padding:10px 14px 10px 10px}
+.wkp-h:active{background:var(--active-sq)}
+.wkp-h > svg.i{width:16px;height:16px;color:var(--ink-3);flex:none}
+.wkp-h .pj-ring{width:42px;height:42px}
+.wkp-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wkp-t .name{font-size:16px;font-weight:600;line-height:1.25}
+.wkp-t .meta{font-size:12.5px;color:var(--ink-2)}
+.wkp .pstep{border-top:1px solid var(--hair)}
+/* a project opened from Work fills the space; Back returns to Work */
+.mtg.solo{display:flex}
+.mtg.solo .mt-pane{display:flex;flex:1;min-height:0;width:100%;max-width:820px;margin:0 auto}
+.mtg.solo .mt-back{display:grid}
+.wk-tl .ttag.work{display:none}
