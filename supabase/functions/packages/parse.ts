@@ -69,8 +69,9 @@ const pickStr = (o: Record<string, unknown>, re: RegExp) => { for (const [k, v] 
 // a time with no zone ("2026-10-11 14:20:00") is the local time where it happened: kept as written for showing
 const wallOf = (v: unknown) => (typeof v === "string" && /^\d{4}-\d\d-\d\d[ T]\d\d:\d\d(:\d\d)?$/.test(v.trim()) ? v.trim().replace("T", " ").slice(0, 16) : null);
 function eventOf(o: Record<string, unknown>): Ev | null {
-  const tv = pickStr(o, /^(event)?(time|date|datetime)|time(stamp)?$|^date$/i) ?? pickStr(o, /time|date/i);
-  const at = timeOf(tv), wall = wallOf(tv);
+  // the event's own time (not its time zone); a UTC copy, when there is one, gives the exact moment
+  const tv = pickStr(o, /^(?!.*(zone|utc)).*(time|date)/i);
+  const at = timeOf(pickStr(o, /zero\s*utc|utc$/i)) || timeOf(tv), wall = wallOf(tv);
   const text = String(pickStr(o, /detail|desc|message|statusText|^event$|^status$|content|info/i) ?? "").trim();
   if (!at || !text) return null;
   const addr = pick(o, /address|location|place|area/i);
@@ -78,7 +79,9 @@ function eventOf(o: Record<string, unknown>): Ev | null {
   const city = String(pickStr(o, /^city$/i) ?? (addr && typeof addr === "object" ? pick(addr as Record<string, unknown>, /city/i) : "") ?? "");
   const st = String(pickStr(o, /^(state|province|region)$/i) ?? (addr && typeof addr === "object" ? pick(addr as Record<string, unknown>, /state|province/i) : "") ?? "");
   const country = String(pickStr(o, /^country/i) ?? "");
-  const place = [city, st].filter(Boolean).join(", ") || addrText;
+  // just the country ("US") isn't a place on the map
+  const bare = (x: string) => (/^(us|usa|united states( of america)?)$/i.test(x.trim()) ? "" : x);
+  const place = bare([city, st].filter(Boolean).join(", ") || addrText);
   const state = (st && CODES.has(st.toUpperCase()) ? st.toUpperCase() : stateOf(st)) || stateOf(place) || stateOf(text);
   const cityName = city || (place ? place.split(",")[0].trim() : "");
   return { at, wall, text, place: place.trim(), city: cityName, state, country };
@@ -118,12 +121,13 @@ export function stageOf(status: string, latest: string): string {
   if (/out[\s_-]*for[\s_-]*delivery|with delivery courier|on vehicle/.test(s)) return "out";
   if (/(^|\W)delivered|delivered_|signed|picked up by (the )?(customer|recipient)/.test(s) && !/not delivered|undeliver|attempt/.test(s)) return "delivered";
   if (/exception|fail|undeliver|returned|return to sender|alert|delay|held|damage/.test(s)) return "exception";
-  if (/info[\s_]*received|label|pre[\s_-]*transit|not[\s_]*found|pending|created|awaiting|order processed|shipping label/.test(s)) return "label";
+  // just registered (INIT) or nothing from the carrier yet (NO_RECORD): it hasn't had its first scan
+  if (/(^|\s)init(\s|$)|no[\s_]*record|info[\s_]*received|label|pre[\s_-]*transit|not[\s_]*found|pending|created|awaiting|order processed|shipping label/.test(s)) return "label";
   return "transit";
 }
 export function readTracking(t: Record<string, unknown>) {
   const evs = eventsIn(t);
-  const status = String(pickStr(t, /^(transit|delivery|package|tracking)?status$|^transitStatus$/i) ?? "");
+  const status = String(pickStr(t, /^transitStatus$/i) ?? pickStr(t, /^(delivery|package|tracking)?status$/i) ?? "");
   const sub = String(pickStr(t, /subStatus/i) ?? "");
   let eta: string | null = null;
   const findEta = (v: unknown, depth: number) => {

@@ -118,8 +118,10 @@ async function refresh(db: SupabaseClient, uid: string, only?: string[]) {
         const g = q ? await geocode(db, q) : null;
         return { city: e.city || null, state: e.state || null, label: e.place || q, ...(g || {}) };
       };
-      if (at) d.where = await spot(at);
-      if (from && (!p.data.from || (p.data.from as { label?: string }).label !== from.place)) d.from = await spot(from);
+      // no place yet (only a label, or just "US"): nothing on the map until the first real scan
+      d.where = at ? await spot(at) : null;
+      if (!from) d.from = null;
+      else if (!p.data.from || (p.data.from as { label?: string }).label !== from.place) d.from = await spot(from);
     }
     if (JSON.stringify(d) !== JSON.stringify({ ...p.data, checkedAt: now })) changed++;
     await putPkg(db, uid, p.id, d);
