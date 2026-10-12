@@ -12,6 +12,11 @@ const API = "https://api.anthropic.com/v1";
 const VERSION = "2023-06-01";
 const PREFER = ["claude-haiku-5-5", "claude-sonnet-5-5"]; // cheapest first; set-key also checks what the key can use
 const DAY_CAP = 300; // asks a day, a ceiling well under the included credits
+const CRON_SHA = "c997b119ab5f48e6373d65c1df95735b17d6eb083b052e3dff936b47f7a147e2"; // the schedule's secret: lets the builder run a check
+async function sha256(s: string) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -73,10 +78,49 @@ POS shows any change and asks him before doing it, so word those replies as the 
 If you didn't catch what he meant, ask one short question with action none.`;
 }
 
+// one call to Claude. If the model name isn't one this key can use, it picks one from the key's own list and
+// remembers it; if a setting isn't accepted, it tries again without it. Failures are kept (never the key) to read later.
+async function claude(db: SupabaseClient, s: Secret, payload: Record<string, unknown>) {
+  let model = s.model || PREFER[0];
+  const send = (m: string, p: Record<string, unknown>) => fetch(API + "/messages", { method: "POST", headers: { "x-api-key": s.key, "anthropic-version": VERSION, "content-type": "application/json" }, body: JSON.stringify({ ...p, model: m }) });
+  let p = { ...payload };
+  for (let tries = 0; tries < 3; tries++) {
+    const r = await send(model, p);
+    const j = await r.json().catch(() => null) as Record<string, any> | null;
+    if (r.ok) return { ok: true, j, model };
+    const msg = String(j?.error?.message || ""), type = String(j?.error?.type || "");
+    await db.from("pos_secrets").upsert({ id: "anthropic-last-error", data: { at: Date.now(), status: r.status, type, message: msg.slice(0, 300), model }, updated_at: new Date().toISOString() });
+    // a setting this model doesn't take (newer models refuse temperature): drop it and go again
+    if (r.status === 400 && /temperature|top_p|top_k/i.test(msg) && "temperature" in p) { const { temperature: _t, ...rest } = p; p = rest; continue; }
+    if (r.status === 400 && /tool_choice/i.test(msg) && "tool_choice" in p) { const { tool_choice: _c, ...rest } = p; p = rest; continue; }
+    // a model this key can't use: pick one from its own list
+    if (r.status === 404 || (r.status === 400 && /model/i.test(msg) && /not found|does not exist|invalid model|unknown model|not available/i.test(msg))) {
+      const lr = await fetch(API + "/models?limit=100", { headers: { "x-api-key": s.key, "anthropic-version": VERSION } });
+      const ids = ((await lr.json().catch(() => null))?.data || []).map((m: { id: string }) => m.id) as string[];
+      const next = ids.find((m) => /haiku/.test(m) && m !== model) || ids.find((m) => /sonnet/.test(m) && m !== model);
+      if (!next) return { ok: false, status: r.status, msg, type };
+      model = next;
+      await db.from("pos_secrets").upsert({ id: "anthropic", data: { ...s, model }, updated_at: new Date().toISOString() });
+      continue;
+    }
+    return { ok: false, status: r.status, msg, type };
+  }
+  return { ok: false, status: 0, msg: "gave up after retries", type: "" };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  // the builder's check: one tiny ask, and what came back (the key never leaves)
+  const cron = req.headers.get("x-cron-secret");
+  if (cron) {
+    if ((await sha256(cron)) !== CRON_SHA) return json({ error: "not allowed" }, 403);
+    const s = await secret(db);
+    if (!s) return json({ key: false });
+    const out = await claude(db, s, { max_tokens: 200, system: system("POS", { today: nyDay(), weekday: "", now: "" }), tools: [TOOL], tool_choice: { type: "tool", name: "respond" }, messages: [{ role: "user", content: 'Summary of his data:\n{}\n\nHe said: "what time is it"' }] });
+    return json({ key: true, model: out.model || s.model, ok: out.ok, status: out.status, type: out.type, msg: out.msg, reply: out.ok ? ((out.j?.content || []).find((c: { type: string }) => c.type === "tool_use")?.input || null) : null });
+  }
   const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: who } = jwt ? await db.auth.getUser(jwt) : { data: { user: null } };
   if (who?.user?.id !== OWNER) return json({ error: "sign in to POS first" }, 401);
@@ -114,30 +158,26 @@ Deno.serve(async (req) => {
       if (u.n >= DAY_CAP) return json({ error: "cap" }, 200);
       const ctx = (body.ctx && typeof body.ctx === "object" ? body.ctx : {}) as Record<string, unknown>;
       const summary = JSON.stringify(ctx).slice(0, 7000); // a ceiling on what goes out, whatever the browser sends
-      const r = await fetch(API + "/messages", {
-        method: "POST",
-        headers: { "x-api-key": s.key, "anthropic-version": VERSION, "content-type": "application/json" },
-        body: JSON.stringify({
-          model: s.model || PREFER[0], max_tokens: 400, temperature: 0.2,
-          system: system(String(body.name || ""), ctx),
-          tools: [TOOL], tool_choice: { type: "tool", name: "respond" },
-          messages: [{ role: "user", content: `Summary of his data:\n${summary}\n\nHe said: "${text}"` }],
-        }),
+      const out = await claude(db, s, {
+        max_tokens: 400,
+        system: system(String(body.name || ""), ctx),
+        tools: [TOOL], tool_choice: { type: "tool", name: "respond" },
+        messages: [{ role: "user", content: `Summary of his data:\n${summary}\n\nHe said: "${text}"` }],
       });
-      const j = await r.json().catch(() => null) as Record<string, any> | null;
-      if (!r.ok) {
-        const msg = String(j?.error?.message || "");
-        if (r.status === 401 || r.status === 403) return json({ error: "key" });
+      if (!out.ok) {
+        const msg = out.msg || "";
+        if (out.status === 401 || out.status === 403) return json({ error: "key" });
         if (/credit balance|billing|spend limit|usage limit/i.test(msg)) return json({ error: "credits" });
-        if (r.status === 429 || r.status === 529) return json({ error: "busy" });
+        if (out.status === 429 || out.status === 529) return json({ error: "busy" });
         return json({ error: "failed", detail: msg.slice(0, 160) });
       }
+      const j = out.j;
       const use = j?.usage || {};
       await db.from("pos_secrets").upsert({ id: "anthropic-usage", data: { day: u.day, n: u.n + 1, month: u.month, m: u.m + 1, inTok: u.inTok + (use.input_tokens || 0), outTok: u.outTok + (use.output_tokens || 0) }, updated_at: new Date().toISOString() });
       const call = (j?.content || []).find((c: { type: string }) => c.type === "tool_use");
-      const out = (call?.input || {}) as Record<string, unknown>;
-      if (!ACTIONS.includes(String(out.action))) out.action = "none";
-      return json({ ok: true, reply: String(out.reply || "").slice(0, 400), act: out });
+      const said = (call?.input || {}) as Record<string, unknown>;
+      if (!ACTIONS.includes(String(said.action))) said.action = "none";
+      return json({ ok: true, reply: String(said.reply || "").slice(0, 400), act: said });
     }
   } catch (e) {
     return json({ error: "failed", detail: String((e as Error)?.message || e).slice(0, 160) }, 200);
