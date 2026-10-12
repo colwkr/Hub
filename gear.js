@@ -20,9 +20,9 @@ window.POSGear = function (ctx) {
     arrow: svg('<path d="M12 5v14M7 14l5 5 5-5"/>'),
   };
   // the parts a camera is described by, in this order; the first four are always shown, even before they're filled in
-  const ROLES = ['Body', 'Lens', 'Matte box', 'Monitor', 'Support', 'Power', 'Other'];
+  const ROLES = ['Body', 'Lens', 'Matte box', 'Monitor', 'Rigging', 'Support', 'Power', 'Converter', 'Other'];
   const CORE = ROLES.slice(0, 4);
-  const CABLES = ['12G-SDI', '6G-SDI', '3G-SDI', 'HD-SDI', 'HDMI', 'SMPTE fiber', 'Fiber', 'Ethernet', 'USB-C', 'XLR', 'Power', 'Other'];
+  const CABLES = ['SDI', '12G-SDI', '6G-SDI', '3G-SDI', 'HD-SDI', 'HDMI', 'SMPTE fiber', 'Fiber', 'Ethernet', 'USB-C', 'XLR', 'Power', 'Other'];
   const USES = [['worship', 'Worship'], ['host', 'Host'], ['message', 'Message']];
   const RIGS = ['Tripod', 'Easyrig', 'Handheld', 'Gimbal', 'Jib', 'Dolly', 'PTZ', 'Other'];
   const SENSORS = ['2/3"', '1"', 'Micro Four Thirds', 'Super 35', 'Full frame', 'Other'];
@@ -126,7 +126,7 @@ window.POSGear = function (ctx) {
   }
   // every camera side by side, one row each
   const cell = v => (v ? esc(v) : '<span class="gr-none">—</span>');
-  const partCell = (c, role) => { const p = part(c, role); return p ? cell(label(p)) : cell(''); };
+  const partCell = (c, role) => cell(partsOf(c).filter(p => p.role === role).map(label).join(' + ')); // a cage and a CineBack are both rigging
   const COLS = [
     ['Status', c => statusPill(c)],
     ['Used during', c => cell(inUse(c) ? usesText(c) : '')],
@@ -138,10 +138,13 @@ window.POSGear = function (ctx) {
     ['Mount', c => { const b = part(c, 'Body'); return cell(b && b.mount); }],
     ['Matte box', c => partCell(c, 'Matte box')],
     ['Monitor', c => partCell(c, 'Monitor')],
+    ['Rigging', c => partCell(c, 'Rigging')],
+    ['Power', c => partCell(c, 'Power')],
+    ['Converter', c => partCell(c, 'Converter')],
     ['Support', c => partCell(c, 'Support')],
     ['Position', c => cell(c.where)],
     ['To the speaker', c => cell(distText(c))],
-    ['Signal out', c => { const l = linksOf(c)[0]; return l ? `${esc(l.cable || '')}${l.len ? ` · ${esc(l.len)}` : ''}<span class="meta">into ${esc(l.to || '?')}</span>` : cell(''); }],
+    ['Signal path', c => { const ls = linksOf(c); return ls.length ? esc(ls.map(l => l.cable || '?').join(' → ')) + `<span class="meta">ends at ${esc(ls[ls.length - 1].to || '?')}</span>` : cell(''); }],
   ];
   function compare(list) {
     if (!list.length) return '<p class="empty">No cameras yet.</p>';
@@ -214,13 +217,13 @@ window.POSGear = function (ctx) {
     window.POSSheet.open({
       title: p ? `${c.name}: ${p.role}` : `${c.name}: add ${role ? role.toLowerCase() : 'a part'}`,
       body: f('Part', `<select id="gp_role">${ROLES.map(x => opt(x, r0)).join('')}</select>`)
-        + f('Make', `<input id="gp_make" maxlength="60" autocomplete="off" placeholder="Sony, Canon, Blackmagic Design…" value="${g('make')}">`)
-        + f('Model', `<input id="gp_model" maxlength="80" autocomplete="off" placeholder="FX30, URSA Broadcast…" value="${g('model')}">`)
+        + f('Make', `<input id="gp_make" maxlength="60" autocomplete="off" placeholder="Sony, Fujifilm, SmallRig…" value="${g('make')}">`)
+        + f('Model', `<input id="gp_model" maxlength="80" autocomplete="off" placeholder="FX30, MK18-55mm T2.9…" value="${g('model')}">`)
         + `<div data-for-role="Body">${f('Sensor', `<select id="gp_sensor"><option value="">Not set</option>${SENSORS.map(x => opt(x, p ? p.sensor : '')).join('')}</select>`)}${f('Sensor size', `<input id="gp_size" maxlength="80" autocomplete="off" placeholder="23.3 × 15.5 mm" value="${g('size')}">`)}</div>`
         + `<div data-for-role="Lens">${f('Focal range', `<input id="gp_range" maxlength="60" autocomplete="off" placeholder="18–105mm f/4" value="${g('range')}">`)}</div>`
         + `<div data-for-role="Body,Lens">${f('Mount', `<input id="gp_mount" maxlength="40" autocomplete="off" placeholder="Sony E, B4, EF…" value="${g('mount')}">`)}</div>`
         + f('Serial number', `<input id="gp_serial" maxlength="60" autocomplete="off" placeholder="Optional" value="${g('serial')}">`)
-        + f('Notes', `<textarea id="gp_notes" rows="3" maxlength="500" placeholder="Settings, what it plugs into…">${esc(p ? p.notes || '' : '')}</textarea>`),
+        + f('Notes', `<textarea id="gp_notes" rows="3" maxlength="500" placeholder="Version, settings, what it plugs into…">${esc(p ? p.notes || '' : '')}</textarea>`),
       ready: box => {
         roleFields(r0);
         box.querySelector('#gp_role').addEventListener('change', e => roleFields(e.target.value));
