@@ -258,31 +258,58 @@ def ssdp_search(wait=2.5):
     return found
 
 
-async def is_tv(ip, port, sec):
+async def tv_model(ip, port, sec):
+    """Which LG TV is at this address (its model), without asking it for anything else. None if it isn't one."""
     try:
         ws = await WS.open(f'{"wss" if sec else "ws"}://{ip}:{port}', tv_tls() if sec else None, 2.5)
     except Exception:
-        return False
+        return None
     try:
         ws.send(json.dumps({'id': 'hello', 'type': 'hello', 'payload': {}}))
         m = json.loads(await asyncio.wait_for(ws.recv(), 3))
-        return m.get('type') == 'hello'
+        if m.get('type') != 'hello':
+            return None
+        ws.send(json.dumps({'id': 'sys0', 'type': 'request', 'uri': 'ssap://system/getSystemInfo', 'payload': {}}))
+        try:
+            m = json.loads(await asyncio.wait_for(ws.recv(), 3))
+            return (m.get('payload') or {}).get('modelName') or '?'
+        except Exception:
+            return '?'
     except Exception:
-        return False
+        return None
     finally:
         ws.close()
 
 
-async def discover(ports, scan=True):
+def is_mine(model, want):
+    if not want:
+        return True
+    if not model or model == '?':
+        return False
+    a, b = re.sub(r'[^A-Z0-9]', '', model.upper()), re.sub(r'[^A-Z0-9]', '', want.upper())
+    return a.startswith(b) or b.startswith(a)
+
+
+async def pick(ips, ports, want):
+    for ip in ips:
+        for port, sec in ports:
+            model = await tv_model(ip, port, sec)
+            if model is None:
+                continue
+            if is_mine(model, want):
+                log(f'found your TV ({model}) at {ip}')
+                return ip
+            log(f'skipping another TV on the network: {model} at {ip}')
+            break
+    return None
+
+
+async def discover(ports, scan=True, want=None):
     loop = asyncio.get_running_loop()
     hits = await loop.run_in_executor(None, ssdp_search)
-    for ip in hits:
-        for port, sec in ports:
-            if await is_tv(ip, port, sec):
-                log('found the TV by asking the network:', ip)
-                return ip
-    if not scan:
-        return None
+    ip = await pick(hits, ports, want)
+    if ip or not scan:
+        return ip
     mine = my_ip()
     if not mine:
         return None
@@ -298,13 +325,8 @@ async def discover(ports, scan=True):
                 return ip
             except Exception:
                 return None
-    open_ = [ip for ip in await asyncio.gather(*[knock(f'{prefix}.{i}') for i in range(1, 255)]) if ip and ip != mine]
-    for ip in open_:
-        for port, sec in ports:
-            if await is_tv(ip, port, sec):
-                log('found the TV by looking around:', ip)
-                return ip
-    return None
+    open_ = [ip for ip in await asyncio.gather(*[knock(f'{prefix}.{i}') for i in range(1, 255)]) if ip and ip != mine and ip not in hits]
+    return await pick(open_, ports, want)
 
 
 def wake(macs, ip=None):
@@ -360,6 +382,10 @@ class NotPaired(Exception):
     pass
 
 
+class WrongTV(Exception):
+    pass
+
+
 class TV:
     def __init__(self):
         self.link = None
@@ -369,6 +395,7 @@ class TV:
         self.wait, self.subs = {}, {}
         self.kick = asyncio.Event()
         self.hold = False  # after a declined/missed pairing, wait for POS to ask again
+        self.want = None
         self.waking_until = 0
         self.apps, self.apps_rev = [], 0
         self.st = {'tv': 'searching', 'vol': None, 'muted': False, 'out': None, 'app': None, 'play': None, 'kb': False,
@@ -516,14 +543,17 @@ class TV:
                 raise ConnectionError('not a webOS TV')
             # newer TVs want this asked before pairing
             ws.send(json.dumps({'id': 'sys0', 'type': 'request', 'uri': 'ssap://system/getSystemInfo', 'payload': {}}))
+            model = None
             try:
                 m = await self.recv_json(ws, 6)
                 model = (m.get('payload') or {}).get('modelName')
-                if model and self.info.get('model') != model:
-                    self.info['model'] = model
-                    self.save()
             except asyncio.TimeoutError:
                 pass
+            if not is_mine(model, self.want):
+                raise WrongTV(f'{model or "an unknown TV"} at {ip} is not yours')
+            if model and self.info.get('model') != model:
+                self.info['model'] = model
+                self.save()
             reg = dict(REGISTER)
             if self.info.get('key'):
                 reg['client-key'] = self.info['key']
@@ -547,6 +577,9 @@ class TV:
                     log('asking the TV for permission (press Accept on the TV)')
                     self.set(tv='pairing')
                     self.push(soon=False)
+        except WrongTV:
+            ws.close()
+            raise
         except asyncio.TimeoutError:
             ws.close()
             if self.st['tv'] == 'pairing':
@@ -721,7 +754,7 @@ class TV:
                 # asking the network is cheap; knocking on every address is saved for when there's no address yet,
                 # and then only now and then (a TV that's off answers neither)
                 looks += 1
-                found = await discover(self.ports, scan=not ip and (looks <= 3 or looks % 12 == 0))
+                found = await discover(self.ports, scan=not ip and (looks <= 3 or looks % 12 == 0), want=self.want)
                 if found and found != ip:
                     self.info['ip'] = ip = found
                     self.save()
@@ -729,6 +762,15 @@ class TV:
                 try:
                     await self.session(ip)
                     fails = 0
+                except WrongTV as e:
+                    log('not your TV:', e)
+                    for k in ('ip', 'port', 'model', 'key', 'macs'):
+                        self.info.pop(k, None)
+                    self.save()
+                    ip = None
+                    fails = 0
+                    self.set(tv='searching')
+                    continue
                 except NotPaired as e:
                     log('not paired:', e)
                     self.hold = True
@@ -1022,6 +1064,11 @@ async def main(lock):
         while True:
             await asyncio.sleep(3600)
     tv = TV()
+    tv.want = conf.get('model')  # only this TV; any other LG TV on the network is left alone
+    if tv.info.get('model') and not is_mine(tv.info['model'], tv.want):
+        log('forgetting', tv.info['model'], 'at', tv.info.get('ip'), '(not yours)')
+        tv.info = {}
+        tv.save()
     link = Link(conf, tv)
     tv.link = link
     log(f'POS TV link {VERSION} starting')
