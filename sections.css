@@ -677,7 +677,7 @@ body.qmode .top{display:none}
 .qh-link{border:0;background:none;padding:6px 0;font:500 11px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--qdim);cursor:pointer}
 .qh-link:hover{color:var(--qink)}
 /* corners: always there */
-.qh-c{display:flex;flex-direction:column;gap:4px;z-index:2}
+.qh-c{position:relative;display:flex;flex-direction:column;gap:4px;z-index:2}
 .qh-c.q-tl{grid-area:top;justify-self:start}
 .qh-c.q-tr{grid-area:top;justify-self:end;align-items:flex-end;text-align:right}
 .qh-c.q-bl,.qh-c.q-br,.qh-mark{display:none}
@@ -690,7 +690,10 @@ body.qmode .top{display:none}
 .qh-stage{grid-area:stage;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px}
 .qh-orbbtn{flex:none;width:min(80vw,40vh,380px);height:min(80vw,40vh,380px)}
 .qh-orb{display:block;width:100%;height:100%}
-.qh-status{margin:-4% 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+/* the creature's canvas covers Home behind everything; it draws itself centered on the stage */
+.qh-field{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.qh-stage,.qh-cards{position:relative;z-index:1}
+.qh-status{margin:3% 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
 /* the cards: a short stack, Obsidian-glass panels */
 .qh-cards{grid-area:cards;display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
 .qh-card{display:flex;align-items:stretch;background:rgba(48,50,56,.42);-webkit-backdrop-filter:blur(16px) saturate(120%);backdrop-filter:blur(16px) saturate(120%);
@@ -718,8 +721,8 @@ body.qmode .top{display:none}
   .qh{display:grid}
   .qh > .qh-c.q-tl,.qh > .qh-c.q-tr,.qh > .qh-stage,.qh > .qh-cards{width:auto}
   body.qmode .app{padding-top:max(16px,env(safe-area-inset-top,0px))}
-  .qh{height:calc(100dvh - 40px);min-height:480px;margin:0 6px;align-content:stretch;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top" "stage" "foot"}
-  .qh.has{grid-template-columns:minmax(0,1fr) minmax(320px,400px);grid-template-areas:"top top" "stage cards" "foot foot"}
+  /* three columns: the stage always sits in the middle one, so cards on the right never push it over */
+  .qh{height:calc(100dvh - 40px);min-height:480px;margin:0 6px;align-content:stretch;grid-template-columns:minmax(305px,1fr) minmax(0,620px) minmax(305px,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top top" ". stage cards" "foot foot foot"}
   .qh-c.q-tl,.qh-c.q-tr{padding:10px 14px}
   .qh-c.q-bl,.qh-c.q-br{display:flex;grid-area:foot;flex-direction:row;align-items:center;gap:8px;padding:8px 14px}
   .qh-c.q-bl{justify-self:start}.qh-c.q-br{justify-self:end}
@@ -730,21 +733,21 @@ body.qmode .top{display:none}
   .qh-mark.q-tl{left:0;top:0}.qh-mark.q-tr{right:0;top:0}.qh-mark.q-bl{left:0;bottom:0}.qh-mark.q-br{right:0;bottom:0}
   .qh-mark.q-tr::before,.qh-mark.q-br::before{right:0}.qh-mark.q-tr::after,.qh-mark.q-br::after{right:0}
   .qh-mark.q-bl::before,.qh-mark.q-br::before{bottom:0}.qh-mark.q-bl::after,.qh-mark.q-br::after{bottom:0}
-  .qh-cards{align-self:center;max-height:100%;overflow-y:auto;scrollbar-width:none;padding:4px 14px 4px 0}
+  .qh-cards{align-self:center;justify-self:end;width:min(400px,100%);max-height:100%;overflow-y:auto;scrollbar-width:none;padding:4px 14px 4px 0}
   .qh-cards::-webkit-scrollbar{display:none}
   .qh-clock b{font-size:56px}
   .qh-orbbtn{width:min(52vh,42vw,600px);height:min(52vh,42vw,600px)}
 }
 /* an upright tablet: the cards go under the entity */
 @media (min-width:760px) and (min-height:500px) and (orientation:portrait){
-  .qh.has{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "stage" "cards" "foot";grid-template-rows:auto minmax(0,1fr) auto auto}
-  .qh-cards{padding:0 14px 8px;max-height:44vh}
+  .qh{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "stage" "cards" "foot";grid-template-rows:auto minmax(0,1fr) auto auto}
+  .qh-cards{justify-self:center;width:min(560px,100%);padding:0 14px 8px;max-height:44vh}
 }
 /* phones: Home scrolls as one column; the dock is a grid of four across */
 @media (max-width:759px){
   .qh{min-height:0;height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:0 -18px;padding:0 18px 24px}
   .qh::-webkit-scrollbar{display:none}
-  .qh-stage{min-height:0;padding:6px 0 18px}
+  .qh-stage{min-height:0;padding:22px 0 18px}
   .qh-cards{padding-bottom:12px}
   .qh-title{font-size:17px}
 }
@@ -780,3 +783,11 @@ body.qmode .top{display:none}
   .dk-sep{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .qh.enter .dk,.qh-dock.swap .dk,.qh.enter .qh-card{animation:none} }
+
+/* tablets on their side: a slimmer dock so it fits between the cards and the left edge */
+@media (min-width:760px) and (max-width:1300px) and (min-height:500px) and (orientation:landscape){
+  .dk-row{gap:2px}
+  .dk{width:60px}
+  .dk-personal .dk{width:52px}
+  .dk-l{font-size:9px;letter-spacing:.08em}
+}

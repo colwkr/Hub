@@ -41,29 +41,29 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012225837">
-<script src="finance.js?v=20261012225837"></script>
-<link rel="stylesheet" href="car.css?v=20261012225837">
-<script src="car.js?v=20261012225837"></script>
-<link rel="stylesheet" href="sections.css?v=20261012225837">
-<link rel="stylesheet" href="tv.css?v=20261012225837">
-<link rel="stylesheet" href="noir.css?v=20261012225837">
-<script src="records.js?v=20261012225837"></script>
-<script src="people.js?v=20261012225837"></script>
-<script src="wheels.js?v=20261012225837"></script>
-<script src="keyboard.js?v=20261012225837"></script>
-<script src="notes.js?v=20261012225837"></script>
-<script src="reminders.js?v=20261012225837"></script>
-<script src="gear.js?v=20261012225837"></script>
-<script src="lights.js?v=20261012225837"></script>
-<script src="tv.js?v=20261012225837"></script>
-<script src="work.js?v=20261012225837"></script>
-<script src="health.js?v=20261012225837"></script>
-<script src="pets.js?v=20261012225837"></script>
-<script src="places.js?v=20261012225837"></script>
-<script src="placestab.js?v=20261012225837"></script>
-<script src="usmap.js?v=20261012225837"></script>
-<script src="packages.js?v=20261012225837"></script>
+<link rel="stylesheet" href="finance.css?v=20261012232600">
+<script src="finance.js?v=20261012232600"></script>
+<link rel="stylesheet" href="car.css?v=20261012232600">
+<script src="car.js?v=20261012232600"></script>
+<link rel="stylesheet" href="sections.css?v=20261012232600">
+<link rel="stylesheet" href="tv.css?v=20261012232600">
+<link rel="stylesheet" href="noir.css?v=20261012232600">
+<script src="records.js?v=20261012232600"></script>
+<script src="people.js?v=20261012232600"></script>
+<script src="wheels.js?v=20261012232600"></script>
+<script src="keyboard.js?v=20261012232600"></script>
+<script src="notes.js?v=20261012232600"></script>
+<script src="reminders.js?v=20261012232600"></script>
+<script src="gear.js?v=20261012232600"></script>
+<script src="lights.js?v=20261012232600"></script>
+<script src="tv.js?v=20261012232600"></script>
+<script src="work.js?v=20261012232600"></script>
+<script src="health.js?v=20261012232600"></script>
+<script src="pets.js?v=20261012232600"></script>
+<script src="places.js?v=20261012232600"></script>
+<script src="placestab.js?v=20261012232600"></script>
+<script src="usmap.js?v=20261012232600"></script>
+<script src="packages.js?v=20261012232600"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1512,13 +1512,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012225837"></script>
+<script src="appearance.js?v=20261012232600"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012225837';
+  const VERSION = '20261012232600';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2426,11 +2426,12 @@ dialog::backdrop{background:transparent}
     const canFull = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled), isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
     const enter = S.qhEnter; S.qhEnter = false;
     const html = `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}${enter ? ' enter' : ''}" id="qh">
+      <canvas id="qhOrb" class="qh-field" aria-hidden="true"></canvas>
       <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
       <div class="qh-c q-tl"><span class="qh-k" data-appname>${esc(appName())}</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
       <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}</div>
       <div class="qh-stage">
-        <div class="qh-orbbtn"><canvas id="qhOrb" class="qh-orb" aria-hidden="true"></canvas></div>
+        <div class="qh-orbbtn" id="qhSlot" aria-hidden="true"></div>
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
         ${vDock()}
       </div>
@@ -2444,223 +2445,174 @@ dialog::backdrop{background:transparent}
   // "everything": the full Home, with a way back to quiet
   const vHomeAll = () => `<div class="qh-back"><button type="button" class="qh-link" data-act="qh-quiet">← Quiet</button></div>${vHome()}`;
 
-  /* ---------- the entity: an android, head and shoulders, drawn in halftone squares. It breathes, looks around,
-     turns toward your pointer or finger, and blinks. Its visor is dim when nothing needs you, brighter when
-     something does, and burns orange when something starts within the hour.
-     The figure is lit in a tiny WebGL pass (one sample per square); the squares are drawn on the page's canvas. ---------- */
-  const ORB = { raf: 0, t0: performance.now(), last: 0, mood: 0, dust: null };
-  const BOT = { gl: null, cv: null, u: {}, n: 0, px: null, fail: false, yaw: 0, pitch: 0, look: null, lookAt: 0, blinkAt: -1e9, blinkNext: 0, prev: 0 };
-  const BOT_VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
-  const BOT_FS = `precision highp float;
-uniform float uN,uT,uYaw,uPitch,uBreath,uScan,uBlink;
-float sdEll(vec3 p,vec3 r){float k0=length(p/r);float k1=length(p/(r*r));return k0*(k0-1.0)/k1;}
-float sdBox(vec3 p,vec3 b){vec3 q=abs(p)-b;return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);}
-float smin(float a,float b,float k){float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);return mix(b,a,h)-k*h*(1.0-h);}
-float sdCap(vec3 p,vec3 a,vec3 b,float r){vec3 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);return length(pa-ba*h)-r;}
-float sdTor(vec3 p,vec2 t){vec2 q=vec2(length(p.xz)-t.x,p.y);return length(q)-t.y;}
-mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-vec3 headP(vec3 p){vec3 q=p-vec3(0.0,0.14,-0.04);q.yz=rot(uPitch)*q.yz;q.xz=rot(uYaw)*q.xz;return q+vec3(0.0,0.14-uBreath*0.012,-0.04);}
-vec2 map(vec3 p){
-  const float HS=1.1;
-  vec3 q=(headP(p)-vec3(0.0,0.24,-0.05))/HS+vec3(0.0,0.24,-0.05);
-  // the head: skull, face, jaw and a nose ridge, a sculpted mask more than an egg
-  float head=sdEll(q-vec3(0.0,0.63,-0.05),vec3(0.29,0.31,0.33));
-  head=smin(head,sdEll(q-vec3(0.0,0.45,0.05),vec3(0.245,0.33,0.27)),0.08);
-  head=smin(head,sdEll(q-vec3(0.0,0.25,0.06),vec3(0.17,0.14,0.2)),0.1);
-  head=smin(head,sdCap(q,vec3(0.0,0.46,0.29),vec3(0.0,0.37,0.325),0.026),0.035);
-  // seams: over the crown ear to ear, down the jaw line, and the mouth
-  head=max(head,-max(abs(q.z+0.08)-0.016,-head-0.03));
-  head=max(head,-max(abs(length(q.xz*vec2(1.0,1.25))-0.19)-0.012,max(q.y-0.36,-head-0.03)));
-  head=max(head,-sdBox(q-vec3(0.0,0.285,0.28),vec3(0.062,0.011,0.08)));
-  // the eye band: a recessed strip of dark glass across the eyes
-  float slot=sdBox(q-vec3(0.0,0.525,0.3),vec3(0.24,0.044,0.13));
-  float glass=max(sdEll(q-vec3(0.0,0.6,-0.05),vec3(0.27,0.29,0.31))-0.0,slot);
-  glass=min(glass,max(sdEll(q-vec3(0.0,0.45,0.05),vec3(0.225,0.31,0.25)),slot));
-  head=max(head,-slot);
-  // temple pieces
-  vec3 e=vec3(abs(q.x)-0.285,q.y-0.52,q.z+0.03);
-  float ear=max(length(e.yz)-0.09,abs(e.x)-0.04)-0.006;
-  ear=max(ear,-max(length(e.yz)-0.045,abs(e.x-0.04)-0.02));
-  float ring=max(length(e.yz)-0.04,abs(e.x-0.025)-0.01);
-  head=min(head,ear)*HS;glass*=HS;ring*=HS;
-  // neck: short and strong, finely ridged
-  float neck=sdCap(p,vec3(0.0,-0.28,-0.05),vec3(0.0,0.24,-0.05),0.13+0.006*sin(p.y*55.0));
-  // shoulders, trapezius and chest
-  float by=1.0+0.02*uBreath, sy=-0.5+0.014*uBreath;
-  vec3 tp=p-vec3(0.0,-0.84,-0.05);tp.y/=by;
-  float tor=sdEll(tp,vec3(0.7,0.5,0.31));
-  float sh=min(length(p-vec3(-0.58,sy,-0.05)),length(p-vec3(0.58,sy,-0.05)))-0.19;
-  float tr=min(sdCap(p,vec3(-0.08,-0.22,-0.08),vec3(-0.5,sy+0.07,-0.06),0.085),sdCap(p,vec3(0.08,-0.22,-0.08),vec3(0.5,sy+0.07,-0.06),0.085));
-  float body=smin(tor,sh,0.14);
-  body=smin(body,tr,0.1);
-  body=smin(body,neck,0.06);
-  // armor seams: shoulder plates, sternum, across the chest
-  float seam=min(min(max(abs(p.x)-0.014,p.y+0.5),abs(p.y+0.7)-0.013),max(abs(abs(p.x)-0.43)-0.012,p.y+0.2));
-  body=max(body,-max(seam,-body-0.03));
-  vec2 r=vec2(body,0.0);
-  if(head<r.x)r=vec2(head,0.0);
-  if(glass<r.x)r=vec2(glass,1.0);
-  if(ring<r.x)r=vec2(ring,2.0);
-  return r;
-}
-vec3 nrm(vec3 p){const vec2 k=vec2(1.0,-1.0);float h=0.003;return normalize(k.xyy*map(p+k.xyy*h).x+k.yyx*map(p+k.yyx*h).x+k.yxy*map(p+k.yxy*h).x+k.xxx*map(p+k.xxx*h).x);}
-void main(){
-  vec2 cell=floor(gl_FragCoord.xy);
-  vec2 uv=(gl_FragCoord.xy/uN)*2.0-1.0;
-  vec3 ro=vec3(0.0,0.1,3.4);
-  vec3 rd=normalize(vec3(uv*0.3,-1.0));
-  float t=0.0,dmin=9.0;vec2 h=vec2(9.0,0.0);bool hit=false;
-  for(int i=0;i<80;i++){h=map(ro+rd*t);dmin=min(dmin,h.x);if(h.x<0.0015){hit=true;break;}t+=h.x*0.85;if(t>5.0)break;}
-  float fade=smoothstep(-1.0,-0.5,uv.y);
-  if(!hit){
-    float k=floor(uT*2.5+hash(cell)*7.0);
-    float s=step(0.9,hash(cell+k*1.37))*(1.0-smoothstep(0.0,0.14,dmin))*fade;
-    gl_FragColor=vec4(0.0,0.0,s,1.0);return;
-  }
-  vec3 p=ro+rd*t,n=nrm(p);
-  float dif=max(dot(n,normalize(vec3(-0.55,0.6,0.62))),0.0);
-  float fre=pow(1.0-max(dot(n,-rd),0.0),2.2);
-  float rim=fre*(0.35+0.65*max(dot(n,normalize(vec3(0.85,0.25,-0.35))),0.0));
-  float ao=clamp(0.3+map(p+n*0.05).x/0.05*0.7,0.0,1.0);
-  float scan=exp(-pow((p.y-uScan)*10.0,2.0))*0.45;
-  float b=(0.08+0.9*dif*ao+0.55*rim+scan)*fade;
-  float e=0.0;
-  if(h.y>0.5){
-    vec3 q=headP(p);
-    // two eyes glow inside the dark band; the band itself only faintly
-    float eye=1.0-smoothstep(0.034,0.062,length(vec2(abs(q.x)-0.098,(q.y-0.525)*1.5)));
-    e=h.y<1.5?max(0.08,eye*(1.0-uBlink)):0.45;
-    b*=0.18;
-  }
-  gl_FragColor=vec4(clamp(b,0.0,1.0),clamp(e,0.0,1.0),0.0,1.0);
-}`;
-  function botInit() {
-    if (BOT.gl) return true;
-    if (BOT.fail) return false;
-    try {
-      const cv = document.createElement('canvas');
-      const gl = cv.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
-      if (!gl) throw new Error('no webgl');
-      const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
-      const pr = gl.createProgram();
-      gl.attachShader(pr, sh(gl.VERTEX_SHADER, BOT_VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, BOT_FS)); gl.linkProgram(pr);
-      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
-      gl.useProgram(pr);
-      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-      const a = gl.getAttribLocation(pr, 'a'); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      for (const k of ['uN', 'uT', 'uYaw', 'uPitch', 'uBreath', 'uScan', 'uBlink']) BOT.u[k] = gl.getUniformLocation(pr, k);
-      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); BOT.gl = null; BOT.n = 0; });
-      BOT.gl = gl; BOT.cv = cv; BOT.n = 0;
-      return true;
-    } catch (e) { BOT.fail = true; return false; }
-  }
-  // where it looks: your pointer or finger for a few seconds after you move it, otherwise it glances around
-  for (const ev of ['pointermove', 'pointerdown']) document.addEventListener(ev, e => { if (S.tab === 'home') { BOT.look = [e.clientX, e.clientY]; BOT.lookAt = performance.now(); } }, { passive: true });
-  function botFrame(cv, g, w, h, now) {
-    const gl = BOT.gl, t = (now - ORB.t0) / 1000, mood = ORB.mood;
-    const dt = BOT.prev ? Math.min(0.1, (now - BOT.prev) / 1000) : 0.03; BOT.prev = now;
-    const still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const s = Math.min(w, h), N = Math.max(56, Math.min(120, Math.round(s / 4.4)));
-    if (BOT.n !== N) { BOT.cv.width = BOT.cv.height = N; BOT.n = N; BOT.px = new Uint8Array(N * N * 4); gl.viewport(0, 0, N, N); }
-    // look target
-    let ty, tp;
-    if (BOT.look && now - BOT.lookAt < 6000 && !still) {
-      const r = cv.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * 0.33;
-      ty = Math.max(-1, Math.min(1, (BOT.look[0] - cx) / (innerWidth * 0.45))) * 0.6;
-      tp = Math.max(-1, Math.min(1, (BOT.look[1] - cy) / (innerHeight * 0.5))) * 0.32;
-    } else if (still) { ty = 0; tp = 0; }
-    else {
-      ty = 0.24 * Math.sin(t * 0.11) + 0.1 * Math.sin(t * 0.29 + 1) + (mood === 2 ? 0.16 : 0);
-      tp = 0.05 * Math.sin(t * 0.17) + (mood ? 0.04 : 0);
+  /* ---------- the entity: a living thing of light. A bright core, a few hundred threads streaming out of it and
+     swaying in slow currents, each ending in a small cap; a soft membrane along the rim, a lavender halo, and
+     dotted trails drifting through the dark behind it. Calm when nothing needs you; livelier when something does;
+     its core burns orange and it pulses faster when something starts within the hour.
+     One canvas covers Home; the creature sits in the middle of the stage, always centered. ---------- */
+  const ORB = { raf: 0, t0: performance.now(), last: 0, mood: 0, k: 0, seed: null, trails: null, motes: null, w: 0, h: 0, R: 0 };
+  function orbSeed(n) {
+    let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    const st = [];
+    for (let i = 0; i < n; i++) {
+      const th = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.05;
+      st.push({ th, len: 0.84 + r() * 0.2, r0: 0.01 + r() * 0.07, ph: 1.1 * Math.sin(th * 3 + 0.6) + 0.8 * Math.sin(th * 7 + 2.1) + r() * 2.6,
+        cap: 0.6 + r() * 0.8, twin: r() < 0.14, lav: r() < 0.4, hi: r() < 0.3, warm: r() < 0.1 });
     }
-    const ease = Math.min(1, dt * 3.2);
-    BOT.yaw += (ty - BOT.yaw) * ease; BOT.pitch += (tp - BOT.pitch) * ease;
-    if (now > BOT.blinkNext) { BOT.blinkAt = now; BOT.blinkNext = now + 3200 + Math.random() * 5200; }
-    const blink = !still && now - BOT.blinkAt < 130 ? 1 : 0;
-    const ph = (t % 9) / 1.7, scan = still || ph >= 1 ? 9 : 1.2 - ph * 2.5;
-    const breath = still ? 0.5 : 0.5 + 0.5 * Math.sin(t * (mood === 2 ? 1.7 : 1.15));
-    const U = BOT.u;
-    gl.uniform1f(U.uN, N); gl.uniform1f(U.uT, t); gl.uniform1f(U.uYaw, -BOT.yaw); gl.uniform1f(U.uPitch, BOT.pitch);
-    gl.uniform1f(U.uBreath, breath); gl.uniform1f(U.uScan, scan); gl.uniform1f(U.uBlink, blink);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-    gl.readPixels(0, 0, N, N, gl.RGBA, gl.UNSIGNED_BYTE, BOT.px);
-    const px = BOT.px, cs = s / N, ox = (w - s) / 2, oy = (h - s) / 2;
-    const vis = mood === 2 ? '255,96,48' : mood ? '236,242,255' : '196,214,240';
-    const gain = mood === 2 ? 0.78 + 0.22 * Math.sin(t * 5) : mood ? 0.9 : 0.62;
-    const dust = mood === 2 ? '255,140,100' : '230,232,238';
-    for (let row = 0; row < N; row++) {
-      const y = oy + (N - 1 - row) * cs;
-      for (let col = 0; col < N; col++) {
-        const i = (row * N + col) * 4, b = px[i] / 255, e = px[i + 1] / 255, d = px[i + 2] / 255;
-        const x = ox + col * cs;
-        if (e > 0.04) {
-          const a = e * gain;
-          if (e > 0.4) { g.fillStyle = `rgba(${vis},${(a * 0.14).toFixed(3)})`; g.fillRect(x - cs, y - cs, cs * 3, cs * 3); }
-          g.fillStyle = `rgba(${vis},${Math.min(1, 0.3 + a * 0.75).toFixed(3)})`;
-          const z = cs * (0.6 + 0.32 * a); g.fillRect(x + (cs - z) / 2, y + (cs - z) / 2, z, z);
-        } else if (b > 0.02) {
-          const jit = 0.88 + 0.12 * Math.sin(col * 12.99 + row * 78.23 + t * 2.4);
-          const z = cs * Math.sqrt(Math.min(1, b * jit)) * 0.9; // area follows brightness, like print halftone
-          if (z < 0.6) continue;
-          g.fillStyle = `rgba(236,238,242,${Math.min(1, 0.22 + b * 0.78).toFixed(3)})`;
-          g.fillRect(x + (cs - z) / 2, y + (cs - z) / 2, z, z);
-        } else if (d > 0.02) {
-          g.fillStyle = `rgba(${dust},${(d * 0.65).toFixed(3)})`;
-          g.fillRect(x + cs * 0.3, y + cs * 0.3, Math.max(1.2, cs * 0.34), Math.max(1.2, cs * 0.34));
-        }
-      }
-    }
+    st.sort((a, b) => a.th - b.th);
+    return st;
+  }
+  function orbWorld() {
+    let s = 3; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    ORB.trails = Array.from({ length: 7 }, (_, i) => ({ orbit: i < 2, a: r(), b: r(), c: r(), f: 1.5 + r() * 2.5, sp: 0.015 + r() * 0.03, ph: r() * 6.3, amp: 0.05 + r() * 0.12 }));
+    const tint = ['255,80,96', '64,214,192', '150,130,255'];
+    ORB.motes = Array.from({ length: 90 }, () => ({ x: r(), y: r(), z: 1 + r() * 2.4, vx: (r() - 0.5) * 0.004, vy: (r() - 0.5) * 0.004, c: r() < 0.12 ? tint[Math.floor(r() * 3)] : '236,238,255', a: 0.3 + r() * 0.6, tw: r() * 6.3 }));
   }
   function orbKick() { if (!ORB.raf) ORB.raf = requestAnimationFrame(orbFrame); }
   function orbFrame(now) {
     ORB.raf = 0;
-    const cv = document.getElementById('qhOrb');
-    if (!cv || document.hidden) return; // a render or coming back starts it again
+    const cv = document.getElementById('qhOrb'), slot = document.getElementById('qhSlot');
+    if (!cv || !slot || document.hidden) return; // a render or coming back starts it again
     ORB.raf = requestAnimationFrame(orbFrame);
     if (now - ORB.last < 33) return; // about 30 frames a second is plenty for a slow thing
+    const dt = ORB.last ? Math.min(0.1, (now - ORB.last) / 1000) : 0.033;
     ORB.last = now;
     const w = cv.clientWidth, h = cv.clientHeight;
     if (!w || !h) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    let dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (w * h * dpr * dpr > 4.6e6) dpr = Math.max(1, Math.sqrt(4.6e6 / (w * h)));
     if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
     const g = cv.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-    if (botInit()) { try { botFrame(cv, g, w, h, now); return; } catch (e) { BOT.fail = true; BOT.gl = null; } }
-    orbSphere(g, w, h, now);
-  }
-  // without WebGL: the old breathing sphere of points
-  function orbSphere(g, w, h, now) {
-    const t = (now - ORB.t0) / 1000, mood = ORB.mood;
-    const breathe = 1 + Math.sin(t * (mood ? 1.25 : 0.8)) * (mood ? 0.022 : 0.014);
-    const R = Math.min(w, h) * 0.31 * breathe, cx = w / 2, cy = h / 2;
-    const step = Math.max(4, Math.round(R / 24));
-    const lift = mood ? 1.12 : 0.92;
-    // the sphere: a halftone of squares, lit from the upper left, its surface slowly turning
-    for (let y = -R; y <= R; y += step) {
-      for (let x = -R; x <= R; x += step) {
-        const d2 = x * x + y * y; if (d2 > R * R) continue;
-        const nx = x / R, ny = y / R, nz = Math.sqrt(1 - d2 / (R * R));
-        const light = Math.max(0, -0.42 * nx - 0.5 * ny + 0.76 * nz);
-        const u = Math.atan2(nx, nz) + t * 0.22, v = Math.asin(Math.max(-1, Math.min(1, ny)));
-        const tex = 0.5 + 0.5 * Math.sin(u * 5 + Math.sin(v * 4 + t * 0.35) * 1.6) * Math.cos(v * 3 - t * 0.18);
-        let b = (light * 0.78 + tex * 0.3 * nz) * lift;
-        b *= 0.86 + 0.14 * Math.sin(x * 12.99 + y * 78.23 + t * 2.4);
-        const s = step * Math.min(1, b) * 0.92;
-        if (s < 0.6) continue;
-        g.fillStyle = `rgba(236,238,242,${Math.min(1, 0.25 + b * 0.75).toFixed(3)})`;
-        g.fillRect(cx + x - s / 2, cy + y - s / 2, s, s);
+    const still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const mood = ORB.mood;
+    // how lively it is eases toward the mood, so a change of mood swells in rather than snapping
+    const want = mood === 2 ? 1.35 : mood ? 1.05 : 0.8;
+    ORB.k = ORB.k ? ORB.k + (want - ORB.k) * Math.min(1, dt * 1.5) : want;
+    ORB.tt = (ORB.tt || 0) + (still ? 0 : dt * ORB.k);
+    const t = ORB.tt, k = ORB.k;
+    const cr = cv.getBoundingClientRect(), sr = slot.getBoundingClientRect();
+    const cx = sr.left - cr.left + sr.width / 2, cy = sr.top - cr.top + sr.height / 2;
+    const R = Math.min(sr.width, sr.height) * (w < 760 ? 0.43 : 0.45) * (1 + 0.022 * Math.sin(t * 0.9));
+    if (!ORB.seed || ORB.seedN !== (w < 700 ? 280 : 420)) { ORB.seedN = w < 700 ? 280 : 420; ORB.seed = orbSeed(ORB.seedN); }
+    if (!ORB.trails) orbWorld();
+    const warm = mood === 2;
+
+    // the halo behind everything
+    let gr = g.createRadialGradient(cx, cy, R * 0.1, cx, cy, R * 2);
+    gr.addColorStop(0, warm ? 'rgba(150,120,255,.34)' : 'rgba(126,128,255,.32)');
+    gr.addColorStop(0.42, 'rgba(100,102,240,.2)'); gr.addColorStop(0.6, 'rgba(70,72,190,.08)'); gr.addColorStop(1, 'rgba(40,40,120,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+
+    // the trails: long dotted lines wandering through the dark, two of them circling the creature
+    g.lineWidth = 1;
+    for (const tr of ORB.trails) {
+      const pts = [];
+      const M = 60;
+      for (let i = 0; i <= M; i++) {
+        const u = i / M;
+        let x, y;
+        if (tr.orbit) {
+          const a = u * Math.PI * 2 + t * tr.sp * 3 + tr.ph, rr = R * (1.38 + tr.a * 0.4) * (1 + tr.amp * 0.5 * Math.sin(a * 3 + t * 0.2 + tr.ph));
+          x = cx + Math.cos(a) * rr * (1.05 + tr.b * 0.25); y = cy + Math.sin(a) * rr * (0.82 + tr.c * 0.2);
+        } else {
+          x = w * (tr.a * 1.2 - 0.1) + w * 0.35 * (u - 0.5) * (tr.b - 0.5) * 2 + w * tr.amp * Math.sin(u * tr.f * 3 + t * tr.sp * 6 + tr.ph);
+          y = h * (u * 1.2 - 0.1) + h * tr.amp * 0.6 * Math.sin(u * tr.f * 2.3 + t * tr.sp * 5 + tr.ph * 1.3);
+        }
+        pts.push(x, y);
+      }
+      g.strokeStyle = 'rgba(150,152,255,.13)';
+      g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); g.stroke();
+      // the nodes slide along the line, like something travelling on it
+      const off = (t * tr.sp * 4) % 1;
+      g.fillStyle = 'rgba(220,222,255,.55)';
+      for (let j = 0; j < 30; j++) {
+        const u = ((j + off) / 30) * M, i0 = Math.floor(u), f = u - i0;
+        if (i0 >= M) continue;
+        const x = pts[i0 * 2] + (pts[i0 * 2 + 2] - pts[i0 * 2]) * f, y = pts[i0 * 2 + 1] + (pts[i0 * 2 + 3] - pts[i0 * 2 + 1]) * f;
+        const z = j % 7 === 0 ? 3.2 : 1.8;
+        g.fillRect(x - z / 2, y - z / 2, z, z);
       }
     }
-    // the dust around it: points drifting out from the surface and fading
-    if (!ORB.dust) { let seed = 11; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647; ORB.dust = Array.from({ length: 220 }, () => ({ a: r() * Math.PI * 2, k: r(), sp: 0.04 + r() * 0.1, sz: 1 + r() * 2.2 })); }
-    for (const d of ORB.dust) {
-      const ph = (d.k + t * d.sp) % 1, rr = R * (1.02 + ph * (mood ? 0.85 : 0.6)), a = d.a + Math.sin(t * 0.1 + d.k * 6) * 0.15;
-      const al = (1 - ph) * (mood ? 0.6 : 0.4);
-      g.fillStyle = mood === 2 ? `rgba(255,120,72,${al.toFixed(3)})` : `rgba(230,232,238,${al.toFixed(3)})`;
-      g.fillRect(cx + Math.cos(a) * rr * 1.08, cy + Math.sin(a) * rr * 0.92, d.sz, d.sz);
+    // motes: specks drifting in the dark, a few in color
+    for (const m of ORB.motes) {
+      if (!still) { m.x = (m.x + m.vx * dt + 1) % 1; m.y = (m.y + m.vy * dt + 1) % 1; }
+      const a = m.a * (0.6 + 0.4 * Math.sin(t * 1.3 + m.tw));
+      g.fillStyle = `rgba(${warm && m.c !== '236,238,255' ? '255,120,72' : m.c},${a.toFixed(3)})`;
+      g.fillRect(m.x * w, m.y * h, m.z, m.z);
     }
+
+    // the threads: each leaves the core, sways in a current that its neighbours share, and ends in a cap
+    const ST = ORB.seed, SEG = 22, ends = [];
+    const pulse = (t * 0.32) % 1.6; // a ring of light travels out along the threads now and then
+    const faint = new Path2D(), bright = new Path2D(), lit = new Path2D();
+    const swayA = 0.04 * k, swayB = 0.016 * k;
+    for (const s of ST) {
+      const L = R * s.len, r0 = R * s.r0;
+      let px = 0, py = 0, qx = 0, qy = 0;
+      const ca = Math.cos(s.th), sa = Math.sin(s.th);
+      for (let i = 0; i <= SEG; i++) {
+        const u = i / SEG, r = r0 + (L - r0) * u;
+        const lat = R * ((swayA + 0.06 * k * u) * Math.sin(u * 5.2 - t * 1.05 + s.ph) + swayB * u * Math.sin(u * 11 - t * 1.7 + s.ph * 1.7));
+        const sw = 0.3 * Math.pow(1 - u, 3) * Math.sin(t * 0.13 + s.ph * 0.5) + 0.07 * Math.pow(1 - u, 2.5);
+        const c2 = Math.cos(sw), s2 = Math.sin(sw);
+        const dx = ca * c2 - sa * s2, dy = sa * c2 + ca * s2;
+        const x = cx + dx * r - dy * lat, y = cy + dy * r + dx * lat;
+        if (i === 0) { faint.moveTo(x, y); if (s.hi) bright.moveTo(x, y); }
+        else {
+          faint.lineTo(x, y); if (s.hi) bright.lineTo(x, y);
+          if (Math.abs(u - pulse) < 0.07) { lit.moveTo(px, py); lit.lineTo(x, y); }
+        }
+        qx = px; qy = py; px = x; py = y;
+      }
+      ends.push({ x: px, y: py, a: Math.atan2(py - qy, px - qx), s });
+    }
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.lineWidth = 0.9; g.strokeStyle = `rgba(160,166,255,${(0.17 + 0.05 * k).toFixed(3)})`; g.stroke(faint);
+    g.lineWidth = 0.75; g.strokeStyle = 'rgba(232,234,255,.32)'; g.stroke(bright);
+    g.lineWidth = 1.4; g.strokeStyle = warm ? 'rgba(255,170,120,.55)' : 'rgba(235,238,255,.5)'; g.stroke(lit);
+    // the core: white heat where every thread begins
+    gr = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.5);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(0.1, 'rgba(255,255,255,.8)');
+    gr.addColorStop(0.24, warm ? 'rgba(255,160,110,.5)' : 'rgba(214,218,255,.5)');
+    gr.addColorStop(0.5, warm ? 'rgba(255,96,48,.14)' : 'rgba(130,134,255,.16)');
+    gr.addColorStop(1, 'rgba(90,90,255,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 0.5 * (1 + 0.06 * Math.sin(t * (warm ? 3.2 : 1.6))), 0, Math.PI * 2); g.fill();
+    // a glow along the rim
+    gr = g.createRadialGradient(cx, cy, R * 0.7, cx, cy, R * 1.3);
+    gr.addColorStop(0, 'rgba(120,124,255,0)'); gr.addColorStop(0.5, `rgba(130,134,255,${(0.1 + 0.04 * k).toFixed(3)})`); gr.addColorStop(1, 'rgba(120,124,255,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 1.3, 0, Math.PI * 2); g.fill();
+    g.restore();
+    // the membrane: soft bands along the rim, under the caps
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    g.lineWidth = Math.max(4, R * 0.05); g.strokeStyle = 'rgba(150,152,245,.24)';
+    g.beginPath();
+    for (let i = 0; i < ends.length; i++) {
+      const e = ends[i], gi = Math.floor(i / 6);
+      if (gi % 3 === 2) continue; // gaps between the bands
+      const x = cx + (e.x - cx) * 0.955, y = cy + (e.y - cy) * 0.955;
+      if (i % 6 === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+    // the caps: little half discs, domes facing out
+    const capW = new Path2D(), capL = new Path2D(), capO = new Path2D();
+    const cz = Math.max(2.2, R * 0.025);
+    for (const e of ends) {
+      const p = e.s.lav ? capL : warm && e.s.warm ? capO : capW;
+      const z = cz * e.s.cap;
+      p.moveTo(e.x + Math.cos(e.a - Math.PI / 2) * z, e.y + Math.sin(e.a - Math.PI / 2) * z);
+      p.arc(e.x, e.y, z, e.a - Math.PI / 2, e.a + Math.PI / 2); p.closePath();
+      if (e.s.twin) {
+        const x2 = e.x - Math.cos(e.a) * z * 2.4 + Math.cos(e.a + Math.PI / 2) * z * 1.4, y2 = e.y - Math.sin(e.a) * z * 2.4 + Math.sin(e.a + Math.PI / 2) * z * 1.4;
+        p.moveTo(x2 + Math.cos(e.a - Math.PI / 2) * z * 0.8, y2 + Math.sin(e.a - Math.PI / 2) * z * 0.8);
+        p.arc(x2, y2, z * 0.8, e.a - Math.PI / 2, e.a + Math.PI / 2); p.closePath();
+      }
+    }
+    g.fillStyle = 'rgba(240,242,255,.92)'; g.fill(capW);
+    g.fillStyle = 'rgba(172,174,248,.86)'; g.fill(capL);
+    g.fillStyle = 'rgba(255,128,80,.92)'; g.fill(capO);
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) orbKick(); });
 
