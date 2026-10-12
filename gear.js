@@ -20,7 +20,7 @@ window.POSGear = function (ctx) {
     arrow: svg('<path d="M12 5v14M7 14l5 5 5-5"/>'),
   };
   // the parts a camera is described by, in this order; the first four are always shown, even before they're filled in
-  const ROLES = ['Body', 'Lens', 'Matte box', 'Monitor', 'Rigging', 'Support', 'Power', 'Converter', 'Other'];
+  const ROLES = ['Body', 'Lens', 'Matte box', 'Monitor', 'Rigging', 'Support', 'Power', 'Converter', 'Comms', 'Other'];
   const CORE = ROLES.slice(0, 4);
   const CABLES = ['SDI', '12G-SDI', '6G-SDI', '3G-SDI', 'HD-SDI', 'HDMI', 'SMPTE fiber', 'Fiber', 'Ethernet', 'USB-C', 'XLR', 'Power', 'Other'];
   const USES = [['worship', 'Worship'], ['host', 'Host'], ['message', 'Message']];
@@ -142,6 +142,7 @@ window.POSGear = function (ctx) {
     ['Power', c => partCell(c, 'Power')],
     ['Converter', c => partCell(c, 'Converter')],
     ['Support', c => partCell(c, 'Support')],
+    ['Comms', c => partCell(c, 'Comms')],
     ['Position', c => cell(c.where)],
     ['To the speaker', c => cell(distText(c))],
     ['Signal path', c => { const ls = linksOf(c); return ls.length ? esc(ls.map(l => l.cable || '?').join(' → ')) + `<span class="meta">ends at ${esc(ls[ls.length - 1].to || '?')}</span>` : cell(''); }],
