@@ -477,14 +477,14 @@ html.osk-on .app{padding-bottom:calc(var(--osk-h, 300px) + 12px)}
 .work > .mtg{flex:1;min-height:0}
 
 /* gear: each camera, its parts and its signal path */
-.gr-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 4px}
+.gr-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0 4px}
 .gr-sum > div{display:flex;flex-direction:column;gap:2px}
 .gr-sum b{font-size:40px;font-weight:200;line-height:1}
 .gr-sum span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
 .gr-row{gap:8px}
 .gr-n{flex:none;text-align:right;font-size:10.5px;line-height:1.35;color:var(--ink-3);white-space:nowrap}
 .gr-n b{font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.gr-where{border:0;background:var(--field);color:var(--ink);border-radius:14px;padding:10px 12px;min-height:44px;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);width:100%}
+.gr-in{border:0;background:var(--field);color:var(--ink);border-radius:14px;padding:10px 12px;min-height:44px;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);width:100%}
 .gr-parts,.gr-links{display:flex;flex-direction:column;border-radius:20px;background:var(--well);box-shadow:inset 0 0 0 1px var(--hair)}
 .gr-part{display:grid;grid-template-columns:92px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;border:0;background:none;color:inherit;text-align:left;padding:12px 14px 12px 16px;min-height:56px}
 .gr-part + .gr-part,.gr-link + .gr-link{box-shadow:inset 0 1px 0 var(--hair)}
@@ -500,3 +500,46 @@ html.osk-on .app{padding-bottom:calc(var(--osk-h, 300px) + 12px)}
 .gr-wire svg.i{width:14px;height:14px;color:var(--ink-3)}
 .gr-addlink{align-self:flex-start;display:inline-flex;align-items:center;gap:6px}
 .gr-addlink svg.i{width:15px;height:15px}
+
+.gr-in{display:block}
+.gr-what{display:flex;flex-direction:column;gap:18px}
+.gr-st{grid-template-columns:repeat(2,minmax(0,1fr));max-width:300px}
+.gr-uses{display:flex;flex-wrap:wrap;gap:8px}
+.gr-use{border:0;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:500;background:var(--control);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--glass-border)}
+.gr-use[aria-pressed="true"]{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
+.gr-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.gr-pair .xin{display:flex;align-items:center;gap:8px;flex:none}
+.gr-pair .xin input{flex:1;min-width:0}
+select.gr-in{-webkit-appearance:none;appearance:none}
+.pill.gr-on{background:var(--solid);color:var(--on-solid)}
+.pill.gr-off{background:none;color:var(--ink-3);box-shadow:inset 0 0 0 1px var(--hair)}
+.gr-row.off .name,.gr-row.off .cal-ic{color:var(--ink-3)}
+.gr-modes{grid-template-columns:repeat(2,minmax(0,1fr));max-width:280px}
+/* the sensor mix */
+.gr-mix-box{display:flex;flex-direction:column;gap:14px;padding:16px 18px}
+.gr-mix-row{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-areas:"l bar" "l pc";column-gap:12px;row-gap:6px;align-items:center}
+.gr-mix-l{grid-area:l;font-size:13px;color:var(--ink-2)}
+.gr-mix-l b{display:block;font-size:26px;font-weight:200;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+.gr-mix-bar{grid-area:bar;display:flex;gap:3px;height:12px;border-radius:6px;overflow:hidden;background:var(--well)}
+.gr-mix-bar i{display:block;height:100%}
+.gr-mix-pc{grid-area:pc;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--ink-2)}
+.gr-mix-pc i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
+.gr-mix-row > .meta{grid-area:bar}
+/* compare: every camera side by side */
+.gr-cmp{flex:1;min-height:0;display:flex;flex-direction:column}
+.gr-cmp-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;display:flex;flex-direction:column;gap:20px;margin:-6px -18px 0;padding:6px 18px 24px}
+.gr-cmp-scroll::-webkit-scrollbar{display:none}
+.gr-cmp-scroll > .gr-sum{max-width:520px}
+.gr-table-wrap{overflow-x:auto;border-radius:22px;background:var(--g-sheen),var(--glass);box-shadow:inset 0 0 0 1px var(--glass-border),var(--lift);-webkit-overflow-scrolling:touch}
+.gr-table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:13px}
+.gr-table th,.gr-table td{text-align:left;vertical-align:top;padding:12px 16px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;box-shadow:inset 0 -1px 0 var(--hair)}
+.gr-table thead th{font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);position:sticky;top:0}
+.gr-table tbody th{position:sticky;left:0;z-index:1;background:var(--chrome);box-shadow:inset 0 -1px 0 var(--hair),inset -1px 0 0 var(--hair)}
+.gr-table thead th:first-child{position:sticky;left:0;z-index:2;background:var(--chrome)}
+.gr-table tbody th .link{font-size:14px;font-weight:600;text-decoration:none}
+.gr-table td .meta{display:block;margin-top:2px}
+.gr-table tr.off td,.gr-table tr.off th .link{color:var(--ink-3)}
+.gr-table tbody tr:last-child > *{box-shadow:none}
+.gr-table tbody tr:last-child th{box-shadow:inset -1px 0 0 var(--hair)}
+.gr-none{color:var(--ink-3)}
+@media (min-width:760px) and (min-height:500px){ .gr-cmp-scroll{padding:6px 24px 48px;margin:-6px -24px -12px} }
