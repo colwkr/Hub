@@ -35,28 +35,28 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012172211">
-<script src="finance.js?v=20261012172211"></script>
-<link rel="stylesheet" href="car.css?v=20261012172211">
-<script src="car.js?v=20261012172211"></script>
-<link rel="stylesheet" href="sections.css?v=20261012172211">
-<link rel="stylesheet" href="tv.css?v=20261012172211">
-<script src="records.js?v=20261012172211"></script>
-<script src="people.js?v=20261012172211"></script>
-<script src="wheels.js?v=20261012172211"></script>
-<script src="keyboard.js?v=20261012172211"></script>
-<script src="notes.js?v=20261012172211"></script>
-<script src="reminders.js?v=20261012172211"></script>
-<script src="gear.js?v=20261012172211"></script>
-<script src="lights.js?v=20261012172211"></script>
-<script src="tv.js?v=20261012172211"></script>
-<script src="work.js?v=20261012172211"></script>
-<script src="health.js?v=20261012172211"></script>
-<script src="pets.js?v=20261012172211"></script>
-<script src="places.js?v=20261012172211"></script>
-<script src="placestab.js?v=20261012172211"></script>
-<script src="usmap.js?v=20261012172211"></script>
-<script src="packages.js?v=20261012172211"></script>
+<link rel="stylesheet" href="finance.css?v=20261012183059">
+<script src="finance.js?v=20261012183059"></script>
+<link rel="stylesheet" href="car.css?v=20261012183059">
+<script src="car.js?v=20261012183059"></script>
+<link rel="stylesheet" href="sections.css?v=20261012183059">
+<link rel="stylesheet" href="tv.css?v=20261012183059">
+<script src="records.js?v=20261012183059"></script>
+<script src="people.js?v=20261012183059"></script>
+<script src="wheels.js?v=20261012183059"></script>
+<script src="keyboard.js?v=20261012183059"></script>
+<script src="notes.js?v=20261012183059"></script>
+<script src="reminders.js?v=20261012183059"></script>
+<script src="gear.js?v=20261012183059"></script>
+<script src="lights.js?v=20261012183059"></script>
+<script src="tv.js?v=20261012183059"></script>
+<script src="work.js?v=20261012183059"></script>
+<script src="health.js?v=20261012183059"></script>
+<script src="pets.js?v=20261012183059"></script>
+<script src="places.js?v=20261012183059"></script>
+<script src="placestab.js?v=20261012183059"></script>
+<script src="usmap.js?v=20261012183059"></script>
+<script src="packages.js?v=20261012183059"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1047,6 +1047,28 @@ body.marking,body.marking *{cursor:ns-resize!important}
 .r-dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--ink-3);box-shadow:0 0 0 2px var(--ring)}
 .r-dot.ok{background:var(--good)}
 .r-dot.off{background:var(--bad)}
+/* Work and Personal on the rail: a small arrow says each one opens a menu beside the rail */
+.r-grp .r-more{position:absolute;right:6px;top:50%;width:5px;height:5px;margin-top:-3px;border-right:1.6px solid currentColor;border-top:1.6px solid currentColor;transform:rotate(45deg);opacity:.5}
+.r-grp[aria-expanded="true"] .ic{background:var(--active)}
+.fly{position:fixed;z-index:30;min-width:220px;padding:10px;border-radius:24px;display:flex;flex-direction:column;
+  background:var(--g-lines),var(--g-sheen),var(--sheet);box-shadow:inset 0 0 0 1px var(--glass-border),var(--glow),var(--lift);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.fly[hidden],.fly-grp[hidden]{display:none}
+.fly-grp{display:flex;flex-direction:column;gap:2px}
+.fly .lab{padding:4px 14px 8px}
+.fly button{position:relative;display:flex;align-items:center;gap:13px;width:100%;height:50px;padding:0 14px;border:0;background:none;border-radius:15px;font-size:15.5px;color:var(--ink-2);text-align:left}
+.fly button svg.i{width:21px;height:21px;flex:none}
+.fly button:hover{background:var(--active);color:var(--ink)}
+.fly button:active{transform:scale(.98)}
+.fly button[aria-current="page"]{background:var(--active);color:var(--ink);font-weight:600}
+.fly .badge{margin-left:auto;min-width:20px;height:20px;border-radius:10px;background:var(--solid);color:var(--on-solid);font-size:10.5px;font-weight:600;line-height:20px;text-align:center;padding:0 6px}
+/* the phone menu: Work and Personal fold open */
+.nav .d-grp .chev{opacity:.55;transition:transform .2s,opacity .2s}
+.nav .d-grp .badge + .chev{margin-left:8px}
+.nav .d-grp[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.nav .d-grp.has-cur{color:var(--ink);font-weight:600}
+.d-sub{display:flex;flex-direction:column;gap:2px;padding-left:16px}
+.d-sub[hidden]{display:none}
+.d-sub button[aria-current="page"]::before{left:-28px}
 @media (min-width:760px) and (min-height:500px){
   :root{padding-bottom:0;padding-top:max(env(safe-area-inset-top, 0px), var(--sb-under, 0px))}
   #rail{position:fixed;z-index:5;left:12px;top:calc(12px + max(env(safe-area-inset-top, 0px), var(--sb-under, 0px)));bottom:12px;width:var(--rail);
@@ -1246,18 +1268,11 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="home" aria-label="Home" title="Home"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="tasks" aria-label="Tasks" title="Tasks"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg></span><span class="pip" id="railBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="calendar" aria-label="Calendar" title="Calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span></button>
-  <button type="button" class="r-btn" data-tab="work" aria-label="Work" title="Work"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg></span></button>
-  <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
-  <button type="button" class="r-btn" data-tab="health" aria-label="Health" title="Health"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg></span></button>
-  <button type="button" class="r-btn" data-tab="car" aria-label="Car" title="Car"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg></span><span class="pip" id="railCarBadge" hidden></span></button>
-  <button type="button" class="r-btn" data-tab="places" aria-label="Places" title="Places"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></span></button>
-  <button type="button" class="r-btn" data-tab="packages" aria-label="Packages" title="Packages"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/></svg></span><span class="pip" id="railPkgBadge" hidden></span></button>
-  <button type="button" class="r-btn" data-tab="pets" aria-label="Pets" title="Pets"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg></span><span class="pip" id="railPetBadge" hidden></span></button>
-  <i class="r-line"></i>
-  <button type="button" class="r-btn" data-tab="lights" aria-label="Lights" title="Lights"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span></button>
-  <button type="button" class="r-btn" data-tab="tv" aria-label="TV remote" title="TV remote"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="3.2"/><circle cx="12" cy="7.8" r="1.9"/><path d="M10.4 12.6h.01M13.6 12.6h.01M10.4 15.4h.01M13.6 15.4h.01M10.4 18.2h3.2"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="notes" aria-label="Notes" title="Notes"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="reminders" aria-label="Reminders" title="Reminders"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span><span class="pip" id="railRemBadge" hidden></span></button>
+  <i class="r-line"></i>
+  <button type="button" class="r-btn r-grp" data-grp="work" aria-label="Work" title="Work" aria-haspopup="menu" aria-expanded="false"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg></span><span class="r-more" aria-hidden="true"></span></button>
+  <button type="button" class="r-btn r-grp" data-grp="personal" aria-label="Personal" title="Personal" aria-haspopup="menu" aria-expanded="false"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-3.7 3.4-6 7-6s6.4 2.3 7 6"/></svg></span><span class="r-more" aria-hidden="true"></span><span class="pip" id="railPerBadge" hidden></span></button>
   <div class="r-foot">
     <button type="button" class="r-add" id="railAdd" aria-label="Add" title="Add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
     <i class="r-line"></i>
@@ -1265,6 +1280,25 @@ dialog::backdrop{background:transparent}
     <button type="button" class="r-btn r-set" data-act="settings" aria-label="Settings" title="Settings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg></span><span class="r-dot" id="railDot" role="img" aria-label="Connecting"></span></button>
   </div>
 </nav>
+
+<div id="fly" class="fly" role="menu" hidden>
+  <div class="fly-grp" data-fly="work"><span class="lab">Work</span>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="overview"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.5"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.5"/><rect x="15.5" y="4.5" width="5" height="6.5" rx="1.5"/></svg><span>Projects</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.5-3 2.7-5 5.5-5s5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.5 1.4 5 4.3"/></svg><span>Meetings</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="gear"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Gear</span></button>
+  </div>
+  <div class="fly-grp" data-fly="personal"><span class="lab">Personal</span>
+    <button type="button" role="menuitem" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="railFinBadge" hidden></span></button>
+    <button type="button" role="menuitem" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg><span>Health</span></button>
+    <button type="button" role="menuitem" data-tab="car"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg><span>Car</span><span class="badge" id="railCarBadge" hidden></span></button>
+    <button type="button" role="menuitem" data-tab="places"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Places</span></button>
+    <button type="button" role="menuitem" data-tab="packages"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/></svg><span>Packages</span><span class="badge" id="railPkgBadge" hidden></span></button>
+    <button type="button" role="menuitem" data-tab="pets"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg><span>Pets</span><span class="badge" id="railPetBadge" hidden></span></button>
+    <button type="button" role="menuitem" data-tab="lights"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg><span>Lights</span></button>
+    <button type="button" role="menuitem" data-tab="tv"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="3.2"/><circle cx="12" cy="7.8" r="1.9"/><path d="M10.4 12.6h.01M13.6 12.6h.01M10.4 15.4h.01M13.6 15.4h.01M10.4 18.2h3.2"/></svg><span>TV remote</span></button>
+  </div>
+</div>
 
 <div id="scrim"></div>
 <aside id="drawer" aria-label="Menu" inert>
@@ -1275,17 +1309,26 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5v7.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M10 20v-5h4v5"/></svg><span>Home</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="tasks"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="17" r="1.6"/><path d="M10 7h9.5M10 12h9.5M10 17h9.5"/></svg><span>Tasks</span><span class="badge" id="taskBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="work"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg><span>Work</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg><span>Health</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="car"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg><span>Car</span><span class="badge" id="carBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="places"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Places</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="packages"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/></svg><span>Packages</span><span class="badge" id="pkgBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="pets"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg><span>Pets</span><span class="badge" id="petBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="lights"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg><span>Lights</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-    <button type="button" data-tab="tv"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="3.2"/><circle cx="12" cy="7.8" r="1.9"/><path d="M10.4 12.6h.01M13.6 12.6h.01M10.4 15.4h.01M13.6 15.4h.01M10.4 18.2h3.2"/></svg><span>TV remote</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="notes"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg><span>Notes</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="reminders"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span>Reminders</span><span class="badge" id="remBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" class="d-grp" data-grp="work" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg><span>Work</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg></button>
+    <div class="d-sub" data-sub-of="work" hidden>
+      <button type="button" data-tab="work" data-wsub="overview"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.5"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.5"/><rect x="15.5" y="4.5" width="5" height="6.5" rx="1.5"/></svg><span>Projects</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.5-3 2.7-5 5.5-5s5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.5 1.4 5 4.3"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="gear"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Gear</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    </div>
+    <button type="button" class="d-grp" data-grp="personal" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-3.7 3.4-6 7-6s6.4 2.3 7 6"/></svg><span>Personal</span><span class="badge" id="perBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg></button>
+    <div class="d-sub" data-sub-of="personal" hidden>
+      <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg><span>Health</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="car"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg><span>Car</span><span class="badge" id="carBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="places"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Places</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="packages"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/></svg><span>Packages</span><span class="badge" id="pkgBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="pets"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg><span>Pets</span><span class="badge" id="petBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="lights"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg><span>Lights</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="tv"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="3.2"/><circle cx="12" cy="7.8" r="1.9"/><path d="M10.4 12.6h.01M13.6 12.6h.01M10.4 15.4h.01M13.6 15.4h.01M10.4 18.2h3.2"/></svg><span>TV remote</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    </div>
   </nav>
   <i class="d-line"></i>
   <div class="nav"><button type="button" data-act="settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg><span>Settings</span></button></div>
@@ -1448,13 +1491,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012172211"></script>
+<script src="appearance.js?v=20261012183059"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012172211';
+  const VERSION = '20261012183059';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1551,6 +1594,8 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- state ---------- */
+  // the sections that belong to one side; Home, Tasks, Calendar, Notes and Reminders hold both, so they stay up top
+  const GROUP_OF = { work: 'work', finance: 'personal', health: 'personal', car: 'personal', places: 'personal', packages: 'personal', pets: 'personal', lights: 'personal', tv: 'personal' };
   const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', work: 'Work', finance: 'Finance', health: 'Health', car: 'Car', places: 'Places', packages: 'Packages', pets: 'Pets', lights: 'Lights', tv: 'TV remote', notes: 'Notes', reminders: 'Reminders' };
   const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
   function savedCalView() {
@@ -2040,6 +2085,46 @@ dialog::backdrop{background:transparent}
     return `<div class="wxm" aria-label="Weather in ${esc(w.place || 'your area')}: now ${Math.round(c.temp)} degrees"><span class="lab">${esc(w.place || 'Weather')}</span><div class="wxm-row">${items.join('')}</div></div>`;
   }
 
+  /* ---------- Claude usage: the PC's Chrome extension keeps the 'claude-usage' record up to date ---------- */
+  const CLU = { d: null };
+  const CLU_NAMES = [['five_hour', '5-hour'], ['seven_day', 'Week'], ['seven_day_opus', 'Opus week'], ['seven_day_sonnet', 'Sonnet week']];
+  async function cluLoad() {
+    if (!sb || !S.user || document.hidden) return;
+    try {
+      const { data, error } = await sb.from('records').select('data').eq('id', 'claude-usage').maybeSingle();
+      if (error) return;
+      CLU.d = data ? data.data : null;
+    } catch (e) { return; }
+    cluPaint();
+  }
+  function cluPaint() { const el = document.getElementById('clu'); if (el) el.outerHTML = vClaude(); }
+  function agoText(ms) {
+    const m = Math.floor(ms / 60e3);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m} min ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} h ago`;
+    return `${Math.floor(h / 24)} d ago`;
+  }
+  function resetText(t) {
+    const d = new Date(t);
+    const same = dkey(d) === todayKey();
+    return `Resets ${same ? '' : wdFmt.format(d) + ' '}${timeFmt.format(d)}`;
+  }
+  function vClaude() {
+    const d = CLU.d, lim = d && d.limits;
+    if (!lim || !(lim.five_hour || lim.seven_day)) return '<div id="clu" hidden></div>';
+    const now = Date.now(), stale = !d.at || now - d.at > 20 * 60e3;
+    const items = CLU_NAMES.filter(([k]) => lim[k] && (k === 'five_hour' || k === 'seven_day' || lim[k].pct > 0)).map(([k, name]) => {
+      const v = lim[k], r = v.resets ? Date.parse(v.resets) : 0, over = r && r <= now;
+      const p = clamp(Math.round(v.pct), 0, 100), lvl = over ? '' : p >= 90 ? ' bad' : p >= 70 ? ' warn' : '';
+      return `<div class="clu-it${lvl}${over ? ' over' : ''}"><b>${over ? '—' : p}<small>${over ? '' : '%'}</small></b><span class="clu-n">${esc(name)}</span><i class="clu-bar"><i style="width:${over ? 0 : p}%"></i></i><small>${over ? 'Reset since' : r ? esc(resetText(r)) : 'Not started'}</small></div>`;
+    });
+    const seenErr = d.err && d.seen && now - d.seen < 30 * 60e3;
+    const note = stale ? `Last read ${d.at ? agoText(now - d.at) : 'never'}${seenErr ? ` · ${esc(d.err)}` : ''}` : `Updated ${agoText(now - d.at)}`;
+    return `<div id="clu" class="clu${stale ? ' stale' : ''}" aria-label="Claude usage"><div class="clu-head"><span class="lab">Claude usage</span><small>${note}</small></div><div class="clu-row">${items.join('')}</div></div>`;
+  }
+
   /* ---------- home ---------- */
   function vNowNext() {
     const tk = todayKey(), nm = nowMin();
@@ -2128,6 +2213,7 @@ dialog::backdrop{background:transparent}
         <p class="long" data-longdate>${esc(longFmt.format(new Date()))}</p>
         <p class="meta sum">${esc(summary)}</p>
         ${vWeatherMini()}
+        ${vClaude()}
       </section>
       ${vWeather('g-wx')}
       <div class="g-mid">${vNext('g-next')}${vMeet('g-meet')}</div>
@@ -2955,9 +3041,13 @@ dialog::backdrop{background:transparent}
     $('#title').textContent = TITLES[S.tab];
     document.body.dataset.view = S.tab;
     $('#today').innerHTML = S.tab === 'home' ? '' : `<i></i>${esc(shortFmt.format(new Date()))}`;
-    for (const b of document.querySelectorAll('.nav button, #rail [data-tab]')) {
-      if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    for (const b of document.querySelectorAll('.nav button[data-tab], #rail [data-tab], #fly [data-tab]')) {
+      const on = b.dataset.wsub ? S.tab === 'work' && S.workSub === b.dataset.wsub : b.dataset.tab === S.tab;
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     }
+    const grpNow = GROUP_OF[S.tab] || '';
+    for (const b of document.querySelectorAll('#rail [data-grp]')) { if (b.dataset.grp === grpNow) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
+    for (const b of document.querySelectorAll('.nav [data-grp]')) b.classList.toggle('has-cur', b.dataset.grp === grpNow);
     $('#view').innerHTML = views[S.tab]();
     for (const el of document.querySelectorAll('#view [data-keep]')) {
       if (S.aim[el.id] != null) { el.scrollTop = S.aim[el.id]; delete S.aim[el.id]; }
@@ -2978,6 +3068,8 @@ dialog::backdrop{background:transparent}
     for (const badge of [$('#petBadge'), $('#railPetBadge')]) { badge.hidden = !nPet; badge.textContent = nPet; }
     const nPkg = PKG ? PKG.badge() : 0;
     for (const badge of [$('#pkgBadge'), $('#railPkgBadge')]) { badge.hidden = !nPkg; badge.textContent = nPkg; }
+    const nPer = nFin + nCar + nPet + nPkg;
+    for (const badge of [$('#perBadge'), $('#railPerBadge')]) { badge.hidden = !nPer; badge.textContent = nPer; }
     const nRem = REM ? REM.due() : 0;
     for (const badge of [$('#remBadge'), $('#railRemBadge')]) { badge.hidden = !nRem; badge.textContent = nRem; }
     const pip = $('#grabCount');
@@ -3842,6 +3934,7 @@ dialog::backdrop{background:transparent}
   new MutationObserver(syncSheets).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });
   // when closed, the menu and its dimmed layer are fully hidden, so iOS never tints the status bar from them
   function setDrawer(open) {
+    if (open && !drawerOpen && GROUP_OF[S.tab]) dGrp(GROUP_OF[S.tab], true);
     drawerOpen = open;
     drawer.classList.toggle('open', open);
     document.body.classList.toggle('menu-open', open);
@@ -3856,6 +3949,51 @@ dialog::backdrop{background:transparent}
   // a drag that ends on a button must not also count as a tap on it
   document.addEventListener('click', e => { if (Date.now() < quietUntil && !(e.target.closest && e.target.closest('dialog'))) { e.stopPropagation(); e.preventDefault(); } }, true);
   menuBtn.addEventListener('click', () => setDrawer(!drawerOpen));
+  // the menu (phones): Work and Personal fold open to show their sections
+  function dGrp(g, open) {
+    const b = document.querySelector(`.nav [data-grp="${g}"]`), sub = document.querySelector(`.nav [data-sub-of="${g}"]`);
+    if (!b || !sub) return;
+    b.setAttribute('aria-expanded', String(open)); sub.hidden = !open;
+  }
+  for (const b of document.querySelectorAll('.nav [data-grp]')) b.addEventListener('click', () => dGrp(b.dataset.grp, b.getAttribute('aria-expanded') !== 'true'));
+
+  // the rail (tablets, computers): Work and Personal open a menu beside the rail. A mouse opens it by hovering
+  // (and a click on Work goes straight to Work); a finger taps to open or close it.
+  const fly = $('#fly');
+  let flyFor = null, flyT = 0, lastPtr = 'mouse';
+  function flyOpen(btn) {
+    clearTimeout(flyT);
+    const g = btn.dataset.grp;
+    for (const sec of fly.querySelectorAll('[data-fly]')) sec.hidden = sec.dataset.fly !== g;
+    fly.hidden = false;
+    const r = btn.getBoundingClientRect(), h = fly.offsetHeight;
+    fly.style.left = Math.round(r.right + 12) + 'px';
+    fly.style.top = Math.round(Math.max(8, Math.min(r.top - 10, window.innerHeight - h - 8))) + 'px';
+    flyFor = g;
+    for (const b of document.querySelectorAll('#rail [data-grp]')) b.setAttribute('aria-expanded', String(b.dataset.grp === g));
+  }
+  function flyClose() {
+    clearTimeout(flyT);
+    if (fly.hidden) return;
+    fly.hidden = true; flyFor = null;
+    for (const b of document.querySelectorAll('#rail [data-grp]')) b.setAttribute('aria-expanded', 'false');
+  }
+  const flyLater = () => { clearTimeout(flyT); flyT = setTimeout(flyClose, 300); };
+  for (const b of document.querySelectorAll('#rail [data-grp]')) {
+    b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') flyOpen(b); });
+    b.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') flyLater(); });
+    b.addEventListener('pointerdown', e => { lastPtr = e.pointerType || 'mouse'; });
+    b.addEventListener('click', e => {
+      const mouse = e.detail > 0 && lastPtr === 'mouse';
+      if (mouse && b.dataset.grp === 'work') { setTab('work'); return; }
+      if (flyFor === b.dataset.grp && !mouse) flyClose(); else flyOpen(b);
+    });
+  }
+  fly.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') clearTimeout(flyT); });
+  fly.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') flyLater(); });
+  document.addEventListener('pointerdown', e => { if (!fly.hidden && !(e.target.closest && e.target.closest('#fly, #rail [data-grp]'))) flyClose(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') flyClose(); });
+  window.addEventListener('resize', flyClose);
   scrim.addEventListener('click', () => setDrawer(false));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) setDrawer(false); });
   document.addEventListener('touchstart', e => {
@@ -4566,6 +4704,7 @@ dialog::backdrop{background:transparent}
     if (TV && tab === 'tv' && was !== 'tv') TV.shown(true);
     setTimeout(() => loadEvents(false), 0);
     setDrawer(false);
+    flyClose();
     render();
     window.scrollTo(0, 0);
   }
@@ -4728,7 +4867,7 @@ dialog::backdrop{background:transparent}
 
   document.addEventListener('click', e => {
     const tabBtn = e.target.closest('[data-tab]');
-    if (tabBtn) { setTab(tabBtn.dataset.tab); return; }
+    if (tabBtn) { if (tabBtn.dataset.wsub) setWorkSub(tabBtn.dataset.wsub); setTab(tabBtn.dataset.tab); return; }
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const act = b.dataset.act;
@@ -4883,7 +5022,7 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
@@ -5051,10 +5190,12 @@ dialog::backdrop{background:transparent}
 
   setInterval(() => { loadWeather(false); loadEvents(false); }, 5 * 60e3);
   setInterval(checkVersion, 3 * 60e3);
+  // Claude usage: the PC sends it every few minutes; POS looks every minute, which also keeps "Updated … ago" true
+  setInterval(cluLoad, 60e3);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { cluLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);

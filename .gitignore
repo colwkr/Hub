@@ -1,3 +1,6 @@
 # local test page built by the scratch harness
 _test.html
 __pycache__/
+
+# the Claude usage extension's key lives only on the PC
+bridge/claude-usage/config.js
