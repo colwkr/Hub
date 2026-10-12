@@ -626,3 +626,29 @@ select.gr-in{-webkit-appearance:none;appearance:none}
 .mtg.solo .mt-pane{display:flex;flex:1;min-height:0;width:100%;max-width:820px;margin:0 auto}
 .mtg.solo .mt-back{display:grid}
 .wk-tl .ttag.work{display:none}
+
+/* AVL: Work's Audio, Video and Lighting. A path bar says where you are (Video › Broadcast › Cameras);
+   tiles lead to what's inside, each with the one number that matters there */
+.wk-tabs .wk-sep{flex:none;width:1px;margin:7px 4px;background:var(--line)}
+.work > .avl{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
+.avl > .gr-cmp,.avl > .mtg,.avl > .avl-scroll{flex:1;min-height:0}
+.avl-scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.avl-scroll::-webkit-scrollbar{display:none}
+.avl-bar{display:flex;align-items:center;gap:12px;min-height:38px;flex:none}
+.avl-path{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;font-size:16px}
+.avl-crumb{border:0;background:none;padding:4px 2px;color:var(--ink-2);font-size:16px}
+.avl-crumb:hover{color:var(--ink)}
+.avl-sep{color:var(--ink-3);font-size:18px;line-height:1}
+.avl-cur{font-weight:600;color:var(--ink)}
+.avl-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.avl-tile{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"ic name" "fig fig";gap:18px 12px;align-items:center;text-align:left;border:0;color:var(--ink);text-decoration:none;padding:20px 22px;min-height:160px;align-content:space-between}
+.avl-tile:active{transform:scale(.985)}
+.avl-ic{grid-area:ic;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--well);color:var(--ink)}
+.avl-ic svg.i{width:22px;height:22px}
+.avl-name{grid-area:name;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.avl-fig{grid-area:fig;display:flex;align-items:baseline;gap:8px;min-width:0}
+.avl-fig b{font-size:46px;font-weight:200;line-height:.9;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.avl-fig span{font-size:13.5px;color:var(--ink-2);line-height:1.35}
+.avl-none{max-width:520px}
+.gr-tip{padding:10px 4px 0}
+.avl .mtg.solo .mt-back{display:none}

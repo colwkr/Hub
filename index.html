@@ -35,28 +35,28 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012193108">
-<script src="finance.js?v=20261012193108"></script>
-<link rel="stylesheet" href="car.css?v=20261012193108">
-<script src="car.js?v=20261012193108"></script>
-<link rel="stylesheet" href="sections.css?v=20261012193108">
-<link rel="stylesheet" href="tv.css?v=20261012193108">
-<script src="records.js?v=20261012193108"></script>
-<script src="people.js?v=20261012193108"></script>
-<script src="wheels.js?v=20261012193108"></script>
-<script src="keyboard.js?v=20261012193108"></script>
-<script src="notes.js?v=20261012193108"></script>
-<script src="reminders.js?v=20261012193108"></script>
-<script src="gear.js?v=20261012193108"></script>
-<script src="lights.js?v=20261012193108"></script>
-<script src="tv.js?v=20261012193108"></script>
-<script src="work.js?v=20261012193108"></script>
-<script src="health.js?v=20261012193108"></script>
-<script src="pets.js?v=20261012193108"></script>
-<script src="places.js?v=20261012193108"></script>
-<script src="placestab.js?v=20261012193108"></script>
-<script src="usmap.js?v=20261012193108"></script>
-<script src="packages.js?v=20261012193108"></script>
+<link rel="stylesheet" href="finance.css?v=20261012194730">
+<script src="finance.js?v=20261012194730"></script>
+<link rel="stylesheet" href="car.css?v=20261012194730">
+<script src="car.js?v=20261012194730"></script>
+<link rel="stylesheet" href="sections.css?v=20261012194730">
+<link rel="stylesheet" href="tv.css?v=20261012194730">
+<script src="records.js?v=20261012194730"></script>
+<script src="people.js?v=20261012194730"></script>
+<script src="wheels.js?v=20261012194730"></script>
+<script src="keyboard.js?v=20261012194730"></script>
+<script src="notes.js?v=20261012194730"></script>
+<script src="reminders.js?v=20261012194730"></script>
+<script src="gear.js?v=20261012194730"></script>
+<script src="lights.js?v=20261012194730"></script>
+<script src="tv.js?v=20261012194730"></script>
+<script src="work.js?v=20261012194730"></script>
+<script src="health.js?v=20261012194730"></script>
+<script src="pets.js?v=20261012194730"></script>
+<script src="places.js?v=20261012194730"></script>
+<script src="placestab.js?v=20261012194730"></script>
+<script src="usmap.js?v=20261012194730"></script>
+<script src="packages.js?v=20261012194730"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1286,7 +1286,9 @@ dialog::backdrop{background:transparent}
     <button type="button" role="menuitem" data-tab="work" data-wsub="overview"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span></button>
     <button type="button" role="menuitem" data-tab="work" data-wsub="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.5"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.5"/><rect x="15.5" y="4.5" width="5" height="6.5" rx="1.5"/></svg><span>Projects</span></button>
     <button type="button" role="menuitem" data-tab="work" data-wsub="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.5-3 2.7-5 5.5-5s5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.5 1.4 5 4.3"/></svg><span>Meetings</span></button>
-    <button type="button" role="menuitem" data-tab="work" data-wsub="gear"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Gear</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="audio"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Audio</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="video"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Video</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="lighting"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10l-2 7H9z"/><path d="M12 11.5v3M8.5 20.5l3.5-6 3.5 6"/><path d="M5 2.8 6.4 4M19 2.8 17.6 4"/></svg><span>Lighting</span></button>
   </div>
   <div class="fly-grp" data-fly="personal"><span class="lab">Personal</span>
     <button type="button" role="menuitem" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="railFinBadge" hidden></span></button>
@@ -1316,7 +1318,9 @@ dialog::backdrop{background:transparent}
       <button type="button" data-tab="work" data-wsub="overview"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
       <button type="button" data-tab="work" data-wsub="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.5"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.5"/><rect x="15.5" y="4.5" width="5" height="6.5" rx="1.5"/></svg><span>Projects</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
       <button type="button" data-tab="work" data-wsub="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.5-3 2.7-5 5.5-5s5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.5 1.4 5 4.3"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
-      <button type="button" data-tab="work" data-wsub="gear"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Gear</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="audio"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Audio</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="video"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Video</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="lighting"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10l-2 7H9z"/><path d="M12 11.5v3M8.5 20.5l3.5-6 3.5 6"/><path d="M5 2.8 6.4 4M19 2.8 17.6 4"/></svg><span>Lighting</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     </div>
     <button type="button" class="d-grp" data-grp="personal" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-3.7 3.4-6 7-6s6.4 2.3 7 6"/></svg><span>Personal</span><span class="badge" id="perBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg></button>
     <div class="d-sub" data-sub-of="personal" hidden>
@@ -1491,13 +1495,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012193108"></script>
+<script src="appearance.js?v=20261012194730"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012193108';
+  const VERSION = '20261012194730';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1609,7 +1613,7 @@ dialog::backdrop{background:transparent}
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
     all: [], tasks: [], items: [], projects: [], steps: [], missQ: new Set(), weather: null, mtgId: null, prjId: null,
-    workSub: (() => { try { const v = localStorage.getItem('pos.workSub'); return ['projects', 'meetings', 'gear'].includes(v) ? v : 'overview'; } catch (e) { return 'overview'; } })(),
+    workSub: (() => { try { const v = localStorage.getItem('pos.workSub'); return ['projects', 'meetings', 'audio', 'video', 'lighting'].includes(v) ? v : v === 'gear' ? 'video' : 'overview'; } catch (e) { return 'overview'; } })(),
     tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     taskTag: (() => { try { const v = localStorage.getItem('pos.taskTag'); return v === 'personal' || v === 'work' ? v : ''; } catch (e) { return ''; } })(),
     wxMode: (() => { try { const v = localStorage.getItem('pos.wxMode'); return v === 'day' || v === 'ahead' ? v : 'now'; } catch (e) { return 'now'; } })(),
@@ -2338,19 +2342,22 @@ dialog::backdrop{background:transparent}
   }
   // Work: the CG list for Sunday, and the work meetings coming up
   // Work: one tab. Overview (the CG list, work projects, work meetings), then Projects, Meetings and the Gear list.
-  const WORK_SUBS = [['overview', 'Overview'], ['projects', 'Projects'], ['meetings', 'Meetings'], ['gear', 'Gear']];
-  const WORK_PARTS = ['projects', 'meetings', 'gear'];
+  // Work: the day-to-day (Overview, Projects, Meetings), then the gear by department (Audio, Video, Lighting)
+  const WORK_SUBS = [['overview', 'Overview'], ['projects', 'Projects'], ['meetings', 'Meetings'], ['audio', 'Audio'], ['video', 'Video'], ['lighting', 'Lighting']];
+  const AVL = ['audio', 'video', 'lighting'];
+  const WORK_PARTS = ['projects', 'meetings', 'gear', ...AVL];
   const WORK_NAV = WORK_SUBS;
   const onWork = sub => S.tab === 'work' && S.workSub === sub;
   function setWorkSub(sub) {
+    if (sub === 'gear') { sub = 'video'; if (GEAR) GEAR.toCameras(); } // the old Gear page is Video › Broadcast › Cameras now
     S.workSub = WORK_SUBS.some(([k]) => k === sub) ? sub : 'overview';
     try { localStorage.setItem('pos.workSub', S.workSub); } catch (e) {}
   }
   function vWork() {
     if (!S.loaded) return notReady();
     const sub = S.workSub;
-    const nav = `<nav class="fin-tabs wk-tabs" aria-label="Work sections">${WORK_NAV.map(([k, l]) => `<button type="button" data-act="wsub" data-sub="${k}"${k === sub ? ' aria-current="page"' : ''}>${l}</button>`).join('')}</nav>`;
-    const body = sub === 'projects' ? vProjects() : sub === 'meetings' ? vMeetings() : sub === 'gear' ? (GEAR ? GEAR.view() : notReady()) : vWorkHome();
+    const nav = `<nav class="fin-tabs wk-tabs" aria-label="Work sections">${WORK_NAV.map(([k, l]) => `${k === 'audio' ? '<i class="wk-sep" aria-hidden="true"></i>' : ''}<button type="button" data-act="wsub" data-sub="${k}"${k === sub ? ' aria-current="page"' : ''}>${l}</button>`).join('')}</nav>`;
+    const body = sub === 'projects' ? vProjects() : sub === 'meetings' ? vMeetings() : AVL.includes(sub) ? (GEAR ? GEAR.view(sub) : notReady()) : vWorkHome();
     return `<div class="work wk-${sub}">${nav}${body}</div>`;
   }
   // Work at a glance: the CG list down the left, every open work task in the middle, meetings on the right.
@@ -4966,7 +4973,7 @@ dialog::backdrop{background:transparent}
     if (S.tab === 'packages') { if (PKG && S.canSave) PKG.add(); return; }
     if (S.tab === 'health') { if (HEALTH && S.canSave) HEALTH.add(); return; }
     if (onWork('projects')) { newProject(); return; }
-    if (onWork('gear')) { if (GEAR && S.canSave) GEAR.add(); return; }
+    if (onWork('video') && GEAR && GEAR.at('video') === 'cameras') { if (S.canSave) GEAR.add(); return; }
     if (onWork('meetings')) { newMeeting(); return; }
     if (S.tab === 'work') { openTask(null, { tag: 'work' }, 'task'); return; }
     openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}, S.tab === 'tasks' ? 'task' : null);

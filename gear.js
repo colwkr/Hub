@@ -1,4 +1,5 @@
-// POS Gear: the broadcast gear list. One entry per camera: whether it's in the broadcast, what it does (when in the
+// POS Gear, sorted the way the production team thinks: Audio, Video and Lighting, each split into areas
+// (Video › Broadcast) and what's in them (Broadcast › Cameras, 3D cam plot). Cameras is the broadcast gear list. One entry per camera: whether it's in the broadcast, what it does (when in the
 // service it's used, its job, how it's rigged, where it sits and how far from the speaker), every part on it (body,
 // lens, matte box, monitor and whatever else rides along) and its signal path: what goes out of what, on which cable,
 // into what. Compare puts every camera side by side, and the sensor mix shows how much of the broadcast is which sensor.
@@ -9,7 +10,7 @@ window.POSGear = function (ctx) {
   const KIND = 'gear-cam';
   const R = window.POSRecords(ctx, [KIND], 'pos-gear');
   const S = R.S;
-  const UI = { sel: null, mode: (() => { try { return localStorage.getItem('pos.gearMode') === 'compare' ? 'compare' : 'cams'; } catch (e) { return 'cams'; } })() };
+  const UI = { sel: null };
   const svg = d => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
   const ICON = {
     cam: svg('<rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 10.5 5-3v9l-5-3"/><circle cx="9.5" cy="12" r="2.2"/>'),
@@ -18,6 +19,8 @@ window.POSGear = function (ctx) {
     chev: svg('<path d="M9.5 6.5 15 12l-5.5 5.5"/>'),
     trash: svg('<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>'),
     arrow: svg('<path d="M12 5v14M7 14l5 5 5-5"/>'),
+    cube: svg('<path d="M12 3.5 19.5 7.5v9L12 20.5 4.5 16.5v-9z"/><path d="M4.5 7.5 12 11.5l7.5-4M12 11.5v9"/>'),
+    tower: svg('<path d="M12 10v10.5M8.5 20.5h7"/><circle cx="12" cy="8" r="2"/><path d="M8 4.5a5 5 0 0 0 0 7M16 4.5a5 5 0 0 1 0 7"/>'),
   };
   // the parts a camera is described by, in this order; the first four are always shown, even before they're filled in
   const ROLES = ['Body', 'Lens', 'Matte box', 'Monitor', 'Rigging', 'Support', 'Power', 'Converter', 'Comms', 'Other'];
@@ -66,14 +69,6 @@ window.POSGear = function (ctx) {
 
   /* ---------- markup ---------- */
   const statusPill = c => (inUse(c) ? '<span class="pill gr-on">In use</span>' : '<span class="pill gr-off">Not in use</span>');
-  function camRow(c, on) {
-    const body = part(c, 'Body');
-    const bits = [body ? label(body) : 'No body yet', sensorOf(c) || ''].filter(Boolean);
-    return `<button type="button" class="mrow gr-row${on ? ' on' : ''}${inUse(c) ? '' : ' off'}" data-act="gr-open" data-id="${esc(c.id)}"${on ? ' aria-current="true"' : ''}>
-      <span class="cal-ic" aria-hidden="true">${ICON.cam}</span>
-      <span class="tmain"><span class="name">${esc(c.name)}</span><span class="meta">${statusPill(c)}<span>${esc(bits.join(' · '))}</span>${inUse(c) && usesOf(c).length ? `<span>${esc(usesText(c))}</span>` : ''}${c.rig ? `<span>${esc(c.rig)}</span>` : ''}</span></span>
-      <span class="gr-n" title="Parts and cables"><b>${partsOf(c).length}</b> ${partsOf(c).length === 1 ? 'part' : 'parts'}<br><b>${linksOf(c).length}</b> ${linksOf(c).length === 1 ? 'cable' : 'cables'}</span>${ICON.chev}</button>`;
-  }
   function partRow(c, p) {
     const spec = p.role === 'Body' ? [p.sensor, p.mount].filter(Boolean).join(' · ') : p.role === 'Lens' ? [p.range, p.mount].filter(Boolean).join(' · ') : '';
     const sub = [spec, p.serial ? `S/N ${p.serial}` : '', p.notes && (p.make || p.model) ? p.notes : ''].filter(Boolean).join(' · ');
@@ -150,27 +145,70 @@ window.POSGear = function (ctx) {
   function compare(list) {
     if (!list.length) return '<p class="empty">No cameras yet.</p>';
     return `<div class="gr-table-wrap" id="grTable" data-keep><table class="gr-table"><thead><tr><th scope="col">Camera</th>${COLS.map(([h]) => `<th scope="col">${h}</th>`).join('')}</tr></thead>
-      <tbody>${list.map(c => `<tr class="${inUse(c) ? '' : 'off'}"><th scope="row"><button type="button" class="link" data-act="gr-open" data-id="${esc(c.id)}" data-mode="cams">${esc(c.name)}</button></th>${COLS.map(([, f]) => `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+      <tbody>${list.map(c => `<tr class="${inUse(c) ? '' : 'off'}"><th scope="row"><button type="button" class="link" data-act="gr-open" data-id="${esc(c.id)}">${esc(c.name)}</button></th>${COLS.map(([, f]) => `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
-  function view() {
-    if (S.failed) return '<p class="empty">The gear list did not load. POS tries again when you come back to it.</p>';
-    if (!S.loaded) return '<p class="empty">Loading…</p>';
-    const list = cams(), live = list.filter(inUse);
+  /* ---------- AVL: each department is a tree of areas; the deepest place you went is remembered per department ---------- */
+  const TREE = {
+    audio: { name: 'Audio', kids: [] },
+    video: { name: 'Video', kids: [{ id: 'broadcast', name: 'Broadcast', kids: [{ id: 'cameras', name: 'Cameras' }, { id: 'camplot', name: '3D cam plot', href: 'cam.html' }] }] },
+    lighting: { name: 'Lighting', kids: [] },
+  };
+  const PATH = (() => { try { const p = JSON.parse(localStorage.getItem('pos.avlPath') || 'null'); return p && typeof p === 'object' ? p : { video: ['broadcast'] }; } catch (e) { return { video: ['broadcast'] }; } })();
+  function goTo(dept, ids) {
+    PATH[dept] = ids; UI.sel = null;
+    try { localStorage.setItem('pos.avlPath', JSON.stringify(PATH)); } catch (e) {}
+  }
+  // the places along the remembered path (anything that no longer exists is dropped)
+  function walk(dept) {
+    const nodes = [TREE[dept]];
+    for (const id of Array.isArray(PATH[dept]) ? PATH[dept] : []) {
+      const k = (nodes[nodes.length - 1].kids || []).find(x => x.id === id && !x.href);
+      if (!k) break;
+      nodes.push(k);
+    }
+    return nodes;
+  }
+  const at = dept => { const n = walk(dept); return n[n.length - 1].id || ''; };
+  function crumbs(dept, nodes, sel) {
+    const ids = nodes.slice(1).map(n => n.id);
+    const parts = nodes.map((n, i) => (i === nodes.length - 1 && !sel)
+      ? `<span class="avl-cur" aria-current="page">${esc(n.name)}</span>`
+      : `<button type="button" class="avl-crumb" data-act="gr-go" data-dept="${dept}" data-path="${esc(ids.slice(0, i).join('/'))}">${esc(n.name)}</button>`);
+    if (sel) parts.push(`<span class="avl-cur" aria-current="page">${esc(sel.name)}</span>`);
+    const up = sel ? `data-act="gr-back"` : nodes.length > 1 ? `data-act="gr-go" data-dept="${dept}" data-path="${esc(ids.slice(0, -1).join('/'))}"` : '';
+    return `<nav class="avl-bar" aria-label="Where you are">${up ? `<button type="button" class="circle avl-up" ${up} aria-label="Back">${ICON.left}</button>` : ''}<span class="avl-path">${parts.join('<span class="avl-sep" aria-hidden="true">›</span>')}</span></nav>`;
+  }
+  // a tile for each place you can go next: its name, and the one number that matters there
+  function tile(dept, ids, k, list) {
+    const live = list.filter(inUse).length;
+    const info = k.id === 'broadcast' ? [ICON.tower, live, live === 1 ? 'camera in use' : 'cameras in use']
+      : k.id === 'cameras' ? [ICON.cam, list.length, `${list.length === 1 ? 'camera' : 'cameras'} · ${live} in use`]
+      : k.id === 'camplot' ? [ICON.cube, '', 'The room in 3D, each camera’s real view, and a multiview to practice cuts']
+      : [ICON.chev, '', ''];
+    const inner = `<span class="avl-ic">${info[0]}</span><span class="avl-name">${esc(k.name)}</span><span class="avl-fig">${info[1] !== '' ? `<b>${info[1]}</b>` : ''}<span>${esc(info[2])}</span></span>`;
+    if (k.href) return `<a class="float avl-tile" href="${esc(k.href)}">${inner}</a>`;
+    return `<button type="button" class="float avl-tile" data-act="gr-go" data-dept="${dept}" data-path="${esc(ids.concat(k.id).join('/'))}">${inner}</button>`;
+  }
+  function camerasPage(list) {
+    const live = list.filter(inUse);
     const nParts = list.reduce((n, c) => n + partsOf(c).length, 0), nLinks = list.reduce((n, c) => n + linksOf(c).length, 0);
     const sum = `<div class="gr-sum"><div><b class="fig">${live.length}</b><span>in use</span></div><div><b class="fig">${list.length}</b><span>${list.length === 1 ? 'camera' : 'cameras'}</span></div><div><b class="fig">${nParts}</b><span>parts</span></div><div><b class="fig">${nLinks}</b><span>cables</span></div></div>`;
-    const modes = `<div class="gr-modebar"><div class="seg3 gr-modes" role="radiogroup" aria-label="Show">${[['cams', 'Cameras'], ['compare', 'Compare']].map(([v, l]) => `<button type="button" role="radio" data-act="gr-mode" data-v="${v}" aria-checked="${UI.mode === v}">${l}</button>`).join('')}</div><a class="btn gr-3d" href="cam.html">${ICON.cam}<span>3D cam plot</span></a></div>`;
-    if (UI.mode === 'compare') {
-      return `<div class="gr-cmp"><div class="gr-cmp-scroll" id="grCmp" data-keep>${sum}${modes}${sensorMix(list)}<section class="sec"><div class="sec-head"><h2 class="lab">Every camera</h2>${ctx.canSave() ? '<button type="button" class="link" data-act="gr-new">Add a camera</button>' : ''}</div>${compare(list)}</section></div></div>`;
-    }
-    const sel = list.find(c => c.id === UI.sel) || null;
+    return `<div class="gr-cmp"><div class="gr-cmp-scroll" id="grCmp" data-keep>${sum}<section class="sec"><div class="sec-head"><h2 class="lab">Every camera</h2>${ctx.canSave() ? '<button type="button" class="link" data-act="gr-new">Add a camera</button>' : ''}</div>${compare(list)}<p class="meta gr-tip">Tap a camera’s name to open everything on it.</p></section>${sensorMix(list)}</div></div>`;
+  }
+  function view(dept) {
+    dept = TREE[dept] ? dept : 'video';
+    if (S.failed) return '<p class="empty">The gear list did not load. POS tries again when you come back to it.</p>';
+    if (!S.loaded) return '<p class="empty">Loading…</p>';
+    const nodes = walk(dept), here = nodes[nodes.length - 1], ids = nodes.slice(1).map(n => n.id), list = cams();
+    const sel = here.id === 'cameras' && UI.sel ? list.find(c => c.id === UI.sel) || null : null;
     if (!sel) UI.sel = null;
-    const side = `<div class="mt-list" id="grList" data-keep>${sum}${modes}
-        ${ctx.canSave() ? `<button type="button" class="btn solid mt-new" data-act="gr-new">${ICON.plus}<span>Add a camera</span></button>` : ''}
-        <section class="sec"><div class="sec-head"><h2 class="lab">Cameras</h2></div><div class="float list">${list.length ? list.map(c => camRow(c, sel && c.id === sel.id)).join('') : '<p class="empty">No cameras yet. Add one, then its body, lens, matte box, monitor and where its video goes.</p>'}</div></section>
-        ${sensorMix(list)}
-      </div>`;
-    const pane = sel ? detail(sel) : `<div class="float mt-none"><span class="cal-ic">${ICON.cam}</span><p class="name">Pick a camera, or add one.</p><p class="meta">Each camera keeps what it does, its parts and its signal path in one place. Compare shows them all side by side.</p>${ctx.canSave() ? '<button type="button" class="btn" data-act="gr-new">Add a camera</button>' : ''}</div>`;
-    return `<div class="mtg gr${sel ? ' has-sel' : ''}">${side}<div class="mt-pane">${pane}</div></div>`;
+    const bar = crumbs(dept, nodes, sel);
+    if (sel) return `<div class="avl">${bar}<div class="mtg gr has-sel solo"><div class="mt-pane">${detail(sel)}</div></div></div>`;
+    if (here.id === 'cameras') return `<div class="avl">${bar}${camerasPage(list)}</div>`;
+    const kids = here.kids || [];
+    const body = kids.length ? `<div class="avl-tiles">${kids.map(k => tile(dept, ids, k, list)).join('')}</div>`
+      : `<div class="float mt-none avl-none"><p class="name">Nothing in ${esc(here.name)} yet.</p><p class="meta">Its areas and gear will sort in here the same way Video does: an area, then what's in it.</p></div>`;
+    return `<div class="avl">${bar}<div class="avl-scroll" id="avlScroll" data-keep>${body}</div></div>`;
   }
 
   /* ---------- changes ---------- */
@@ -192,7 +230,7 @@ window.POSGear = function (ctx) {
         const id = R.newId('gear');
         const pos = S[KIND].reduce((m, c) => Math.max(m, c.pos || 0), 0) + 1000;
         const ok = await R.save(R.db.set(KIND, id, { name: name.slice(0, 80), status: 'in', uses: [], job: '', rig: '', where: val('gr_where').slice(0, 120), dist: null, notes: '', pos, parts: [], links: [] }));
-        if (ok) { UI.sel = id; setMode('cams'); ctx.rerender(); }
+        if (ok) { goTo('video', ['broadcast', 'cameras']); UI.sel = id; ctx.rerender(); }
         return ok || 'That did not save. Check your connection and try again.';
       },
     });
@@ -310,10 +348,9 @@ window.POSGear = function (ctx) {
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && ['name', 'where', 'job', 'dist'].includes(e.target.dataset.gf)) { e.preventDefault(); e.target.blur(); } });
   document.addEventListener('focusout', e => { if (e.target.dataset && e.target.dataset.gf && e.target.closest && e.target.closest('.gr-detail')) { if (e.target.dataset.gf === 'name' && !e.target.value.trim()) { const c = camById(e.target.closest('.gr-detail').dataset.cam); if (c) e.target.value = c.name; } flush(); } });
 
-  function setMode(m) { UI.mode = m === 'compare' ? 'compare' : 'cams'; try { localStorage.setItem('pos.gearMode', UI.mode); } catch (e) {} }
   async function act(name, b) {
-    if (name === 'gr-mode') { flush(); setMode(b.dataset.v); ctx.rerender(); return; }
-    if (name === 'gr-open') { flush(); UI.sel = b.dataset.id; if (b.dataset.mode) setMode(b.dataset.mode); ctx.rerender(); return; }
+    if (name === 'gr-go') { flush(); if (TREE[b.dataset.dept]) goTo(b.dataset.dept, (b.dataset.path || '').split('/').filter(Boolean)); ctx.rerender(); return; }
+    if (name === 'gr-open') { flush(); UI.sel = b.dataset.id; ctx.rerender(); return; }
     if (name === 'gr-back') { flush(); UI.sel = null; ctx.rerender(); return; }
     if (!ctx.canSave()) return;
     if (name === 'gr-new') { addCamera(); return; }
@@ -335,5 +372,7 @@ window.POSGear = function (ctx) {
     }
   }
   const add = () => addCamera();
-  return { view, act, add, start: R.start, stop: R.stop, count: () => S[KIND].length };
+  // where Gear used to be: Video › Broadcast › Cameras
+  const toCameras = () => goTo('video', ['broadcast', 'cameras']);
+  return { view, act, add, at, toCameras, start: R.start, stop: R.stop, count: () => S[KIND].length };
 };
