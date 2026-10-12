@@ -10,7 +10,7 @@
 #   pos_tv.log      what happened, newest at the bottom
 #
 # To stop it starting with Windows: Settings > Apps > Startup, turn off "POS TV", or delete POS TV from the Startup folder.
-import asyncio, base64, hashlib, json, os, re, socket, ssl, struct, subprocess, sys, threading, time, urllib.parse
+import asyncio, base64, hashlib, json, os, re, socket, ssl, struct, subprocess, sys, threading, time, urllib.parse, urllib.request
 
 VERSION = '2026.10.12'
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -352,6 +352,26 @@ def wake(macs, ip=None):
         s.close()
 
 
+def fetch_icon(url, tv_ip):
+    """An app's picture from the TV (only from the TV itself), as a data: URL small enough to pass along."""
+    try:
+        u = urllib.parse.urlsplit(url)
+        if u.scheme not in ('http', 'https') or not tv_ip or u.hostname != tv_ip:
+            return None
+        with urllib.request.urlopen(url, timeout=4, context=tv_tls() if u.scheme == 'https' else None) as r:
+            body = r.read(400_001)
+            kind = (r.headers.get('Content-Type') or '').split(';')[0].strip()
+        if len(body) > 400_000:
+            return None
+        if not kind.startswith('image/'):
+            kind = 'image/png' if url.lower().endswith('.png') else 'image/jpeg' if re.search(r'\.jpe?g$', url, re.I) else 'image/png'
+        b64 = base64.b64encode(body).decode()
+        return f'data:{kind};base64,{b64}' if len(b64) < 180_000 else None
+    except Exception as e:
+        log('icon:', repr(e)[:120])
+        return None
+
+
 def arp_mac(ip):
     if not WIN or not ip:
         return None
@@ -397,6 +417,7 @@ class TV:
         self.hold = False  # after a declined/missed pairing, wait for POS to ask again
         self.want = None
         self.home_until = 0
+        self.sub_uri, self.icon_src = {}, {}
         self.waking_until = 0
         self.apps, self.apps_rev = [], 0
         self.st = {'tv': 'searching', 'vol': None, 'muted': False, 'out': None, 'app': None, 'play': None, 'kb': False,
@@ -464,6 +485,7 @@ class TV:
         i = f'p{self.n}'
         if cb:
             self.subs[i] = cb
+            self.sub_uri[i] = uri
         self.ws.send(json.dumps({'id': i, 'type': kind, 'uri': uri, 'payload': payload or {}}))
         return i
 
@@ -592,7 +614,8 @@ class TV:
             ws.close()
             raise
 
-        self.ws, self.wait, self.subs = ws, {}, {}
+        self.ws, self.wait, self.subs, self.sub_uri = ws, {}, {}, {}
+        self.st['power'] = None
         reader = asyncio.ensure_future(self.read(ws))
         log('connected to the TV at', ip)
         try:
@@ -614,6 +637,10 @@ class TV:
                 if time.monotonic() - ws.last > 11:
                     log('the TV stopped answering')
                     break
+                if self.st['tv'] == 'waking' and time.time() > self.waking_until:
+                    p = self.st.get('power')
+                    off = p in OFF_STATES or (p is None and not self.st.get('app'))
+                    self.set(tv='off' if off else 'on')
                 try:
                     ws.ping()
                     if self.pin and not self.pin.closed:
@@ -641,6 +668,9 @@ class TV:
                     if not f.done():
                         f.set_result(m)
                 elif i in self.subs:
+                    if m.get('type') == 'error':
+                        log('the TV would not report', self.sub_uri.get(i, i).rsplit('/', 1)[-1] + ':', m.get('error'))
+                        continue
                     try:
                         self.subs[i](m.get('payload') or {}, m)
                     except Exception as e:
@@ -655,6 +685,8 @@ class TV:
                 return
             proc = p.get('processing') or ''
             off = s in OFF_STATES or 'Power Off' in proc
+            if s != self.st.get('power'):
+                log('TV power:', s, proc)
             self.st['power'] = s
             if off:
                 self.set(tv='waking' if time.time() < self.waking_until else 'off', play=None)
@@ -666,6 +698,12 @@ class TV:
             a = p.get('appId')
             if a is not None:
                 self.set(app=a or None)
+                p = self.st.get('power')
+                if a and self.st['tv'] in ('off', 'waking') and p not in OFF_STATES:
+                    self.waking_until = 0
+                    self.set(tv='on')  # something is on screen
+                elif not a and self.st['tv'] == 'on' and p is None:
+                    self.set(tv='off', play=None)  # nothing in front and no power report: it's in standby
                 if a and time.time() < self.home_until:
                     self.home_until = 0
                     asyncio.ensure_future(self.home_if_blank(a))
@@ -690,10 +728,14 @@ class TV:
             lp = p.get('launchPoints')
             if lp is not None:
                 self.apps = [{'id': a.get('id'), 'title': a.get('title') or a.get('id')} for a in lp if a.get('id')]
+                for a in lp:
+                    if a.get('id'):
+                        self.icon_src[a['id']] = (a.get('largeIcon'), a.get('icon'), a.get('iconColor'))
             elif p.get('change') and p.get('id'):
                 self.apps = [a for a in self.apps if a['id'] != p['id']]
                 if p['change'] != 'removed':
                     self.apps.append({'id': p['id'], 'title': p.get('title') or p['id']})
+                    self.icon_src[p['id']] = (p.get('largeIcon'), p.get('icon'), p.get('iconColor'))
             else:
                 return
             self.apps_rev += 1
@@ -838,11 +880,31 @@ class TV:
                 self.power_off()
         elif k == 'hello':
             self.push(with_apps=True)
+        elif k == 'icons':
+            ids = [str(x) for x in (c.get('ids') or [])][:20]
+            asyncio.ensure_future(self.send_icons(ids))
         elif k == 'pair':
             if self.hold or self.st['tv'] in ('unpaired', 'searching', 'off'):
                 log('POS asked to pair again')
                 self.hold = False
                 self.kick.set()
+
+    async def send_icons(self, ids):
+        """The app pictures the TV itself shows, passed along so POS can show the same ones."""
+        loop = asyncio.get_running_loop()
+        for i in ids:
+            src = self.icon_src.get(i)
+            if not src:
+                continue
+            data = None
+            for url in (src[0], src[1]):
+                if url:
+                    data = await loop.run_in_executor(None, fetch_icon, url, self.info.get('ip'))
+                    if data:
+                        break
+            if data and self.link:
+                self.link.send('icon', {'id': i, 'src': data, 'bg': src[2]})
+                await asyncio.sleep(0.05)
 
     async def home_if_blank(self, app):
         """Turned on from POS and it came up on an input with nothing on it ("No signal"): go to Home instead."""

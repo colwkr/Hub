@@ -1,18 +1,34 @@
-// POS TV: the LG TV's remote. A press goes over a private live channel to the TV link running on the PC, which keeps
-// the TV's own connection open, so it lands in about the time a message takes to cross the internet (≈ 40–60 ms).
+// POS TV remote: the LG TV's remote. A press goes over a private live channel to the TV link running on the PC, which
+// keeps the TV's own connection open, so it lands in about the time a message takes to cross the internet (≈ 40–60 ms).
 // The channel's name is the key: it lives in one owner-only record (kind "tv", id "tv-link": { topic }).
-// Presses are sent the moment a finger lands (not on lift), and carry their place in line so they arrive in order.
+// Presses go the moment a finger lands (not on lift), and carry their place in line so they arrive in order.
 window.POSTV = function (ctx) {
-  const { esc } = ctx;
+  const { esc, toast } = ctx;
   const R = window.POSRecords({ ...ctx, onLoad: () => join() }, ['tv'], 'pos-tv');
   const S = R.S;
   const CID = Math.random().toString(36).slice(2, 10);
   let ch = null, topic = null, seq = 0;
-  let tv = null, seenAt = 0, askedAt = 0, apps = [];
+  let tv = null, seenAt = 0, askedAt = 0, apps = [], icons = {}, iconsAsked = false;
   const pings = [];
-  let pingT = null, waitT = null, lastPP = null, kbOpen = false, kbText = '';
-  try { tv = JSON.parse(localStorage.getItem('pos.tv.last') || 'null'); apps = JSON.parse(localStorage.getItem('pos.tv.apps') || '[]'); } catch (e) {}
+  let waitT = null, lastPP = null, kbOpen = false, kbText = '';
+  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') || d; } catch (e) { return d; } };
+  const keep = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  tv = load('pos.tv.last', null); apps = load('pos.tv.apps', []); icons = load('pos.tv.icons', {});
   if (tv) tv.stale = true;
+
+  // the only apps shown, in this order; each is found among what's installed on the TV
+  const WANT = [
+    { name: 'YouTube', re: /^youtube$/i, id: /^youtube\.leanback/i },
+    { name: 'Netflix', re: /netflix/i },
+    { name: 'Crunchyroll', re: /crunchyroll/i },
+    { name: 'Prime Video', re: /prime video|^amazon/i, id: /^amazon$/i },
+    { name: 'Hulu', re: /^hulu/i },
+    { name: 'Spotify', re: /spotify/i },
+    { name: 'Disney+', re: /disney/i },
+    { name: 'Apple TV', re: /^apple ?tv/i, id: /appletv/i },
+    { name: 'HBO Max', re: /^(hbo ?)?max$|hbo/i, id: /hbo|max/i },
+  ];
+  const shelf = () => WANT.map(w => ({ ...w, app: apps.find(a => (w.id && w.id.test(a.id)) || w.re.test(a.title)) || null }));
 
   const svg = (d, cls = '') => `<svg class="i${cls}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
   const ICON = {
@@ -25,8 +41,8 @@ window.POSTV = function (ctx) {
     ff: svg('<path d="M12.5 7 19 12l-6.5 5zM4.5 7 11 12l-6.5 5z"/>', ' fill'),
     play: svg('<path d="M8.5 5.8v12.4L18.5 12z"/>', ' fill'),
     pause: svg('<path d="M8.5 6v12M15.5 6v12"/>', ' thick'),
-    minus: svg('<path d="M6 12h12"/>'),
-    plus: svg('<path d="M12 6v12M6 12h12"/>'),
+    minus: svg('<path d="M6.5 12h11"/>'),
+    plus: svg('<path d="M12 6.5v11M6.5 12h11"/>'),
     sound: svg('<path d="M4.5 9.5h3l4-3.5v12l-4-3.5h-3z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>'),
     muted: svg('<path d="M4.5 9.5h3l4-3.5v12l-4-3.5h-3z"/><path d="m16 9.5 4.5 5M20.5 9.5l-4.5 5"/>'),
     up: svg('<path d="m7 14 5-5 5 5"/>'), down: svg('<path d="m7 10 5 5 5-5"/>'), left: svg('<path d="m14 7-5 5 5 5"/>'), right: svg('<path d="m10 7 5 5-5 5"/>'),
@@ -43,6 +59,7 @@ window.POSTV = function (ctx) {
     ch = ctx.sb.channel(t, { config: { broadcast: { self: false, ack: false } } })
       .on('broadcast', { event: 'state' }, m => got(m.payload))
       .on('broadcast', { event: 'pong' }, m => pong(m.payload))
+      .on('broadcast', { event: 'icon' }, m => gotIcon(m.payload))
       .subscribe(st => { if (st === 'SUBSCRIBED') hello(); });
   }
   function leave() { if (ch && ctx.sb) ctx.sb.removeChannel(ch); ch = null; topic = null; }
@@ -57,7 +74,7 @@ window.POSTV = function (ctx) {
     send({ c: 'hello' });
     ping();
     clearTimeout(waitT);
-    waitT = setTimeout(() => { if (seenAt < askedAt) ctx.rerender(); }, 3500); // no answer: say so
+    waitT = setTimeout(() => { if (seenAt < askedAt) { paint(); ctx.rerender(); } }, 3500); // no answer: say so
   }
   function ping() { send({ c: 'ping', t: Date.now(), cid: CID }); }
   function pong(p) {
@@ -72,14 +89,29 @@ window.POSTV = function (ctx) {
   function got(p) {
     if (!p || typeof p !== 'object') return;
     const before = shape();
-    if (Array.isArray(p.apps)) { apps = p.apps.filter(a => a && a.id).map(a => ({ id: String(a.id), title: String(a.title || a.id) })); try { localStorage.setItem('pos.tv.apps', JSON.stringify(apps)); } catch (e) {} }
+    if (Array.isArray(p.apps)) { apps = p.apps.filter(a => a && a.id).map(a => ({ id: String(a.id), title: String(a.title || a.id) })); keep('pos.tv.apps', apps); askIcons(); }
     else if (tv && p.appsRev !== tv.appsRev && Date.now() - askedAt > 5000) hello();
-    const keep = held && tv && hold && hold.vol != null ? tv.vol : null;
+    const mine = vol.drag || Date.now() < vol.holdUntil ? tv && tv.vol : null; // the slider under your finger wins
     tv = { ...p }; delete tv.apps; seenAt = Date.now();
-    if (keep != null) tv.vol = keep;
-    try { localStorage.setItem('pos.tv.last', JSON.stringify(tv)); } catch (e) {}
+    if (mine != null) tv.vol = mine;
+    keep('pos.tv.last', tv);
     if (tv.kb && !kbOpen) { kbOpen = true; kbText = ''; }
-    if (shape() !== before) ctx.rerender(); else paint();
+    paint();
+    if (shape() !== before) ctx.rerender();
+  }
+  // the pictures the TV itself shows for each app, asked for once and kept on this device
+  function askIcons() {
+    if (iconsAsked) return;
+    const need = shelf().filter(w => w.app && !icons[w.app.id]).map(w => w.app.id);
+    if (!need.length) return;
+    iconsAsked = true;
+    send({ c: 'icons', ids: need });
+  }
+  function gotIcon(p) {
+    if (!p || typeof p.id !== 'string' || typeof p.src !== 'string' || !/^data:image\/(png|jpeg|webp|gif);base64,/.test(p.src)) return;
+    icons[p.id] = { src: p.src, bg: typeof p.bg === 'string' && /^#[0-9a-f]{3,8}$/i.test(p.bg) ? p.bg : null };
+    keep('pos.tv.icons', icons);
+    if (document.querySelector('.tv-apps')) ctx.rerender();
   }
   const alive = () => !!tv && !tv.stale && Date.now() - seenAt < 50000;
   const phase = () => {
@@ -89,7 +121,7 @@ window.POSTV = function (ctx) {
   };
   const isOn = () => alive() && (tv.tv === 'on' || tv.tv === 'screenoff');
   // the parts of the state that change the layout (the rest is painted in place)
-  const shape = () => [phase(), isOn(), kbOpen, apps.map(a => a.id).join(','), tv && tv.app].join('|');
+  const shape = () => [phase(), isOn(), kbOpen, apps.map(a => a.id).join(',')].join('|');
 
   /* ---------- markup ---------- */
   const STATUS = { none: 'Not set up', hello: 'Connecting', gone: 'PC link off', searching: 'Looking', pairing: 'Accept on TV', unpaired: 'Not allowed', off: 'Off', waking: 'Turning on', on: 'On', screenoff: 'Screen off' };
@@ -103,59 +135,65 @@ window.POSTV = function (ctx) {
     if (ph === 'unpaired') return 'The TV didn’t allow the connection.';
     const bits = [];
     if (isOn() && tv.appName) bits.push(tv.appName);
-    if (ms != null) bits.push(`${ms} ms to TV`);
+    if (ms != null) bits.push(`${ms} ms`);
     return bits.join(' · ');
   }
   const k = (key, icon, label, cls = '') => `<button type="button" class="tv-b${cls}" data-tv="btn" data-k="${key}" aria-label="${label}">${icon}<span>${label}</span></button>`;
+  function appTile(w) {
+    const a = w.app, ic = a && icons[a.id], cur = a && tv && tv.app === a.id;
+    const style = ic && ic.bg ? ` style="--app-bg:${ic.bg}"` : '';
+    return `<button type="button" class="tv-app${ic ? ' pic' : ''}${cur ? ' cur' : ''}${a ? '' : ' none'}" data-act="tv-app" data-id="${esc(a ? a.id : '')}" data-name="${esc(w.name)}" aria-label="${esc(w.name)}${a ? '' : ' (not on the TV)'}" title="${esc(w.name)}"${style}>`
+      + (ic ? `<img src="${ic.src}" alt="" draggable="false">` : `<span>${esc(w.name)}</span>`) + '</button>';
+  }
   function view() {
     if (S.failed) return '<div class="tvr"><p class="empty">The TV remote did not load. POS tries again when you come back to it.</p></div>';
     if (!S.loaded && !tv) return '<div class="tvr"><p class="empty">Loading…</p></div>';
-    const ph = phase(), on = isOn(), dim = !on;
+    const ph = phase(), on = isOn();
     const playing = tv && tv.play === 'playing';
-    const vol = tv && tv.vol != null ? tv.vol : '–';
-    const appRow = apps.length ? `<section class="tv-apps" aria-label="Apps">${apps.map(a => `<button type="button" class="tv-app${tv && tv.app === a.id ? ' cur' : ''}" data-act="tv-app" data-id="${esc(a.id)}">${esc(a.title)}</button>`).join('')}</section>` : '';
-    const fix = ph === 'unpaired' || ph === 'searching' ? `<button type="button" class="btn solid" data-act="tv-pair">Ask the TV again</button>` : '';
-    return `<div class="tvr${dim ? ' tv-off' : ''}" data-phase="${ph}"><div class="tvr-scroll" id="tvScroll" data-keep><div class="tv-grid">
+    const v = curVol();
+    const fix = ph === 'unpaired' || ph === 'searching' ? '<button type="button" class="btn solid" data-act="tv-pair">Ask the TV again</button>' : '';
+    const bottom = kbOpen
+      ? `<form class="float tv-kb${tv && tv.kb ? ' ask' : ''}" id="tvKb" data-hold-render autocomplete="off"><input id="tv_text" maxlength="200" placeholder="${tv && tv.kb ? 'The TV is ready for text' : 'Type on the TV'}" enterkeyhint="search" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(kbText)}"><button type="submit" class="btn solid">Enter</button><button type="button" class="circle" data-act="tv-kb" aria-label="Close typing"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></form>`
+      : `<section class="tv-apps" aria-label="Apps">${shelf().map(appTile).join('')}</section>`;
+    return `<div class="tvr${on ? '' : ' tv-off'}" data-phase="${ph}">
       <section class="float tv-head">
-        <div class="tv-st"><span class="lab">${esc(tv && tv.model ? 'LG TV · ' + tv.model : 'LG TV')}</span>
-          <span class="tv-big" id="tvState">${esc(STATUS[ph] || 'On')}</span>
+        <div class="tv-st"><span class="tv-big" id="tvState">${esc(STATUS[ph] || 'On')}</span>
           <span class="meta" id="tvSub">${esc(subText())}</span>${fix ? `<div class="tv-fix">${fix}</div>` : ''}</div>
         <button type="button" class="tv-pow${on ? ' on' : ''}${ph === 'waking' ? ' wake' : ''}" data-tv="power" id="tvPow" aria-label="${on ? 'Turn the TV off' : 'Turn the TV on'}">${ICON.power}</button>
       </section>
-      <section class="tv-pad" id="tvPad" role="application" aria-label="Touch pad. Swipe to move, tap for OK.">
-        <span class="tv-hint">Swipe to move · Tap for OK</span>
+      <div class="tv-padbox"><div class="tv-dpad" id="tvPad" role="application" aria-label="Arrows and OK (the arrow keys and Enter work too)">
         <i class="tv-ar up">${ICON.up}</i><i class="tv-ar down">${ICON.down}</i><i class="tv-ar left">${ICON.left}</i><i class="tv-ar right">${ICON.right}</i>
-        <i class="tv-dot" id="tvDot"></i>
-      </section>
-      <div class="tv-side">
-        <div class="tv-nav">${k('BACK', ICON.back, 'Back')}${k('HOME', ICON.home, 'Home')}<button type="button" class="tv-b${kbOpen ? ' sel' : ''}" data-act="tv-kb" aria-pressed="${kbOpen}">${ICON.kb}<span>Type</span></button>${k('QMENU', ICON.gear, 'Settings')}</div>
-        <div class="tv-media">${k('REWIND', ICON.rew, 'Rewind', ' tv-skip')}<button type="button" class="tv-pp" data-tv="pp" id="tvPP" aria-label="${playing ? 'Pause' : 'Play'}">${playing ? ICON.pause : ICON.play}</button>${k('FASTFORWARD', ICON.ff, 'Fast forward', ' tv-skip')}</div>
-        <section class="float tv-vol">
-          <button type="button" class="tv-vb" data-tv="vol" data-d="-1" aria-label="Volume down">${ICON.minus}</button>
-          <div class="tv-vn"><span class="lab">Volume</span><b class="fig" id="tvVol">${vol}</b></div>
-          <button type="button" class="tv-vb" data-tv="vol" data-d="1" aria-label="Volume up">${ICON.plus}</button>
-          <button type="button" class="tv-mute${tv && tv.muted ? ' on' : ''}" data-tv="mute" id="tvMute" aria-pressed="${!!(tv && tv.muted)}" aria-label="Mute">${tv && tv.muted ? ICON.muted : ICON.sound}</button>
-        </section>
-        ${kbOpen ? `<form class="float tv-kb${tv && tv.kb ? ' ask' : ''}" id="tvKb" data-hold-render autocomplete="off"><input id="tv_text" maxlength="200" placeholder="${tv && tv.kb ? 'The TV is ready for text' : 'Type on the TV'}" enterkeyhint="search" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(kbText)}"><button type="submit" class="btn solid">Enter</button><button type="button" class="circle" data-act="tv-kb" aria-label="Close typing"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></form>` : ''}
-        ${appRow}
-      </div>
-    </div></div></div>`;
+        <span class="tv-ok">OK</span>
+      </div></div>
+      <div class="tv-nav">${k('BACK', ICON.back, 'Back')}${k('HOME', ICON.home, 'Home')}<button type="button" class="tv-b${tv && tv.muted ? ' sel' : ''}" data-tv="mute" id="tvMute" aria-pressed="${!!(tv && tv.muted)}" aria-label="Mute">${tv && tv.muted ? ICON.muted : ICON.sound}<span>Mute</span></button><button type="button" class="tv-b${kbOpen ? ' sel' : ''}" data-act="tv-kb" aria-pressed="${kbOpen}">${ICON.kb}<span>Type</span></button>${k('QMENU', ICON.gear, 'Settings')}</div>
+      <div class="tv-media">${k('REWIND', ICON.rew, 'Rewind', ' tv-skip')}<button type="button" class="tv-pp" data-tv="pp" id="tvPP" aria-label="${playing ? 'Pause' : 'Play'}">${playing ? ICON.pause : ICON.play}</button>${k('FASTFORWARD', ICON.ff, 'Fast forward', ' tv-skip')}</div>
+      <aside class="tv-volr" aria-label="Volume">
+        <button type="button" class="tv-vs" data-tv="vol" data-d="1" aria-label="Volume up">${ICON.plus}</button>
+        <b class="tv-vnum fig" id="tvVol">${v == null ? '–' : v}</b>
+        <div class="tv-track" id="tvTrack" role="slider" tabindex="0" aria-label="Volume" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${v == null ? 0 : v}">
+          <i class="tv-rail"><i class="tv-fill" id="tvFill" style="height:${v == null ? 0 : v}%"></i><i class="tv-knob" id="tvKnob" style="bottom:${v == null ? 0 : v}%"><b class="tv-bubble fig" id="tvBubble">${v == null ? '' : v}</b></i></i>
+        </div>
+        <button type="button" class="tv-vs" data-tv="vol" data-d="-1" aria-label="Volume down">${ICON.minus}</button>
+      </aside>
+      ${bottom}
+    </div>`;
   }
-  // the quick-changing parts, updated where they are (no redraw, so a finger on the pad is never interrupted)
+  // the quick-changing parts, updated where they are (no redraw, so a finger on the remote is never interrupted)
   function paint() {
     const $ = id => document.getElementById(id);
     const st = $('tvState'); if (!st) return;
     const ph = phase(), on = isOn();
     st.textContent = STATUS[ph] || 'On';
     $('tvSub').textContent = subText();
-    const v = $('tvVol'); if (v) v.textContent = tv && tv.vol != null ? tv.vol : '–';
+    paintVol();
     const m = $('tvMute');
-    if (m) { const mu = !!(tv && tv.muted); m.classList.toggle('on', mu); m.setAttribute('aria-pressed', mu); m.innerHTML = mu ? ICON.muted : ICON.sound; }
+    if (m) { const mu = !!(tv && tv.muted); m.classList.toggle('sel', mu); m.setAttribute('aria-pressed', mu); m.innerHTML = (mu ? ICON.muted : ICON.sound) + '<span>Mute</span>'; }
     const pp = $('tvPP');
     if (pp) { const pl = tv && tv.play === 'playing'; pp.innerHTML = pl ? ICON.pause : ICON.play; pp.setAttribute('aria-label', pl ? 'Pause' : 'Play'); }
     const pw = $('tvPow');
     if (pw) { pw.classList.toggle('on', on); pw.classList.toggle('wake', ph === 'waking'); pw.setAttribute('aria-label', on ? 'Turn the TV off' : 'Turn the TV on'); }
     const root = document.querySelector('.tvr'); if (root) { root.classList.toggle('tv-off', !on); root.dataset.phase = ph; }
+    for (const el of document.querySelectorAll('.tv-app')) el.classList.toggle('cur', !!(tv && el.dataset.id && tv.app === el.dataset.id));
   }
 
   /* ---------- feel ---------- */
@@ -178,63 +216,88 @@ window.POSTV = function (ctx) {
   function flash(el) { if (!el) return; el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
   function press(key, el) { send({ c: 'btn', k: key }); tick(); flash(el); }
 
-  /* ---------- the pad ---------- */
-  const STEP = 30; // px of finger travel per arrow press
+  /* ---------- the arrows and OK: one press per touch, like the remote (hold an arrow to keep going) ---------- */
   let pad = null;
-  function padArrow(dir) {
-    press(dir.toUpperCase());
-    const a = document.querySelector('.tv-ar.' + dir); flash(a);
+  function zone(el, x, y) {
+    const r = el.getBoundingClientRect(), R = r.width / 2;
+    const dx = x - (r.left + R), dy = y - (r.top + r.height / 2), d = Math.hypot(dx, dy);
+    if (d <= R * 0.36) return 'ok';
+    if (d > R * 1.08) return null;
+    return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   }
   function padDown(e) {
     const el = document.getElementById('tvPad');
     if (!el) return;
+    const z = zone(el, e.clientX, e.clientY);
+    if (!z) return;
     e.preventDefault();
     try { el.setPointerCapture(e.pointerId); } catch (err) {}
-    const r = el.getBoundingClientRect();
-    pad = { id: e.pointerId, el, r, x0: e.clientX, y0: e.clientY, ax: e.clientX, ay: e.clientY, t0: performance.now(), moved: 0, swiped: 0, dir: null, stillT: null, rep: null };
-    el.classList.add('touch');
-    dot(e.clientX, e.clientY);
-  }
-  function dot(x, y) {
-    const d = document.getElementById('tvDot'); if (!d || !pad) return;
-    d.style.transform = `translate(${(x - pad.r.left).toFixed(0)}px,${(y - pad.r.top).toFixed(0)}px)`;
-  }
-  function stopRepeat() { if (!pad) return; clearTimeout(pad.stillT); clearInterval(pad.rep); pad.stillT = pad.rep = null; }
-  // after a swipe, holding the finger still keeps going that way
-  function armRepeat() {
-    stopRepeat();
-    const dir = pad.dir;
-    pad.stillT = setTimeout(() => { if (pad && pad.dir === dir) pad.rep = setInterval(() => padArrow(dir), 130); }, 380);
-  }
-  function padMove(e) {
-    if (!pad || e.pointerId !== pad.id) return;
-    dot(e.clientX, e.clientY);
-    pad.moved = Math.max(pad.moved, Math.hypot(e.clientX - pad.x0, e.clientY - pad.y0));
-    const dx = e.clientX - pad.ax, dy = e.clientY - pad.ay;
-    const ax = Math.abs(dx), ay = Math.abs(dy);
-    if (Math.max(ax, ay) >= STEP) {
-      const dir = ax > ay ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-      const n = Math.floor(Math.max(ax, ay) / STEP);
-      for (let i = 0; i < Math.min(n, 3); i++) padArrow(dir);
-      pad.swiped += n; pad.dir = dir;
-      if (ax > ay) { pad.ax += Math.sign(dx) * n * STEP; pad.ay = e.clientY; } else { pad.ay += Math.sign(dy) * n * STEP; pad.ax = e.clientX; }
-      armRepeat();
-    } else if (pad.rep && Math.max(ax, ay) > 8) { stopRepeat(); armRepeat(); }
+    const key = z === 'ok' ? 'ENTER' : z.toUpperCase();
+    press(key);
+    el.dataset.p = z;
+    pad = { id: e.pointerId, el, rep: null, t: null };
+    if (z !== 'ok') pad.t = setTimeout(() => { if (pad) pad.rep = setInterval(() => press(key), 150); }, 500);
   }
   function padUp(e) {
     if (!pad || e.pointerId !== pad.id) return;
-    const p = pad; stopRepeat(); pad = null;
-    p.el.classList.remove('touch');
-    if (e.type === 'pointerup' && !p.swiped && p.moved < 16) { press('ENTER'); p.el.classList.remove('ok'); void p.el.offsetWidth; p.el.classList.add('ok'); }
-    if (renderWanted) { renderWanted = false; ctx.rerender(); }
+    clearTimeout(pad.t); clearInterval(pad.rep);
+    const el = pad.el; pad = null;
+    setTimeout(() => { if (!pad) delete el.dataset.p; }, 90);
+    if (renderWanted && !busy()) { renderWanted = false; ctx.rerender(); }
+  }
+
+  /* ---------- volume: a slider down the right side (drag the whole way for 0 to 100), with + and − ---------- */
+  const vol = { drag: null, holdUntil: 0, sentAt: 0, sendT: null };
+  const curVol = () => (tv && tv.vol != null ? tv.vol : null);
+  function paintVol() {
+    const v = curVol(), $ = id => document.getElementById(id);
+    const n = $('tvVol'); if (!n) return;
+    n.textContent = v == null ? '–' : v;
+    const p = v == null ? 0 : v;
+    $('tvFill').style.height = p + '%';
+    $('tvKnob').style.bottom = p + '%';
+    $('tvBubble').textContent = v == null ? '' : v;
+    $('tvTrack').setAttribute('aria-valuenow', p);
+  }
+  function setVol(v, now) {
+    v = Math.max(0, Math.min(100, Math.round(v)));
+    if (!tv) return;
+    if (tv.vol === v && !now) return;
+    tv.vol = v; vol.holdUntil = Date.now() + 900;
+    paintVol();
+    const go = () => { vol.sentAt = Date.now(); vol.sendT = null; send({ c: 'vol', v: tv.vol }); };
+    clearTimeout(vol.sendT);
+    if (now || Date.now() - vol.sentAt >= 60) go(); else vol.sendT = setTimeout(go, 60 - (Date.now() - vol.sentAt));
+  }
+  function trackDown(e) {
+    const el = document.getElementById('tvTrack');
+    if (!el || curVol() == null) return;
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    const r = el.getBoundingClientRect();
+    vol.drag = { id: e.pointerId, y0: e.clientY, v0: curVol(), h: Math.max(80, r.height), el };
+    el.classList.add('held'); tick();
+  }
+  function trackMove(e) {
+    const d = vol.drag;
+    if (!d || e.pointerId !== d.id) return;
+    setVol(d.v0 + (d.y0 - e.clientY) / d.h * 100);
+  }
+  function trackUp(e) {
+    const d = vol.drag;
+    if (!d || e.pointerId !== d.id) return;
+    vol.drag = null;
+    d.el.classList.remove('held');
+    if (tv && tv.vol != null && tv.vol !== d.v0) setVol(tv.vol, true);
+    if (renderWanted && !busy()) { renderWanted = false; ctx.rerender(); }
+  }
+  function volStep(d, el) {
+    if (tv && tv.vol != null) { tv.vol = Math.max(0, Math.min(100, tv.vol + d)); vol.holdUntil = Date.now() + 900; paintVol(); }
+    send({ c: 'volstep', d }); tick(); flash(el);
   }
 
   /* ---------- buttons: they act as the finger lands ---------- */
-  let hold = null, held = false, renderWanted = false;
-  function volStep(d, el) {
-    if (tv && tv.vol != null) { tv.vol = Math.max(0, Math.min(100, tv.vol + d)); const v = document.getElementById('tvVol'); if (v) v.textContent = tv.vol; }
-    send({ c: 'volstep', d }); tick(); flash(el);
-  }
+  let hold = null, renderWanted = false;
   function down(e) {
     const b = e.target.closest && e.target.closest('[data-tv]');
     if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
@@ -247,7 +310,7 @@ window.POSTV = function (ctx) {
     } else if (what === 'vol') {
       const d = +b.dataset.d;
       volStep(d, b);
-      startHold(b, () => volStep(d, b), 380, 110, true);
+      startHold(b, () => volStep(d, b), 380, 110);
     } else if (what === 'mute') {
       const to = !(tv && tv.muted);
       if (tv) tv.muted = to;
@@ -264,29 +327,30 @@ window.POSTV = function (ctx) {
       if (tv && alive()) { tv.tv = on ? 'off' : 'waking'; paint(); }
     }
   }
-  function startHold(b, fn, wait, every, isVol) {
+  function startHold(b, fn, wait, every) {
     stopHold();
-    held = true;
-    hold = { b, vol: isVol ? 1 : null, t: setTimeout(() => { hold.i = setInterval(fn, every); }, wait) };
+    hold = { b, t: setTimeout(() => { if (hold) hold.i = setInterval(fn, every); }, wait) };
     b.classList.add('held');
   }
   function stopHold() {
     if (hold) { clearTimeout(hold.t); clearInterval(hold.i); hold.b.classList.remove('held'); }
-    hold = null; held = false;
-    if (renderWanted && !pad) { renderWanted = false; ctx.rerender(); }
+    hold = null;
+    if (renderWanted && !busy()) { renderWanted = false; ctx.rerender(); }
   }
 
   document.addEventListener('pointerdown', e => {
-    if (!document.querySelector('.tvr')) return;
-    if (e.target.closest && e.target.closest('#tvPad')) { if (ctx.canSave()) padDown(e); return; }
+    if (!document.querySelector('.tvr') || !e.target.closest) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.target.closest('#tvPad')) { if (ctx.canSave()) padDown(e); return; }
+    if (e.target.closest('#tvTrack')) { if (ctx.canSave()) trackDown(e); return; }
     down(e);
   });
-  document.addEventListener('pointermove', padMove);
-  for (const t of ['pointerup', 'pointercancel']) document.addEventListener(t, e => { padUp(e); if (hold) stopHold(); });
+  document.addEventListener('pointermove', trackMove);
+  for (const t of ['pointerup', 'pointercancel']) document.addEventListener(t, e => { padUp(e); trackUp(e); if (hold) stopHold(); });
   document.addEventListener('pointerleave', e => { if (hold && e.target === hold.b) stopHold(); }, true);
   // swallow the click that follows a press (the press already happened)
-  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-tv]')) { e.preventDefault(); e.stopPropagation(); } }, true);
-  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('#tvPad, [data-tv]')) e.preventDefault(); });
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-tv], #tvPad, #tvTrack')) { e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.tvr')) e.preventDefault(); });
 
   // typing: each change is sent as what was added or taken away
   document.addEventListener('input', e => {
@@ -308,6 +372,7 @@ window.POSTV = function (ctx) {
     if (!document.querySelector('.tvr') || e.metaKey || e.ctrlKey || e.altKey) return;
     const tag = (e.target && e.target.tagName) || '';
     if (/INPUT|TEXTAREA|SELECT/.test(tag) || (e.target && e.target.isContentEditable) || document.querySelector('dialog[open]')) return;
+    if (e.target && e.target.id === 'tvTrack' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); volStep(e.key === 'ArrowUp' ? 1 : -1); return; }
     const map = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'ENTER', Backspace: 'BACK', Escape: 'BACK', ' ': null };
     if (!(e.key in map)) return;
     e.preventDefault();
@@ -324,14 +389,16 @@ window.POSTV = function (ctx) {
       return;
     }
     if (!ctx.canSave()) return;
-    if (name === 'tv-app') { send({ c: 'launch', id: b.dataset.id }); tick(); flash(b); }
-    else if (name === 'tv-pair') { send({ c: 'pair' }); if (tv) { tv.tv = 'searching'; paint(); } }
+    if (name === 'tv-app') {
+      if (!b.dataset.id) { toast(`${b.dataset.name} isn’t on the TV`); return; }
+      send({ c: 'launch', id: b.dataset.id }); tick(); flash(b);
+    } else if (name === 'tv-pair') { send({ c: 'pair' }); if (tv) { tv.tv = 'searching'; paint(); } }
   }
 
   // while the remote is open, keep the measure of how quick it is fresh
-  pingT = setInterval(() => { if (ch && !document.hidden && document.querySelector('.tvr')) ping(); }, 15000);
-  function shown(yes) { if (yes && ch) hello(); }
-  const busy = () => !!pad || held;
+  setInterval(() => { if (ch && !document.hidden && document.querySelector('.tvr')) ping(); }, 15000);
+  function shown(yes) { if (yes && ch) { hello(); iconsAsked = false; askIcons(); } }
+  const busy = () => !!pad || !!hold || !!vol.drag;
   const wantRender = () => { renderWanted = true; };
   function start() { R.start(); if (ch) hello(); }
   function stop() { leave(); R.stop(); }
