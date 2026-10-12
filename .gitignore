@@ -1,2 +1,3 @@
 # local test page built by the scratch harness
 _test.html
+__pycache__/
