@@ -35,27 +35,27 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012033124">
-<script src="finance.js?v=20261012033124"></script>
-<link rel="stylesheet" href="car.css?v=20261012033124">
-<script src="car.js?v=20261012033124"></script>
-<link rel="stylesheet" href="sections.css?v=20261012033124">
-<link rel="stylesheet" href="tv.css?v=20261012033124">
-<script src="records.js?v=20261012033124"></script>
-<script src="people.js?v=20261012033124"></script>
-<script src="wheels.js?v=20261012033124"></script>
-<script src="keyboard.js?v=20261012033124"></script>
-<script src="notes.js?v=20261012033124"></script>
-<script src="reminders.js?v=20261012033124"></script>
-<script src="lights.js?v=20261012033124"></script>
-<script src="tv.js?v=20261012033124"></script>
-<script src="work.js?v=20261012033124"></script>
-<script src="health.js?v=20261012033124"></script>
-<script src="pets.js?v=20261012033124"></script>
-<script src="places.js?v=20261012033124"></script>
-<script src="placestab.js?v=20261012033124"></script>
-<script src="usmap.js?v=20261012033124"></script>
-<script src="packages.js?v=20261012033124"></script>
+<link rel="stylesheet" href="finance.css?v=20261012152937">
+<script src="finance.js?v=20261012152937"></script>
+<link rel="stylesheet" href="car.css?v=20261012152937">
+<script src="car.js?v=20261012152937"></script>
+<link rel="stylesheet" href="sections.css?v=20261012152937">
+<link rel="stylesheet" href="tv.css?v=20261012152937">
+<script src="records.js?v=20261012152937"></script>
+<script src="people.js?v=20261012152937"></script>
+<script src="wheels.js?v=20261012152937"></script>
+<script src="keyboard.js?v=20261012152937"></script>
+<script src="notes.js?v=20261012152937"></script>
+<script src="reminders.js?v=20261012152937"></script>
+<script src="lights.js?v=20261012152937"></script>
+<script src="tv.js?v=20261012152937"></script>
+<script src="work.js?v=20261012152937"></script>
+<script src="health.js?v=20261012152937"></script>
+<script src="pets.js?v=20261012152937"></script>
+<script src="places.js?v=20261012152937"></script>
+<script src="placestab.js?v=20261012152937"></script>
+<script src="usmap.js?v=20261012152937"></script>
+<script src="packages.js?v=20261012152937"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1071,7 +1071,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   #rail .r-line{margin:4px 0}
   #rail .r-add{width:40px;height:40px;margin:4px 0 2px}
 }
-@media (min-width:760px) and (min-height:500px) and (max-height:780px){
+@media (min-width:760px) and (min-height:500px) and (max-height:840px){
   #rail{padding:8px 0 6px}
   #rail .r-btn{padding:0}
   #rail .r-btn .ic{width:33px;height:33px;border-radius:11px}
@@ -1079,6 +1079,14 @@ body.marking,body.marking *{cursor:ns-resize!important}
   #rail .r-mark{height:28px}
   #rail .r-line{margin:3px 0}
   #rail .r-add{width:36px;height:36px;margin:3px 0 1px}
+}
+@media (min-width:760px) and (min-height:500px) and (max-height:730px){
+  #rail{padding:6px 0 4px}
+  #rail .r-btn .ic{width:30px;height:30px;border-radius:10px}
+  #rail .r-btn .ic svg.i{width:17px;height:17px}
+  #rail .r-mark{height:24px}
+  #rail .r-line{margin:2px 0}
+  #rail .r-add{width:32px;height:32px;margin:2px 0 1px}
 }
 @media (min-width:760px) and (min-height:500px){
   #grab,#drawer,#scrim{display:none!important}
@@ -1239,6 +1247,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="calendar" aria-label="Calendar" title="Calendar"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="work" aria-label="Work" title="Work"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="meetings" aria-label="Meetings" title="Meetings"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg></span></button>
+  <button type="button" class="r-btn" data-tab="projects" aria-label="Projects" title="Projects"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M8 13.5l2.2 2.2L16 10"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="finance" aria-label="Finance" title="Finance"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg></span><span class="pip" id="railFinBadge" hidden></span></button>
   <button type="button" class="r-btn" data-tab="health" aria-label="Health" title="Health"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="car" aria-label="Car" title="Car"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg></span><span class="pip" id="railCarBadge" hidden></span></button>
@@ -1269,6 +1278,7 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="calendar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="5.5" width="15" height="14" rx="3"/><path d="M4.5 10h15M9 3.5v4M15 3.5v4"/></svg><span>Calendar</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="work"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg><span>Work</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17 14.8c1.8.5 3 1.9 3.5 4.2"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" data-tab="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M8 13.5l2.2 2.2L16 10"/></svg><span>Projects</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="finance"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.75"/><path d="M14.7 9.4c-.45-.95-1.45-1.55-2.7-1.55-1.55 0-2.65.8-2.65 1.95 0 2.75 5.4 1.45 5.4 4.3 0 1.2-1.15 2.05-2.75 2.05-1.35 0-2.45-.65-2.9-1.65M12 6.3v1.55M12 16.15v1.55"/></svg><span>Finance</span><span class="badge" id="finBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2-4.5 3.5 9 2.5-6 1.5 1.5h3.5"/></svg><span>Health</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="car"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2M7.6 14.3h.8M15.6 14.3h.8"/></svg><span>Car</span><span class="badge" id="carBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
@@ -1318,6 +1328,8 @@ dialog::backdrop{background:transparent}
       <div class="f f-tag">
         <div class="seg3 tags" role="radiogroup" aria-label="Personal or work"><button type="button" role="radio" data-tag="" aria-checked="true">Neither</button><button type="button" role="radio" data-tag="personal" aria-checked="false">Personal</button><button type="button" role="radio" data-tag="work" aria-checked="false">Work</button></div>
       </div>
+      <p class="f f-proj" id="f_projBox" hidden><span class="lab">Step of</span><b id="f_projName"></b></p>
+      <label class="f f-wait" id="f_waitBox" hidden><span class="f-h">Waiting on</span><input id="f_wait" type="text" maxlength="80" autocomplete="off" enterkeyhint="done" placeholder="Nothing. Or who: IT, a vendor…"></label>
       <select id="f_parent" hidden disabled aria-hidden="true" tabindex="-1"></select><input type="hidden" id="f_list">
       <div class="f f-when">
         <div class="when-top"><div class="chips"><button type="button" class="chip" data-set="date" data-rel="0">Today</button><button type="button" class="chip" data-set="date" data-rel="1">Tomorrow</button></div></div>
@@ -1439,13 +1451,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012033124"></script>
+<script src="appearance.js?v=20261012152937"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012033124';
+  const VERSION = '20261012152937';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1542,7 +1554,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- state ---------- */
-  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', work: 'Work', meetings: 'Meetings', finance: 'Finance', health: 'Health', car: 'Car', places: 'Places', packages: 'Packages', pets: 'Pets', lights: 'Lights', tv: 'TV remote', notes: 'Notes', reminders: 'Reminders' };
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', work: 'Work', meetings: 'Meetings', finance: 'Finance', health: 'Health', car: 'Car', places: 'Places', packages: 'Packages', pets: 'Pets', lights: 'Lights', tv: 'TV remote', projects: 'Projects', notes: 'Notes', reminders: 'Reminders' };
   const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
   function savedCalView() {
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
@@ -1554,7 +1566,7 @@ dialog::backdrop{background:transparent}
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
   const S = {
     booted: false, canSave: false, failed: false, loaded: false,
-    all: [], tasks: [], items: [], weather: null, mtgId: null,
+    all: [], tasks: [], items: [], projects: [], steps: [], missQ: new Set(), weather: null, mtgId: null, prjId: null,
     tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     taskTag: (() => { try { const v = localStorage.getItem('pos.taskTag'); return v === 'personal' || v === 'work' ? v : ''; } catch (e) { return ''; } })(),
     wxMode: (() => { try { const v = localStorage.getItem('pos.wxMode'); return v === 'day' || v === 'ahead' ? v : 'now'; } catch (e) { return 'now'; } })(),
@@ -1567,12 +1579,14 @@ dialog::backdrop{background:transparent}
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
-  const fromRow = r => ({ id: r.id, kind: r.kind || 'task', title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [], ...(Array.isArray(r.repeat.days) && r.repeat.days.length ? { days: r.repeat.days } : {}) } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null, place: r.place && typeof r.place === 'object' && r.place.q ? r.place : null });
+  const fromRow = r => ({ id: r.id, kind: r.kind === 'step' ? 'task' : r.kind || 'task', step: r.kind === 'step', wait: r.wait || null, missed: r.missed || null, title: r.title, date: r.day || null, time: r.at_time ? String(r.at_time).slice(0, 5) : null, mins: r.mins ?? null, done: !!r.done, doneAt: r.done_at ? Date.parse(r.done_at) : null, createdAt: Date.parse(r.created_at) || 0, notes: r.notes || '', agenda: Array.isArray(r.agenda) ? r.agenda : [], repeat: r.repeat && r.repeat.freq ? { freq: r.repeat.freq, until: r.repeat.until || null, skip: Array.isArray(r.repeat.skip) ? r.repeat.skip : [], ...(Array.isArray(r.repeat.days) && r.repeat.days.length ? { days: r.repeat.days } : {}) } : null, seriesId: r.series_id || null, origDay: r.orig_day || null, mtype: r.subtype || null, list: r.list || null, parentId: r.parent_id || null, pos: r.pos ?? null, tag: r.tag || null, place: r.place && typeof r.place === 'object' && r.place.q ? r.place : null });
   function toRow(o) {
     const r = {};
     if ('id' in o) r.id = o.id;
     if ('title' in o) r.title = o.title;
-    if ('kind' in o) r.kind = o.kind || 'task';
+    if ('kind' in o) r.kind = (o.kind || 'task') === 'task' && o.step ? 'step' : o.kind || 'task';
+    if ('wait' in o) r.wait = o.wait ? String(o.wait).slice(0, 80) : null;
+    if ('missed' in o) r.missed = o.missed || null;
     if ('notes' in o) r.notes = o.notes || null;
     if ('agenda' in o) r.agenda = o.agenda || [];
     if ('repeat' in o) r.repeat = o.repeat || null;
@@ -1598,20 +1612,42 @@ dialog::backdrop{background:transparent}
   // Tasks only live for their day: one from an earlier day is gone, done or not, and a finished one goes when its day ends.
   // The database clears them every few minutes; the page drops them the moment the day turns over.
   function expired(t) {
-    if (t.kind !== 'task') return false;
+    if (t.kind !== 'task' || t.step) return false; // a project's steps stay with the project
     const tk = todayKey();
     return (!!t.date && t.date < tk) || (t.done && !!t.doneAt && t.doneAt < fromKey(tk).getTime());
   }
+  // Projects hold steps. A step is a task like any other on its day (calendar, Tasks, Home); with no day it lives only in
+  // its project. A finished step stays as the project's progress; one whose day passed undone comes off the calendar and
+  // waits in the project to be planned again ("Missed Oct 12").
   function split() {
     S.all = S.all.filter(x => !expired(x));
-    S.tasks = S.all.filter(x => x.kind === 'task');
-    S.items = S.all.filter(x => x.kind !== 'task');
+    S.projects = S.all.filter(x => x.kind === 'project');
+    const pids = new Set(S.projects.map(p => p.id)), tk = todayKey();
+    S.tasks = []; S.steps = [];
+    for (const x of S.all) {
+      if (x.kind !== 'task') continue;
+      if (x.step && x.parentId && pids.has(x.parentId)) {
+        if (x.date && x.date < tk && !x.done) { S.missQ.add(x.id); x.missed = x.date; x.date = null; x.time = null; }
+        S.steps.push(x);
+        if (x.date && x.date >= tk) S.tasks.push(x);
+      } else S.tasks.push(x);
+    }
+    S.items = S.all.filter(x => x.kind !== 'task' && x.kind !== 'project');
+  }
+  // the missed steps found above, saved (off the calendar, remembering the day)
+  async function saveMissed() {
+    const ids = [...S.missQ]; S.missQ.clear();
+    for (const id of ids) {
+      const t = task(id);
+      if (t) try { must(await sb.from('tasks').update({ day: null, at_time: null, missed: t.missed }).eq('id', id)); } catch (e) {}
+    }
   }
   const store = {
     async add(o) { must(await sb.from('tasks').insert(toRow(o))); await reloadTasks(); },
     // quiet: save without rebuilding the page (used while typing in a meeting)
     async update(id, patch, quiet) {
       const t = task(id); if (t) Object.assign(t, patch); split(); if (!quiet) render();
+      if ('kind' in patch && t && t.step) patch = { ...patch, step: true }; // a step stays a step
       try { must(await sb.from('tasks').update(toRow(patch)).eq('id', id)); } catch (e) { await reloadTasks(); throw e; }
     },
     async remove(id) {
@@ -1691,8 +1727,15 @@ dialog::backdrop{background:transparent}
   // Steps: a task can sit under another as a later step. Steps are done in order: the parent first,
   // then each step after the one before it. Returns what has to be done first, or null.
   const stepsOf = id => S.tasks.filter(t => t.parentId === id).sort(byOrder());
+  // a project's own steps: in the order you put them (newest last until you move one)
+  const projOf = t => (t && t.step && t.parentId ? S.projects.find(p => p.id === t.parentId) || null : null);
+  const projSteps = id => S.steps.filter(t => t.parentId === id).sort(byOrder((a, b) => (a.createdAt || 0) - (b.createdAt || 0)));
+  function projInfo(p) {
+    const st = projSteps(p.id), done = st.filter(t => t.done).length;
+    return { st, done, n: st.length, next: st.find(t => !t.done) || null, finished: st.length > 0 && done === st.length };
+  }
   function blockedBy(t) {
-    if (!t || !t.parentId || t.done) return null;
+    if (!t || !t.parentId || t.done || t.step) return null; // a project's steps can be done in any order
     const p = S.tasks.find(x => x.id === t.parentId);
     if (p && !p.done) return p;
     for (const s of stepsOf(t.parentId)) { if (s.id === t.id) break; if (!s.done) return s; }
@@ -1700,7 +1743,7 @@ dialog::backdrop{background:transparent}
   }
   // what comes right before a step: its task for the first step, else the step before it ("After Dry comforter")
   function stepBefore(t) {
-    if (!t || !t.parentId) return null;
+    if (!t || !t.parentId || t.step) return null;
     const sib = stepsOf(t.parentId), i = sib.findIndex(x => x.id === t.id);
     return i > 0 ? sib[i - 1] : S.tasks.find(x => x.id === t.parentId) || null;
   }
@@ -1749,7 +1792,8 @@ dialog::backdrop{background:transparent}
   /* ---------- pieces ---------- */
   function row(t, withDay, step) {
     const wait = blockedBy(t), mt = meta(t, withDay);
-    const metaBits = [isOverdue(t) ? '<span class="pill warn">Overdue</span>' : '', tagPill(t), wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : '', mt && !wait ? `<span>${esc(mt)}</span>` : ''].filter(Boolean).join('');
+    const pj = projOf(t);
+    const metaBits = [isOverdue(t) ? '<span class="pill warn">Overdue</span>' : '', pj ? `<span class="ptag">${esc(pj.title)}</span>` : tagPill(t), t.wait && !t.done ? `<span class="pill wait">Waiting on ${esc(t.wait)}</span>` : '', wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : '', mt && !wait ? `<span>${esc(mt)}</span>` : ''].filter(Boolean).join('');
     return `<div class="trow${t.done ? ' done' : ''}${step ? ' step srt' : ''}${wait ? ' locked' : ''}" data-sid="${esc(t.id)}">
       <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done ? 'true' : 'false'}" aria-label="${t.done ? 'Mark not done' : wait ? `Waiting on ${esc(wait.title)}` : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>
       <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}">
@@ -1761,6 +1805,8 @@ dialog::backdrop{background:transparent}
   // a section's tasks, each with its steps tucked under it; hold any row to drag it into a new order
   function famList(list, withDay, fallback) {
     return familyOrder(list, fallback).map(f => {
+      // a project's steps that fall on this day: shown together, moved around in their project, not here
+      if (f.orphan && f.kids.length && f.kids[0].step) return `<div class="tgroup orphan pgroup" data-sid="${esc(f.key)}"><div class="tsteps">${f.kids.map(t => row(t, withDay, true)).join('')}</div></div>`;
       const kids = f.kids.length ? `<div class="tsteps" data-sortbox="kids">${f.kids.map(t => row(t, withDay, true)).join('')}</div>` : '';
       return `<div class="tgroup srt${f.orphan ? ' orphan' : ''}" data-sid="${esc(f.key)}">${f.root ? row(f.root, withDay) : ''}${kids}</div>`;
     }).join('');
@@ -2212,9 +2258,11 @@ dialog::backdrop{background:transparent}
     const mine = S.items.filter(x => x.kind === 'meeting' && x.tag !== 'personal');
     const up = mine.filter(m => m.date && !mtgEnded(m)).sort(byNextMeet).slice(0, 8);
     const plan = mine.filter(m => !m.date).sort(byNew).slice(0, 5);
+    const work = S.projects.filter(p => p.tag !== 'personal' && !projInfo(p).finished).sort(byOrder(byNew));
     return `<div class="work"><div class="work-scroll" id="workScroll" data-keep><div class="wk-grid">
       <div class="wk-main">${WORK ? WORK.cgCard() : ''}</div>
       <div class="wk-side">
+        ${sec('Projects', work.length ? work.map(p => prjRow(p, false)).join('') : '<p class="empty">No work projects yet.</p>', `<button type="button" class="link" data-act="pj-new">New project</button>`)}
         ${sec('Work meetings', up.length ? up.map(m => mtgRow(m, false)).join('') : '<p class="empty">No work meetings coming up.</p>', '<button type="button" class="link" data-tab="meetings">All meetings</button>')}
         ${plan.length ? sec('Not scheduled', plan.map(m => mtgRow(m, false)).join('')) : ''}
       </div>
@@ -2237,6 +2285,75 @@ dialog::backdrop{background:transparent}
       </div>`;
     const pane = sel ? vMeetingDetail(sel) : `<div class="float mt-none"><span class="cal-ic">${ICON.people}</span><p class="name">Pick a meeting, or start a new one.</p><p class="meta">Meetings can be planned without a day, then scheduled when you're ready.</p><button type="button" class="btn" data-act="mtg-new">New meeting</button></div>`;
     return `<div class="mtg${sel ? ' has-sel' : ''}">${list}<div class="mt-pane">${pane}</div></div>`;
+  }
+
+  /* ---------- projects: a name and its steps. The project never goes on the calendar; each step can, on its own day ---------- */
+  const ICON_PROJ = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M8 13.5l2.2 2.2L16 10"/></svg>';
+  const pct = (a, n) => (n ? Math.round(a / n * 100) : 0);
+  function prjRow(p, on) {
+    const i = projInfo(p), nx = i.next;
+    const bits = i.finished ? ['All steps done'] : nx ? [`Next: ${nx.title}`] : ['No steps yet'];
+    return `<button type="button" class="mrow pjrow${on ? ' on' : ''}${i.finished ? ' fin' : ''}" data-act="pj-open" data-id="${esc(p.id)}"${on ? ' aria-current="true"' : ''}>
+      <span class="pj-ring" style="--p:${pct(i.done, i.n)}" aria-hidden="true"><b>${i.n ? `${i.done}/${i.n}` : '0'}</b></span>
+      <span class="tmain"><span class="name">${esc(p.title)}${p.tag === 'personal' ? tagPill(p) : ''}</span><span class="meta"><span>${esc(bits[0])}</span>${nx && nx.wait ? `<span class="pill wait">Waiting on ${esc(nx.wait)}</span>` : nx && nx.date ? `<span>${esc(dayLabel(nx.date))}</span>` : ''}</span></span>${ICON.chev}</button>`;
+  }
+  function stepRow(t, next) {
+    const when = t.done ? (t.doneAt ? `Done ${dayLabel(dkey(new Date(t.doneAt)))}` : 'Done')
+      : t.date ? meta(t, true) : t.missed ? `Missed ${dayLabel(t.missed)} · not planned` : 'Not planned';
+    const bits = [next ? '<span class="pill next">Next</span>' : '', t.wait && !t.done ? `<span class="pill wait">Waiting on ${esc(t.wait)}</span>` : '', `<span>${esc(when)}</span>`].join('');
+    return `<div class="trow srt pstep${t.done ? ' done' : ''}${next ? ' next' : ''}${!t.done && !t.date ? ' unplanned' : ''}" data-sid="${esc(t.id)}">
+      <button type="button" class="chk" data-act="done" data-id="${esc(t.id)}" aria-pressed="${t.done}" aria-label="${t.done ? 'Mark not done' : 'Mark done'}: ${esc(t.title)}">${ICON.check}</button>
+      <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${bits}</span></button>
+    </div>`;
+  }
+  function vProjectDetail(p) {
+    const i = projInfo(p), left = i.n - i.done;
+    return `<section class="float mt-detail pj-detail" data-hold-render data-prj="${esc(p.id)}" aria-label="Project">
+      <div class="mt-top">
+        <button type="button" class="circle mt-back" data-act="pj-back" aria-label="All projects">${ICON.left}</button>
+        <input class="mt-title" data-pf="title" value="${esc(p.title)}" maxlength="200" aria-label="Project name" placeholder="Project name" enterkeyhint="done" autocomplete="off">
+        <button type="button" class="circle mt-del" data-act="pj-del" aria-label="Delete project" title="Delete project">${ICON.trash}</button>
+      </div>
+      <div class="mt-scroll" id="pjScroll" data-keep>
+        <div class="pj-sum">
+          <div class="pj-big"><b class="fig">${i.done}</b><span>of ${i.n} ${i.n === 1 ? 'step' : 'steps'} done</span></div>
+          <div class="pj-bar" role="progressbar" aria-label="Steps done" aria-valuemin="0" aria-valuemax="${i.n}" aria-valuenow="${i.done}"><i style="width:${pct(i.done, i.n)}%"></i></div>
+          <p class="meta pj-left">${i.finished ? 'Every step is done. Add another if something comes up.' : i.n ? `${left} to go${i.next ? ` · next is ${esc(i.next.title)}` : ''}` : 'Add the steps it takes, in order.'}</p>
+        </div>
+        <div class="mt-sec">
+          <span class="lab">Steps</span>
+          <div class="pj-steps" data-sortbox="proj">${i.st.map(t => stepRow(t, i.next && t.id === i.next.id)).join('')}</div>
+          <form class="mt-add pj-add" id="pjAdd" autocomplete="off"><span class="add-ic">${ICON.plus}</span><input id="pj_step" maxlength="200" placeholder="Add a step" enterkeyhint="done" aria-label="Add a step"></form>
+          <p class="meta pj-tip">Tap a step to give it a day (then it's on the calendar) or say what it's waiting on. Hold one to move it.</p>
+        </div>
+        <div class="mt-sec">
+          <span class="lab" id="pjTagH">Work or personal</span>
+          <div class="seg3 mt-tag" role="radiogroup" aria-labelledby="pjTagH">${[['work', 'Work'], ['personal', 'Personal']].map(([v, l]) => `<button type="button" role="radio" data-act="pj-tag" data-tag="${v}" aria-checked="${(p.tag === 'personal' ? 'personal' : 'work') === v}">${l}</button>`).join('')}</div>
+        </div>
+        <div class="mt-sec">
+          <span class="lab">Notes</span>
+          <textarea class="mt-notes" data-pf="notes" placeholder="Anything to keep with the project" aria-label="Project notes">${esc(p.notes || '')}</textarea>
+        </div>
+      </div>
+    </section>`;
+  }
+  function vProjects() {
+    if (!S.loaded) return notReady();
+    const all = S.projects.slice().sort(byOrder(byNew));
+    const sel = all.find(p => p.id === S.prjId) || null;
+    if (!sel) S.prjId = null;
+    const info = new Map(all.map(p => [p.id, projInfo(p)]));
+    const open = all.filter(p => !info.get(p.id).finished), fin = all.filter(p => info.get(p.id).finished);
+    const work = open.filter(p => p.tag !== 'personal'), mine = open.filter(p => p.tag === 'personal');
+    const rowP = p => prjRow(p, sel && p.id === sel.id);
+    const list = `<div class="mt-list" id="pjList" data-keep>
+        <button type="button" class="btn solid mt-new" data-act="pj-new">${ICON.plus}<span>New project</span></button>
+        ${sec('Work', work.length ? work.map(rowP).join('') : '<p class="empty">No work projects yet.</p>')}
+        ${mine.length ? sec('Personal', mine.map(rowP).join('')) : ''}
+        ${fin.length ? sec('Finished', fin.map(rowP).join('')) : ''}
+      </div>`;
+    const pane = sel ? vProjectDetail(sel) : `<div class="float mt-none"><span class="cal-ic">${ICON_PROJ}</span><p class="name">Pick a project, or start a new one.</p><p class="meta">A project is the steps it takes. Give a step a day and it shows up on the calendar; the project itself never does.</p><button type="button" class="btn" data-act="pj-new">New project</button></div>`;
+    return `<div class="mtg pj${sel ? ' has-sel' : ''}">${list}<div class="mt-pane">${pane}</div></div>`;
   }
 
   /* ---------- calendar ---------- */
@@ -2632,13 +2749,13 @@ dialog::backdrop{background:transparent}
       const sr = live ? ', now' : soon ? `, in ${inMins(s0 - nm)}` : '';
       const cdHtml = live ? `<span class="tq-cd now" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><b>Now</b></span>`
         : cd ? `<span class="tq-cd" data-cd="${cd}" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><small>in</small><b>${cp[0]}</b><small class="u">${cp[1]}</small></span>` : '';
-      const big = cls === 'first' && !live, wait = blockedBy(t), isStep = !!t.parentId;
+      const big = cls === 'first' && !live, wait = blockedBy(t), isStep = !!t.parentId && !t.step, pj = projOf(t);
       // swipe right to complete, the same as Home's Next list; no checkboxes here
       return `<div class="trow sw tq-row${live ? ' live' : ''}${cdHtml ? ' has-cd' : ''}${big ? ' first' : ''}${isStep ? ' tq-step' : ''}${wait ? ' locked' : ''}" data-swipe="${esc(t.id)}">
         <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
         <div class="sw-face">
           <button type="button" class="sw-handle" data-act="swipe-hint" aria-hidden="true" tabindex="-1">${ICON.arrow}</button>
-          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${tagPill(t)}${wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : `<span>${esc(when)}</span>`}${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>
+          <button type="button" class="tmain" data-act="edit" data-id="${esc(t.id)}"><span class="name">${esc(t.title)}</span><span class="meta">${pj ? `<span class="ptag">${esc(pj.title)}</span>` : tagPill(t)}${wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : `<span>${esc(when)}</span>`}${sr ? `<span class="sr-only">${esc(sr)}</span>` : ''}</span></button>
           ${cdHtml}
           <button type="button" class="sr-only" data-act="done" data-id="${esc(t.id)}">Complete ${esc(t.title)}</button>
         </div>
@@ -2769,7 +2886,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, work: vWork, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), tv: () => (TV ? TV.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), reminders: () => (REM ? REM.view() : notReady()), places: () => (PLT && PLACES && S.user ? PLT.view() : notReady()), packages: () => (PKG ? PKG.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, work: vWork, meetings: vMeetings, projects: vProjects, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), tv: () => (TV ? TV.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), reminders: () => (REM ? REM.view() : notReady()), places: () => (PLT && PLACES && S.user ? PLT.view() : notReady()), packages: () => (PKG ? PKG.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -3068,6 +3185,14 @@ dialog::backdrop{background:transparent}
     F.mtype = t ? t.mtype || null : null;
     setKind(F.kind);
     setMtype(F.mtype, true);
+    // a project's step: it stays a task in that project; it can say what it's waiting on
+    const pj = t ? projOf(t) : null;
+    F.step = !!pj;
+    sheet.dataset.step = pj ? '1' : '';
+    $('#f_projBox').hidden = !pj; $('#f_waitBox').hidden = !pj;
+    $('#f_projName').textContent = pj ? pj.title : '';
+    $('#f_wait').value = t && t.wait ? t.wait : '';
+    if (pj) $('#sheetTitle').textContent = 'Edit step';
     sheet.showModal();
     POSWheels.sync();
     // on a computer the name is ready to type into; on the iPad and phone nothing pops up until you tap a field
@@ -3273,6 +3398,7 @@ dialog::backdrop{background:transparent}
       }
     }
     if (kind === 'meeting') body.tag = F.tag === 'personal' ? 'personal' : 'work';
+    if (F.step) { body.wait = $('#f_wait').value.trim().slice(0, 80) || null; if (body.date) body.missed = null; }
     if (kind !== 'task') { body.done = false; body.doneAt = null; }
     const freq = kind !== 'task' && body.date ? ($('#f_repeat').value || null) : null;
     if (F.occ) {
@@ -3583,6 +3709,113 @@ dialog::backdrop{background:transparent}
       save(store.remove(id)).then(ok => { if (ok) toast(`Deleted: ${t.title}`, () => save(store.restore({ ...old, id }))); });
     } else return false;
     return true;
+  }
+
+  /* ---------- projects: open one, add steps, rename, notes, work or personal, delete ---------- */
+  function openProject(id) {
+    if (!task(id)) return;
+    S.prjId = id;
+    if (S.tab !== 'projects') setTab('projects'); else render();
+  }
+  // the name and notes save a moment after you stop typing, and when you leave the field
+  let pjPend = null, pjT = null;
+  function pjQueue(id, patch, wait) {
+    pjPend = { id, patch: { ...(pjPend && pjPend.id === id ? pjPend.patch : {}), ...patch } };
+    clearTimeout(pjT); pjT = setTimeout(pjFlush, wait);
+  }
+  function pjFlush() {
+    clearTimeout(pjT);
+    const p = pjPend; pjPend = null;
+    if (!p) return;
+    const t = task(p.id); if (!t) return;
+    Object.assign(t, p.patch);
+    sb.from('tasks').update(toRow(p.patch)).eq('id', p.id).then(must).catch(() => toast('That did not save. Check your connection and try again.'));
+  }
+  document.addEventListener('input', e => {
+    const box = e.target.closest && e.target.closest('.pj-detail[data-prj]');
+    if (!box || !e.target.dataset.pf || !S.canSave) return;
+    const id = box.dataset.prj;
+    if (e.target.dataset.pf === 'title') {
+      const v = e.target.value.trim().slice(0, 200);
+      if (!v) return;
+      pjQueue(id, { title: v }, 700);
+      const nm = document.querySelector(`#pjList [data-id="${CSS.escape(id)}"] .name`); if (nm) nm.firstChild.textContent = v;
+    } else if (e.target.dataset.pf === 'notes') pjQueue(id, { notes: e.target.value.slice(0, 100000) }, 900);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.pf === 'title' && e.target.closest('.pj-detail')) { e.preventDefault(); e.target.blur(); } });
+  document.addEventListener('focusout', e => { if (e.target.closest && e.target.closest('.pj-detail')) setTimeout(() => { if (!typingInMeeting()) flushLater(); }, 0); });
+  document.addEventListener('focusout', e => { if (e.target.dataset && e.target.dataset.pf && e.target.closest && e.target.closest('.pj-detail')) { if (e.target.dataset.pf === 'title' && !e.target.value.trim()) { const t = task(e.target.closest('.pj-detail').dataset.prj); if (t) e.target.value = t.title; } pjFlush(); } });
+  // add a step: it shows at once and the box stays ready for the next one
+  document.addEventListener('submit', async e => {
+    if (!e.target || e.target.id !== 'pjAdd') return;
+    e.preventDefault();
+    const box = e.target.closest('.pj-detail[data-prj]'), id = box && box.dataset.prj, p = id && task(id), inp = $('#pj_step');
+    const title = inp ? inp.value.trim().slice(0, 200) : '';
+    if (!p || !title || !S.canSave) return;
+    inp.value = '';
+    const pos = projSteps(id).reduce((m, x) => Math.max(m, x.pos || 0), 0) + 1000, nid = crypto.randomUUID();
+    const tag = p.tag === 'personal' ? 'personal' : 'work';
+    S.all.push(fromRow({ id: nid, kind: 'step', title, parent_id: id, pos, tag, created_at: new Date().toISOString() })); split();
+    const list = box.querySelector('.pj-steps'), first = !projInfo(p).next || projInfo(p).next.id === nid;
+    if (list) list.insertAdjacentHTML('beforeend', stepRow(task(nid), first && !list.querySelector('.pstep.next')));
+    renderLater = true;
+    if (!touchOnly()) inp.focus();
+    try { must(await sb.from('tasks').insert(toRow({ id: nid, kind: 'task', step: true, title, parentId: id, pos, tag }))); }
+    catch (err) { toast('That step did not save. Check your connection and try again.'); await reloadTasks(); }
+  });
+  async function newProject() {
+    if (!S.canSave) return;
+    const f = (label, inner, hint) => `<label class="f"><span class="lab">${label}</span>${inner}${hint ? `<span class="meta">${hint}</span>` : ''}</label>`;
+    window.POSSheet.open({
+      title: 'New project',
+      body: f('Name', '<input id="pjn_name" maxlength="200" autocomplete="off" placeholder="Install Resi at Fountain Inn">')
+        + f('Work or personal', '<select id="pjn_tag"><option value="work">Work</option><option value="personal">Personal</option></select>')
+        + f('Steps', '<textarea id="pjn_steps" rows="6" placeholder="One per line, in order:\nCheck we have the encoder\nTest it in Resi Studio\nGet a network cable run"></textarea>', 'Optional. You can add more any time.'),
+      saveLabel: 'Start project',
+      submit: async () => {
+        const name = ($('#pjn_name').value || '').trim().slice(0, 200);
+        if (!name) return 'Give the project a name.';
+        const tag = $('#pjn_tag').value === 'personal' ? 'personal' : 'work';
+        const lines = ($('#pjn_steps').value || '').split('\n').map(x => x.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(Boolean).slice(0, 300);
+        const pid = crypto.randomUUID();
+        const rows = [toRow({ id: pid, kind: 'project', title: name, tag })]
+          .concat(lines.map((l, i) => toRow({ id: crypto.randomUUID(), kind: 'task', step: true, title: l.slice(0, 200), parentId: pid, pos: (i + 1) * 1000, tag })));
+        try { must(await sb.from('tasks').insert(rows)); } catch (err) { return 'That did not save. Check your connection and try again.'; }
+        S.prjId = pid;
+        await reloadTasks();
+        if (S.tab !== 'projects') setTab('projects'); else render();
+        return true;
+      },
+    });
+  }
+  async function pjAct(act, b) {
+    if (act === 'pj-open') { pjFlush(); openProject(b.dataset.id); return; }
+    if (act === 'pj-back') { pjFlush(); S.prjId = null; render(); return; }
+    if (!S.canSave) return;
+    if (act === 'pj-new') { newProject(); return; }
+    const box = document.querySelector('.pj-detail[data-prj]'), id = box && box.dataset.prj, p = id && task(id);
+    if (!p) return;
+    if (act === 'pj-tag') {
+      const tag = b.dataset.tag === 'personal' ? 'personal' : 'work';
+      if ((p.tag === 'personal' ? 'personal' : 'work') === tag) return;
+      pjFlush();
+      const steps = projSteps(id);
+      await save(store.update(id, { tag }, true));
+      for (const st of steps) store.update(st.id, { tag }, true).catch(() => {});
+      render();
+    } else if (act === 'pj-del') {
+      const steps = projSteps(id);
+      if (!b.classList.contains('armed')) { b.classList.add('armed'); b.setAttribute('aria-label', 'Tap again to delete'); toast(steps.length ? `Tap the bin again to delete the project and its ${steps.length} ${steps.length === 1 ? 'step' : 'steps'}` : 'Tap the bin again to delete this project'); setTimeout(() => b.classList.remove('armed'), 4000); return; }
+      pjPend = null; clearTimeout(pjT);
+      const old = [{ ...bodyOf(p), id }].concat(steps.map(st => ({ ...bodyOf(st), id: st.id })));
+      const ids = old.map(o => o.id);
+      S.prjId = null;
+      S.all = S.all.filter(x => !ids.includes(x.id)); split(); render();
+      try {
+        must(await sb.from('tasks').delete().in('id', ids));
+        toast(`Deleted: ${p.title}`, async () => { try { must(await sb.from('tasks').insert(old.map(toRow))); } catch (e) { toast('That did not come back. Check your connection.'); } await reloadTasks(); });
+      } catch (err) { toast('That did not delete. Check your connection and try again.'); await reloadTasks(); }
+    }
   }
 
   /* ---------- menu: drag the arrow (or anywhere along the bottom) to the right; swipe left to put it away ---------- */
@@ -4472,6 +4705,7 @@ dialog::backdrop{background:transparent}
     if (S.tab === 'places') { if (PLT && S.canSave) PLT.add(); return; }
     if (S.tab === 'packages') { if (PKG && S.canSave) PKG.add(); return; }
     if (S.tab === 'health') { if (HEALTH && S.canSave) HEALTH.add(); return; }
+    if (S.tab === 'projects') { newProject(); return; }
     if (S.tab === 'meetings' || S.tab === 'work') { newMeeting(); return; }
     openTask(null, S.tab === 'calendar' ? { date: S.calDay } : {}, S.tab === 'tasks' ? 'task' : null);
   }
@@ -4521,6 +4755,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'event') openEvent(b.dataset.ev);
     else if (act === 'meeting') openMeeting(b.dataset.id);
     else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
+    else if (act.startsWith('pj-')) pjAct(act, b);
     else if (act === 'settings') openSettings();
     else if (act === 'home-here') setHome();
     else if (act === 'me-src') { if (PLACES) { PLACES.setSource(!PLACES.isSource()); fillMe(); toast(PLACES.isSource() ? 'This device now shares where you are' : 'This device no longer shares where you are'); } }
@@ -4555,6 +4790,7 @@ dialog::backdrop{background:transparent}
     S.failed = false; S.loaded = true;
     S.all = data.map(fromRow); split();
     render();
+    if (S.missQ.size) saveMissed();
     retireMovedTasks();
     placeSweep();
   }
