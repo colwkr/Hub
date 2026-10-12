@@ -688,13 +688,15 @@ body.qmode .top{display:none}
 .qh-dot.qh-on{background:#4ad66d}.qh-dot.qh-off{background:var(--qacc)}
 /* the entity */
 .qh-stage{grid-area:stage;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px}
-.qh-orbbtn{flex:none;border:0;background:none;padding:0;width:min(88vw,380px);height:min(88vw,380px);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.qh-orbbtn{flex:none;width:min(64vw,36vh,380px);height:min(64vw,36vh,380px)}
 .qh-orb{display:block;width:100%;height:100%}
 .qh-status{margin:-4% 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
 /* the cards: a short stack, Obsidian-glass panels */
 .qh-cards{grid-area:cards;display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
 .qh-card{display:flex;align-items:stretch;background:rgba(48,50,56,.42);-webkit-backdrop-filter:blur(16px) saturate(120%);backdrop-filter:blur(16px) saturate(120%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);border-radius:3px;animation:qin .45s cubic-bezier(.2,.85,.25,1) both}
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);border-radius:3px}
+.qh.enter .qh-card{animation:qin .45s cubic-bezier(.2,.85,.25,1) both}
+.qh.enter .qh-card:nth-child(2){animation-delay:.05s}.qh.enter .qh-card:nth-child(3){animation-delay:.1s}.qh.enter .qh-card:nth-child(n+4){animation-delay:.15s}
 @keyframes qin{from{opacity:0;transform:translateY(8px)}}
 .qh-open{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;border:0;background:none;color:inherit;text-align:left;padding:14px 16px;cursor:pointer}
 .qh-lab{font:500 10.5px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--qdim);display:flex;align-items:center;gap:8px}
@@ -731,15 +733,50 @@ body.qmode .top{display:none}
   .qh-cards{align-self:center;max-height:100%;overflow-y:auto;scrollbar-width:none;padding:4px 14px 4px 0}
   .qh-cards::-webkit-scrollbar{display:none}
   .qh-clock b{font-size:56px}
-  .qh-orbbtn{width:min(58vh,44vw,600px);height:min(58vh,44vw,600px)}
+  .qh-orbbtn{width:min(46vh,40vw,520px);height:min(46vh,40vw,520px)}
 }
 /* an upright tablet: the cards go under the entity */
 @media (min-width:760px) and (min-height:500px) and (orientation:portrait){
   .qh.has{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "stage" "cards" "foot";grid-template-rows:auto minmax(0,1fr) auto auto}
   .qh-cards{padding:0 14px 8px;max-height:44vh}
 }
-/* phones: the menu and add buttons sit in the bottom corners, so the readouts stay up top */
+/* phones: Home scrolls as one column; the dock is a grid of four across */
 @media (max-width:759px){
-  .qh-cards{padding-bottom:84px}
+  .qh{min-height:0;height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:0 -18px;padding:0 18px 24px}
+  .qh::-webkit-scrollbar{display:none}
+  .qh-stage{min-height:0;padding:6px 0 18px}
+  .qh-cards{padding-bottom:12px}
   .qh-title{font-size:17px}
 }
+
+/* ---------- the dock: square glass keys with mono captions, under the status ---------- */
+.qh-dock{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:22px;max-width:100%}
+.dk-head{font:500 10px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--qdim)}
+.dk-head::before{content:"";display:inline-block;width:6px;height:6px;margin-right:10px;background:var(--qacc);vertical-align:1px}
+.dk-row{display:flex;align-items:flex-start;gap:4px;padding:8px;border-radius:6px;background:rgba(28,30,34,.42);-webkit-backdrop-filter:blur(18px) saturate(120%);backdrop-filter:blur(18px) saturate(120%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.075),0 30px 60px -30px rgba(0,0,0,.9)}
+.dk{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:70px;padding:6px 0 5px;border:0;background:none;color:var(--qink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dk-ic{position:relative;display:grid;place-items:center;width:48px;height:48px;border-radius:4px;background:rgba(255,255,255,.045);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);transition:transform .28s cubic-bezier(.2,.9,.3,1.25),background .2s,box-shadow .2s}
+.dk-ic svg.i{width:22px;height:22px}
+.dk-l{font:500 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--qdim);white-space:nowrap;transition:color .2s}
+@media (hover:hover){
+  .dk:hover .dk-ic{transform:translateY(-5px) scale(1.06);background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.24)}
+  .dk:hover .dk-l{color:var(--qink)}
+}
+.dk:active .dk-ic{transform:scale(.9);transition-duration:.08s}
+.dk:focus-visible{outline:none}.dk:focus-visible .dk-ic{box-shadow:inset 0 0 0 1px var(--qacc)}
+.dk-n{position:absolute;top:-6px;right:-7px;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center;background:var(--qacc);color:#140604;font:600 10px/1 var(--mono);border-radius:2px}
+.dk-grp .dk-ic::after{content:"";position:absolute;right:5px;bottom:5px;width:5px;height:5px;border-right:1px solid var(--qdim);border-bottom:1px solid var(--qdim)}
+.dk-back .dk-ic{background:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.dk-back .dk-l{color:rgba(236,238,242,.32)}
+.dk-sep{align-self:stretch;width:1px;margin:8px 5px 22px;background:rgba(255,255,255,.1)}
+.qh.enter .dk,.qh-dock.swap .dk{animation:dkIn .5s cubic-bezier(.2,.85,.25,1) both;animation-delay:calc(var(--i) * 30ms + 60ms)}
+.qh-dock.swap .dk-head{animation:dkIn .4s both}
+@keyframes dkIn{from{opacity:0;transform:translateY(12px)}}
+@media (max-width:759px){
+  .qh-dock{width:100%;margin-top:18px}
+  .dk-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 2px;width:100%;max-width:380px;padding:10px 6px}
+  .dk{width:auto}
+  .dk-ic{width:46px;height:46px}
+  .dk-sep{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .qh.enter .dk,.qh-dock.swap .dk,.qh.enter .qh-card{animation:none} }

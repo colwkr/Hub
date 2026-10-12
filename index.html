@@ -12,6 +12,12 @@
 /* pick light or dark, and the status bar color, before the first paint so the app never flashes the wrong look */
 (function () {
   var r = document.documentElement, chrome = '#0B0C0E';
+  /* POS noir: one look everywhere (black, grain, mono labels). It replaces the light/dark/wallpaper choices. */
+  r.setAttribute('data-noir', '');
+  r.setAttribute('data-theme', 'dark');
+  var m0 = document.getElementById('themeColor');
+  if (m0) m0.setAttribute('content', '#050505');
+  if (r.hasAttribute('data-noir')) return;
   try {
     var mode = localStorage.getItem('pos.mode') || 'dark';
     var dark = mode === 'auto' ? !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) : mode !== 'light';
@@ -35,28 +41,29 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012221203">
-<script src="finance.js?v=20261012221203"></script>
-<link rel="stylesheet" href="car.css?v=20261012221203">
-<script src="car.js?v=20261012221203"></script>
-<link rel="stylesheet" href="sections.css?v=20261012221203">
-<link rel="stylesheet" href="tv.css?v=20261012221203">
-<script src="records.js?v=20261012221203"></script>
-<script src="people.js?v=20261012221203"></script>
-<script src="wheels.js?v=20261012221203"></script>
-<script src="keyboard.js?v=20261012221203"></script>
-<script src="notes.js?v=20261012221203"></script>
-<script src="reminders.js?v=20261012221203"></script>
-<script src="gear.js?v=20261012221203"></script>
-<script src="lights.js?v=20261012221203"></script>
-<script src="tv.js?v=20261012221203"></script>
-<script src="work.js?v=20261012221203"></script>
-<script src="health.js?v=20261012221203"></script>
-<script src="pets.js?v=20261012221203"></script>
-<script src="places.js?v=20261012221203"></script>
-<script src="placestab.js?v=20261012221203"></script>
-<script src="usmap.js?v=20261012221203"></script>
-<script src="packages.js?v=20261012221203"></script>
+<link rel="stylesheet" href="finance.css?v=20261012223216">
+<script src="finance.js?v=20261012223216"></script>
+<link rel="stylesheet" href="car.css?v=20261012223216">
+<script src="car.js?v=20261012223216"></script>
+<link rel="stylesheet" href="sections.css?v=20261012223216">
+<link rel="stylesheet" href="tv.css?v=20261012223216">
+<link rel="stylesheet" href="noir.css?v=20261012223216">
+<script src="records.js?v=20261012223216"></script>
+<script src="people.js?v=20261012223216"></script>
+<script src="wheels.js?v=20261012223216"></script>
+<script src="keyboard.js?v=20261012223216"></script>
+<script src="notes.js?v=20261012223216"></script>
+<script src="reminders.js?v=20261012223216"></script>
+<script src="gear.js?v=20261012223216"></script>
+<script src="lights.js?v=20261012223216"></script>
+<script src="tv.js?v=20261012223216"></script>
+<script src="work.js?v=20261012223216"></script>
+<script src="health.js?v=20261012223216"></script>
+<script src="pets.js?v=20261012223216"></script>
+<script src="places.js?v=20261012223216"></script>
+<script src="placestab.js?v=20261012223216"></script>
+<script src="usmap.js?v=20261012223216"></script>
+<script src="packages.js?v=20261012223216"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -436,7 +443,7 @@ body[data-view="home"] .top{display:none}
 .srt.outdenting::after{content:"Its own task"}
 .srt.sorting{position:relative;z-index:6;background:var(--lift-bg);border-radius:20px;box-shadow:0 18px 36px -12px rgba(0,0,0,.55),0 0 0 1.5px var(--ink-2)!important}
 /* personal and work */
-.ttag{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px;line-height:1.3;white-space:nowrap}
+.ttag{flex:none;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px;line-height:1.3;white-space:nowrap}
 .ttag.work{background:var(--solid);color:var(--on-solid)}
 .ttag.personal{box-shadow:inset 0 0 0 1px var(--ink-3);color:var(--ink-2)}
 .tfilter{max-width:330px;margin-bottom:6px}
@@ -1247,9 +1254,10 @@ dialog::backdrop{background:transparent}
 
 <div class="app">
   <header class="top">
-    <h1 id="title">Home</h1>
+    <div class="win-l"><button type="button" class="win-home" data-tab="home" aria-label="Home"><i aria-hidden="true"></i>POS</button><span class="win-sep" aria-hidden="true">/</span><h1 id="title">Home</h1></div>
     <div class="right">
       <span class="date" id="today"></span>
+      <button type="button" class="win-add" id="winAdd" aria-label="Add" title="Add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
     </div>
   </header>
   <main id="view"></main>
@@ -1495,14 +1503,15 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012221203"></script>
+<script src="appearance.js?v=20261012223216"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012221203';
+  const VERSION = '20261012223216';
   const $ = (s, r = document) => r.querySelector(s);
+  const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const pad = n => String(n).padStart(2, '0');
@@ -1614,7 +1623,7 @@ dialog::backdrop{background:transparent}
     booted: false, canSave: false, failed: false, loaded: false,
     all: [], tasks: [], items: [], projects: [], steps: [], missQ: new Set(), weather: null, mtgId: null, prjId: null,
     workSub: (() => { try { const v = localStorage.getItem('pos.workSub'); return ['projects', 'meetings', 'audio', 'video', 'lighting'].includes(v) ? v : v === 'gear' ? 'video' : 'overview'; } catch (e) { return 'overview'; } })(),
-    tab: 'home', calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
+    tab: 'home', dock: 'main', qhEnter: true, dockSwap: false, calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     taskTag: (() => { try { const v = localStorage.getItem('pos.taskTag'); return v === 'personal' || v === 'work' ? v : ''; } catch (e) { return ''; } })(),
     wxMode: (() => { try { const v = localStorage.getItem('pos.wxMode'); return v === 'day' || v === 'ahead' ? v : 'now'; } catch (e) { return 'now'; } })(),
     wxSkyNow: (() => { try { return localStorage.getItem('pos.wxSkyNow') === '1'; } catch (e) { return false; } })(),
@@ -2326,6 +2335,43 @@ dialog::backdrop{background:transparent}
     return `<div class="qh-card${c.sticky ? ' sticky' : ''}${c.warn ? ' warn' : ''}"><button type="button" class="qh-open" ${c.open}><span class="qh-lab">${esc(c.lab)}</span>${body}</button>${right}</div>`;
   }
   const qDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  /* ---------- the dock: a few icons under the status, the only way around POS. Work and Personal swap the row
+     for their own sections; each icon opens its section over the whole screen. ---------- */
+  const DOCK_SVG = {};
+  const dockSvg = sel => DOCK_SVG[sel] || (DOCK_SVG[sel] = ((document.querySelector(`#drawer ${sel} svg.i:not(.chev)`) || {}).outerHTML || ''));
+  const BACK_SVG = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>';
+  function dockRows() {
+    return {
+      main: [['tasks', 'Tasks'], ['calendar', 'Calendar'], ['notes', 'Notes'], ['reminders', 'Reminders'], '|', ['@work', 'Work'], ['@personal', 'Personal'], '|', ['!settings', 'Settings']],
+      work: [['<', 'Back'], ...WORK_SUBS.map(([k, l]) => ['work:' + k, l])],
+      personal: [['<', 'Back'], ['finance', 'Finance'], ['health', 'Health'], ['car', 'Car'], ['places', 'Places'], ['packages', 'Packages'], ['pets', 'Pets'], ['lights', 'Lights'], ['tv', 'TV']],
+    };
+  }
+  function dockCounts() {
+    const tk = todayKey(), c = {};
+    if (!S.loaded) return c;
+    c.tasks = S.tasks.filter(isOverdue).length + S.tasks.filter(t => t.date === tk && !t.done).length;
+    c.reminders = REM ? REM.due() : 0;
+    c.finance = FIN ? FIN.badge() : 0; c.car = CAR ? CAR.badge() : 0; c.pets = PETS ? PETS.badge() : 0; c.packages = PKG ? PKG.badge() : 0;
+    c['@personal'] = c.finance + c.car + c.pets + c.packages;
+    return c;
+  }
+  function vDock() {
+    const rows = dockRows(), grp = rows[S.dock] ? S.dock : 'main', n = dockCounts();
+    const item = (id, label, i) => {
+      let attrs, icon;
+      if (id === '<') { attrs = 'data-act="dock" data-grp="main"'; icon = BACK_SVG; }
+      else if (id[0] === '@') { attrs = `data-act="dock" data-grp="${id.slice(1)}"`; icon = dockSvg(`[data-grp="${id.slice(1)}"]`); }
+      else if (id[0] === '!') { attrs = `data-act="${id.slice(1)}"`; icon = dockSvg(`[data-act="${id.slice(1)}"]`); }
+      else if (id.startsWith('work:')) { attrs = `data-tab="work" data-wsub="${id.slice(5)}"`; icon = dockSvg(`[data-wsub="${id.slice(5)}"]`); }
+      else { attrs = `data-tab="${id}"`; icon = dockSvg(`.nav [data-tab="${id}"]`); }
+      const cnt = n[id] || 0;
+      return `<button type="button" class="dk${id[0] === '@' ? ' dk-grp' : ''}${id === '<' ? ' dk-back' : ''}" ${attrs} data-dk="${esc(id)}" style="--i:${i}" aria-label="${esc(label)}${cnt ? `, ${cnt}` : ''}"><span class="dk-ic">${icon}${cnt ? `<b class="dk-n">${cnt}</b>` : ''}</span><span class="dk-l">${esc(label)}</span></button>`;
+    };
+    let i = 0;
+    const html = rows[grp].map(x => (x === '|' ? '<i class="dk-sep" aria-hidden="true"></i>' : item(x[0], x[1], i++))).join('');
+    return `<nav class="qh-dock dk-${grp}${S.dockSwap ? ' swap' : ''}" aria-label="${grp === 'main' ? 'Sections' : grp === 'work' ? 'Work' : 'Personal'}">${grp !== 'main' ? `<span class="dk-head">${grp === 'work' ? 'Work' : 'Personal'}</span>` : ''}<div class="dk-row">${html}</div></nav>`;
+  }
   function vQuiet() {
     const cards = homeCards(), n = cards.length, sticky = cards.some(c => c.sticky);
     ORB.mood = sticky ? 2 : n ? 1 : 0;
@@ -2333,18 +2379,23 @@ dialog::backdrop{background:transparent}
     const wxText = w ? `${Math.round(w.temp)}° · ${wx(w.code, w.isDay)[0]}` : '';
     const status = !S.loaded ? 'Waking up' : n ? `${n} ${n === 1 ? 'thing' : 'things'} for today` : 'All clear';
     const statusSub = !S.loaded ? '' : n ? (sticky ? 'One starts soon' : 'Got it moves one off Home') : 'Nothing needs you right now';
-    return `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}" id="qh">
+    const canFull = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled), isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const enter = S.qhEnter; S.qhEnter = false;
+    const html = `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}${enter ? ' enter' : ''}" id="qh">
       <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
       <div class="qh-c q-tl"><span class="qh-k">POS</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
-      <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}<button type="button" class="qh-link qh-all-top" data-act="qh-all">Everything ↗</button></div>
+      <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}</div>
       <div class="qh-stage">
-        <button type="button" class="qh-orbbtn" data-act="qh-all" aria-label="Show everything"><canvas id="qhOrb" class="qh-orb" aria-hidden="true"></canvas></button>
+        <div class="qh-orbbtn"><canvas id="qhOrb" class="qh-orb" aria-hidden="true"></canvas></div>
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
+        ${vDock()}
       </div>
       ${n ? `<div class="qh-cards" id="qhCards" data-keep>${cards.map(qCard).join('')}</div>` : ''}
       <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
-      <div class="qh-c q-br"><button type="button" class="qh-link" data-act="qh-all">Everything ↗</button></div>
+      <div class="qh-c q-br">${canFull ? `<button type="button" class="qh-link" data-act="qh-full">${isFull ? 'Exit full screen' : 'Full screen'}</button>` : ''}</div>
     </div>`;
+    S.dockSwap = false;
+    return html;
   }
   // "everything": the full Home, with a way back to quiet
   const vHomeAll = () => `<div class="qh-back"><button type="button" class="qh-link" data-act="qh-quiet">← Quiet</button></div>${vHome()}`;
@@ -3253,7 +3304,7 @@ dialog::backdrop{background:transparent}
     }
     const keep = {};
     for (const el of document.querySelectorAll('#view [data-keep]')) keep[el.id] = el.scrollTop;
-    $('#title').textContent = TITLES[S.tab];
+    $('#title').textContent = S.tab === 'work' ? `Work / ${(WORK_SUBS.find(([k]) => k === S.workSub) || ['', 'Overview'])[1]}` : TITLES[S.tab];
     document.body.dataset.view = S.tab;
     document.body.classList.toggle('qmode', S.tab === 'home' && !S.homeAll);
     $('#today').innerHTML = S.tab === 'home' ? '' : `<i></i>${esc(shortFmt.format(new Date()))}`;
@@ -3299,7 +3350,7 @@ dialog::backdrop{background:transparent}
     dot.setAttribute('aria-label', foot.textContent); dot.title = foot.textContent;
     const me = whoAmI();
     $('#meName').textContent = me.name;
-    $('#fab').disabled = !S.canSave; $('#railAdd').disabled = !S.canSave;
+    $('#fab').disabled = !S.canSave; $('#railAdd').disabled = !S.canSave; $('#winAdd').disabled = !S.canSave;
     renderWake();
     wxFx();
   }
@@ -4215,7 +4266,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) setDrawer(false); });
   document.addEventListener('touchstart', e => {
     drag = null;
-    if (e.touches.length !== 1 || sheet.open || railMode()) return;
+    if (NOIR || e.touches.length !== 1 || sheet.open || railMode()) return;
     const t = e.touches[0];
     if (!drawerOpen && !e.target.closest('#grab') && t.clientY < window.innerHeight - 120) return;
     if (!drawerOpen && e.target.closest('.trow.sw, .lt-sl')) return;
@@ -5001,13 +5052,66 @@ dialog::backdrop{background:transparent}
     if (tab === 'calendar' && was !== 'calendar') aimTimeline();
     if (tab === 'home' && was !== 'home') aimHome();
     if (tab === 'home') S.homeAll = false; // Home always opens quiet
+    if (tab === 'home' && was !== 'home') S.qhEnter = true;
     if (TV && tab === 'tv' && was !== 'tv') TV.shown(true);
     setTimeout(() => loadEvents(false), 0);
     setDrawer(false);
     flyClose();
+    const ghost = NOIR && was !== 'home' && tab === 'home' && !stillMotion() ? winSnap() : null;
     render();
     window.scrollTo(0, 0);
+    if (NOIR && was !== tab) winMove(was, tab, ghost);
   }
+  /* sections open out of the dock icon you tapped and fill the screen; going Home folds the section back into its icon */
+  let dockFrom = null;
+  document.addEventListener('click', e => { const d = e.target.closest && e.target.closest('.dk[data-tab]'); dockFrom = d ? d.querySelector('.dk-ic').getBoundingClientRect() : null; }, true);
+  const appEl = document.querySelector('.app');
+  function winAim(el, r) { // how far the icon's middle is from the middle of the window
+    const a = el.getBoundingClientRect();
+    el.style.setProperty('--wx', Math.round(r.left + r.width / 2 - (a.left + a.width / 2)) + 'px');
+    el.style.setProperty('--wy', Math.round(r.top + r.height / 2 - (a.top + a.height / 2)) + 'px');
+    el.style.setProperty('--ws', Math.max(0.04, Math.min(0.2, r.width / a.width)).toFixed(3));
+  }
+  function winSnap() {
+    const r = appEl.getBoundingClientRect(), g = appEl.cloneNode(true);
+    g.classList.remove('win-in', 'home-in'); g.classList.add('win-ghost');
+    for (const el of g.querySelectorAll('[id]')) el.removeAttribute('id');
+    g.setAttribute('aria-hidden', 'true'); g.inert = true;
+    Object.assign(g.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: '0', maxWidth: 'none' });
+    document.body.appendChild(g);
+    // keep each list where it was scrolled to
+    const src = appEl.querySelectorAll('*'), dst = g.querySelectorAll('*');
+    for (let i = 0; i < src.length && i < dst.length; i++) if (src[i].scrollTop) dst[i].scrollTop = src[i].scrollTop;
+    return g;
+  }
+  function winMove(was, tab, ghost) {
+    appEl.classList.remove('win-in', 'home-in');
+    if (stillMotion()) { dockFrom = null; return; }
+    void appEl.offsetWidth;
+    if (tab !== 'home') {
+      if (dockFrom) winAim(appEl, dockFrom); else { appEl.style.setProperty('--wx', '0px'); appEl.style.setProperty('--wy', '0px'); appEl.style.setProperty('--ws', '.94'); }
+      appEl.classList.add('win-in');
+    } else {
+      appEl.classList.add('home-in');
+      if (ghost) {
+        const key = was === 'work' ? 'work:' + S.workSub : was;
+        const ic = document.querySelector(`.dk[data-dk="${key}"] .dk-ic`) || (GROUP_OF[was] && document.querySelector(`.dk[data-dk="@${GROUP_OF[was]}"] .dk-ic`));
+        if (ic) winAim(ghost, ic.getBoundingClientRect()); else { ghost.style.setProperty('--wx', '0px'); ghost.style.setProperty('--wy', '0px'); ghost.style.setProperty('--ws', '.94'); }
+        ghost.classList.add('out');
+        const done = () => ghost.remove();
+        ghost.addEventListener('animationend', done); setTimeout(done, 900);
+      }
+    }
+    dockFrom = null;
+  }
+  appEl.addEventListener('animationend', e => { if (e.target === appEl) appEl.classList.remove('win-in', 'home-in'); });
+  // Escape takes you back Home (when nothing else is open or being typed in)
+  document.addEventListener('keydown', e => {
+    if (!NOIR || e.key !== 'Escape' || S.tab === 'home' || e.defaultPrevented) return;
+    const a = document.activeElement;
+    if (document.querySelector('dialog[open]') || (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) || mk || mv || bd || so || wd) return;
+    setTab('home');
+  });
   window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
   // weather graph: the hour under the pointer or finger
   let wgHide = null;
@@ -5165,6 +5269,7 @@ dialog::backdrop{background:transparent}
   }
   $('#fab').addEventListener('click', addNew);
   $('#railAdd').addEventListener('click', addNew);
+  $('#winAdd').addEventListener('click', addNew);
 
   document.addEventListener('click', e => {
     const tabBtn = e.target.closest('[data-tab]');
@@ -5212,6 +5317,8 @@ dialog::backdrop{background:transparent}
     else if (act === 'qh-ack') { const k = b.dataset.key, sec = b.dataset.sec; ack(k, true); toast(sec ? `Off Home. It's still in ${sec}.` : 'Off Home', () => ack(k, false)); }
     else if (act === 'qh-all') { S.homeAll = true; aimHome(); render(); }
     else if (act === 'qh-quiet') { S.homeAll = false; render(); }
+    else if (act === 'dock') { S.dock = b.dataset.grp; S.dockSwap = true; render(); }
+    else if (act === 'qh-full') { $('#fsBtn').click(); setTimeout(render, 400); }
     else if (act === 'wt-new') { if (S.canSave) openTask(null, { tag: 'work' }, 'task'); }
     else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
     else if (act.startsWith('pj-')) pjAct(act, b);

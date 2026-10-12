@@ -1,0 +1,129 @@
+/* POS noir: the whole app in one look. Black, a soft moving haze, film grain, thin lines and corner marks,
+   mono capitals for labels and controls, smoky glass panels with small corners, one warm accent for "now".
+   It loads last and wins over the older light/dark/wallpaper looks. */
+:root[data-noir][data-noir][data-noir]{
+  color-scheme:dark;
+  --chrome:#050505 !important;
+  --ground:#040405;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --qacc:#ff5a28; --qink:#eceef2; --qdim:rgba(236,238,242,.46); --qline:rgba(236,238,242,.16);
+  --ink:#eceef2; --ink-2:rgba(236,238,242,.64); --ink-3:rgba(236,238,242,.4);
+  --panel-hi:rgba(255,255,255,.05); --hair:rgba(255,255,255,.075); --well:rgba(255,255,255,.045);
+  --line:rgba(236,238,242,.2);
+  --field:rgba(255,255,255,.035); --field-border:rgba(255,255,255,.12);
+  --solid:#eceef2; --on-solid:#060606; --ring:#050505;
+  --good:#4ad66d; --warn:#f2b85e; --bad:#ff5a28; --on-bad:#140604;
+  --live:#ff5a28; --live-edge:rgba(255,90,40,.6); --live-glow:rgba(255,90,40,.22); --live-soft:rgba(255,90,40,.16);
+  --live-fill:linear-gradient(180deg,rgba(255,90,40,.14),rgba(255,90,40,.04)); --live-press:linear-gradient(180deg,#2a1610,#1c100b); --live-handle:rgba(255,90,40,.12);
+  --glass:rgba(40,42,48,.4);
+  --sheet:rgba(16,17,20,.94);
+  --lift-bg:#1d1e22;
+  --control:rgba(255,255,255,.05);
+  --glass-border:rgba(255,255,255,.085); --glass-hi:rgba(255,255,255,.14); --glass-lo:rgba(255,255,255,.05); --sheen:rgba(255,255,255,0);
+  --lift:0 24px 48px -28px rgba(0,0,0,.95);
+  --lift-sm:0 10px 22px -14px rgba(0,0,0,.95);
+  --glow:0 0 0 0 transparent; --sel-glow:0 0 0 0 transparent; --fab-glow:0 0 0 1px rgba(255,255,255,.2);
+  --active:rgba(255,255,255,.07); --active-sq:rgba(255,255,255,.08);
+  --indicator:#ff5a28; --indicator-glow:0 0 0 0 transparent;
+  --knob:#eceef2; --track:rgba(255,255,255,.12);
+  --today-col:rgba(255,255,255,.02); --ghost:rgba(255,255,255,.025);
+  --clock-glow:none; --now-line:0 0 8px rgba(255,90,40,.6);
+  --scrim:rgba(0,0,0,.5); --halo:none;
+  --blur:blur(18px) saturate(120%);
+  --rail:0px;
+}
+/* the ground: black, a slow haze, and grain over everything */
+[data-noir] #bg{background:#040405}
+[data-noir] #bg .wall,[data-noir] #bg::after{display:none}
+[data-noir] #bg::before{content:"";position:absolute;inset:-20%;background:
+  radial-gradient(38% 32% at 62% 42%,rgba(120,128,140,.15),transparent 70%),
+  radial-gradient(30% 26% at 30% 70%,rgba(70,82,98,.13),transparent 70%),
+  radial-gradient(26% 24% at 80% 80%,rgba(140,110,80,.07),transparent 70%);
+  filter:blur(30px);animation:qhaze 38s ease-in-out infinite alternate}
+@keyframes qhaze{to{transform:translate(-4%,3%) scale(1.06)}}
+[data-noir] body::after{content:"";position:fixed;inset:0;z-index:2147483000;pointer-events:none;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@media (prefers-reduced-motion:reduce){ [data-noir] #bg::before{animation:none} }
+
+/* no side bar, no menu drawer, no floating buttons: Home's dock is how you get around */
+[data-noir] #rail,[data-noir] #grab,[data-noir] #drawer,[data-noir] #scrim,[data-noir] #fab,[data-noir] .cs-add{display:none!important}
+@media (min-width:760px) and (min-height:500px){
+  [data-noir] .app{padding-left:24px;padding-right:24px}
+  [data-noir] .toast{left:50%;max-width:calc(100% - 80px)}
+}
+[data-noir] .app{position:relative}
+@media (max-width:759px),(max-height:499px){ [data-noir] .app{padding-bottom:14px} }
+/* a section opens over the whole screen out of its dock icon; going Home folds it back into the icon */
+@keyframes winIn{from{opacity:0;transform:translate(var(--wx,0),var(--wy,0)) scale(var(--ws,.06))}45%{opacity:1}to{opacity:1;transform:none}}
+@keyframes winOut{from{opacity:1;transform:none}to{opacity:0;transform:translate(var(--wx,0),var(--wy,0)) scale(var(--ws,.06))}}
+@keyframes homeIn{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
+[data-noir] .app.win-in{transform-origin:50% 50%;animation:winIn .5s cubic-bezier(.16,.9,.24,1)}
+[data-noir] .app.home-in{transform-origin:50% 50%;animation:homeIn .55s cubic-bezier(.2,.8,.2,1)}
+.win-ghost{z-index:4;pointer-events:none;transform-origin:50% 50%;overflow:hidden}
+.win-ghost.out{animation:winOut .38s cubic-bezier(.5,0,.8,.3) forwards}
+@media (prefers-reduced-motion:reduce){ [data-noir] .app.win-in,[data-noir] .app.home-in,.win-ghost.out{animation:none} }
+/* Settings: the old light/dark and wallpaper choices don't apply to this look */
+[data-noir] #setSheet .set-sec[aria-labelledby="apLab"],[data-noir] #setSheet .set-sec[aria-labelledby="wlLab"],[data-noir] #setSheet .set-sec[aria-labelledby="wlLab"] + .set-line{display:none}
+/* corner marks frame every section */
+[data-noir] body:not(.qmode) .app::after{content:"";position:absolute;inset:8px 10px;pointer-events:none;z-index:0;background:
+  linear-gradient(var(--qline),var(--qline)) left top/22px 1px no-repeat,linear-gradient(var(--qline),var(--qline)) left top/1px 22px no-repeat,
+  linear-gradient(var(--qline),var(--qline)) right top/22px 1px no-repeat,linear-gradient(var(--qline),var(--qline)) right top/1px 22px no-repeat,
+  linear-gradient(var(--qline),var(--qline)) left bottom/22px 1px no-repeat,linear-gradient(var(--qline),var(--qline)) left bottom/1px 22px no-repeat,
+  linear-gradient(var(--qline),var(--qline)) right bottom/22px 1px no-repeat,linear-gradient(var(--qline),var(--qline)) right bottom/1px 22px no-repeat}
+
+/* the section bar: back to POS, where you are, the date, and add */
+[data-noir] .top{position:relative;z-index:3;min-height:44px;padding:4px 6px 0;font:500 11px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--qdim)}
+[data-noir] body[data-view] .top{display:flex}
+[data-noir] body.qmode .top,[data-noir] body[data-auth="out"] .top{display:none!important}
+[data-noir] .top h1{font:500 11px/1.4 var(--mono);letter-spacing:.2em;color:var(--qink)}
+.win-l{display:flex;align-items:center;gap:12px;min-width:0}
+.win-home{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:8px 2px;font:500 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--qdim);cursor:pointer}
+.win-home:hover{color:var(--qink)}
+.win-home i{width:9px;height:9px;border:1px solid currentColor;transform:rotate(45deg);display:inline-block}
+.win-sep{color:rgba(236,238,242,.25)}
+.win-add{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:3px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:var(--qink);cursor:pointer}
+.win-add:hover{background:rgba(255,255,255,.1)}
+.win-add svg.i{width:16px;height:16px}
+.top .date{font:500 11px var(--mono);letter-spacing:.16em}
+.top .date i{background:var(--qline)}
+
+/* type: mono capitals for labels, tabs, buttons and tags; content stays in the sans */
+[data-noir] .lab,[data-noir] .link,[data-noir] .btn,[data-noir] .fin-tabs button,[data-noir] .seg3 button,[data-noir] .pill,[data-noir] .badge,
+[data-noir] .ptag,[data-noir] .ttag,[data-noir] .toast,[data-noir] .list-h,[data-noir] .day-div,[data-noir] .sheet-head .bar h2,[data-noir] .avl-crumb,[data-noir] .avl-cur{font-family:var(--mono)!important;letter-spacing:.12em}
+[data-noir] .btn,[data-noir] .fin-tabs button,[data-noir] .seg3 button,[data-noir] .link,[data-noir] .toast button{text-transform:uppercase;font-size:11px!important;font-weight:500}
+[data-noir] .lab{font-size:10.5px;letter-spacing:.18em;color:var(--qdim)}
+[data-noir] .link{color:var(--qdim);text-decoration:none;border-bottom:1px solid rgba(236,238,242,.22);padding-bottom:1px}
+[data-noir] .link:hover{color:var(--qink)}
+[data-noir] .pill,[data-noir] .ptag,[data-noir] .ttag{text-transform:uppercase;font-size:9px!important;letter-spacing:.12em}
+
+/* shapes: small corners, thin edges, flat smoky glass */
+[data-noir] .float,[data-noir] .float.list,[data-noir] .avl-tile,[data-noir] .gr-table-wrap,[data-noir] .wd-ghost{border-radius:4px!important;background:var(--glass);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)!important}
+[data-noir] .float.list > *,[data-noir] .list > .mrow,[data-noir] .list > .trow.live{border-radius:0!important}
+[data-noir] dialog{border-radius:6px!important;background:var(--sheet)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 30px 60px -20px rgba(0,0,0,.9)!important}
+[data-noir] .btn{border-radius:3px!important;min-height:36px;padding:9px 14px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)!important;background:rgba(255,255,255,.04)}
+[data-noir] .btn.solid{background:var(--qink);color:#060606;box-shadow:none!important}
+[data-noir] .circle{border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)!important;background:rgba(255,255,255,.04)}
+[data-noir] .fin-tabs,[data-noir] .seg3{border-radius:4px!important;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+[data-noir] .fin-tabs button,[data-noir] .seg3 button{border-radius:2px!important}
+[data-noir] .fin-tabs button[aria-current="page"],[data-noir] .seg3 button[aria-checked="true"]{background:var(--qink)!important;color:#060606!important;box-shadow:none!important}
+[data-noir] .pill,[data-noir] .ptag,[data-noir] .ttag,[data-noir] .list-peek span,[data-noir] .list-h em{border-radius:2px!important}
+[data-noir] .badge,[data-noir] .pip{border-radius:2px!important;background:var(--qacc)!important;color:#140604!important;box-shadow:none!important}
+[data-noir] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),[data-noir] select,[data-noir] textarea{border-radius:3px!important}
+[data-noir] .toast{border-radius:3px!important;background:rgba(20,21,24,.94)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)!important;text-transform:uppercase;font-size:11px}
+[data-noir] .chk svg.i,[data-noir] .chk::before{border-radius:2px!important}
+[data-noir] .sec-head .lab::before{content:"";display:inline-block;width:6px;height:6px;margin-right:10px;background:rgba(236,238,242,.35);vertical-align:1px}
+[data-noir] ::selection{background:rgba(255,90,40,.35)}
+
+/* every rounded shape in the sections squares off: small corners, thin edges */
+[data-noir] .cal-side,[data-noir] .cal-views,[data-noir] .cs-views,[data-noir] .ac-main,[data-noir] .hl-btn,[data-noir] .tv-app,[data-noir] .tv-bubble,
+[data-noir] .nt-search,[data-noir] .avl-ic,[data-noir] .cg-r,[data-noir] .wd,[data-noir] .tv-b:not(.tv-skip):not(.tv-vs){border-radius:4px!important}
+[data-noir] .blk{border-radius:3px!important}
+[data-noir] .cal-views button,[data-noir] .cs-views button,[data-noir] .chip,[data-noir] .tag,[data-noir] .fig.md,[data-noir] .cal b,[data-noir] .wk-c,[data-noir] .pk-ric,[data-noir] .plc-ic{border-radius:2px!important}
+[data-noir] .cal-views button,[data-noir] .cs-views button,[data-noir] .hl-btn,[data-noir] .tag{font-family:var(--mono)!important;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px!important}
+[data-noir] .hl-btn{font-size:12px!important}
+@media (max-width:759px){
+  [data-noir] .top .date{display:none}
+  [data-noir] .top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  [data-noir] .win-l{gap:9px}
+  [data-noir] .btn{letter-spacing:.06em;padding:9px 11px}
+}

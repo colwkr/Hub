@@ -206,6 +206,8 @@ window.POSLook = (function () {
   /* ---------- put the chosen look on screen ---------- */
   let turn = 0;
   async function apply() {
+    // POS noir is one look on every device: dark, no wallpaper, a near-black status bar
+    if (root.hasAttribute('data-noir')) { root.setAttribute('data-theme', 'dark'); root.removeAttribute('data-wall'); layer.classList.remove('on'); setChrome('#050505'); refresh(); return; }
     const theme = themeNow(), my = ++turn;
     root.setAttribute('data-theme', theme);
     if (wall === 'none') {
