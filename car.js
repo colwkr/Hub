@@ -1,6 +1,7 @@
 // POS Car: the CR-V's record. Services (oil changes from Express Oil receipts and anything else), mileage readings and notes.
 // The odometer is estimated from how fast the miles have been going up, so "next oil change" works without the windshield sticker.
-// Records live in Supabase table records (kinds: vehicle, service, odometer, carnote), owner-only. Times are epoch ms, money whole cents.
+// Records live in Supabase table records (kinds: vehicle, service, odometer, carnote, carissue), owner-only.
+// carissue: something wrong you've noticed { title, detail, urgent, at, fixedAt }. Times are epoch ms, money whole cents.
 window.POSCar = function (ctx) {
   const { sb, toast, rerender, esc } = ctx;
   const $ = (s, r = document) => r.querySelector(s);
@@ -21,8 +22,8 @@ window.POSCar = function (ctx) {
     chev: '<svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>',
   };
 
-  const KINDS = ['vehicle', 'service', 'odometer', 'carnote'];
-  const S = { loaded: false, failed: false, vehicle: [], service: [], odometer: [], carnote: [], open: new Set() };
+  const KINDS = ['vehicle', 'service', 'odometer', 'carnote', 'carissue'];
+  const S = { loaded: false, failed: false, vehicle: [], service: [], odometer: [], carnote: [], carissue: [], open: new Set() };
   let F = null;
 
   /* ---------- storage ---------- */
@@ -137,7 +138,8 @@ window.POSCar = function (ctx) {
   }
   const tireRec = () => recs().some(r => /tire|rotat/i.test(r.text));
   // the menu badge: an oil change due within a week, or past due
-  const badge = () => { if (!S.loaded) return 0; const d = oilDue(); return d && d.st !== 'ok' ? 1 : 0; };
+  const openIssues = () => S.carissue.filter(x => !x.fixedAt).sort((a, b) => (!!b.urgent - !!a.urgent) || (a.at || 0) - (b.at || 0));
+  const badge = () => { if (!S.loaded) return 0; const d = oilDue(); return (d && d.st !== 'ok' ? 1 : 0) + openIssues().filter(x => x.urgent).length; };
 
   /* ---------- the page ---------- */
   // The 2017 CR-V's side, drawn to its published measurements at 2 units an inch: 180.6 in long, 104.7 in between
@@ -242,6 +244,17 @@ window.POSCar = function (ctx) {
       </article>
     </section>`;
   }
+  // what you've noticed is wrong: safety things first; Fixed takes one off (with undo)
+  function issueList() {
+    const list = openIssues();
+    if (!list.length && !canSave()) return '';
+    return `<section class="sec"><div class="sec-head"><span class="lab">To fix</span>${canSave() ? `<button type="button" class="circle" data-act="car-form" data-form="issue" aria-label="Add something to fix">${ICON.plus}</button>` : ''}</div>
+      ${list.length ? `<div class="float list">${list.map(x => `<div class="rec-row iss${x.urgent ? ' urgent' : ''}"><span class="rec-ic">${ICON.warn}</span>
+        <button type="button" class="rec-t iss-t" data-act="car-form" data-form="issue" data-id="${esc(x.id)}"><span class="name">${esc(x.title)}</span>${x.urgent ? '<span class="iss-tag">Safety</span>' : ''}${x.detail ? `<span class="meta">${esc(String(x.detail).split('\n')[0])}</span>` : ''}</button>
+        ${canSave() ? `<button type="button" class="btn" data-act="car-fixed" data-id="${esc(x.id)}">Fixed</button>` : ''}</div>`).join('')}</div>`
+        : '<p class="empty">Nothing wrong that you know of. Add anything you notice: a light out, a noise, a leak.</p>'}
+    </section>`;
+  }
   function recList() {
     const r = recs();
     if (!r.length) return '';
@@ -303,7 +316,7 @@ window.POSCar = function (ctx) {
     else if (!S.loaded) body = '<p class="empty">Loading your car…</p>';
     else {
       const v = car();
-      body = `<div class="car-grid"><div class="car-col">${hero(v)}${oilCard()}${moneyCard()}</div><div class="car-col">${recList()}${history()}${notes()}${details(v)}</div></div>`;
+      body = `<div class="car-grid"><div class="car-col">${hero(v)}${oilCard()}${moneyCard()}</div><div class="car-col">${issueList()}${recList()}${history()}${notes()}${details(v)}</div></div>`;
     }
     return `<div class="car"><div class="car-scroll" id="carScroll" data-keep>${body}</div></div>`;
   }
@@ -360,6 +373,13 @@ window.POSCar = function (ctx) {
           + field('Date', `<input id="cf_date" type="date" value="${dateInput(o ? o.at : Date.now())}">`)
           + field('Note', `<input id="cf_note" autocomplete="off" maxlength="200" placeholder="Optional" value="${esc(o ? o.note || '' : '')}">`),
       };
+    },
+    issue(id) {
+      const x = id ? S.carissue.find(z => z.id === id) : null;
+      return { title: x ? 'To fix' : 'Something to fix', del: !!x,
+        body: field('What\'s wrong', `<input id="cf_ititle" maxlength="120" autocomplete="off" placeholder="Rear left brake light out" value="${esc(x ? x.title : '')}">`)
+          + field('Details', `<textarea id="cf_idetail" rows="5" maxlength="2000" placeholder="What you noticed, since when, what might be causing it">${esc(x ? x.detail || '' : '')}</textarea>`)
+          + `<label class="f-check"><input type="checkbox" id="cf_iurgent"${x && x.urgent ? ' checked' : ''}><span>A safety thing: fix it soon</span></label>` };
     },
     note(id) {
       const n = id ? S.carnote.find(z => z.id === id) : null;
@@ -419,6 +439,12 @@ window.POSCar = function (ctx) {
       toast(`Mileage ${mi(miles)}`);
       return true;
     },
+    async issue() {
+      const title = val('cf_ititle');
+      if (!title) return fail('Say what\'s wrong first.');
+      const d = { title, detail: val('cf_idetail'), urgent: !!($('#cf_iurgent') && $('#cf_iurgent').checked) };
+      return save(F.id ? db.update('carissue', F.id, d) : db.set('carissue', newId('issue'), { ...d, at: Date.now(), fixedAt: null }));
+    },
     async note() {
       const text = val('cf_text');
       if (!text) return fail('Write the note first.');
@@ -474,7 +500,7 @@ window.POSCar = function (ctx) {
     const b = e.currentTarget;
     if (!F.armed) { F.armed = true; b.classList.add('armed'); b.textContent = 'Tap again to delete'; return; }
     b.disabled = true;
-    const k = F.kind === 'note' ? 'carnote' : F.kind;
+    const k = F.kind === 'note' ? 'carnote' : F.kind === 'issue' ? 'carissue' : F.kind;
     const ok = await save(db.remove(k, F.id));
     b.disabled = false;
     if (ok) { closeForm(); toast('Deleted'); }
@@ -524,6 +550,11 @@ window.POSCar = function (ctx) {
     }
     if (!canSave()) return;
     if (name === 'car-form') openForm(b.dataset.form, b.dataset.id, { type: b.dataset.type, fix: b.dataset.fix });
+    else if (name === 'car-fixed') {
+      const x = S.carissue.find(z => z.id === b.dataset.id);
+      if (!x) return;
+      save(db.update('carissue', x.id, { fixedAt: Date.now() })).then(ok => { if (ok) toast(`Fixed: ${x.title}`, () => save(db.update('carissue', x.id, { fixedAt: null }))); });
+    }
   }
   const add = () => openForm('service', null, { type: 'oil' });
   const sheetOpen = () => sheet.open;
