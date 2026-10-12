@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090b">
+<title>Cam Plot · POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
+<style>
+/* POS Cam Plot: the room in 3D, every camera's real view, and a multiview to cut from */
+:root{
+  --bg:#08090b;--panel:rgba(22,23,27,.86);--panel-2:rgba(255,255,255,.05);--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.16);
+  --ink:#f2f2f4;--ink-2:rgba(242,242,244,.66);--ink-3:rgba(242,242,244,.42);
+  --pgm:#ff3b30;--pvw:#2fd158;--warn:#f2b85e;--sel:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Outfit,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button,input,select{font:inherit;color:inherit}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;pointer-events:none}
+.top{position:relative;z-index:2;display:flex;align-items:center;gap:12px;padding:12px 16px;flex-wrap:wrap}
+.top a.back{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);text-decoration:none;font-size:13px;padding:8px 12px 8px 8px;border-radius:999px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line)}
+.top a.back svg{width:16px;height:16px}
+.top h1{margin:0;font-size:13px;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.top .grow{flex:1}
+.seg{display:inline-flex;gap:3px;padding:3px;border-radius:999px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{border:0;background:none;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#0b0c0e}
+.note{font-size:11.5px;color:var(--ink-3)}
+main{position:relative;z-index:1;display:grid;gap:12px;padding:0 16px 24px;grid-template-columns:minmax(0,1fr);grid-template-areas:"mv" "plot" "side"}
+@media (min-width:1100px){ main{grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);grid-template-areas:"mv plot" "mv side";align-items:start} }
+.mv{grid-area:mv;display:flex;flex-direction:column;gap:8px}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.view{position:relative;aspect-ratio:16/9;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.view .lbl{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:5px 8px;background:linear-gradient(transparent,rgba(0,0,0,.72));font-size:11px;letter-spacing:.02em;white-space:nowrap;overflow:hidden}
+.view .lbl b{font-size:12px;font-weight:700;letter-spacing:.06em}
+.view .lbl span{overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.82)}
+.view .tag{position:absolute;left:8px;top:7px;font-size:11px;font-weight:700;letter-spacing:.14em;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.55)}
+.view.pgm-box{box-shadow:inset 0 0 0 3px var(--pgm)}
+.view.pvw-box{box-shadow:inset 0 0 0 3px var(--pvw)}
+.view.pgm-box .tag{background:var(--pgm)}
+.view.pvw-box .tag{background:var(--pvw);color:#04140a}
+.view .timer{position:absolute;right:8px;top:6px;font-size:22px;font-weight:200;font-variant-numeric:tabular-nums;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.tile{cursor:pointer;touch-action:manipulation}
+.tile.is-pgm{box-shadow:inset 0 0 0 3px var(--pgm)}
+.tile.is-pvw{box-shadow:inset 0 0 0 3px var(--pvw)}
+.tile.is-pgm.is-pvw{box-shadow:inset 0 0 0 3px var(--pgm),inset 0 0 0 6px var(--pvw)}
+.tile.sel .lbl{background:linear-gradient(transparent,rgba(255,255,255,.18))}
+.tile .off{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:8px;background:rgba(8,9,11,.66);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.tile .off small{display:block;font-size:10px;letter-spacing:.04em;text-transform:none;font-weight:400;color:var(--ink-3);margin-top:3px}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cut{border:0;border-radius:12px;padding:12px 26px;font-weight:700;letter-spacing:.16em;background:var(--ink);color:#0b0c0e;min-width:120px}
+.cut:active{transform:scale(.97)}
+.keys{font-size:11.5px;color:var(--ink-3)}
+.plot{grid-area:plot;display:flex;flex-direction:column;gap:8px}
+.plot .view{aspect-ratio:4/3;cursor:grab;touch-action:none}
+.plot .view.aiming{cursor:crosshair;box-shadow:inset 0 0 0 2px var(--warn)}
+.plot .hint{position:absolute;left:10px;top:8px;font-size:11px;color:var(--ink-2);background:rgba(0,0,0,.5);padding:4px 8px;border-radius:6px;pointer-events:none}
+.side{grid-area:side;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border-radius:18px;box-shadow:inset 0 0 0 1px var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:12px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.lab{font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.cam-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cam-h b{font-size:26px;font-weight:300}
+.cam-h span{font-size:13px;color:var(--ink-2)}
+.pill{font-size:10px;font-weight:600;letter-spacing:.08em;border-radius:999px;padding:2px 8px;text-transform:uppercase}
+.pill.on{background:var(--ink);color:#0b0c0e}.pill.out{box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink-3)}
+.figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.figs div{display:flex;flex-direction:column;gap:2px}
+.figs b{font-size:30px;font-weight:200;line-height:1;font-variant-numeric:tabular-nums}
+.figs span{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.shot{font-size:13px;color:var(--ink-2)}
+.shot b{color:var(--ink);font-weight:600}
+.row{display:flex;align-items:center;gap:10px}
+.row label{font-size:12px;color:var(--ink-2);min-width:64px}
+.row input[type=range]{flex:1;accent-color:var(--ink)}
+.row output{min-width:54px;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{border:0;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:500;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink)}
+.btn[aria-pressed="true"]{background:var(--warn);color:#1a1205;box-shadow:none}
+.log{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto;font-size:12.5px;font-variant-numeric:tabular-nums}
+.log div{display:flex;gap:10px;color:var(--ink-2)}
+.log div b{color:var(--ink);font-weight:600;min-width:52px}
+.saved{font-size:11.5px;color:var(--ink-3);min-height:1.2em}
+.assume{font-size:11.5px;color:var(--warn)}
+@media (max-width:600px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .big{grid-template-columns:1fr} .big .pgm-box{order:-1} .top h1{font-size:12px} .view .timer{font-size:18px} }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<header class="top">
+  <a class="back" href="./#gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6.5-5.5 5.5 5.5 5.5"/></svg>Gear</a>
+  <h1>Cam plot</h1>
+  <div class="seg" role="group" aria-label="Part of the service" id="segs"><button data-seg="worship" aria-pressed="true">Worship</button><button data-seg="host" aria-pressed="false">Host</button><button data-seg="message" aria-pressed="false">Message</button></div>
+  <span class="grow"></span>
+  <span class="note" id="who">Loading your cameras…</span>
+</header>
+<main>
+  <section class="mv" aria-label="Multiview">
+    <div class="big">
+      <div class="view pvw-box" data-view="pvw"><span class="tag" id="pvwTag">PREVIEW</span><div class="lbl" id="pvwLbl"></div></div>
+      <div class="view pgm-box" data-view="pgm"><span class="tag" id="pgmTag">PROGRAM</span><span class="timer" id="pgmTime">0:00</span><div class="lbl" id="pgmLbl"></div></div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="bar"><button class="cut" id="cutBtn">CUT</button><span class="keys">Tap a camera to preview it, double-tap to take it. Keys: 1–6 preview · Space cut</span></div>
+  </section>
+  <section class="plot" aria-label="Room">
+    <div class="view" data-view="plot" id="plotView"><span class="hint" id="plotHint">Drag to look around · drag a camera to move it</span></div>
+  </section>
+  <aside class="side">
+    <div class="card" id="camCard"></div>
+    <div class="card">
+      <span class="lab">Directing</span>
+      <div class="figs"><div><b id="nCuts">0</b><span>Cuts</span></div><div><b id="avgShot">–</b><span>Avg shot</span></div><div><b id="longShot">–</b><span>Longest</span></div></div>
+      <div class="log" id="cutLog"></div>
+      <div class="btns"><button class="btn" id="clearLog">Start over</button></div>
+    </div>
+  </aside>
+</main>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co', SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const FT = 1; // one unit is one foot
+
+/* ---------- the room: a stage, a band, a speaker and a full house (an assumed layout until it's measured) ---------- */
+const ROOM = { w: 110, front: -32, back: 110, h: 36, stageW: 64, stageD: 26, stageH: 3.5 };
+const SPOTS = { // where the action is, in feet: x across (house left is negative), y up, z toward the back
+  speaker: new THREE.Vector3(0, ROOM.stageH + 5.4, -7), center: new THREE.Vector3(0, ROOM.stageH + 5, -10),
+  band: new THREE.Vector3(0, ROOM.stageH + 5.5, -12), host: new THREE.Vector3(0, ROOM.stageH + 5.4, -5),
+};
+// sensor width (16:9 picture area, mm) for each format
+const SENSOR_W = { '2/3"': 9.59, '1"': 13.2, 'Micro Four Thirds': 17.3, 'Super 35': 23.3, 'Full frame': 35.6 };
+// where each camera sits until it's placed for real: the plot says these are assumed
+const DEFAULTS = {
+  1: { x: 0, y: 9.6, z: 70, aim: 'speaker', f: 110 },
+  2: { x: 34, y: 5.5, z: 26, aim: 'center', f: 24 },
+  3: { x: -28, y: 5.5, z: 40, aim: 'speaker', f: 100 },
+  4: { x: 21, y: 5.6, z: 5, aim: 'band', f: 60 },
+  5: { x: -17, y: 5.6, z: 4, aim: 'band', f: 24 },
+  6: { x: 0, y: 12, z: 100, aim: 'center', f: 24 },
+};
+
+const renderer = new THREE.WebGLRenderer({ canvas: $('#gl'), antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.setClearColor(0x08090b, 1);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050506);
+
+const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0.05, ...o });
+function box(w, h, d, c, x, y, z, o) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, o)); m.position.set(x, y, z); scene.add(m); return m; }
+
+// house: floor, walls, ceiling, a riser at the back for the center camera
+box(ROOM.w, 0.2, ROOM.back - ROOM.front, 0x24252d, 0, -0.1, (ROOM.back + ROOM.front) / 2);
+box(ROOM.w, ROOM.h, 0.5, 0x0d0e12, 0, ROOM.h / 2, ROOM.front);
+// side walls, ceiling and back wall: only the cameras see them, so the room view can look in from above
+const SHELL = 2;
+for (const m of [box(0.5, ROOM.h, ROOM.back - ROOM.front, 0x101116, -ROOM.w / 2, ROOM.h / 2, (ROOM.back + ROOM.front) / 2),
+  box(0.5, ROOM.h, ROOM.back - ROOM.front, 0x101116, ROOM.w / 2, ROOM.h / 2, (ROOM.back + ROOM.front) / 2),
+  box(ROOM.w, 0.5, ROOM.back - ROOM.front, 0x07070a, 0, ROOM.h, (ROOM.back + ROOM.front) / 2),
+  box(ROOM.w, ROOM.h, 0.5, 0x0c0d11, 0, ROOM.h / 2, ROOM.back)]) m.layers.set(SHELL);
+box(22, 4, 10, 0x22232b, 0, 2, 70);
+// stage and its lip lights
+box(ROOM.stageW, ROOM.stageH, ROOM.stageD, 0x16171c, 0, ROOM.stageH / 2, -ROOM.stageD / 2);
+box(ROOM.stageW, 0.15, 0.2, 0xffffff, 0, ROOM.stageH - 0.2, 0.05, { emissive: 0x9ab6ff, emissiveIntensity: 0.8 });
+box(16, 1.5, 10, 0x1d1e24, 0, ROOM.stageH + 0.75, -19); // drum riser
+
+// LED wall: a soft abstract gradient
+function ledTexture() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 232;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 512, 232); gr.addColorStop(0, '#1d3c8f'); gr.addColorStop(0.55, '#5a2a8a'); gr.addColorStop(1, '#0d1b3d');
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 232);
+  for (let i = 0; i < 9; i++) { g.beginPath(); g.fillStyle = `rgba(255,255,255,${0.04 + (i % 3) * 0.02})`; g.arc(60 + i * 55, 116 + Math.sin(i) * 60, 40 + (i % 4) * 22, 0, Math.PI * 2); g.fill(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const led = new THREE.Mesh(new THREE.PlaneGeometry(44, 20), new THREE.MeshBasicMaterial({ map: ledTexture() }));
+led.position.set(0, 15, ROOM.front + 0.4); scene.add(led);
+for (const sx of [-1, 1]) { // side screens
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(18, 10.1), new THREE.MeshBasicMaterial({ color: 0x223a6b }));
+  s.position.set(sx * 41, 16, -4); s.rotation.y = -sx * 0.45; scene.add(s);
+}
+
+// people: a simple figure (body and head), solid colors
+const bodyGeo = new THREE.CapsuleGeometry(0.75, 2.9, 4, 10); bodyGeo.translate(0, 2.2, 0);
+const headGeo = new THREE.SphereGeometry(0.48, 14, 10); headGeo.translate(0, 5.25, 0);
+function person(shirt, skin = 0xc99a7a) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(bodyGeo, mat(shirt))); g.add(new THREE.Mesh(headGeo, mat(skin, { roughness: 0.6 })));
+  return g;
+}
+const onStage = (g, x, z) => { g.position.set(x, ROOM.stageH, z); scene.add(g); return g; };
+// worship: band and vocalists
+const band = new THREE.Group(); scene.add(band);
+const addBand = (g, x, z, y = ROOM.stageH) => { g.position.set(x, y, z); band.add(g); return g; };
+const vocals = [[-12, -8, 0x2c3e66], [-4, -8, 0xe8e2d6], [4, -8, 0x3b2b2b], [12, -8, 0x6b6f78]].map(([x, z, c]) => addBand(person(c), x, z));
+for (const v of vocals) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.8), mat(0x111111)); st.position.set(0, 2.4, 1.1); v.add(st); }
+addBand(person(0x1f1f1f), 0, -20, ROOM.stageH + 1.5);
+const kit = new THREE.Group(); [[-1.6, 0.2, 0.9, 1.9], [1.6, 0.2, 0.9, 1.9], [0, 0.6, 1.2, 0.9], [-2.6, -0.4, 0.8, 2.1], [2.4, -0.6, 1, 1.4]].forEach(([x, z, r, y]) => { const d = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1.1, 16), mat(0x7a1c1c, { metalness: 0.3 })); d.position.set(x, y, z + 2.4); kit.add(d); });
+addBand(kit, 0, -20, ROOM.stageH + 1.5);
+addBand(person(0x334455), -18, -14); addBand(person(0x5a4a3a), 18, -14);
+const keys = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3, 1.4), mat(0x0f0f0f)); keys.position.set(-11, 1.5, 1.4); addBand(person(0x223322), -11, -16).add(keys);
+// host
+const host = onStage(person(0x8a6b4a), 0, -5);
+// message: the speaker and a clear pulpit
+const message = new THREE.Group(); scene.add(message);
+const pulpit = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.8, 1.6), new THREE.MeshStandardMaterial({ color: 0xdfe8ff, transparent: true, opacity: 0.22, roughness: 0.1 }));
+pulpit.position.set(-4, ROOM.stageH + 1.9, -9); message.add(pulpit);
+const speaker = person(0x1e2a44); speaker.position.set(0, ROOM.stageH, -7); message.add(speaker);
+
+// the house, full: rows of seats and people (drawn in two batches so it stays quick)
+(function audience() {
+  const seats = [], folks = [];
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let z = 10; z <= 96; z += 3.2) {
+    if (z > 62 && z < 78) continue; // the camera riser and aisle around it
+    for (let x = -46; x <= 46; x += 2.1) {
+      if (Math.abs(x) < 3.5 || Math.abs(Math.abs(x) - 30) < 2) continue; // aisles
+      seats.push([x, z]);
+      if (rnd() < 0.72) folks.push([x + (rnd() - 0.5) * 0.3, z, rnd()]);
+    }
+  }
+  const seatGeo = new THREE.BoxGeometry(1.8, 1.6, 1.6); seatGeo.translate(0, 0.8, 0.35);
+  const sm = new THREE.InstancedMesh(seatGeo, mat(0x23242c), seats.length);
+  const m4 = new THREE.Matrix4();
+  seats.forEach(([x, z], i) => sm.setMatrixAt(i, m4.makeTranslation(x, 0, z)));
+  scene.add(sm);
+  const pg = mergeGeometries([bodyGeo.clone(), headGeo.clone()]);
+  const pm = new THREE.InstancedMesh(pg, mat(0xffffff), folks.length);
+  const col = new THREE.Color(), shirts = [0x2a2f3a, 0x3d3227, 0x4a4f58, 0x1c2433, 0x5c4a3b, 0x6a6e78, 0x2f3b2c, 0x7a2f2f];
+  folks.forEach(([x, z, r], i) => { m4.makeScale(0.92, 0.82, 0.92).setPosition(x, 0.2, z); pm.setMatrixAt(i, m4); pm.setColorAt(i, col.setHex(shirts[Math.floor(r * shirts.length)])); });
+  scene.add(pm);
+})();
+
+// light: a dim house, a bright stage, and a few colored beams in the haze
+const hemi = new THREE.HemisphereLight(0x8090b0, 0x101014, 0.35); scene.add(hemi);
+// a floor grid every 10 ft, only in the room view, for judging distance
+const grid = new THREE.GridHelper(220, 22, 0x3a3d48, 0x24262e); grid.position.set(0, 0.02, 40); grid.layers.set(1); scene.add(grid);
+const key = new THREE.DirectionalLight(0xfff1e0, 1.6); key.position.set(0, 40, 60); key.target.position.set(0, 4, -10); scene.add(key, key.target);
+for (const [x, c, i] of [[-24, 0xffe4c8, 2.6], [24, 0xffe4c8, 2.6], [0, 0xffffff, 3]]) {
+  const s = new THREE.SpotLight(c, i, 0, Math.PI / 7, 0.5, 0); s.position.set(x, 32, 22); s.target.position.set(x * 0.3, 4, -8); scene.add(s, s.target);
+}
+const beams = new THREE.Group(); scene.add(beams);
+for (const [x, c] of [[-26, 0x4d7dff], [-13, 0xb04dff], [13, 0xb04dff], [26, 0x4d7dff]]) {
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(4, 30, 24, 1, true), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  cone.position.set(x, 18, -18); cone.rotation.z = (x > 0 ? 1 : -1) * 0.25; beams.add(cone);
+}
+
+/* ---------- cameras ---------- */
+const MARK = 1; // camera markers and frustums only show in the room view
+const cams = []; // { n, id, name, data, cam (THREE camera), plot {x,y,z,tx,ty,tz,f,aim}, lens {min,max,known}, sensorW, sensor, mark, line, out, uses }
+const plotCam = new THREE.PerspectiveCamera(42, 4 / 3, 1, 1000);
+plotCam.position.set(70, 90, 120); plotCam.layers.enable(MARK);
+const controls = new OrbitControls(plotCam, $('#plotView'));
+controls.target.set(0, 0, 10); controls.maxPolarAngle = Math.PI * 0.49; controls.minDistance = 20; controls.maxDistance = 320; controls.update();
+
+function labelSprite(text) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(64, 64, 56, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#0b0c0e'; g.font = '700 72px Outfit, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 64, 70);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false })); s.scale.set(4.5, 4.5, 1); s.renderOrder = 10; return s;
+}
+function makeMarker(n) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 2.6), new THREE.MeshBasicMaterial({ color: 0xdddddd }));
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 1.6, 12), new THREE.MeshBasicMaterial({ color: 0x888888 }));
+  lens.rotation.x = Math.PI / 2; lens.position.z = -2;
+  const head = new THREE.Group(); head.add(body, lens); g.add(head);
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1, 6), new THREE.MeshBasicMaterial({ color: 0x777777 })); g.add(stand);
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(3.4, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); g.add(hit);
+  const tag = labelSprite(String(n)); tag.position.y = 3.6; g.add(tag);
+  g.traverse(o => o.layers.set(MARK));
+  g.userData = { head, stand, body, hit, n };
+  scene.add(g);
+  const fr = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }));
+  fr.layers.set(MARK); scene.add(fr);
+  return { g, fr };
+}
+const lensRange = s => { const m = String(s || '').match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)\s*mm/); return m ? [parseFloat(m[1]), parseFloat(m[2])] : null; };
+function setupCam(n, rec) {
+  const d = rec ? rec.data : {}, parts = Array.isArray(d.parts) ? d.parts : [];
+  const body = parts.find(p => p.role === 'Body'), lensP = parts.find(p => p.role === 'Lens');
+  const sensor = body && body.sensor ? body.sensor : null;
+  let sw = SENSOR_W[sensor] || 23.3;
+  const sz = body && sensor !== '2/3"' && String(body.size || '').match(/(\d+(?:\.\d+)?)\s*[×x]\s*\d+(?:\.\d+)?\s*mm/);
+  if (sz) sw = parseFloat(sz[1]);
+  const r = lensP && lensRange(lensP.range || lensP.model);
+  const assumed = [];
+  let lens;
+  if (r) lens = { min: r[0], max: r[1], name: lensP.model, known: true };
+  else if (sensor === '2/3"') { lens = { min: 8, max: 128, name: 'Lens not known: a 16× B4 zoom (8–128mm) assumed', known: false }; assumed.push('lens'); }
+  else { lens = { min: 18, max: 55, name: 'No lens yet: an 18–55mm assumed', known: false }; assumed.push('lens'); }
+  if (!body) assumed.push('body');
+  const def = DEFAULTS[n] || DEFAULTS[6];
+  const saved = d.plot && typeof d.plot === 'object' ? d.plot : null;
+  const plot = { ...def, ...(saved || {}) };
+  plot.f = clamp(plot.f, lens.min, lens.max);
+  const c = { n, id: rec ? rec.id : null, name: d.name || `Camera ${n}`, data: d, body, lensP, sensor: sensor || 'Super 35', sensorW: sw, lens, plot, placed: !!saved, assumed,
+    out: d.status === 'out', uses: Array.isArray(d.uses) ? d.uses : [], cam: new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 600) };
+  c.cam.layers.enable(SHELL);
+  Object.assign(c, makeMarker(n));
+  cams.push(c); place(c);
+}
+const aimPoint = c => (c.plot.aim && SPOTS[c.plot.aim] ? SPOTS[c.plot.aim].clone() : new THREE.Vector3(c.plot.tx ?? 0, c.plot.ty ?? 8, c.plot.tz ?? -8));
+const hfov = c => 2 * Math.atan(c.sensorW / (2 * c.plot.f)); // radians
+function place(c) {
+  const p = c.plot, t = aimPoint(c);
+  c.cam.position.set(p.x, p.y, p.z); c.cam.lookAt(t);
+  c.cam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hfov(c) / 2) / (16 / 9))); c.cam.updateProjectionMatrix();
+  c.g.position.set(p.x, 0, p.z);
+  c.g.userData.head.position.set(0, p.y, 0); c.g.userData.head.lookAt(t.x, t.y, t.z); c.g.userData.head.rotateY(Math.PI);
+  c.g.userData.stand.scale.y = Math.max(0.2, p.y - 0.7); c.g.userData.stand.position.y = (p.y - 0.7) / 2;
+  c.g.children.find(o => o.isSprite).position.y = p.y + 2.8;
+  c.g.userData.hit.position.y = p.y;
+  // the frustum out to the aim point, so the plot shows what each camera sees
+  const dist = c.cam.position.distanceTo(t), hw = Math.tan(hfov(c) / 2) * dist, hh = hw / (16 / 9);
+  const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
+  c.cam.getWorldDirection(fw); rt.crossVectors(fw, c.cam.up).normalize(); up.crossVectors(rt, fw).normalize();
+  const o = c.cam.position, cen = o.clone().addScaledVector(fw, dist);
+  const k = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => cen.clone().addScaledVector(rt, a * hw).addScaledVector(up, b * hh));
+  const pts = []; for (const q of k) pts.push(o, q); for (let i = 0; i < 4; i++) pts.push(k[i], k[(i + 1) % 4]);
+  c.fr.geometry.setFromPoints(pts);
+}
+
+/* ---------- the multiview ---------- */
+const st = { seg: 'worship', pgm: 1, pvw: 3, sel: 1, since: performance.now(), cuts: [], aiming: false, drag: null };
+const camByN = n => cams.find(c => c.n === n);
+const usedNow = c => !c.out && (!c.uses.length || c.uses.includes(st.seg));
+function tileHtml(c) {
+  const why = c.out ? 'Not in use' : !usedNow(c) ? `Off for the ${st.seg}` : '';
+  const sub = c.out ? (c.body ? 'Built, not in the broadcast' : 'Not built out') : st.seg === 'message' && !usedNow(c) ? 'Leaves the room for the message' : '';
+  return `<div class="view tile" data-view="cam" data-n="${c.n}" tabindex="0" role="button" aria-label="Camera ${c.n}">
+    ${why ? `<div class="off">${esc(why)}${sub ? `<small>${esc(sub)}</small>` : ''}</div>` : ''}
+    <div class="lbl"><b>CAM ${c.n}</b><span>${esc(lensLine(c))}</span></div></div>`;
+}
+const lensLine = c => `${c.body ? c.body.model.replace(/\s*\(.*\)/, '') : 'No body'} · ${Math.round(c.plot.f)}mm`;
+function drawTiles() {
+  $('#tiles').innerHTML = cams.map(tileHtml).join('');
+  tally();
+}
+function tally() {
+  for (const t of document.querySelectorAll('.tile')) {
+    const n = +t.dataset.n;
+    t.classList.toggle('is-pgm', n === st.pgm); t.classList.toggle('is-pvw', n === st.pvw); t.classList.toggle('sel', n === st.sel);
+    const c = camByN(n); const l = t.querySelector('.lbl span'); if (c && l) l.textContent = lensLine(c);
+  }
+  const p = camByN(st.pgm), v = camByN(st.pvw);
+  $('#pgmTag').textContent = `PROGRAM · CAM ${st.pgm}`; $('#pvwTag').textContent = `PREVIEW · CAM ${st.pvw}`;
+  $('#pgmLbl').innerHTML = p ? `<b>CAM ${p.n}</b><span>${esc(lensLine(p))} · ${esc(shotName(p))}</span>` : '';
+  $('#pvwLbl').innerHTML = v ? `<b>CAM ${v.n}</b><span>${esc(lensLine(v))} · ${esc(shotName(v))}</span>` : '';
+}
+function preview(n) { if (!camByN(n)) return; st.pvw = n; st.sel = n; tally(); panel(); }
+function take(n) {
+  if (!camByN(n) || n === st.pgm) return;
+  const now = performance.now(), held = (now - st.since) / 1000;
+  st.cuts.unshift({ from: st.pgm, to: n, held, at: new Date() });
+  st.pvw = st.pgm; st.pgm = n; st.since = now;
+  tally(); stats();
+}
+const cut = () => take(st.pvw);
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function stats() {
+  const held = st.cuts.map(c => c.held);
+  $('#nCuts').textContent = st.cuts.length;
+  $('#avgShot').textContent = held.length ? `${(held.reduce((a, b) => a + b, 0) / held.length).toFixed(1)}s` : '–';
+  $('#longShot').textContent = held.length ? `${Math.max(...held).toFixed(0)}s` : '–';
+  $('#cutLog').innerHTML = st.cuts.slice(0, 40).map(c => `<div><b>${c.at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</b><span>Cam ${c.from} → Cam ${c.to}</span><span>held ${c.held.toFixed(1)}s</span></div>`).join('');
+}
+$('#tiles').addEventListener('click', e => { const t = e.target.closest('.tile'); if (t && performance.now() - (st.took || 0) > 500) preview(+t.dataset.n); });
+$('#tiles').addEventListener('dblclick', e => { const t = e.target.closest('.tile'); if (t) take(+t.dataset.n); });
+let lastTap = { n: 0, t: 0 };
+$('#tiles').addEventListener('pointerup', e => { // double-tap on touch screens
+  if (e.pointerType !== 'touch') return;
+  const t = e.target.closest('.tile'); if (!t) return;
+  const n = +t.dataset.n, now = performance.now();
+  if (lastTap.n === n && now - lastTap.t < 320) { take(n); st.took = now; lastTap = { n: 0, t: 0 }; } else lastTap = { n, t: now };
+});
+$('#cutBtn').addEventListener('click', cut);
+$('#clearLog').addEventListener('click', () => { st.cuts = []; st.since = performance.now(); stats(); });
+document.addEventListener('keydown', e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  if (/^[1-6]$/.test(e.key)) { preview(+e.key); e.preventDefault(); }
+  else if (e.key === ' ' || e.key === 'Enter') { cut(); e.preventDefault(); }
+});
+for (const b of document.querySelectorAll('#segs button')) b.addEventListener('click', () => {
+  st.seg = b.dataset.seg;
+  for (const x of document.querySelectorAll('#segs button')) x.setAttribute('aria-pressed', String(x === b));
+  band.visible = st.seg === 'worship'; host.visible = st.seg === 'host'; message.visible = st.seg === 'message'; beams.visible = st.seg === 'worship';
+  for (const c of cams) if (c.plot.aim === 'band' && st.seg !== 'worship') { /* the aim stays; the band just isn't there */ }
+  drawTiles(); panel();
+});
+band.visible = true; host.visible = false; message.visible = false;
+
+/* ---------- the selected camera: what it sees, and where it is ---------- */
+function shotName(c) {
+  const t = aimPoint(c), d = c.cam.position.distanceTo(t), w = d * c.sensorW / c.plot.f; // feet across the frame at the subject
+  if (w < 2.6) return 'extreme close-up';
+  if (w < 4.6) return 'close-up';
+  if (w < 8) return 'medium';
+  if (w < 16) return 'full body';
+  if (w < 40) return 'wide';
+  return 'very wide';
+}
+function panel() {
+  const c = camByN(st.sel); if (!c) return;
+  const t = aimPoint(c), d = c.cam.position.distanceTo(t), w = d * c.sensorW / c.plot.f, toSpk = c.cam.position.distanceTo(SPOTS.speaker);
+  const fovH = THREE.MathUtils.radToDeg(hfov(c));
+  const assumed = [!c.placed ? 'position' : '', ...c.assumed].filter(Boolean);
+  $('#camCard').innerHTML = `
+    <div class="cam-h"><b>Camera ${c.n}</b>${c.out ? '<span class="pill out">Not in use</span>' : '<span class="pill on">In use</span>'}<span>${esc(c.body ? `${c.body.make} ${c.body.model}` : 'No body yet')}</span></div>
+    <span class="shot">${esc(c.lens.name)} on ${esc(c.sensor)}${c.data.rig ? ` · ${esc(c.data.rig)}` : ''}</span>
+    <div class="figs"><div><b id="fNum">${Math.round(c.plot.f)}</b><span>mm</span></div><div><b>${fovH.toFixed(1)}°</b><span>Angle of view</span></div><div><b>${Math.round(toSpk)}</b><span>ft to speaker</span></div></div>
+    <span class="shot">At the ${esc(c.plot.aim || 'aim point')}: <b>${w.toFixed(1)} ft</b> across the frame, a <b>${esc(shotName(c))}</b>.</span>
+    <div class="row"><label for="zoom">Zoom</label><input id="zoom" type="range" min="${c.lens.min}" max="${c.lens.max}" step="1" value="${Math.round(c.plot.f)}"><output>${Math.round(c.plot.f)} mm</output></div>
+    <div class="row"><label for="hgt">Height</label><input id="hgt" type="range" min="3" max="20" step="0.1" value="${c.plot.y}"><output>${c.plot.y.toFixed(1)} ft</output></div>
+    <span class="lab">Aim at</span>
+    <div class="btns">${[['speaker', 'Speaker'], ['center', 'Stage center'], ['band', 'Band'], ['host', 'Host']].map(([k, l]) => `<button class="btn" data-aim="${k}" aria-pressed="${c.plot.aim === k}">${l}</button>`).join('')}<button class="btn" id="aimBtn" aria-pressed="${st.aiming}">Tap to aim</button></div>
+    ${assumed.length ? `<span class="assume">Assumed: ${esc(assumed.join(', '))}. Move it in the room view and it saves to Gear.</span>` : ''}
+    <span class="saved" id="saved"></span>`;
+  $('#zoom').addEventListener('input', e => { c.plot.f = +e.target.value; place(c); e.target.nextElementSibling.textContent = `${c.plot.f} mm`; $('#fNum').textContent = c.plot.f; tally(); later(c); });
+  $('#zoom').addEventListener('change', () => panel());
+  $('#hgt').addEventListener('input', e => { c.plot.y = +e.target.value; place(c); e.target.nextElementSibling.textContent = `${c.plot.y.toFixed(1)} ft`; later(c); });
+  $('#hgt').addEventListener('change', () => panel());
+  for (const b of document.querySelectorAll('[data-aim]')) b.addEventListener('click', () => { c.plot.aim = b.dataset.aim; place(c); panel(); tally(); later(c); });
+  $('#aimBtn').addEventListener('click', () => { st.aiming = !st.aiming; $('#plotView').classList.toggle('aiming', st.aiming); $('#plotHint').textContent = st.aiming ? `Tap where Camera ${c.n} should point` : 'Drag to look around · drag a camera to move it'; panel(); });
+}
+
+/* ---------- the room view: drag a camera to move it, or tap to aim ---------- */
+const ray = new THREE.Raycaster(); ray.layers.enableAll();
+const ndc = new THREE.Vector2();
+function pick(e) {
+  const r = $('#plotView').getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, plotCam);
+}
+const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+$('#plotView').addEventListener('pointerdown', e => {
+  pick(e);
+  if (st.aiming) {
+    const shown = o => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
+    const hits = ray.intersectObjects(scene.children, true).filter(h => h.object.isMesh && !(h.object.layers.mask & (1 << MARK)) && shown(h.object) && h.object.material && !h.object.material.transparent);
+    const c = camByN(st.sel);
+    if (hits.length && c) { const p = hits[0].point; c.plot.aim = null; c.plot.tx = +p.x.toFixed(1); c.plot.ty = +Math.max(p.y, 1).toFixed(1); c.plot.tz = +p.z.toFixed(1); place(c); later(c); }
+    st.aiming = false; $('#plotView').classList.remove('aiming'); $('#plotHint').textContent = 'Drag to look around · drag a camera to move it'; panel(); tally();
+    e.stopImmediatePropagation(); return;
+  }
+  const hit = ray.intersectObjects(cams.map(c => c.g.userData.hit), false)[0];
+  if (!hit) return;
+  const c = cams.find(x => x.g.userData.hit === hit.object);
+  st.sel = c.n; st.drag = { c, id: e.pointerId }; controls.enabled = false;
+  $('#plotView').setPointerCapture(e.pointerId);
+  tally(); panel();
+}, true);
+$('#plotView').addEventListener('pointermove', e => {
+  if (!st.drag || e.pointerId !== st.drag.id) return;
+  pick(e);
+  const p = new THREE.Vector3();
+  if (ray.ray.intersectPlane(floor, p)) {
+    const c = st.drag.c;
+    c.plot.x = +clamp(p.x, -ROOM.w / 2 + 2, ROOM.w / 2 - 2).toFixed(1); c.plot.z = +clamp(p.z, ROOM.front + 2, ROOM.back - 2).toFixed(1);
+    place(c);
+  }
+});
+const endDrag = e => { if (!st.drag || e.pointerId !== st.drag.id) return; const c = st.drag.c; st.drag = null; controls.enabled = true; panel(); tally(); later(c); };
+$('#plotView').addEventListener('pointerup', endDrag);
+$('#plotView').addEventListener('pointercancel', endDrag);
+
+/* ---------- saving: a camera's spot, aim and zoom go back to its Gear entry (and its distance to the speaker) ---------- */
+let sb = null, canSave = false;
+const saveT = new Map();
+function later(c) {
+  if (!canSave || !c.id) { const s = $('#saved'); if (s) s.textContent = canSave ? '' : 'Sign in to POS on this device to keep changes.'; return; }
+  clearTimeout(saveT.get(c.n));
+  saveT.set(c.n, setTimeout(() => save(c), 1200));
+}
+async function save(c) {
+  const plot = { x: c.plot.x, y: +c.plot.y.toFixed(1), z: c.plot.z, f: Math.round(c.plot.f), aim: c.plot.aim || null, tx: c.plot.tx ?? null, ty: c.plot.ty ?? null, tz: c.plot.tz ?? null };
+  const dist = Math.round(c.cam.position.distanceTo(SPOTS.speaker));
+  try {
+    const { data: rows, error: e1 } = await sb.from('records').select('data').eq('id', c.id);
+    if (e1 || !rows || !rows[0]) throw e1 || new Error('missing');
+    const { error } = await sb.from('records').update({ data: { ...rows[0].data, plot, dist } }).eq('id', c.id);
+    if (error) throw error;
+    c.placed = true; c.data = { ...rows[0].data, plot, dist };
+    const s = $('#saved'); if (s && st.sel === c.n) s.textContent = `Saved to Gear · ${dist} ft to the speaker`;
+  } catch (err) { const s = $('#saved'); if (s) s.textContent = 'That did not save. Check your connection.'; }
+}
+
+/* ---------- drawing: one canvas, every view in its own box ---------- */
+const views = () => [...document.querySelectorAll('.view[data-view]')];
+function cameraFor(el) {
+  const v = el.dataset.view;
+  if (v === 'plot') return plotCam;
+  if (v === 'pgm') return (camByN(st.pgm) || {}).cam;
+  if (v === 'pvw') return (camByN(st.pvw) || {}).cam;
+  return (camByN(+el.dataset.n) || {}).cam;
+}
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  const t = now / 1000;
+  // a little life: the speaker walks and talks, the vocalists sway, the host shifts
+  speaker.position.x = Math.sin(t * 0.22) * 7 + Math.sin(t * 0.61) * 0.8; speaker.rotation.y = Math.cos(t * 0.22) * 0.5;
+  vocals.forEach((v, i) => { v.position.y = ROOM.stageH + Math.abs(Math.sin(t * 2.1 + i)) * 0.12; v.rotation.y = Math.sin(t * 0.7 + i) * 0.25; });
+  host.position.x = Math.sin(t * 0.3) * 1.2;
+  beams.children.forEach((b, i) => { b.rotation.z = (i < 2 ? -1 : 1) * (0.25 + Math.sin(t * 0.5 + i) * 0.15); });
+  // cameras on the speaker follow whoever has the stage: the worship leader, the host, or the speaker as they walk
+  const who = st.seg === 'message' ? speaker : st.seg === 'host' ? host : vocals[1];
+  for (const c of cams) if (c.plot.aim === 'speaker') c.cam.lookAt(who.position.x, who.position.y + 5.4, who.position.z);
+  // tally colors in the room view
+  for (const c of cams) {
+    const col = c.n === st.pgm ? 0xff3b30 : c.n === st.pvw ? 0x2fd158 : c.n === st.sel ? 0xffffff : c.out ? 0x555555 : 0xaaaaaa;
+    c.fr.material.color.setHex(col); c.g.userData.body.material.color.setHex(col);
+    c.fr.material.opacity = c.n === st.pgm || c.n === st.pvw || c.n === st.sel ? 0.8 : 0.28;
+  }
+  const W = renderer.domElement.clientWidth, H = renderer.domElement.clientHeight;
+  if (renderer.domElement.width !== Math.floor(W * renderer.getPixelRatio()) || renderer.domElement.height !== Math.floor(H * renderer.getPixelRatio())) renderer.setSize(W, H, false);
+  renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
+  for (const el of views()) {
+    const r = el.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > H || r.right < 0 || r.left > W || r.width < 4) continue;
+    const cam = cameraFor(el); if (!cam) continue;
+    renderer.setViewport(r.left, H - r.bottom, r.width, r.height); renderer.setScissor(r.left, H - r.bottom, r.width, r.height);
+    if (cam === plotCam) { cam.aspect = r.width / r.height; cam.updateProjectionMatrix(); }
+    hemi.intensity = cam === plotCam ? 2.2 : 0.35; // house lights up for the room view only
+    renderer.render(scene, cam);
+  }
+  $('#pgmTime').textContent = mmss((now - st.since) / 1000);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- start: your cameras from Gear (or the assumed six when not signed in) ---------- */
+async function start() {
+  let recs = [];
+  try {
+    if (window.supabase) {
+      sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'hub.auth' } });
+      const { data } = await sb.auth.getSession();
+      if (data && data.session) {
+        const { data: rows, error } = await sb.from('records').select('id,data').eq('kind', 'gear-cam');
+        if (!error && rows) { recs = rows; canSave = true; }
+      }
+    }
+  } catch (e) { /* shown with the assumed cameras */ }
+  const byN = new Map();
+  for (const r of recs) { const m = String(r.data && r.data.name || '').match(/(\d+)/); if (m && !byN.has(+m[1])) byN.set(+m[1], r); }
+  for (let n = 1; n <= 6; n++) setupCam(n, byN.get(n) || null);
+  $('#who').textContent = canSave ? `${byN.size} cameras from Gear · room layout assumed` : 'Not signed in: showing assumed cameras';
+  st.pgm = cams.find(c => !c.out && c.n === 1) ? 1 : cams.find(c => !c.out)?.n || 1;
+  st.pvw = cams.find(c => !c.out && c.n !== st.pgm)?.n || 2; st.sel = st.pgm;
+  drawTiles(); panel(); stats();
+  requestAnimationFrame(frame);
+}
+start();
+</script>
+</body>
+</html>

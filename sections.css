@@ -543,3 +543,7 @@ select.gr-in{-webkit-appearance:none;appearance:none}
 .gr-table tbody tr:last-child th{box-shadow:inset -1px 0 0 var(--hair)}
 .gr-none{color:var(--ink-3)}
 @media (min-width:760px) and (min-height:500px){ .gr-cmp-scroll{padding:6px 24px 48px;margin:-6px -24px -12px} }
+.gr-modebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gr-modebar .gr-modes{flex:1 1 200px}
+.gr-3d{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.gr-3d svg.i{width:17px;height:17px}

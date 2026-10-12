@@ -157,7 +157,7 @@ window.POSGear = function (ctx) {
     const list = cams(), live = list.filter(inUse);
     const nParts = list.reduce((n, c) => n + partsOf(c).length, 0), nLinks = list.reduce((n, c) => n + linksOf(c).length, 0);
     const sum = `<div class="gr-sum"><div><b class="fig">${live.length}</b><span>in use</span></div><div><b class="fig">${list.length}</b><span>${list.length === 1 ? 'camera' : 'cameras'}</span></div><div><b class="fig">${nParts}</b><span>parts</span></div><div><b class="fig">${nLinks}</b><span>cables</span></div></div>`;
-    const modes = `<div class="seg3 gr-modes" role="radiogroup" aria-label="Show">${[['cams', 'Cameras'], ['compare', 'Compare']].map(([v, l]) => `<button type="button" role="radio" data-act="gr-mode" data-v="${v}" aria-checked="${UI.mode === v}">${l}</button>`).join('')}</div>`;
+    const modes = `<div class="gr-modebar"><div class="seg3 gr-modes" role="radiogroup" aria-label="Show">${[['cams', 'Cameras'], ['compare', 'Compare']].map(([v, l]) => `<button type="button" role="radio" data-act="gr-mode" data-v="${v}" aria-checked="${UI.mode === v}">${l}</button>`).join('')}</div><a class="btn gr-3d" href="cam.html">${ICON.cam}<span>3D cam plot</span></a></div>`;
     if (UI.mode === 'compare') {
       return `<div class="gr-cmp"><div class="gr-cmp-scroll" id="grCmp" data-keep>${sum}${modes}${sensorMix(list)}<section class="sec"><div class="sec-head"><h2 class="lab">Every camera</h2>${ctx.canSave() ? '<button type="button" class="link" data-act="gr-new">Add a camera</button>' : ''}</div>${compare(list)}</section></div></div>`;
     }
