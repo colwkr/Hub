@@ -471,3 +471,32 @@ html.osk-on .app{padding-bottom:calc(var(--osk-h, 300px) + 12px)}
 .f-proj{display:flex;align-items:baseline;gap:10px;margin:0}
 .f-proj b{font-size:15px;font-weight:500}
 .f-wait input{width:100%}
+
+/* Work: one tab, with Overview, Projects, Meetings and Gear inside */
+.work > .wk-tabs{flex:none}
+.work > .mtg{flex:1;min-height:0}
+
+/* gear: each camera, its parts and its signal path */
+.gr-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 4px}
+.gr-sum > div{display:flex;flex-direction:column;gap:2px}
+.gr-sum b{font-size:40px;font-weight:200;line-height:1}
+.gr-sum span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.gr-row{gap:8px}
+.gr-n{flex:none;text-align:right;font-size:10.5px;line-height:1.35;color:var(--ink-3);white-space:nowrap}
+.gr-n b{font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.gr-where{border:0;background:var(--field);color:var(--ink);border-radius:14px;padding:10px 12px;min-height:44px;font:inherit;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border);width:100%}
+.gr-parts,.gr-links{display:flex;flex-direction:column;border-radius:20px;background:var(--well);box-shadow:inset 0 0 0 1px var(--hair)}
+.gr-part{display:grid;grid-template-columns:92px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;border:0;background:none;color:inherit;text-align:left;padding:12px 14px 12px 16px;min-height:56px}
+.gr-part + .gr-part,.gr-link + .gr-link{box-shadow:inset 0 1px 0 var(--hair)}
+.gr-part > svg.i{width:16px;height:16px;color:var(--ink-3)}
+.gr-pv{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gr-pv .name{font-size:15px}
+.gr-part.blank .meta{color:var(--ink-3)}
+.gr-link{display:flex;align-items:flex-start;gap:12px;width:100%;border:0;background:none;color:inherit;text-align:left;padding:12px 14px}
+.gr-step{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--solid);color:var(--on-solid);margin-top:1px}
+.gr-hop{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.gr-end{font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.gr-wire{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2);padding-left:2px}
+.gr-wire svg.i{width:14px;height:14px;color:var(--ink-3)}
+.gr-addlink{align-self:flex-start;display:inline-flex;align-items:center;gap:6px}
+.gr-addlink svg.i{width:15px;height:15px}
