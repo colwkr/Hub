@@ -35,28 +35,28 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012190604">
-<script src="finance.js?v=20261012190604"></script>
-<link rel="stylesheet" href="car.css?v=20261012190604">
-<script src="car.js?v=20261012190604"></script>
-<link rel="stylesheet" href="sections.css?v=20261012190604">
-<link rel="stylesheet" href="tv.css?v=20261012190604">
-<script src="records.js?v=20261012190604"></script>
-<script src="people.js?v=20261012190604"></script>
-<script src="wheels.js?v=20261012190604"></script>
-<script src="keyboard.js?v=20261012190604"></script>
-<script src="notes.js?v=20261012190604"></script>
-<script src="reminders.js?v=20261012190604"></script>
-<script src="gear.js?v=20261012190604"></script>
-<script src="lights.js?v=20261012190604"></script>
-<script src="tv.js?v=20261012190604"></script>
-<script src="work.js?v=20261012190604"></script>
-<script src="health.js?v=20261012190604"></script>
-<script src="pets.js?v=20261012190604"></script>
-<script src="places.js?v=20261012190604"></script>
-<script src="placestab.js?v=20261012190604"></script>
-<script src="usmap.js?v=20261012190604"></script>
-<script src="packages.js?v=20261012190604"></script>
+<link rel="stylesheet" href="finance.css?v=20261012192442">
+<script src="finance.js?v=20261012192442"></script>
+<link rel="stylesheet" href="car.css?v=20261012192442">
+<script src="car.js?v=20261012192442"></script>
+<link rel="stylesheet" href="sections.css?v=20261012192442">
+<link rel="stylesheet" href="tv.css?v=20261012192442">
+<script src="records.js?v=20261012192442"></script>
+<script src="people.js?v=20261012192442"></script>
+<script src="wheels.js?v=20261012192442"></script>
+<script src="keyboard.js?v=20261012192442"></script>
+<script src="notes.js?v=20261012192442"></script>
+<script src="reminders.js?v=20261012192442"></script>
+<script src="gear.js?v=20261012192442"></script>
+<script src="lights.js?v=20261012192442"></script>
+<script src="tv.js?v=20261012192442"></script>
+<script src="work.js?v=20261012192442"></script>
+<script src="health.js?v=20261012192442"></script>
+<script src="pets.js?v=20261012192442"></script>
+<script src="places.js?v=20261012192442"></script>
+<script src="placestab.js?v=20261012192442"></script>
+<script src="usmap.js?v=20261012192442"></script>
+<script src="packages.js?v=20261012192442"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1284,6 +1284,7 @@ dialog::backdrop{background:transparent}
 <div id="fly" class="fly" role="menu" hidden>
   <div class="fly-grp" data-fly="work"><span class="lab">Work</span>
     <button type="button" role="menuitem" data-tab="work" data-wsub="overview"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span></button>
+    <button type="button" role="menuitem" data-tab="work" data-wsub="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.5"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.5"/><rect x="15.5" y="4.5" width="5" height="6.5" rx="1.5"/></svg><span>Projects</span></button>
     <button type="button" role="menuitem" data-tab="work" data-wsub="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.5-3 2.7-5 5.5-5s5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.5 1.4 5 4.3"/></svg><span>Meetings</span></button>
     <button type="button" role="menuitem" data-tab="work" data-wsub="gear"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Gear</span></button>
   </div>
@@ -1313,6 +1314,7 @@ dialog::backdrop{background:transparent}
     <button type="button" class="d-grp" data-grp="work" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/></svg><span>Work</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg></button>
     <div class="d-sub" data-sub-of="work" hidden>
       <button type="button" data-tab="work" data-wsub="overview"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+      <button type="button" data-tab="work" data-wsub="projects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.5"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.5"/><rect x="15.5" y="4.5" width="5" height="6.5" rx="1.5"/></svg><span>Projects</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
       <button type="button" data-tab="work" data-wsub="meetings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.5-3 2.7-5 5.5-5s5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.2c2.4-.3 4.5 1.4 5 4.3"/></svg><span>Meetings</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
       <button type="button" data-tab="work" data-wsub="gear"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-2.5v8l-5-2.5"/></svg><span>Gear</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     </div>
@@ -1489,13 +1491,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012190604"></script>
+<script src="appearance.js?v=20261012192442"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012190604';
+  const VERSION = '20261012192442';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1600,7 +1602,7 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 680 ? 'week' : 'day';
   }
-  let mk = null, mv = null, bd = null, so = null, renderLater = false, scopeOpen = false;
+  let mk = null, mv = null, bd = null, so = null, wd = null, renderLater = false, scopeOpen = false;
   // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
   const H_MIN = 16, H_MAX = 480; // all the way in, a 5-minute block is tall enough for its name and its time
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
@@ -1804,7 +1806,7 @@ dialog::backdrop{background:transparent}
   const TAGS = { personal: 'Personal', work: 'Work' };
   const tagPill = t => (t.tag && TAGS[t.tag] ? `<span class="ttag ${t.tag}">${TAGS[t.tag]}</span>` : '');
 
-  function meta(t, withDay) {
+  function meta(t, withDay, quiet) {
     const bits = [], k = kindOf(t);
     if (k !== 'unsorted' && withDay) bits.push(dayLabel(t.date));
     if (k === 'timed') {
@@ -1817,7 +1819,7 @@ dialog::backdrop{background:transparent}
     } else {
       if (t.time) bits.push(fmtTime(toMin(t.time)));
       if (t.mins) bits.push(fmtDur(t.mins));
-      if (!bits.length && !t.list) bits.push('No day or time');
+      if (!bits.length && !t.list && !quiet) bits.push('No day or time');
     }
     return bits.join(' · ');
   }
@@ -1831,8 +1833,8 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- pieces ---------- */
-  function row(t, withDay, step) {
-    const wait = blockedBy(t), mt = meta(t, withDay);
+  function row(t, withDay, step, quiet) {
+    const wait = blockedBy(t), mt = meta(t, withDay, quiet);
     const pj = projOf(t);
     const metaBits = [isOverdue(t) ? '<span class="pill warn">Overdue</span>' : '', pj ? `<span class="ptag">${esc(pj.title)}</span>` : tagPill(t), t.wait && !t.done ? `<span class="pill wait">Waiting on ${esc(t.wait)}</span>` : '', wait ? `<span class="after">After ${esc((stepBefore(t) || wait).title)}</span>` : '', mt && !wait ? `<span>${esc(mt)}</span>` : ''].filter(Boolean).join('');
     return `<div class="trow${t.done ? ' done' : ''}${step ? ' step srt' : ''}${wait ? ' locked' : ''}" data-sid="${esc(t.id)}">
@@ -2338,8 +2340,7 @@ dialog::backdrop{background:transparent}
   // Work: one tab. Overview (the CG list, work projects, work meetings), then Projects, Meetings and the Gear list.
   const WORK_SUBS = [['overview', 'Overview'], ['projects', 'Projects'], ['meetings', 'Meetings'], ['gear', 'Gear']];
   const WORK_PARTS = ['projects', 'meetings', 'gear'];
-  // what the Work bar shows: projects live on the Overview list, and one opens on its own page from there
-  const WORK_NAV = [['overview', 'Overview'], ['meetings', 'Meetings'], ['gear', 'Gear']];
+  const WORK_NAV = WORK_SUBS;
   const onWork = sub => S.tab === 'work' && S.workSub === sub;
   function setWorkSub(sub) {
     S.workSub = WORK_SUBS.some(([k]) => k === sub) ? sub : 'overview';
@@ -2348,49 +2349,48 @@ dialog::backdrop{background:transparent}
   function vWork() {
     if (!S.loaded) return notReady();
     const sub = S.workSub;
-    const nav = `<nav class="fin-tabs wk-tabs" aria-label="Work sections">${WORK_NAV.map(([k, l]) => `<button type="button" data-act="wsub" data-sub="${k}"${k === sub || (k === 'overview' && sub === 'projects') ? ' aria-current="page"' : ''}>${l}</button>`).join('')}</nav>`;
+    const nav = `<nav class="fin-tabs wk-tabs" aria-label="Work sections">${WORK_NAV.map(([k, l]) => `<button type="button" data-act="wsub" data-sub="${k}"${k === sub ? ' aria-current="page"' : ''}>${l}</button>`).join('')}</nav>`;
     const body = sub === 'projects' ? vProjects() : sub === 'meetings' ? vMeetings() : sub === 'gear' ? (GEAR ? GEAR.view() : notReady()) : vWorkHome();
     return `<div class="work wk-${sub}">${nav}${body}</div>`;
   }
-  // Work at a glance: the CG list down the left, every open work task and project in the middle, meetings on the right
+  // Work at a glance: the CG list down the left, every open work task in the middle, meetings on the right.
+  // A project's steps sit in the list as tasks of their own (a small tag says which project). Hold a task (or drag it
+  // with a mouse) and drop it on Today, Tomorrow, another day or No day to move it there.
   function vWorkHome() {
-    const tk = todayKey();
+    const tk = todayKey(), tom = addDays(tk, 1);
     const mine = S.items.filter(x => x.kind === 'meeting' && x.tag !== 'personal');
     const up = mine.filter(m => m.date && !mtgEnded(m)).sort(byNextMeet).slice(0, 10);
     const plan = mine.filter(m => !m.date).sort(byNew).slice(0, 6);
-    const open = S.tasks.filter(t => !t.done && !t.step && t.tag === 'work');
-    const overdue = open.filter(isOverdue), today = open.filter(t => t.date === tk);
-    const later = open.filter(t => t.date && t.date > tk).sort(cmp), noday = open.filter(t => !t.date);
-    const projs = S.projects.filter(p => p.tag !== 'personal' && !projInfo(p).finished).sort(byOrder(byNew));
-    const nOpen = open.length + projs.reduce((n, p) => n + projSteps(p.id).filter(t => !t.done).length, 0);
+    const projs = S.projects.filter(p => p.tag !== 'personal').sort(byOrder(byNew));
+    const rank = new Map(projs.map((p, i) => [p.id, i]));
+    const all = S.tasks.filter(t => !t.done && !t.step && t.tag === 'work').concat(S.steps.filter(t => !t.done && rank.has(t.parentId)));
+    const overdue = all.filter(isOverdue), today = all.filter(t => t.date === tk).sort(cmp);
+    const later = all.filter(t => t.date && t.date > tk).sort(cmp);
+    const stepOrder = byOrder((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    // no day: plain tasks first (newest on top), then each project's steps together, in the project's own order
+    const noday = all.filter(t => !t.date).sort((a, b) => (a.step - b.step) || (a.step ? rank.get(a.parentId) - rank.get(b.parentId) || stepOrder(a, b) : byNew(a, b)));
+    const rows = list => list.map(t => row(t, false, false, true)).join('');
+    const drop = (title, day, list, empty) => `<section class="sec wd-sec" data-wdrop="${day}"><div class="sec-head"><h2 class="lab">${title}</h2>${list.length ? `<em class="wd-n">${list.length}</em>` : ''}</div><div class="float list">${list.length ? rows(list) : `<p class="empty">${empty}</p>`}</div></section>`;
     const parts = [];
-    if (overdue.length) parts.push(sec('Overdue', famList(overdue, true)));
-    parts.push(sec('Today', today.length ? famList(today, false) : '<p class="empty">Nothing due today.</p>'));
-    parts.push(`<div class="sec-head wk-ph"><h2 class="lab">Projects</h2><button type="button" class="link" data-tab="work" data-wsub="projects">All projects</button></div>`);
-    parts.push(projs.length ? projs.map(wkProject).join('') : '<p class="empty">No work projects going. New project starts one.</p>');
+    if (overdue.length) parts.push(sec('Overdue', overdue.map(t => row(t, true)).join('')));
+    parts.push(drop('Today', tk, today, 'Nothing due today.'));
+    parts.push(drop('Tomorrow', tom, later.filter(t => t.date === tom), 'Nothing yet.'));
     const days = [];
-    for (const t of later) { const g = days[days.length - 1]; if (g && g.date === t.date) g.items.push(t); else days.push({ date: t.date, items: [t] }); }
-    for (const g of days) parts.push(sec(esc(dayLabel(g.date)), famList(g.items, false)));
-    if (noday.length) parts.push(sec('No day', famList(noday, false, byNew)));
+    for (const t of later.filter(x => x.date > tom)) { const g = days[days.length - 1]; if (g && g.date === t.date) g.items.push(t); else days.push({ date: t.date, items: [t] }); }
+    for (const g of days) parts.push(drop(esc(dayLabel(g.date)), g.date, g.items, ''));
+    parts.push(drop('No day', 'none', noday, 'Everything has a day.'));
     return `<div class="wk-ov">
       <div class="wk-cgcol" id="wkCg" data-keep>${WORK ? WORK.cgList() : ''}</div>
       <div class="wk-tl" id="wkTl" data-keep>
-        <div class="wk-tlh"><div class="wk-cnt"><b>${nOpen}</b><span>to do</span></div><button type="button" class="btn" data-act="wt-new">${ICON.plus}<span>Task</span></button><button type="button" class="btn" data-act="pj-new">${ICON.plus}<span>Project</span></button></div>
+        <div class="wk-tlh"><div class="wk-cnt"><b>${all.length}</b><span>to do</span></div><button type="button" class="btn" data-act="wt-new">${ICON.plus}<span>Task</span></button></div>
         ${parts.join('')}
+        ${all.length && S.canSave ? '<p class="meta wd-tip">Hold a task and drop it on a day to move it there.</p>' : ''}
       </div>
       <div class="wk-mt" id="wkMt" data-keep>
         ${sec('Meetings', up.length ? up.map(m => mtgRow(m, false)).join('') : '<p class="empty">No work meetings coming up.</p>', '<button type="button" class="link" data-tab="meetings">All meetings</button>')}
         ${plan.length ? sec('Not scheduled', plan.map(m => mtgRow(m, false)).join('')) : ''}
       </div>
     </div>`;
-  }
-  // a project on the Work list: its name and progress (tap to open it), then the steps still to do, each one checkable
-  function wkProject(p) {
-    const i = projInfo(p), todo = i.st.filter(t => !t.done);
-    return `<section class="sec wkp"><div class="float list">
-      <button type="button" class="wkp-h" data-act="pj-open" data-id="${esc(p.id)}"><span class="pj-ring" style="--p:${pct(i.done, i.n)}" aria-hidden="true"><b>${i.n ? `${i.done}/${i.n}` : '0'}</b></span><span class="wkp-t"><span class="name">${esc(p.title)}</span><span class="meta">${i.n ? `${todo.length} to go` : 'No steps yet. Tap to add them.'}</span></span>${ICON.chev}</button>
-      ${todo.map(t => stepRow(t, i.next && t.id === i.next.id, true)).join('')}
-    </div></section>`;
   }
   function vMeetings() {
     if (!S.loaded) return notReady();
@@ -2434,7 +2434,7 @@ dialog::backdrop{background:transparent}
     const i = projInfo(p), left = i.n - i.done;
     return `<section class="float mt-detail pj-detail" data-hold-render data-prj="${esc(p.id)}" aria-label="Project">
       <div class="mt-top">
-        <button type="button" class="circle mt-back" data-act="pj-back" aria-label="Back to Work">${ICON.left}</button>
+        <button type="button" class="circle mt-back" data-act="pj-back" aria-label="All projects">${ICON.left}</button>
         <input class="mt-title" data-pf="title" value="${esc(p.title)}" maxlength="200" aria-label="Project name" placeholder="Project name" enterkeyhint="done" autocomplete="off">
         <button type="button" class="circle mt-del" data-act="pj-del" aria-label="Delete project" title="Delete project">${ICON.trash}</button>
       </div>
@@ -2476,8 +2476,7 @@ dialog::backdrop{background:transparent}
         ${mine.length ? sec('Personal', mine.map(rowP).join('')) : ''}
         ${fin.length ? sec('Finished', fin.map(rowP).join('')) : ''}
       </div>`;
-    if (sel) return `<div class="mtg pj has-sel solo"><div class="mt-pane">${vProjectDetail(sel)}</div></div>`;
-    const pane = `<div class="float mt-none"><span class="cal-ic">${ICON_PROJ}</span><p class="name">Pick a project, or start a new one.</p><p class="meta">A project is the steps it takes. Give a step a day and it shows up on the calendar; the project itself never does.</p><button type="button" class="btn" data-act="pj-new">New project</button></div>`;
+    const pane = sel ? vProjectDetail(sel) : `<div class="float mt-none"><span class="cal-ic">${ICON_PROJ}</span><p class="name">Pick a project, or start a new one.</p><p class="meta">A project is the steps it takes. Give a step a day and it shows up on the calendar; the project itself never does.</p><button type="button" class="btn" data-act="pj-new">New project</button></div>`;
     return `<div class="mtg pj${sel ? ' has-sel' : ''}">${list}<div class="mt-pane">${pane}</div></div>`;
   }
 
@@ -3055,7 +3054,7 @@ dialog::backdrop{background:transparent}
   }
   function render() {
     if (TV && TV.busy()) { renderLater = true; TV.wantRender(); return; }
-    if (mk || mv || bd || so || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy())) { renderLater = true; return; }
+    if (mk || mv || bd || so || wd || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy())) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -3921,7 +3920,7 @@ dialog::backdrop{background:transparent}
   }
   async function pjAct(act, b) {
     if (act === 'pj-open') { pjFlush(); openProject(b.dataset.id); return; }
-    if (act === 'pj-back') { pjFlush(); S.prjId = null; setWorkSub('overview'); render(); return; }
+    if (act === 'pj-back') { pjFlush(); S.prjId = null; render(); return; }
     if (!S.canSave) return;
     if (act === 'pj-new') { newProject(); return; }
     const box = document.querySelector('.pj-detail[data-prj]'), id = box && box.dataset.prj, p = id && task(id);
@@ -4196,12 +4195,12 @@ dialog::backdrop{background:transparent}
   document.addEventListener('pointerup', e => { if (mk && e.pointerId === mk.pid) endMark(true); });
   document.addEventListener('pointercancel', e => { if (mk && e.pointerId === mk.pid) endMark(false); });
   // while drawing with a finger, the timeline must not scroll under it
-  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on) || (so && so.on)) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on) || (so && so.on) || (wd && wd.on)) e.preventDefault(); }, { passive: false });
   // no right-click menu while dragging, or on a timeline (right button + drag zooms it)
   document.addEventListener('contextmenu', e => { if (mk || mv || mz || (e.target.closest && e.target.closest('.tl'))) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
-  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !bd && !so && !scopeOpen && !typingInMeeting()) render(); }, 0); }
+  function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !bd && !so && !wd && !scopeOpen && !typingInMeeting()) render(); }, 0); }
 
   // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
   let zoomSaveT = null;
@@ -4635,6 +4634,88 @@ dialog::backdrop{background:transparent}
   document.addEventListener('pointerup', e => { if (bd && e.pointerId === bd.pid) endBillDrag(true); });
   document.addEventListener('pointercancel', e => { if (bd && e.pointerId === bd.pid) endBillDrag(false); });
 
+  /* ---------- Work: hold a task (or drag it with a mouse) and drop it on a day, or on No day ---------- */
+  function startWd() {
+    const d = wd;
+    if (!d || d.on) return;
+    clearTimeout(d.hold);
+    if (!d.row.isConnected) { endWd(false); return; }
+    d.on = true; sw = null; drag = null;
+    if (!d.mouse) haptic();
+    const r = d.row.getBoundingClientRect();
+    d.dx = d.x0 - r.left; d.dy = d.y0 - r.top;
+    const g = d.row.cloneNode(true);
+    for (const n of [g, ...g.querySelectorAll('[data-act],[data-id],[data-sid]')]) { n.removeAttribute('data-act'); n.removeAttribute('data-id'); n.removeAttribute('data-sid'); }
+    g.setAttribute('aria-hidden', 'true');
+    g.classList.add('wd-ghost');
+    g.style.width = r.width + 'px';
+    document.body.appendChild(g);
+    d.ghost = g;
+    d.row.classList.add('wd-origin');
+    document.body.classList.add('moving');
+    d.scroller = scrollerOf(d.row);
+    drawWd();
+    // near the top or bottom edge, the list scrolls so far-off days can be reached
+    const loop = () => {
+      if (!wd || !wd.on) return;
+      const sc = wd.scroller, b = sc === document.scrollingElement ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect(), edge = 60;
+      const v = wd.y < b.top + edge ? -(b.top + edge - wd.y) / 3 : wd.y > b.bottom - edge ? (wd.y - (b.bottom - edge)) / 3 : 0;
+      if (v) { sc.scrollTop += Math.max(-18, Math.min(18, v)); drawWd(); }
+      wd.raf = requestAnimationFrame(loop);
+    };
+    d.raf = requestAnimationFrame(loop);
+  }
+  function drawWd() {
+    const d = wd;
+    if (!d || !d.on) return;
+    d.ghost.style.transform = `translate(${d.x - d.dx}px, ${d.y - d.dy}px) scale(1.03)`;
+    const el = document.elementFromPoint(d.x, d.y), t = el && el.closest ? el.closest('.wk-tl [data-wdrop]') : null;
+    if (t === d.target) return;
+    if (d.target) d.target.classList.remove('wd-over');
+    d.target = t;
+    if (t) { t.classList.add('wd-over'); if (!d.mouse) haptic(); }
+  }
+  async function endWd(commit) {
+    const d = wd; wd = null;
+    if (!d) return;
+    clearTimeout(d.hold); cancelAnimationFrame(d.raf);
+    if (!d.on) { flushLater(); return; } // a plain tap: the click still opens it
+    quietUntil = Date.now() + 400;
+    document.body.classList.remove('moving');
+    if (d.ghost) d.ghost.remove();
+    if (d.target) d.target.classList.remove('wd-over');
+    d.row.classList.remove('wd-origin');
+    renderLater = false;
+    const t = task(d.id), to = commit && d.target ? d.target.dataset.wdrop : null;
+    const day = to === 'none' ? null : to;
+    if (!t || !to || (t.date || null) === day) { render(); return; }
+    const before = { date: t.date || null, time: t.time || null, missed: t.missed || null };
+    const patch = day ? { date: day, missed: null } : { date: null };
+    if (!(await save(store.update(t.id, patch)))) return;
+    toast(day ? `${t.title}: ${dayLabel(day)}` : `${t.title}: no day`, () => save(store.update(t.id, before)));
+  }
+  document.addEventListener('pointerdown', e => {
+    if (wd) endWd(false);
+    const r = e.target.closest && e.target.closest('.wk-tl .trow[data-sid]');
+    if (!r || !e.isPrimary || !S.canSave || e.target.closest('.chk')) return;
+    const mouse = e.pointerType === 'mouse';
+    if (mouse && e.button !== 0) return;
+    const t = task(r.dataset.sid);
+    if (!t || t.repeat || t.seriesId) return; // a repeating task moves from its sheet
+    wd = { row: r, id: t.id, mouse, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, target: null };
+    wd.hold = setTimeout(startWd, mouse ? 300 : 420);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!wd || e.pointerId !== wd.pid) return;
+    wd.x = e.clientX; wd.y = e.clientY;
+    if (wd.on) { drawWd(); return; }
+    const moved = Math.hypot(e.clientX - wd.x0, e.clientY - wd.y0);
+    if (!wd.mouse) { if (moved > 8) endWd(false); } // the finger is scrolling
+    else if (moved > 4) startWd();
+  });
+  document.addEventListener('pointerup', e => { if (wd && e.pointerId === wd.pid) endWd(true); });
+  document.addEventListener('pointercancel', e => { if (wd && e.pointerId === wd.pid) endWd(false); });
+
   /* ---------- keep the screen on (for the wall iPad) ---------- */
   let wakeLock = null;
   async function lockScreen() {
@@ -4895,7 +4976,7 @@ dialog::backdrop{background:transparent}
 
   document.addEventListener('click', e => {
     const tabBtn = e.target.closest('[data-tab]');
-    if (tabBtn) { if (tabBtn.dataset.wsub === 'projects') S.prjId = null; if (tabBtn.dataset.wsub) setWorkSub(tabBtn.dataset.wsub); setTab(tabBtn.dataset.tab); return; }
+    if (tabBtn) { if (tabBtn.dataset.wsub) setWorkSub(tabBtn.dataset.wsub); setTab(tabBtn.dataset.tab); return; }
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const act = b.dataset.act;

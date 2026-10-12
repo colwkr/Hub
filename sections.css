@@ -611,16 +611,16 @@ select.gr-in{-webkit-appearance:none;appearance:none}
 .wk-cnt span{font-size:13px;color:var(--ink-2)}
 .wk-tlh .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:14px}
 .wk-tlh .btn svg.i{width:16px;height:16px}
-.wk-ph{margin-bottom:-10px}
-.wkp .float{overflow:hidden}
-.wkp-h{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;text-align:left;color:var(--ink);padding:10px 14px 10px 10px}
-.wkp-h:active{background:var(--active-sq)}
-.wkp-h > svg.i{width:16px;height:16px;color:var(--ink-3);flex:none}
-.wkp-h .pj-ring{width:42px;height:42px}
-.wkp-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.wkp-t .name{font-size:16px;font-weight:600;line-height:1.25}
-.wkp-t .meta{font-size:12.5px;color:var(--ink-2)}
-.wkp .pstep{border-top:1px solid var(--hair)}
+/* moving a task to another day: it lifts off, and the day under it lights up */
+.wk-tl .trow{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.wd-sec > .float{transition:box-shadow .15s,background .15s}
+.wd-sec.wd-over > .float{box-shadow:inset 0 0 0 2px var(--ink),var(--lift-sm);background:var(--active-sq)}
+.wd-sec.wd-over .lab{color:var(--ink)}
+.wd-n{font-style:normal;font-size:11px;color:var(--ink-3);margin-left:6px;font-variant-numeric:tabular-nums}
+.wd-sec .empty{padding:14px 16px}
+.wd-ghost{position:fixed!important;left:0!important;top:0!important;z-index:80;pointer-events:none;margin:0!important;border-radius:18px;background:var(--lift-bg);box-shadow:0 18px 36px -12px rgba(0,0,0,.55),0 0 0 1.5px var(--ink-2);will-change:transform}
+.wd-origin{opacity:.3}
+.wd-tip{text-align:center;color:var(--ink-3);font-size:12px;margin-top:-6px}
 /* a project opened from Work fills the space; Back returns to Work */
 .mtg.solo{display:flex}
 .mtg.solo .mt-pane{display:flex;flex:1;min-height:0;width:100%;max-width:820px;margin:0 auto}
