@@ -652,3 +652,94 @@ select.gr-in{-webkit-appearance:none;appearance:none}
 .avl-none{max-width:520px}
 .gr-tip{padding:10px 4px 0}
 .avl .mtg.solo .mt-back{display:none}
+
+/* ---------- the quiet Home: black, a breathing entity, readouts in the corners, and cards only when something
+   needs you. Mono labels, thin lines, one warm accent for "starts soon". ---------- */
+:root{--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;--qacc:#ff5a28;--qink:#eceef2;--qdim:rgba(236,238,242,.46);--qline:rgba(236,238,242,.14)}
+body.qmode #bg{background:#030304}
+body.qmode #bg .wall,body.qmode #bg::after{display:none}
+body.qmode #bg::before{content:"";position:absolute;inset:-20%;background:
+  radial-gradient(38% 32% at 62% 42%,rgba(120,128,140,.16),transparent 70%),
+  radial-gradient(30% 26% at 30% 70%,rgba(70,82,98,.14),transparent 70%),
+  radial-gradient(26% 24% at 80% 80%,rgba(140,110,80,.08),transparent 70%);
+  filter:blur(30px);animation:qhaze 38s ease-in-out infinite alternate}
+@keyframes qhaze{to{transform:translate(-4%,3%) scale(1.06)}}
+@media (prefers-reduced-motion:reduce){ body.qmode #bg::before{animation:none} }
+body.qmode .top{display:none}
+/* phones: a simple flow (readouts across the top, the entity, then the cards); bigger screens use a grid */
+.qh{position:relative;flex:1;min-height:calc(100dvh - 120px);display:flex;flex-wrap:wrap;align-content:flex-start;color:var(--qink);font-family:var(--font)}
+.qh > .qh-c.q-tl,.qh > .qh-c.q-tr{width:50%}
+.qh > .qh-stage,.qh > .qh-cards{width:100%}
+.qh-k{font:500 11px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--qink)}
+.qh-k.qh-faint{color:var(--qdim)}
+.qh-k.qh-hot{color:var(--qacc)}
+#cluQ{margin-right:14px}
+.qh-link{border:0;background:none;padding:6px 0;font:500 11px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--qdim);cursor:pointer}
+.qh-link:hover{color:var(--qink)}
+/* corners: always there */
+.qh-c{display:flex;flex-direction:column;gap:4px;z-index:2}
+.qh-c.q-tl{grid-area:top;justify-self:start}
+.qh-c.q-tr{grid-area:top;justify-self:end;align-items:flex-end;text-align:right}
+.qh-c.q-bl,.qh-c.q-br,.qh-mark{display:none}
+.qh-clock{display:flex;align-items:baseline;gap:6px}
+.qh-clock b{font:200 46px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.qh-clock small{font:500 11px var(--mono);letter-spacing:.16em;color:var(--qdim)}
+.qh-dot{width:7px;height:7px;background:var(--qdim);display:inline-block}
+.qh-dot.qh-on{background:#4ad66d}.qh-dot.qh-off{background:var(--qacc)}
+/* the entity */
+.qh-stage{grid-area:stage;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px}
+.qh-orbbtn{flex:none;border:0;background:none;padding:0;width:min(88vw,380px);height:min(88vw,380px);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.qh-orb{display:block;width:100%;height:100%}
+.qh-status{margin:-4% 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+/* the cards: a short stack, Obsidian-glass panels */
+.qh-cards{grid-area:cards;display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
+.qh-card{display:flex;align-items:stretch;background:rgba(48,50,56,.42);-webkit-backdrop-filter:blur(16px) saturate(120%);backdrop-filter:blur(16px) saturate(120%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);border-radius:3px;animation:qin .45s cubic-bezier(.2,.85,.25,1) both}
+@keyframes qin{from{opacity:0;transform:translateY(8px)}}
+.qh-open{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;border:0;background:none;color:inherit;text-align:left;padding:14px 16px;cursor:pointer}
+.qh-lab{font:500 10.5px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--qdim);display:flex;align-items:center;gap:8px}
+.qh-title{font:400 19px/1.25 var(--font);color:var(--qink)}
+.qh-meta{font:400 13px/1.3 var(--font);color:var(--qdim)}
+.qh-list{display:flex;flex-direction:column;gap:3px;font:400 15px/1.35 var(--font);color:var(--qink)}
+.qh-list span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qh-more{color:var(--qdim);font-size:13px}
+.qh-ack{flex:none;border:0;border-left:1px solid rgba(255,255,255,.07);background:none;color:var(--qdim);padding:0 18px;font:500 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.qh-ack:hover{color:var(--qink);background:rgba(255,255,255,.04)}
+.qh-soon{flex:none;align-self:center;padding:0 18px;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--qacc)}
+.qh-card.sticky .qh-lab::before,.qh-card.warn .qh-lab::before{content:"";width:8px;height:8px;background:var(--qacc);flex:none}
+.qh-card.warn:not(.sticky) .qh-lab::before{background:rgba(255,90,40,.7)}
+.qh-card.sticky{box-shadow:inset 0 0 0 1px rgba(255,90,40,.35)}
+.qh-back{display:flex;justify-content:flex-end;margin:-8px 0 -14px}
+.qh-all-top{margin-top:2px}
+/* tablets and computers: corners in the corners, the entity in the middle, cards to its right */
+@media (min-width:760px) and (min-height:500px){
+  .qh{display:grid}
+  .qh > .qh-c.q-tl,.qh > .qh-c.q-tr,.qh > .qh-stage,.qh > .qh-cards{width:auto}
+  body.qmode .app{padding-top:max(16px,env(safe-area-inset-top,0px))}
+  .qh{height:calc(100dvh - 40px);min-height:480px;margin:0 6px;align-content:stretch;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top" "stage" "foot"}
+  .qh.has{grid-template-columns:minmax(0,1fr) minmax(320px,400px);grid-template-areas:"top top" "stage cards" "foot foot"}
+  .qh-c.q-tl,.qh-c.q-tr{padding:10px 14px}
+  .qh-c.q-bl,.qh-c.q-br{display:flex;grid-area:foot;flex-direction:row;align-items:center;gap:8px;padding:8px 14px}
+  .qh-c.q-bl{justify-self:start}.qh-c.q-br{justify-self:end}
+  .qh-all-top{display:none}
+  .qh-mark{display:block;position:absolute;width:22px;height:22px;pointer-events:none}
+  .qh-mark::before,.qh-mark::after{content:"";position:absolute;background:var(--qline)}
+  .qh-mark::before{width:22px;height:1px}.qh-mark::after{width:1px;height:22px}
+  .qh-mark.q-tl{left:0;top:0}.qh-mark.q-tr{right:0;top:0}.qh-mark.q-bl{left:0;bottom:0}.qh-mark.q-br{right:0;bottom:0}
+  .qh-mark.q-tr::before,.qh-mark.q-br::before{right:0}.qh-mark.q-tr::after,.qh-mark.q-br::after{right:0}
+  .qh-mark.q-bl::before,.qh-mark.q-br::before{bottom:0}.qh-mark.q-bl::after,.qh-mark.q-br::after{bottom:0}
+  .qh-cards{align-self:center;max-height:100%;overflow-y:auto;scrollbar-width:none;padding:4px 14px 4px 0}
+  .qh-cards::-webkit-scrollbar{display:none}
+  .qh-clock b{font-size:56px}
+  .qh-orbbtn{width:min(58vh,44vw,600px);height:min(58vh,44vw,600px)}
+}
+/* an upright tablet: the cards go under the entity */
+@media (min-width:760px) and (min-height:500px) and (orientation:portrait){
+  .qh.has{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "stage" "cards" "foot";grid-template-rows:auto minmax(0,1fr) auto auto}
+  .qh-cards{padding:0 14px 8px;max-height:44vh}
+}
+/* phones: the menu and add buttons sit in the bottom corners, so the readouts stay up top */
+@media (max-width:759px){
+  .qh-cards{padding-bottom:84px}
+  .qh-title{font-size:17px}
+}

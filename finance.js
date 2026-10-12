@@ -1923,5 +1923,8 @@ window.POSFinance = function (ctx) {
     if (!S.loaded) return [];
     return [...kind('list').filter(g => g.mode !== 'sell'), ...kind('goal').filter(isList)].flatMap(g => (g.items || []).filter(i => !i.got && re.test(i.name)).map(i => ({ name: i.name, price: i.price || null, list: g.name })));
   }
-  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals, listMatches };
+  // for the quiet Home: a bill on the day it's due (not paid yet), or late
+  const homeBills = () => (S.loaded ? S.bills.map(b => ({ b, s: billState(b) })).filter(x => x.s.st === 'late' || (x.s.st === 'waiting' && x.s.days === 0))
+    .map(x => ({ id: x.b.id, name: x.b.name, short: x.b.amount ? fmtShort(x.b.amount) : '', late: x.s.st === 'late', days: x.s.days || 0 })) : []);
+  return { view, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals, listMatches, homeBills };
 };

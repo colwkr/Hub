@@ -216,5 +216,8 @@ window.POSPackages = function (ctx) {
   }
   // out for delivery, or arriving today: worth a number on the rail
   const badge = () => (S.loaded ? S.package.filter(p => p.stage === 'out' || (p.stage !== 'delivered' && etaOf(p) && daysTo(etaOf(p)) === 0)).length : 0);
-  return { view, act, add: addSheet, badge, start: R.start, stop: () => { R.stop(); UI.asked = false; UI.key = null; } };
+  // for the quiet Home: out for delivery, or delivered today
+  const homeToday = () => (S.loaded ? S.package.filter(p => !p.archived && (p.stage === 'out' || (p.stage === 'delivered' && p.deliveredAt && new Date(p.deliveredAt).toDateString() === new Date().toDateString())))
+    .map(p => ({ id: p.id, name: p.name || p.store || 'A package', out: p.stage === 'out' })) : []);
+  return { view, act, add: addSheet, badge, homeToday, start: R.start, stop: () => { R.stop(); UI.asked = false; UI.key = null; } };
 };

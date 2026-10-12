@@ -33,30 +33,30 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>POS</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012202616">
-<script src="finance.js?v=20261012202616"></script>
-<link rel="stylesheet" href="car.css?v=20261012202616">
-<script src="car.js?v=20261012202616"></script>
-<link rel="stylesheet" href="sections.css?v=20261012202616">
-<link rel="stylesheet" href="tv.css?v=20261012202616">
-<script src="records.js?v=20261012202616"></script>
-<script src="people.js?v=20261012202616"></script>
-<script src="wheels.js?v=20261012202616"></script>
-<script src="keyboard.js?v=20261012202616"></script>
-<script src="notes.js?v=20261012202616"></script>
-<script src="reminders.js?v=20261012202616"></script>
-<script src="gear.js?v=20261012202616"></script>
-<script src="lights.js?v=20261012202616"></script>
-<script src="tv.js?v=20261012202616"></script>
-<script src="work.js?v=20261012202616"></script>
-<script src="health.js?v=20261012202616"></script>
-<script src="pets.js?v=20261012202616"></script>
-<script src="places.js?v=20261012202616"></script>
-<script src="placestab.js?v=20261012202616"></script>
-<script src="usmap.js?v=20261012202616"></script>
-<script src="packages.js?v=20261012202616"></script>
+<link rel="stylesheet" href="finance.css?v=20261012221203">
+<script src="finance.js?v=20261012221203"></script>
+<link rel="stylesheet" href="car.css?v=20261012221203">
+<script src="car.js?v=20261012221203"></script>
+<link rel="stylesheet" href="sections.css?v=20261012221203">
+<link rel="stylesheet" href="tv.css?v=20261012221203">
+<script src="records.js?v=20261012221203"></script>
+<script src="people.js?v=20261012221203"></script>
+<script src="wheels.js?v=20261012221203"></script>
+<script src="keyboard.js?v=20261012221203"></script>
+<script src="notes.js?v=20261012221203"></script>
+<script src="reminders.js?v=20261012221203"></script>
+<script src="gear.js?v=20261012221203"></script>
+<script src="lights.js?v=20261012221203"></script>
+<script src="tv.js?v=20261012221203"></script>
+<script src="work.js?v=20261012221203"></script>
+<script src="health.js?v=20261012221203"></script>
+<script src="pets.js?v=20261012221203"></script>
+<script src="places.js?v=20261012221203"></script>
+<script src="placestab.js?v=20261012221203"></script>
+<script src="usmap.js?v=20261012221203"></script>
+<script src="packages.js?v=20261012221203"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1495,13 +1495,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012202616"></script>
+<script src="appearance.js?v=20261012221203"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012202616';
+  const VERSION = '20261012221203';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -2101,7 +2101,15 @@ dialog::backdrop{background:transparent}
     } catch (e) { return; }
     cluPaint();
   }
-  function cluPaint() { const el = document.getElementById('clu'); if (el) el.outerHTML = vClaude(); }
+  function cluPaint() { const el = document.getElementById('clu'); if (el) el.outerHTML = vClaude(); const q = document.getElementById('cluQ'); if (q) q.outerHTML = cluCorner(); }
+  // the quiet Home's corner readout: Claude's 5-hour and weekly use, when the PC is sending it
+  function cluCorner() {
+    const d = CLU.d, lim = d && d.limits;
+    if (!lim || !(lim.five_hour || lim.seven_day)) return '<span id="cluQ" hidden></span>';
+    const now = Date.now(), pc = v => { if (!v) return '–'; const r = v.resets ? Date.parse(v.resets) : 0; return r && r <= now ? '0%' : `${Math.round(v.pct)}%`; };
+    const stale = !d.at || now - d.at > 20 * 60e3, hot = [lim.five_hour, lim.seven_day].some(v => v && v.pct >= 80);
+    return `<span id="cluQ" class="qh-k${stale ? ' qh-faint' : ''}${hot ? ' qh-hot' : ''}" title="Claude usage${d.at ? ', updated ' + agoText(now - d.at) : ''}">Claude ${pc(lim.five_hour)} · Wk ${pc(lim.seven_day)}</span>`;
+  }
   function agoText(ms) {
     const m = Math.floor(ms / 60e3);
     if (m < 1) return 'just now';
@@ -2224,6 +2232,180 @@ dialog::backdrop{background:transparent}
       ${vDayCal('g-cal')}
     </div>`;
   }
+
+  /* ---------- the quiet Home. Nothing sits here just because it's true: a card shows up when its moment comes
+     (a meeting that day, a bill on its day or late, a birthday that morning, a package out for delivery, CG on Sunday)
+     and leaves when you say Got it. Getting it never deletes anything: it's still in its own section. Something
+     starting within the hour stays put until it starts. "Everything" (or tapping the entity) shows the full Home. ---------- */
+  const ACK = { day: '', keys: {}, gone: new Set() };
+  const ackId = k => 'home-ack-' + k;
+  async function ackLoad() {
+    if (!sb || !S.user || document.hidden) return;
+    const tk = todayKey();
+    try {
+      const { data, error } = await sb.from('records').select('data').eq('id', ackId(tk)).maybeSingle();
+      if (error) return;
+      if (ACK.day !== tk) { ACK.day = tk; ACK.keys = {}; ACK.gone.clear(); }
+      const remote = (data && data.data && data.data.keys) || {};
+      const next = { ...remote, ...ACK.keys };
+      for (const k of ACK.gone) delete next[k];
+      const changed = JSON.stringify(Object.keys(next).sort()) !== JSON.stringify(Object.keys(ACK.keys).sort());
+      ACK.keys = next;
+      if (changed && S.tab === 'home') render();
+    } catch (e) {}
+  }
+  let ackChain = Promise.resolve();
+  function ack(key, on) {
+    const tk = todayKey();
+    if (ACK.day !== tk) { ACK.day = tk; ACK.keys = {}; ACK.gone.clear(); }
+    if (on) { ACK.keys[key] = Date.now(); ACK.gone.delete(key); } else { delete ACK.keys[key]; ACK.gone.add(key); }
+    render();
+    if (!sb || !S.canSave) return;
+    ackChain = ackChain.then(async () => {
+      const id = ackId(tk);
+      const { data: rows } = await sb.from('records').select('data').eq('id', id);
+      const remote = (rows && rows[0] && rows[0].data && rows[0].data.keys) || {};
+      const keys = { ...remote, ...ACK.keys };
+      for (const k of ACK.gone) delete keys[k];
+      const data = { day: tk, keys };
+      const { error } = rows && rows.length ? await sb.from('records').update({ data }).eq('id', id) : await sb.from('records').insert({ id, kind: 'home-ack', data });
+      if (error) throw error;
+    }).catch(() => toast('That did not save. Check your connection and try again.'));
+  }
+
+  // what deserves a card right now. Timed things: from the morning until they're over; within the hour they stay put.
+  const SECTION = { meeting: 'Meetings', event: 'Calendar', tasks: 'Tasks', task: 'Tasks', bill: 'Finance', bday: 'Birthdays', pkg: 'Packages', cg: 'Work', rem: 'Reminders', car: 'Car', pets: 'Pets' };
+  function timedState(start, mins) { // minutes from now until it starts, and whether it's happening
+    const nm = nowMin(), s = toMin(start), e = s + (mins || 30);
+    if (nm >= e) return null;
+    return { inMin: s - nm, now: nm >= s, sticky: s - nm <= 60, at: s };
+  }
+  const soonText = st => (st.now ? 'Now' : st.inMin < 1 ? 'Starting' : st.inMin < 60 ? `In ${st.inMin} min` : `In ${Math.floor(st.inMin / 60)} hr${st.inMin % 60 ? ` ${st.inMin % 60} min` : ''}`);
+  function homeCards() {
+    if (!S.loaded) return [];
+    const tk = todayKey(), cards = [];
+    const add = c => { if (c.sticky || !ACK.keys[c.key]) cards.push(c); };
+    // meetings today, each its own card
+    for (const m of dayItems(tk).filter(x => x.kind === 'meeting' && !x.done)) {
+      const st = m.time ? timedState(m.time, effMins(m)) : null;
+      if (m.time && !st) continue;
+      add({ key: `mtg:${m.id}:${tk}`, kind: 'meeting', lab: `Meeting${m.time ? ' · ' + fmtTime(toMin(m.time)) : ' · Today'}`, title: m.title, meta: m.agenda && m.agenda.length ? (n => (n ? `${n} talking ${n === 1 ? 'point' : 'points'} left` : 'Every talking point covered'))(m.agenda.filter(a => !a.done).length) : '', st, sticky: !!(st && st.sticky), open: `data-act="meeting" data-id="${esc(m.id)}"`, sort: st ? st.at : 600 });
+    }
+    // the calendar: the day's events in one card; the one coming up within the hour gets its own
+    const evs = (S.events || []).filter(g => g.date === tk && !g.allDay && g.start).map(g => ({ g, st: timedState(g.start, g.mins || 60) })).filter(x => x.st);
+    for (const x of evs.filter(x => x.st.sticky)) add({ key: `ev:${x.g.id}:${tk}`, kind: 'event', lab: `Calendar · ${fmtTime(toMin(x.g.start))}`, title: x.g.title, meta: x.g.location || '', st: x.st, sticky: true, open: 'data-tab="calendar"', sort: x.st.at });
+    const later = evs.filter(x => !x.st.sticky);
+    if (later.length) add({ key: `evs:${tk}:${later.map(x => x.g.id).sort().join(',')}`, kind: 'event', lab: `Calendar · ${later.length} today`, title: later[0].g.title, list: later.slice(0, 4).map(x => `${fmtTime(toMin(x.g.start))}  ${x.g.title}`), open: 'data-tab="calendar"', sort: later[0].st.at });
+    // tasks due today: one card for the day; a timed one within the hour stands on its own
+    const tasks = S.tasks.filter(t => t.date === tk && !t.done).sort(cmp);
+    const near = new Set();
+    for (const t of tasks.filter(t => t.time)) {
+      const st = timedState(t.time, effMins(t));
+      if (st && st.sticky) { near.add(t.id); add({ key: `task:${t.id}:${tk}`, kind: 'task', lab: `Task · ${fmtTime(toMin(t.time))}`, title: t.title, st, sticky: true, open: `data-act="edit" data-id="${esc(t.id)}"`, sort: st.at }); }
+    }
+    const rest = tasks.filter(t => !near.has(t.id)); // the ones coming up within the hour already have their own card
+    if (rest.length) add({ key: `tasks:${tk}:${tasks.map(t => t.id).sort().join(',')}`, kind: 'tasks', lab: `Today · ${rest.length} ${rest.length === 1 ? 'task' : 'tasks'}`, title: rest[0].title, list: rest.slice(0, 5).map(t => `${t.time ? fmtTime(toMin(t.time)) + '  ' : ''}${t.title}`), more: rest.length > 5 ? rest.length - 5 : 0, open: 'data-tab="tasks"', sort: 700 });
+    // bills on their day, or late (a late one comes back each morning until it's handled)
+    for (const b of (FIN && FIN.homeBills ? FIN.homeBills() : [])) add({ key: `bill:${b.id}:${tk}`, kind: 'bill', lab: b.late ? `Bill · Late ${b.days} ${b.days === 1 ? 'day' : 'days'}` : 'Bill · Due today', title: b.name, meta: b.short, warn: b.late, open: `data-act="fin-form" data-form="bill" data-id="${esc(b.id)}"`, sort: b.late ? 1 : 650 });
+    // birthdays: the morning of
+    for (const p of (PEOPLE ? PEOPLE.on(tk) : [])) add({ key: `bday:${p.id}:${tk}`, kind: 'bday', lab: 'Birthday · Today', title: p.me ? 'Happy birthday.' : p.label.replace(/^(.)/, c => c.toUpperCase()), open: `data-act="bday-open" data-id="${esc(p.id)}"`, sort: 640 });
+    // packages: out for delivery, or delivered today
+    for (const p of (PKG && PKG.homeToday ? PKG.homeToday() : [])) add({ key: `pkg:${p.id}:${p.out ? 'out' : 'in'}:${tk}`, kind: 'pkg', lab: p.out ? 'Package · Out for delivery' : 'Package · Delivered', title: p.name, open: 'data-tab="packages"', sort: 660 });
+    // CG: Sunday, if it isn't all in
+    if (WORK && WORK.dueDate && dkey(WORK.dueDate()) === tk && WORK.left() > 0) add({ key: `cg:${tk}:${WORK.left()}`, kind: 'cg', lab: 'CG · Due today', title: `${WORK.left()} left to put in`, open: 'data-tab="work" data-wsub="overview"', sort: 2, warn: true });
+    // reminders whose day has come
+    for (const r of (REM && REM.homeDue ? REM.homeDue() : [])) add({ key: `rem:${r.id}:${tk}`, kind: 'rem', lab: r.late ? 'Reminder · From before' : 'Reminder · Today', title: r.text, open: 'data-tab="reminders"', sort: 680 });
+    // the car and the pets, only when something is actually due
+    if (CAR && CAR.badge && CAR.badge()) { const o = CAR.oilDue && CAR.oilDue(); add({ key: `car:${tk}:${CAR.badge()}`, kind: 'car', lab: 'Car · Needs a look', title: o && o.st === 'due' ? 'Oil change is due' : 'Something on the car needs you', open: 'data-tab="car"', sort: 690 }); }
+    if (PETS && PETS.badge && PETS.badge()) add({ key: `pets:${tk}:${PETS.badge()}`, kind: 'pets', lab: 'Pets · Checkup due', title: `${PETS.badge()} ${PETS.badge() === 1 ? 'checkup is' : 'checkups are'} due`, open: 'data-tab="pets"', sort: 695 });
+    return cards.sort((a, b) => (!!b.sticky - !!a.sticky) || a.sort - b.sort);
+  }
+  function qCard(c) {
+    const right = c.sticky ? `<span class="qh-soon">${esc(soonText(c.st))}</span>` : `<button type="button" class="qh-ack" data-act="qh-ack" data-key="${esc(c.key)}" data-sec="${esc(SECTION[c.kind] || '')}" aria-label="Got it: ${esc(c.title)}">Got it</button>`;
+    const body = c.list ? `<span class="qh-list">${c.list.map(x => `<span>${esc(x)}</span>`).join('')}${c.more ? `<span class="qh-more">+${c.more} more</span>` : ''}</span>` : `<span class="qh-title">${esc(c.title)}</span>${c.meta ? `<span class="qh-meta">${esc(c.meta)}</span>` : ''}`;
+    return `<div class="qh-card${c.sticky ? ' sticky' : ''}${c.warn ? ' warn' : ''}"><button type="button" class="qh-open" ${c.open}><span class="qh-lab">${esc(c.lab)}</span>${body}</button>${right}</div>`;
+  }
+  const qDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  function vQuiet() {
+    const cards = homeCards(), n = cards.length, sticky = cards.some(c => c.sticky);
+    ORB.mood = sticky ? 2 : n ? 1 : 0;
+    const p = timeParts(nowMin()), w = S.weather && S.weather.current;
+    const wxText = w ? `${Math.round(w.temp)}° · ${wx(w.code, w.isDay)[0]}` : '';
+    const status = !S.loaded ? 'Waking up' : n ? `${n} ${n === 1 ? 'thing' : 'things'} for today` : 'All clear';
+    const statusSub = !S.loaded ? '' : n ? (sticky ? 'One starts soon' : 'Got it moves one off Home') : 'Nothing needs you right now';
+    return `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}" id="qh">
+      <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
+      <div class="qh-c q-tl"><span class="qh-k">POS</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
+      <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}<button type="button" class="qh-link qh-all-top" data-act="qh-all">Everything ↗</button></div>
+      <div class="qh-stage">
+        <button type="button" class="qh-orbbtn" data-act="qh-all" aria-label="Show everything"><canvas id="qhOrb" class="qh-orb" aria-hidden="true"></canvas></button>
+        <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
+      </div>
+      ${n ? `<div class="qh-cards" id="qhCards" data-keep>${cards.map(qCard).join('')}</div>` : ''}
+      <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
+      <div class="qh-c q-br"><button type="button" class="qh-link" data-act="qh-all">Everything ↗</button></div>
+    </div>`;
+  }
+  // "everything": the full Home, with a way back to quiet
+  const vHomeAll = () => `<div class="qh-back"><button type="button" class="qh-link" data-act="qh-quiet">← Quiet</button></div>${vHome()}`;
+
+  /* ---------- the entity: a field of points that holds a sphere and breathes. Calm when nothing needs you,
+     brighter when something does, warm when something starts within the hour. ---------- */
+  const ORB = { raf: 0, t0: performance.now(), last: 0, mood: 0, dust: null };
+  function orbKick() { if (!ORB.raf) ORB.raf = requestAnimationFrame(orbFrame); }
+  function orbFrame(now) {
+    ORB.raf = 0;
+    const cv = document.getElementById('qhOrb');
+    if (!cv || document.hidden) return; // a render or coming back starts it again
+    ORB.raf = requestAnimationFrame(orbFrame);
+    if (now - ORB.last < 33) return; // about 30 frames a second is plenty for a slow thing
+    ORB.last = now;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    const t = (now - ORB.t0) / 1000, mood = ORB.mood;
+    const breathe = 1 + Math.sin(t * (mood ? 1.25 : 0.8)) * (mood ? 0.022 : 0.014);
+    const R = Math.min(w, h) * 0.31 * breathe, cx = w / 2, cy = h / 2;
+    const step = Math.max(4, Math.round(R / 24));
+    const lift = mood ? 1.12 : 0.92;
+    // the sphere: a halftone of squares, lit from the upper left, its surface slowly turning
+    for (let y = -R; y <= R; y += step) {
+      for (let x = -R; x <= R; x += step) {
+        const d2 = x * x + y * y; if (d2 > R * R) continue;
+        const nx = x / R, ny = y / R, nz = Math.sqrt(1 - d2 / (R * R));
+        const light = Math.max(0, -0.42 * nx - 0.5 * ny + 0.76 * nz);
+        const u = Math.atan2(nx, nz) + t * 0.22, v = Math.asin(Math.max(-1, Math.min(1, ny)));
+        const tex = 0.5 + 0.5 * Math.sin(u * 5 + Math.sin(v * 4 + t * 0.35) * 1.6) * Math.cos(v * 3 - t * 0.18);
+        let b = (light * 0.78 + tex * 0.3 * nz) * lift;
+        b *= 0.86 + 0.14 * Math.sin(x * 12.99 + y * 78.23 + t * 2.4);
+        const s = step * Math.min(1, b) * 0.92;
+        if (s < 0.6) continue;
+        g.fillStyle = `rgba(236,238,242,${Math.min(1, 0.25 + b * 0.75).toFixed(3)})`;
+        g.fillRect(cx + x - s / 2, cy + y - s / 2, s, s);
+      }
+    }
+    // the dust around it: points drifting out from the surface and fading
+    if (!ORB.dust) { let seed = 11; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647; ORB.dust = Array.from({ length: 220 }, () => ({ a: r() * Math.PI * 2, k: r(), sp: 0.04 + r() * 0.1, sz: 1 + r() * 2.2 })); }
+    for (const d of ORB.dust) {
+      const ph = (d.k + t * d.sp) % 1, rr = R * (1.02 + ph * (mood ? 0.85 : 0.6)), a = d.a + Math.sin(t * 0.1 + d.k * 6) * 0.15;
+      const al = (1 - ph) * (mood ? 0.6 : 0.4);
+      g.fillStyle = mood === 2 ? `rgba(255,120,72,${al.toFixed(3)})` : `rgba(230,232,238,${al.toFixed(3)})`;
+      g.fillRect(cx + Math.cos(a) * rr * 1.08, cy + Math.sin(a) * rr * 0.92, d.sz, d.sz);
+    }
+    // an orbit: faint when calm, plain when something needs you, warm when something starts soon
+    g.save(); g.translate(cx, cy); g.rotate(-0.32 + Math.sin(t * 0.07) * 0.06);
+    g.strokeStyle = mood === 2 ? 'rgba(255,90,40,.85)' : mood ? 'rgba(236,238,242,.38)' : 'rgba(236,238,242,.12)';
+    g.lineWidth = 1; g.beginPath(); g.ellipse(0, 0, R * 1.62, R * 0.42, 0, 0, Math.PI * 2); g.stroke();
+    g.setLineDash([3, 5]); g.strokeStyle = mood === 2 ? 'rgba(255,90,40,.45)' : 'rgba(236,238,242,.1)';
+    g.beginPath(); g.ellipse(0, 0, R * 1.3, R * 0.3, 0, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+    const oa = t * 0.5; g.fillStyle = mood === 2 ? '#ff5a28' : 'rgba(236,238,242,.9)';
+    g.fillRect(Math.cos(oa) * R * 1.62 - 2, Math.sin(oa) * R * 0.42 - 2, 4, 4);
+    g.restore();
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) orbKick(); });
 
   /* ---------- tasks ---------- */
   function vTasks() {
@@ -3017,7 +3199,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, work: vWork, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), tv: () => (TV ? TV.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), reminders: () => (REM ? REM.view() : notReady()), places: () => (PLT && PLACES && S.user ? PLT.view() : notReady()), packages: () => (PKG ? PKG.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
+  const views = { home: () => (S.homeAll ? vHomeAll() : vQuiet()), tasks: vTasks, calendar: vCalendar, work: vWork, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), tv: () => (TV ? TV.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), reminders: () => (REM ? REM.view() : notReady()), places: () => (PLT && PLACES && S.user ? PLT.view() : notReady()), packages: () => (PKG ? PKG.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -3073,6 +3255,7 @@ dialog::backdrop{background:transparent}
     for (const el of document.querySelectorAll('#view [data-keep]')) keep[el.id] = el.scrollTop;
     $('#title').textContent = TITLES[S.tab];
     document.body.dataset.view = S.tab;
+    document.body.classList.toggle('qmode', S.tab === 'home' && !S.homeAll);
     $('#today').innerHTML = S.tab === 'home' ? '' : `<i></i>${esc(shortFmt.format(new Date()))}`;
     for (const b of document.querySelectorAll('.nav button[data-tab], #rail [data-tab], #fly [data-tab]')) {
       const on = b.dataset.wsub ? S.tab === 'work' && S.workSub === b.dataset.wsub : b.dataset.tab === S.tab;
@@ -3082,6 +3265,7 @@ dialog::backdrop{background:transparent}
     for (const b of document.querySelectorAll('#rail [data-grp]')) { if (b.dataset.grp === grpNow) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
     for (const b of document.querySelectorAll('.nav [data-grp]')) b.classList.toggle('has-cur', b.dataset.grp === grpNow);
     $('#view').innerHTML = views[S.tab]();
+    if (S.tab === 'home' && !S.homeAll) orbKick();
     for (const el of document.querySelectorAll('#view [data-keep]')) {
       if (S.aim[el.id] != null) { el.scrollTop = S.aim[el.id]; delete S.aim[el.id]; }
       else if (keep[el.id] != null) el.scrollTop = keep[el.id];
@@ -4816,6 +5000,7 @@ dialog::backdrop{background:transparent}
     try { history.replaceState(null, '', '#' + tab); } catch (e) {}
     if (tab === 'calendar' && was !== 'calendar') aimTimeline();
     if (tab === 'home' && was !== 'home') aimHome();
+    if (tab === 'home') S.homeAll = false; // Home always opens quiet
     if (TV && tab === 'tv' && was !== 'tv') TV.shown(true);
     setTimeout(() => loadEvents(false), 0);
     setDrawer(false);
@@ -5024,6 +5209,9 @@ dialog::backdrop{background:transparent}
     else if (act === 'soon') toast(`${b.dataset.what} is coming in a later build`);
     else if (act === 'event') openEvent(b.dataset.ev);
     else if (act === 'meeting') openMeeting(b.dataset.id);
+    else if (act === 'qh-ack') { const k = b.dataset.key, sec = b.dataset.sec; ack(k, true); toast(sec ? `Off Home. It's still in ${sec}.` : 'Off Home', () => ack(k, false)); }
+    else if (act === 'qh-all') { S.homeAll = true; aimHome(); render(); }
+    else if (act === 'qh-quiet') { S.homeAll = false; render(); }
     else if (act === 'wt-new') { if (S.canSave) openTask(null, { tag: 'work' }, 'task'); }
     else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
     else if (act.startsWith('pj-')) pjAct(act, b);
@@ -5139,7 +5327,7 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
@@ -5309,10 +5497,11 @@ dialog::backdrop{background:transparent}
   setInterval(checkVersion, 3 * 60e3);
   // Claude usage: the PC sends it every few minutes; POS looks every minute, which also keeps "Updated … ago" true
   setInterval(cluLoad, 60e3);
+  setInterval(ackLoad, 60e3); // a Got it on another screen clears it here too
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { cluLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { cluLoad(); ackLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);

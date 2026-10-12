@@ -105,5 +105,7 @@ window.POSReminders = function (ctx) {
     } else if (name === 'rm-edit' && r) edit(r);
   }
   const add = () => { const t = document.getElementById('rm_text'); if (t) t.focus(); };
-  return { view, act, add, due, start: R.start, stop: R.stop };
+  // for the quiet Home: reminders whose day has come
+  const homeDue = () => (S.loaded ? open().filter(r => r.on && r.on <= today()).map(r => ({ id: r.id, text: r.text, late: r.on < today() })) : []);
+  return { view, act, add, due, homeDue, start: R.start, stop: R.stop };
 };
