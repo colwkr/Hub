@@ -396,6 +396,7 @@ class TV:
         self.kick = asyncio.Event()
         self.hold = False  # after a declined/missed pairing, wait for POS to ask again
         self.want = None
+        self.home_until = 0
         self.waking_until = 0
         self.apps, self.apps_rev = [], 0
         self.st = {'tv': 'searching', 'vol': None, 'muted': False, 'out': None, 'app': None, 'play': None, 'kb': False,
@@ -549,8 +550,10 @@ class TV:
                 model = (m.get('payload') or {}).get('modelName')
             except asyncio.TimeoutError:
                 pass
-            if not is_mine(model, self.want):
-                raise WrongTV(f'{model or "an unknown TV"} at {ip} is not yours')
+            if model and model != '?' and not is_mine(model, self.want):
+                raise WrongTV(f'{model} at {ip} is not yours')
+            if (not model or model == '?') and not (self.info.get('key') and self.info.get('ip') == ip):
+                raise ConnectionError('the TV is still starting up')  # wait for it to say which TV it is
             if model and self.info.get('model') != model:
                 self.info['model'] = model
                 self.save()
@@ -663,6 +666,9 @@ class TV:
             a = p.get('appId')
             if a is not None:
                 self.set(app=a or None)
+                if a and time.time() < self.home_until:
+                    self.home_until = 0
+                    asyncio.ensure_future(self.home_if_blank(a))
 
         def volume(p, m):
             v = p.get('volumeStatus') or p
@@ -763,8 +769,9 @@ class TV:
                     await self.session(ip)
                     fails = 0
                 except WrongTV as e:
+                    # another TV now has your TV's address; keep your TV's pairing and look for it again
                     log('not your TV:', e)
-                    for k in ('ip', 'port', 'model', 'key', 'macs'):
+                    for k in ('ip', 'port'):
                         self.info.pop(k, None)
                     self.save()
                     ip = None
@@ -837,8 +844,31 @@ class TV:
                 self.hold = False
                 self.kick.set()
 
+    async def home_if_blank(self, app):
+        """Turned on from POS and it came up on an input with nothing on it ("No signal"): go to Home instead."""
+        log('after turning on, the TV opened', app)
+        blank = False
+        try:
+            await asyncio.sleep(1.2)
+            if app.startswith('com.webos.app.hdmi') or app.startswith('com.webos.app.externalinput'):
+                r = await self.ask('ssap://tv/getExternalInputList')
+                dev = [d for d in (r.get('devices') or []) if d.get('appId') == app]
+                blank = not dev or not dev[0].get('connected')
+            elif app == 'com.webos.app.livetv':
+                try:
+                    r = await self.ask('ssap://tv/getChannelList')
+                    blank = not (r.get('channelList') or [])
+                except Exception:
+                    blank = True
+        except Exception as e:
+            log('checking the input:', e)
+        if blank and self.st.get('app') == app:
+            log('nothing on that input; going Home')
+            self.press('HOME')
+
     def power_on(self):
         self.waking_until = time.time() + 35
+        self.home_until = time.time() + 60
         if self.connected() and self.st.get('power') == 'Screen Off':
             self.send('ssap://com.webos.service.tvpower/power/turnOnScreen', {'standbyMode': 'active'})
             return
