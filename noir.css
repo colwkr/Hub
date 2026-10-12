@@ -127,3 +127,4 @@
   [data-noir] .win-l{gap:9px}
   [data-noir] .btn{letter-spacing:.06em;padding:9px 11px}
 }
+[data-noir] dialog .where,[data-noir] dialog .f input,[data-noir] .nm-row input{border-radius:3px!important}

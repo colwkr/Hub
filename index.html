@@ -41,29 +41,29 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012223216">
-<script src="finance.js?v=20261012223216"></script>
-<link rel="stylesheet" href="car.css?v=20261012223216">
-<script src="car.js?v=20261012223216"></script>
-<link rel="stylesheet" href="sections.css?v=20261012223216">
-<link rel="stylesheet" href="tv.css?v=20261012223216">
-<link rel="stylesheet" href="noir.css?v=20261012223216">
-<script src="records.js?v=20261012223216"></script>
-<script src="people.js?v=20261012223216"></script>
-<script src="wheels.js?v=20261012223216"></script>
-<script src="keyboard.js?v=20261012223216"></script>
-<script src="notes.js?v=20261012223216"></script>
-<script src="reminders.js?v=20261012223216"></script>
-<script src="gear.js?v=20261012223216"></script>
-<script src="lights.js?v=20261012223216"></script>
-<script src="tv.js?v=20261012223216"></script>
-<script src="work.js?v=20261012223216"></script>
-<script src="health.js?v=20261012223216"></script>
-<script src="pets.js?v=20261012223216"></script>
-<script src="places.js?v=20261012223216"></script>
-<script src="placestab.js?v=20261012223216"></script>
-<script src="usmap.js?v=20261012223216"></script>
-<script src="packages.js?v=20261012223216"></script>
+<link rel="stylesheet" href="finance.css?v=20261012225837">
+<script src="finance.js?v=20261012225837"></script>
+<link rel="stylesheet" href="car.css?v=20261012225837">
+<script src="car.js?v=20261012225837"></script>
+<link rel="stylesheet" href="sections.css?v=20261012225837">
+<link rel="stylesheet" href="tv.css?v=20261012225837">
+<link rel="stylesheet" href="noir.css?v=20261012225837">
+<script src="records.js?v=20261012225837"></script>
+<script src="people.js?v=20261012225837"></script>
+<script src="wheels.js?v=20261012225837"></script>
+<script src="keyboard.js?v=20261012225837"></script>
+<script src="notes.js?v=20261012225837"></script>
+<script src="reminders.js?v=20261012225837"></script>
+<script src="gear.js?v=20261012225837"></script>
+<script src="lights.js?v=20261012225837"></script>
+<script src="tv.js?v=20261012225837"></script>
+<script src="work.js?v=20261012225837"></script>
+<script src="health.js?v=20261012225837"></script>
+<script src="pets.js?v=20261012225837"></script>
+<script src="places.js?v=20261012225837"></script>
+<script src="placestab.js?v=20261012225837"></script>
+<script src="usmap.js?v=20261012225837"></script>
+<script src="packages.js?v=20261012225837"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1235,6 +1235,9 @@ dialog::backdrop{background:transparent}
 .wall-opt[aria-checked="true"]{color:var(--ink);font-weight:600}
 .wall-opt[aria-checked="true"] .wsw{box-shadow:0 0 0 2px var(--ring),0 0 0 4px var(--ink),var(--lift-sm)}
 .set-row{display:flex;gap:8px;flex-wrap:wrap}
+.nm-row{flex-wrap:nowrap}
+.nm-row input{flex:1;min-width:0;border:0;background:var(--field);color:var(--ink);border-radius:16px;padding:10px 14px;min-height:44px;font-size:16px;box-shadow:inset 0 0 0 1px var(--field-border)}
+.nm-row input::placeholder{color:var(--ink-3)}
 .set-note{font-size:11.5px;color:var(--ink-3)}
 .set-acct{display:flex;align-items:center;gap:12px}
 .set-acct > span:not(.avatar){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -1254,7 +1257,7 @@ dialog::backdrop{background:transparent}
 
 <div class="app">
   <header class="top">
-    <div class="win-l"><button type="button" class="win-home" data-tab="home" aria-label="Home"><i aria-hidden="true"></i>POS</button><span class="win-sep" aria-hidden="true">/</span><h1 id="title">Home</h1></div>
+    <div class="win-l"><button type="button" class="win-home" data-tab="home" aria-label="Home"><i aria-hidden="true"></i><span data-appname>POS</span></button><span class="win-sep" aria-hidden="true">/</span><h1 id="title">Home</h1></div>
     <div class="right">
       <span class="date" id="today"></span>
       <button type="button" class="win-add" id="winAdd" aria-label="Add" title="Add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
@@ -1312,7 +1315,7 @@ dialog::backdrop{background:transparent}
 
 <div id="scrim"></div>
 <aside id="drawer" aria-label="Menu" inert>
-  <div class="d-brand"><span class="d-title">POS</span><span class="d-sub">Personal Operating System</span></div>
+  <div class="d-brand"><span class="d-title" data-appname>POS</span><span class="d-sub">Personal Operating System</span></div>
   <i class="d-line"></i>
   <span class="lab d-lab">Menu</span>
   <nav class="nav" aria-label="Sections">
@@ -1427,6 +1430,12 @@ dialog::backdrop{background:transparent}
 <dialog id="setSheet" aria-labelledby="setTitle">
   <div class="set-body">
     <div class="sheet-head" id="setHead"><div class="grab"></div><div class="bar"><h2 id="setTitle">Settings</h2><button type="button" class="circle" id="setClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
+    <form class="set-sec" id="nameForm" aria-labelledby="nmLab" novalidate>
+      <div class="set-head"><span class="lab" id="nmLab">Name</span><span class="set-note">Every device</span></div>
+      <p class="set-note">What it's called. The name shows wherever POS does now.</p>
+      <div class="set-row nm-row"><input id="s_name" type="text" maxlength="24" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Not named yet" aria-labelledby="nmLab"><button type="submit" class="btn solid" id="nameSave">Save</button></div>
+    </form>
+    <i class="set-line"></i>
     <section class="set-sec" aria-labelledby="apLab">
       <div class="set-head"><span class="lab" id="apLab">Appearance</span><span class="set-note">This device</span></div>
       <div class="seg3" role="radiogroup" aria-labelledby="apLab">
@@ -1503,13 +1512,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012223216"></script>
+<script src="appearance.js?v=20261012225837"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012223216';
+  const VERSION = '20261012225837';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2246,6 +2255,41 @@ dialog::backdrop{background:transparent}
      (a meeting that day, a bill on its day or late, a birthday that morning, a package out for delivery, CG on Sunday)
      and leaves when you say Got it. Getting it never deletes anything: it's still in its own section. Something
      starting within the hour stays put until it starts. "Everything" (or tapping the entity) shows the full Home. ---------- */
+  /* ---------- its name: you give it one in Settings, and it shows everywhere POS used to, on every device.
+     Until then it's POS. ---------- */
+  const IDENT = { name: (() => { try { return localStorage.getItem('pos.name') || ''; } catch (e) { return ''; } })() };
+  const appName = () => IDENT.name || 'POS';
+  function paintName() {
+    for (const el of document.querySelectorAll('[data-appname]')) el.textContent = appName();
+    document.title = appName();
+  }
+  function setName(n) {
+    n = (n || '').trim().slice(0, 24);
+    if (n === IDENT.name) return false;
+    IDENT.name = n;
+    try { if (n) localStorage.setItem('pos.name', n); else localStorage.removeItem('pos.name'); } catch (e) {}
+    paintName();
+    return true;
+  }
+  paintName();
+  async function identLoad() {
+    if (!sb || !S.user) return;
+    try {
+      const { data, error } = await sb.from('records').select('data').eq('id', 'ident').maybeSingle();
+      if (error) return;
+      if (setName(data && data.data ? data.data.name : '') && S.tab === 'home') render();
+    } catch (e) {}
+  }
+  async function identSave(n) {
+    const name = (n || '').trim().slice(0, 24);
+    const { data: rows, error: e1 } = await sb.from('records').select('id').eq('id', 'ident');
+    if (e1) throw e1;
+    const data = { name };
+    const { error } = rows && rows.length ? await sb.from('records').update({ data }).eq('id', 'ident') : await sb.from('records').insert({ id: 'ident', kind: 'ident', data });
+    if (error) throw error;
+    setName(name); render();
+  }
+
   const ACK = { day: '', keys: {}, gone: new Set() };
   const ackId = k => 'home-ack-' + k;
   async function ackLoad() {
@@ -2383,7 +2427,7 @@ dialog::backdrop{background:transparent}
     const enter = S.qhEnter; S.qhEnter = false;
     const html = `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}${enter ? ' enter' : ''}" id="qh">
       <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
-      <div class="qh-c q-tl"><span class="qh-k">POS</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
+      <div class="qh-c q-tl"><span class="qh-k" data-appname>${esc(appName())}</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
       <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}</div>
       <div class="qh-stage">
         <div class="qh-orbbtn"><canvas id="qhOrb" class="qh-orb" aria-hidden="true"></canvas></div>
@@ -2400,9 +2444,175 @@ dialog::backdrop{background:transparent}
   // "everything": the full Home, with a way back to quiet
   const vHomeAll = () => `<div class="qh-back"><button type="button" class="qh-link" data-act="qh-quiet">← Quiet</button></div>${vHome()}`;
 
-  /* ---------- the entity: a field of points that holds a sphere and breathes. Calm when nothing needs you,
-     brighter when something does, warm when something starts within the hour. ---------- */
+  /* ---------- the entity: an android, head and shoulders, drawn in halftone squares. It breathes, looks around,
+     turns toward your pointer or finger, and blinks. Its visor is dim when nothing needs you, brighter when
+     something does, and burns orange when something starts within the hour.
+     The figure is lit in a tiny WebGL pass (one sample per square); the squares are drawn on the page's canvas. ---------- */
   const ORB = { raf: 0, t0: performance.now(), last: 0, mood: 0, dust: null };
+  const BOT = { gl: null, cv: null, u: {}, n: 0, px: null, fail: false, yaw: 0, pitch: 0, look: null, lookAt: 0, blinkAt: -1e9, blinkNext: 0, prev: 0 };
+  const BOT_VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+  const BOT_FS = `precision highp float;
+uniform float uN,uT,uYaw,uPitch,uBreath,uScan,uBlink;
+float sdEll(vec3 p,vec3 r){float k0=length(p/r);float k1=length(p/(r*r));return k0*(k0-1.0)/k1;}
+float sdBox(vec3 p,vec3 b){vec3 q=abs(p)-b;return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);}
+float smin(float a,float b,float k){float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);return mix(b,a,h)-k*h*(1.0-h);}
+float sdCap(vec3 p,vec3 a,vec3 b,float r){vec3 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);return length(pa-ba*h)-r;}
+float sdTor(vec3 p,vec2 t){vec2 q=vec2(length(p.xz)-t.x,p.y);return length(q)-t.y;}
+mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+vec3 headP(vec3 p){vec3 q=p-vec3(0.0,0.14,-0.04);q.yz=rot(uPitch)*q.yz;q.xz=rot(uYaw)*q.xz;return q+vec3(0.0,0.14-uBreath*0.012,-0.04);}
+vec2 map(vec3 p){
+  const float HS=1.1;
+  vec3 q=(headP(p)-vec3(0.0,0.24,-0.05))/HS+vec3(0.0,0.24,-0.05);
+  // the head: skull, face, jaw and a nose ridge, a sculpted mask more than an egg
+  float head=sdEll(q-vec3(0.0,0.63,-0.05),vec3(0.29,0.31,0.33));
+  head=smin(head,sdEll(q-vec3(0.0,0.45,0.05),vec3(0.245,0.33,0.27)),0.08);
+  head=smin(head,sdEll(q-vec3(0.0,0.25,0.06),vec3(0.17,0.14,0.2)),0.1);
+  head=smin(head,sdCap(q,vec3(0.0,0.46,0.29),vec3(0.0,0.37,0.325),0.026),0.035);
+  // seams: over the crown ear to ear, down the jaw line, and the mouth
+  head=max(head,-max(abs(q.z+0.08)-0.016,-head-0.03));
+  head=max(head,-max(abs(length(q.xz*vec2(1.0,1.25))-0.19)-0.012,max(q.y-0.36,-head-0.03)));
+  head=max(head,-sdBox(q-vec3(0.0,0.285,0.28),vec3(0.062,0.011,0.08)));
+  // the eye band: a recessed strip of dark glass across the eyes
+  float slot=sdBox(q-vec3(0.0,0.525,0.3),vec3(0.24,0.044,0.13));
+  float glass=max(sdEll(q-vec3(0.0,0.6,-0.05),vec3(0.27,0.29,0.31))-0.0,slot);
+  glass=min(glass,max(sdEll(q-vec3(0.0,0.45,0.05),vec3(0.225,0.31,0.25)),slot));
+  head=max(head,-slot);
+  // temple pieces
+  vec3 e=vec3(abs(q.x)-0.285,q.y-0.52,q.z+0.03);
+  float ear=max(length(e.yz)-0.09,abs(e.x)-0.04)-0.006;
+  ear=max(ear,-max(length(e.yz)-0.045,abs(e.x-0.04)-0.02));
+  float ring=max(length(e.yz)-0.04,abs(e.x-0.025)-0.01);
+  head=min(head,ear)*HS;glass*=HS;ring*=HS;
+  // neck: short and strong, finely ridged
+  float neck=sdCap(p,vec3(0.0,-0.28,-0.05),vec3(0.0,0.24,-0.05),0.13+0.006*sin(p.y*55.0));
+  // shoulders, trapezius and chest
+  float by=1.0+0.02*uBreath, sy=-0.5+0.014*uBreath;
+  vec3 tp=p-vec3(0.0,-0.84,-0.05);tp.y/=by;
+  float tor=sdEll(tp,vec3(0.7,0.5,0.31));
+  float sh=min(length(p-vec3(-0.58,sy,-0.05)),length(p-vec3(0.58,sy,-0.05)))-0.19;
+  float tr=min(sdCap(p,vec3(-0.08,-0.22,-0.08),vec3(-0.5,sy+0.07,-0.06),0.085),sdCap(p,vec3(0.08,-0.22,-0.08),vec3(0.5,sy+0.07,-0.06),0.085));
+  float body=smin(tor,sh,0.14);
+  body=smin(body,tr,0.1);
+  body=smin(body,neck,0.06);
+  // armor seams: shoulder plates, sternum, across the chest
+  float seam=min(min(max(abs(p.x)-0.014,p.y+0.5),abs(p.y+0.7)-0.013),max(abs(abs(p.x)-0.43)-0.012,p.y+0.2));
+  body=max(body,-max(seam,-body-0.03));
+  vec2 r=vec2(body,0.0);
+  if(head<r.x)r=vec2(head,0.0);
+  if(glass<r.x)r=vec2(glass,1.0);
+  if(ring<r.x)r=vec2(ring,2.0);
+  return r;
+}
+vec3 nrm(vec3 p){const vec2 k=vec2(1.0,-1.0);float h=0.003;return normalize(k.xyy*map(p+k.xyy*h).x+k.yyx*map(p+k.yyx*h).x+k.yxy*map(p+k.yxy*h).x+k.xxx*map(p+k.xxx*h).x);}
+void main(){
+  vec2 cell=floor(gl_FragCoord.xy);
+  vec2 uv=(gl_FragCoord.xy/uN)*2.0-1.0;
+  vec3 ro=vec3(0.0,0.1,3.4);
+  vec3 rd=normalize(vec3(uv*0.3,-1.0));
+  float t=0.0,dmin=9.0;vec2 h=vec2(9.0,0.0);bool hit=false;
+  for(int i=0;i<80;i++){h=map(ro+rd*t);dmin=min(dmin,h.x);if(h.x<0.0015){hit=true;break;}t+=h.x*0.85;if(t>5.0)break;}
+  float fade=smoothstep(-1.0,-0.5,uv.y);
+  if(!hit){
+    float k=floor(uT*2.5+hash(cell)*7.0);
+    float s=step(0.9,hash(cell+k*1.37))*(1.0-smoothstep(0.0,0.14,dmin))*fade;
+    gl_FragColor=vec4(0.0,0.0,s,1.0);return;
+  }
+  vec3 p=ro+rd*t,n=nrm(p);
+  float dif=max(dot(n,normalize(vec3(-0.55,0.6,0.62))),0.0);
+  float fre=pow(1.0-max(dot(n,-rd),0.0),2.2);
+  float rim=fre*(0.35+0.65*max(dot(n,normalize(vec3(0.85,0.25,-0.35))),0.0));
+  float ao=clamp(0.3+map(p+n*0.05).x/0.05*0.7,0.0,1.0);
+  float scan=exp(-pow((p.y-uScan)*10.0,2.0))*0.45;
+  float b=(0.08+0.9*dif*ao+0.55*rim+scan)*fade;
+  float e=0.0;
+  if(h.y>0.5){
+    vec3 q=headP(p);
+    // two eyes glow inside the dark band; the band itself only faintly
+    float eye=1.0-smoothstep(0.034,0.062,length(vec2(abs(q.x)-0.098,(q.y-0.525)*1.5)));
+    e=h.y<1.5?max(0.08,eye*(1.0-uBlink)):0.45;
+    b*=0.18;
+  }
+  gl_FragColor=vec4(clamp(b,0.0,1.0),clamp(e,0.0,1.0),0.0,1.0);
+}`;
+  function botInit() {
+    if (BOT.gl) return true;
+    if (BOT.fail) return false;
+    try {
+      const cv = document.createElement('canvas');
+      const gl = cv.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
+      if (!gl) throw new Error('no webgl');
+      const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+      const pr = gl.createProgram();
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, BOT_VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, BOT_FS)); gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+      gl.useProgram(pr);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const a = gl.getAttribLocation(pr, 'a'); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+      for (const k of ['uN', 'uT', 'uYaw', 'uPitch', 'uBreath', 'uScan', 'uBlink']) BOT.u[k] = gl.getUniformLocation(pr, k);
+      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); BOT.gl = null; BOT.n = 0; });
+      BOT.gl = gl; BOT.cv = cv; BOT.n = 0;
+      return true;
+    } catch (e) { BOT.fail = true; return false; }
+  }
+  // where it looks: your pointer or finger for a few seconds after you move it, otherwise it glances around
+  for (const ev of ['pointermove', 'pointerdown']) document.addEventListener(ev, e => { if (S.tab === 'home') { BOT.look = [e.clientX, e.clientY]; BOT.lookAt = performance.now(); } }, { passive: true });
+  function botFrame(cv, g, w, h, now) {
+    const gl = BOT.gl, t = (now - ORB.t0) / 1000, mood = ORB.mood;
+    const dt = BOT.prev ? Math.min(0.1, (now - BOT.prev) / 1000) : 0.03; BOT.prev = now;
+    const still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const s = Math.min(w, h), N = Math.max(56, Math.min(120, Math.round(s / 4.4)));
+    if (BOT.n !== N) { BOT.cv.width = BOT.cv.height = N; BOT.n = N; BOT.px = new Uint8Array(N * N * 4); gl.viewport(0, 0, N, N); }
+    // look target
+    let ty, tp;
+    if (BOT.look && now - BOT.lookAt < 6000 && !still) {
+      const r = cv.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * 0.33;
+      ty = Math.max(-1, Math.min(1, (BOT.look[0] - cx) / (innerWidth * 0.45))) * 0.6;
+      tp = Math.max(-1, Math.min(1, (BOT.look[1] - cy) / (innerHeight * 0.5))) * 0.32;
+    } else if (still) { ty = 0; tp = 0; }
+    else {
+      ty = 0.24 * Math.sin(t * 0.11) + 0.1 * Math.sin(t * 0.29 + 1) + (mood === 2 ? 0.16 : 0);
+      tp = 0.05 * Math.sin(t * 0.17) + (mood ? 0.04 : 0);
+    }
+    const ease = Math.min(1, dt * 3.2);
+    BOT.yaw += (ty - BOT.yaw) * ease; BOT.pitch += (tp - BOT.pitch) * ease;
+    if (now > BOT.blinkNext) { BOT.blinkAt = now; BOT.blinkNext = now + 3200 + Math.random() * 5200; }
+    const blink = !still && now - BOT.blinkAt < 130 ? 1 : 0;
+    const ph = (t % 9) / 1.7, scan = still || ph >= 1 ? 9 : 1.2 - ph * 2.5;
+    const breath = still ? 0.5 : 0.5 + 0.5 * Math.sin(t * (mood === 2 ? 1.7 : 1.15));
+    const U = BOT.u;
+    gl.uniform1f(U.uN, N); gl.uniform1f(U.uT, t); gl.uniform1f(U.uYaw, -BOT.yaw); gl.uniform1f(U.uPitch, BOT.pitch);
+    gl.uniform1f(U.uBreath, breath); gl.uniform1f(U.uScan, scan); gl.uniform1f(U.uBlink, blink);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readPixels(0, 0, N, N, gl.RGBA, gl.UNSIGNED_BYTE, BOT.px);
+    const px = BOT.px, cs = s / N, ox = (w - s) / 2, oy = (h - s) / 2;
+    const vis = mood === 2 ? '255,96,48' : mood ? '236,242,255' : '196,214,240';
+    const gain = mood === 2 ? 0.78 + 0.22 * Math.sin(t * 5) : mood ? 0.9 : 0.62;
+    const dust = mood === 2 ? '255,140,100' : '230,232,238';
+    for (let row = 0; row < N; row++) {
+      const y = oy + (N - 1 - row) * cs;
+      for (let col = 0; col < N; col++) {
+        const i = (row * N + col) * 4, b = px[i] / 255, e = px[i + 1] / 255, d = px[i + 2] / 255;
+        const x = ox + col * cs;
+        if (e > 0.04) {
+          const a = e * gain;
+          if (e > 0.4) { g.fillStyle = `rgba(${vis},${(a * 0.14).toFixed(3)})`; g.fillRect(x - cs, y - cs, cs * 3, cs * 3); }
+          g.fillStyle = `rgba(${vis},${Math.min(1, 0.3 + a * 0.75).toFixed(3)})`;
+          const z = cs * (0.6 + 0.32 * a); g.fillRect(x + (cs - z) / 2, y + (cs - z) / 2, z, z);
+        } else if (b > 0.02) {
+          const jit = 0.88 + 0.12 * Math.sin(col * 12.99 + row * 78.23 + t * 2.4);
+          const z = cs * Math.sqrt(Math.min(1, b * jit)) * 0.9; // area follows brightness, like print halftone
+          if (z < 0.6) continue;
+          g.fillStyle = `rgba(236,238,242,${Math.min(1, 0.22 + b * 0.78).toFixed(3)})`;
+          g.fillRect(x + (cs - z) / 2, y + (cs - z) / 2, z, z);
+        } else if (d > 0.02) {
+          g.fillStyle = `rgba(${dust},${(d * 0.65).toFixed(3)})`;
+          g.fillRect(x + cs * 0.3, y + cs * 0.3, Math.max(1.2, cs * 0.34), Math.max(1.2, cs * 0.34));
+        }
+      }
+    }
+  }
   function orbKick() { if (!ORB.raf) ORB.raf = requestAnimationFrame(orbFrame); }
   function orbFrame(now) {
     ORB.raf = 0;
@@ -2417,6 +2627,11 @@ dialog::backdrop{background:transparent}
     if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
     const g = cv.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    if (botInit()) { try { botFrame(cv, g, w, h, now); return; } catch (e) { BOT.fail = true; BOT.gl = null; } }
+    orbSphere(g, w, h, now);
+  }
+  // without WebGL: the old breathing sphere of points
+  function orbSphere(g, w, h, now) {
     const t = (now - ORB.t0) / 1000, mood = ORB.mood;
     const breathe = 1 + Math.sin(t * (mood ? 1.25 : 0.8)) * (mood ? 0.022 : 0.014);
     const R = Math.min(w, h) * 0.31 * breathe, cx = w / 2, cy = h / 2;
@@ -2446,15 +2661,6 @@ dialog::backdrop{background:transparent}
       g.fillStyle = mood === 2 ? `rgba(255,120,72,${al.toFixed(3)})` : `rgba(230,232,238,${al.toFixed(3)})`;
       g.fillRect(cx + Math.cos(a) * rr * 1.08, cy + Math.sin(a) * rr * 0.92, d.sz, d.sz);
     }
-    // an orbit: faint when calm, plain when something needs you, warm when something starts soon
-    g.save(); g.translate(cx, cy); g.rotate(-0.32 + Math.sin(t * 0.07) * 0.06);
-    g.strokeStyle = mood === 2 ? 'rgba(255,90,40,.85)' : mood ? 'rgba(236,238,242,.38)' : 'rgba(236,238,242,.12)';
-    g.lineWidth = 1; g.beginPath(); g.ellipse(0, 0, R * 1.62, R * 0.42, 0, 0, Math.PI * 2); g.stroke();
-    g.setLineDash([3, 5]); g.strokeStyle = mood === 2 ? 'rgba(255,90,40,.45)' : 'rgba(236,238,242,.1)';
-    g.beginPath(); g.ellipse(0, 0, R * 1.3, R * 0.3, 0, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
-    const oa = t * 0.5; g.fillStyle = mood === 2 ? '#ff5a28' : 'rgba(236,238,242,.9)';
-    g.fillRect(Math.cos(oa) * R * 1.62 - 2, Math.sin(oa) * R * 0.42 - 2, 4, 4);
-    g.restore();
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) orbKick(); });
 
@@ -3255,7 +3461,7 @@ dialog::backdrop{background:transparent}
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
       <div class="r-mark" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></div>
-      <h1 class="login-title">Personal Operating System</h1>
+      <h1 class="login-title">${esc(IDENT.name || 'Personal Operating System')}</h1>
       <p class="meta">${up ? 'Create your account. You only do this once; every device then signs in with it.' : 'Sign in to see your tasks and calendar.'}</p>
       <label class="f"><span class="f-h">Email</span><input id="l_email" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" required></label>
       <label class="f"><span class="f-h">Password</span><input id="l_pass" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" minlength="8" required></label>
@@ -5434,7 +5640,7 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
@@ -5507,12 +5713,21 @@ dialog::backdrop{background:transparent}
     $('#setWho').textContent = me.email; $('#setName').textContent = me.name; $('#setInit').textContent = me.init;
     if (window.POSLook) POSLook.refresh();
     fillHome();
+    $('#s_name').value = IDENT.name;
     $('#s_gcal').value = S.gcal || '';
     $('#setErr').hidden = true;
     $('#setStatus').textContent = S.gcal ? (S.evErr ? `Google Calendar: ${S.evErr}` : `Connected: ${S.gcalName || 'Google Calendar'}. ${S.events.length} events loaded.`) : 'No calendar connected yet.';
     setSheet.showModal();
   }
   $('#setClose').addEventListener('click', () => setSheet.close());
+  $('#nameForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!S.canSave) { toast('Not connected yet. Try again in a moment.'); return; }
+    const btn = $('#nameSave'), v = $('#s_name').value.trim();
+    btn.disabled = true;
+    try { await identSave(v); toast(v ? `Named ${v}` : 'Back to POS'); } catch (err) { toast('That did not save. Check your connection and try again.'); }
+    btn.disabled = false;
+  });
   $('#setForm').addEventListener('submit', async e => {
     e.preventDefault();
     const v = $('#s_gcal').value.trim();
@@ -5608,7 +5823,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { cluLoad(); ackLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { cluLoad(); ackLoad(); identLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);
