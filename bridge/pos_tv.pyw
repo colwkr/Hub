@@ -712,13 +712,16 @@ class TV:
 
     # ---- the loop that keeps a connection to the TV
     async def run(self):
-        fails = 0
+        fails = looks = 0
         while True:
             ip = self.info.get('ip')
             if (not ip or (fails and fails % 15 == 0)) and not self.hold:
                 if not ip:
                     self.set(tv='searching')
-                found = await discover(self.ports, scan=not ip)  # the full look-around only when there's no address yet
+                # asking the network is cheap; knocking on every address is saved for when there's no address yet,
+                # and then only now and then (a TV that's off answers neither)
+                looks += 1
+                found = await discover(self.ports, scan=not ip and (looks <= 3 or looks % 12 == 0))
                 if found and found != ip:
                     self.info['ip'] = ip = found
                     self.save()
