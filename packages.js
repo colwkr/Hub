@@ -219,5 +219,8 @@ window.POSPackages = function (ctx) {
   // for the quiet Home: out for delivery, or delivered today
   const homeToday = () => (S.loaded ? S.package.filter(p => !p.archived && (p.stage === 'out' || (p.stage === 'delivered' && p.deliveredAt && new Date(p.deliveredAt).toDateString() === new Date().toDateString())))
     .map(p => ({ id: p.id, name: p.name || p.store || 'A package', out: p.stage === 'out' })) : []);
-  return { view, act, add: addSheet, badge, homeToday, start: R.start, stop: () => { R.stop(); UI.asked = false; UI.key = null; } };
+  // what's on its way, for the assistant: a name and the line you'd read first
+  const summary = () => (S.loaded ? S.package.slice().sort((a, b) => (a.stage === 'delivered') - (b.stage === 'delivered') || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8)
+    .map(p => { const h = headline(p); return { name: String(p.name || p.store || p.trackNo || 'Package').slice(0, 60), status: `${h.big}${h.small ? ' · ' + h.small : ''}`.slice(0, 80) }; }) : []);
+  return { view, act, add: addSheet, badge, homeToday, summary, start: R.start, stop: () => { R.stop(); UI.asked = false; UI.key = null; } };
 };

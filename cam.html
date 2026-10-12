@@ -920,6 +920,9 @@ async function start() {
   st.pvw = cams.find(c => !c.out && c.n !== st.pgm)?.n || 2; st.sel = st.pgm;
   drawTiles(); panel(); stats();
   requestAnimationFrame(frame);
+  // cam.html?op=5 (from the assistant: "operate camera five") opens straight into that camera
+  const opN = +(new URLSearchParams(location.search).get('op') || 0);
+  if (opN >= 1 && opN <= 6 && cams.some(c => c.n === opN && !c.out)) openOp(opN);
 }
 start();
 </script>

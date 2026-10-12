@@ -41,29 +41,30 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012232600">
-<script src="finance.js?v=20261012232600"></script>
-<link rel="stylesheet" href="car.css?v=20261012232600">
-<script src="car.js?v=20261012232600"></script>
-<link rel="stylesheet" href="sections.css?v=20261012232600">
-<link rel="stylesheet" href="tv.css?v=20261012232600">
-<link rel="stylesheet" href="noir.css?v=20261012232600">
-<script src="records.js?v=20261012232600"></script>
-<script src="people.js?v=20261012232600"></script>
-<script src="wheels.js?v=20261012232600"></script>
-<script src="keyboard.js?v=20261012232600"></script>
-<script src="notes.js?v=20261012232600"></script>
-<script src="reminders.js?v=20261012232600"></script>
-<script src="gear.js?v=20261012232600"></script>
-<script src="lights.js?v=20261012232600"></script>
-<script src="tv.js?v=20261012232600"></script>
-<script src="work.js?v=20261012232600"></script>
-<script src="health.js?v=20261012232600"></script>
-<script src="pets.js?v=20261012232600"></script>
-<script src="places.js?v=20261012232600"></script>
-<script src="placestab.js?v=20261012232600"></script>
-<script src="usmap.js?v=20261012232600"></script>
-<script src="packages.js?v=20261012232600"></script>
+<link rel="stylesheet" href="finance.css?v=20261012235131">
+<script src="finance.js?v=20261012235131"></script>
+<link rel="stylesheet" href="car.css?v=20261012235131">
+<script src="car.js?v=20261012235131"></script>
+<link rel="stylesheet" href="sections.css?v=20261012235131">
+<link rel="stylesheet" href="tv.css?v=20261012235131">
+<link rel="stylesheet" href="noir.css?v=20261012235131">
+<script src="records.js?v=20261012235131"></script>
+<script src="people.js?v=20261012235131"></script>
+<script src="wheels.js?v=20261012235131"></script>
+<script src="keyboard.js?v=20261012235131"></script>
+<script src="notes.js?v=20261012235131"></script>
+<script src="reminders.js?v=20261012235131"></script>
+<script src="gear.js?v=20261012235131"></script>
+<script src="lights.js?v=20261012235131"></script>
+<script src="tv.js?v=20261012235131"></script>
+<script src="work.js?v=20261012235131"></script>
+<script src="health.js?v=20261012235131"></script>
+<script src="pets.js?v=20261012235131"></script>
+<script src="places.js?v=20261012235131"></script>
+<script src="placestab.js?v=20261012235131"></script>
+<script src="usmap.js?v=20261012235131"></script>
+<script src="assistant.js?v=20261012235131"></script>
+<script src="packages.js?v=20261012235131"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1436,6 +1437,16 @@ dialog::backdrop{background:transparent}
       <div class="set-row nm-row"><input id="s_name" type="text" maxlength="24" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Not named yet" aria-labelledby="nmLab"><button type="submit" class="btn solid" id="nameSave">Save</button></div>
     </form>
     <i class="set-line"></i>
+    <section class="set-sec" id="asSet" aria-labelledby="asLab">
+      <div class="set-head"><span class="lab" id="asLab">Assistant</span><span class="set-note" id="asNote"></span></div>
+      <p class="set-note">Tap the creature on Home and talk. Understanding runs on Claude, paid from your Max plan's monthly API credits. The key is kept on POS's server, never on this device. Your browser turns speech into text: Apple does it on iPhone and iPad, Google in Chrome.</p>
+      <form class="set-row nm-row" id="asKeyForm" autocomplete="off" novalidate><input id="as_key" class="as-secret" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your Claude API key (sk-ant-…)" aria-label="Claude API key"><button type="submit" class="btn solid" id="asSave">Save</button></form>
+      <div class="set-row as-days"><span class="set-note">The key lasts</span><div class="seg3" id="asDays" role="radiogroup" aria-label="How long the key lasts"><button type="button" role="radio" data-days="30" aria-checked="true">30 days</button><button type="button" role="radio" data-days="90" aria-checked="false">90 days</button><button type="button" role="radio" data-days="never" aria-checked="false">Never</button></div></div>
+      <p class="set-note" id="asKeyInfo"></p>
+      <div class="set-row"><button type="button" class="switch" id="asSpeak" role="switch" aria-checked="true"><span>Speak replies out loud</span><span class="sw" aria-hidden="true"></span></button></div>
+      <div class="set-row"><button type="button" class="btn" id="asRemove" hidden>Remove key</button></div>
+    </section>
+    <i class="set-line"></i>
     <section class="set-sec" aria-labelledby="apLab">
       <div class="set-head"><span class="lab" id="apLab">Appearance</span><span class="set-note">This device</span></div>
       <div class="seg3" role="radiogroup" aria-labelledby="apLab">
@@ -1512,13 +1523,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012232600"></script>
+<script src="appearance.js?v=20261012235131"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012232600';
+  const VERSION = '20261012235131';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1640,7 +1651,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null;
+  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2327,7 +2338,7 @@ dialog::backdrop{background:transparent}
   }
 
   // what deserves a card right now. Timed things: from the morning until they're over; within the hour they stay put.
-  const SECTION = { meeting: 'Meetings', event: 'Calendar', tasks: 'Tasks', task: 'Tasks', bill: 'Finance', bday: 'Birthdays', pkg: 'Packages', cg: 'Work', rem: 'Reminders', car: 'Car', pets: 'Pets' };
+  const SECTION = { assist: 'Settings', meeting: 'Meetings', event: 'Calendar', tasks: 'Tasks', task: 'Tasks', bill: 'Finance', bday: 'Birthdays', pkg: 'Packages', cg: 'Work', rem: 'Reminders', car: 'Car', pets: 'Pets' };
   function timedState(start, mins) { // minutes from now until it starts, and whether it's happening
     const nm = nowMin(), s = toMin(start), e = s + (mins || 30);
     if (nm >= e) return null;
@@ -2371,6 +2382,9 @@ dialog::backdrop{background:transparent}
     // the car and the pets, only when something is actually due
     if (CAR && CAR.badge && CAR.badge()) { const o = CAR.oilDue && CAR.oilDue(); add({ key: `car:${tk}:${CAR.badge()}`, kind: 'car', lab: 'Car · Needs a look', title: o && o.st === 'due' ? 'Oil change is due' : 'Something on the car needs you', open: 'data-tab="car"', sort: 690 }); }
     if (PETS && PETS.badge && PETS.badge()) add({ key: `pets:${tk}:${PETS.badge()}`, kind: 'pets', lab: 'Pets · Checkup due', title: `${PETS.badge()} ${PETS.badge() === 1 ? 'checkup is' : 'checkups are'} due`, open: 'data-tab="pets"', sort: 695 });
+    // the assistant's key, a few days before it runs out
+    const kw = ASSIST && ASSIST.keyWarn();
+    if (kw != null) add({ key: `askey:${tk}`, kind: 'assist', lab: kw <= 0 ? 'Assistant · Key expired' : `Assistant · Key expires in ${kw} ${kw === 1 ? 'day' : 'days'}`, title: 'Make a new key and paste it in Settings', open: 'data-act="settings"', sort: 5, warn: true });
     return cards.sort((a, b) => (!!b.sticky - !!a.sticky) || a.sort - b.sort);
   }
   function qCard(c) {
@@ -2431,9 +2445,9 @@ dialog::backdrop{background:transparent}
       <div class="qh-c q-tl"><span class="qh-k" data-appname>${esc(appName())}</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
       <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}</div>
       <div class="qh-stage">
-        <div class="qh-orbbtn" id="qhSlot" aria-hidden="true"></div>
+        <button type="button" class="qh-orbbtn qh-talk" id="qhSlot" data-act="as-talk" aria-label="Talk to ${esc(appName())}"></button>
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
-        ${vDock()}
+        ${ASSIST && ASSIST.busy() ? ASSIST.panel() : vDock()}
       </div>
       ${n ? `<div class="qh-cards" id="qhCards" data-keep>${cards.map(qCard).join('')}</div>` : ''}
       <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
@@ -2442,6 +2456,78 @@ dialog::backdrop{background:transparent}
     S.dockSwap = false;
     return html;
   }
+  /* ---------- the assistant's view of POS (small on purpose) and what it may do, once you say yes ---------- */
+  const asWd = new Intl.DateTimeFormat('en-US', { weekday: 'long' }), asDay = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const okDate = d => (/^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : null);
+  const okTime = t => (/^\d{1,2}:\d{2}$/.test(t || '') ? t.padStart(5, '0') : null);
+  const dayWord = k => { const n = Math.round((fromKey(k) - fromKey(todayKey())) / 864e5); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : asDay.format(fromKey(k)); };
+  const realId = id => !!id && !String(id).includes('@') && !!task(id);
+  function asSummary() {
+    const tk = todayKey(), end = addDays(tk, 7);
+    const t2 = t => ({ ...(realId(t.id) ? { id: t.id } : {}), title: String(t.title || '').slice(0, 80), ...(t.date ? { date: t.date } : {}), ...(t.time ? { time: t.time } : {}), ...(t.tag ? { tag: t.tag } : {}), ...(isOverdue(t) ? { late: true } : {}) });
+    return {
+      today: tk, weekday: asWd.format(new Date()), now: fmtTime(nowMin()), section: S.tab,
+      tasks: S.tasks.filter(t => !t.done && (!t.date || t.date <= end)).sort(cmp).slice(0, 30).map(t2),
+      meetings: S.items.filter(x => x.kind === 'meeting' && x.date && x.date >= tk && x.date <= end && !x.done).sort(cmp).slice(0, 8).map(m => ({ title: String(m.title || '').slice(0, 80), date: m.date, ...(m.time ? { time: m.time } : {}) })),
+      calendar: (S.events || []).filter(g => g.date >= tk && g.date <= addDays(tk, 3)).slice(0, 10).map(g => ({ title: String(g.title || '').slice(0, 80), date: g.date, time: g.allDay ? 'all day' : g.start })),
+      reminders: REM && REM.summary ? REM.summary() : [],
+      packages: PKG && PKG.summary ? PKG.summary() : [],
+      due: { bills: FIN ? FIN.badge() : 0, car: CAR ? CAR.badge() : 0, pet_checkups: PETS ? PETS.badge() : 0, cg_left: WORK && WORK.left ? WORK.left() : null },
+      on_home: homeCards().slice(0, 6).map(c => `${c.lab}: ${c.title}`),
+    };
+  }
+  // the day, said out loud: "3 things today: Run at 6:15, Order SDI cables, and Production sync at 7:57."
+  function dayText(off) {
+    const k = addDays(todayKey(), off), word = off ? 'tomorrow' : 'today';
+    const list = dayItems(k).filter(x => !x.done && x.kind !== 'project' && (off || !x.time || toMin(x.time) + effMins(x) > nowMin()))
+      .map(x => ({ t: x.title, m: x.time ? toMin(x.time) : 2000 }))
+      .concat((S.events || []).filter(g => g.date === k).map(g => ({ t: g.title, m: g.allDay || !g.start ? 2000 : toMin(g.start) })))
+      .sort((a, b) => a.m - b.m);
+    if (!list.length) return `Nothing on ${word}.`;
+    const say = list.slice(0, 4).map(x => `${x.t}${x.m < 2000 ? ` at ${fmtTime(x.m)}` : ''}`);
+    const more = list.length - say.length;
+    const joined = say.length > 1 ? `${say.slice(0, -1).join(', ')}${more ? ', ' : ' and '}${say[say.length - 1]}` : say[0];
+    return `${list.length} ${list.length === 1 ? 'thing' : 'things'} ${word}: ${joined}${more ? `, and ${more} more` : ''}.`;
+  }
+  function asDescribe(a) {
+    const title = String(a.title || '').trim().slice(0, 200), date = okDate(a.date), time = okTime(a.time);
+    const when = [date ? dayWord(date) : 'No day', time ? fmtTime(toMin(time)) : ''].filter(Boolean).join(', ');
+    if (a.action === 'add_task') return title ? `New task · ${title} · ${when}${a.tag === 'work' || a.tag === 'personal' ? ' · ' + TAGS[a.tag] : ''}` : null;
+    if (a.action === 'complete_task') return realId(a.id) && !task(a.id).done ? `Mark done · ${task(a.id).title}` : null;
+    if (a.action === 'move_task') return realId(a.id) ? `Move · ${task(a.id).title} → ${when}` : null;
+    if (a.action === 'add_reminder') return title ? `New reminder · ${title}${date ? ' · ' + dayWord(date) : ''}` : null;
+    if (a.action === 'add_note') return title || a.details ? `New note · ${title || String(a.details).slice(0, 80)}` : null;
+    if (a.action === 'build_note') return `Note for Claude · ${title || String(a.details || '').slice(0, 80) || 'an idea'}`;
+    return null;
+  }
+  async function asRun(a) {
+    if (!S.canSave) throw new Error('Not connected. Try again in a moment.');
+    const title = String(a.title || '').trim().slice(0, 200), date = okDate(a.date), time = okTime(a.time), uid = () => crypto.randomUUID();
+    const rec = async (kind, data) => must(await sb.from('records').insert({ id: `${kind}-${uid()}`, kind, data }));
+    if (a.action === 'add_task') {
+      await store.add({ id: uid(), kind: 'task', title, date, time, mins: a.mins > 0 ? Math.min(600, Math.round(a.mins)) : null, tag: a.tag === 'work' || a.tag === 'personal' ? a.tag : null, done: false, doneAt: null });
+      return `Added ${title}.`;
+    }
+    if (a.action === 'complete_task') { const t = task(a.id); await toggleDone(a.id); return `Done with ${t.title}.`; }
+    if (a.action === 'move_task') { const t = task(a.id); await store.update(a.id, { date, time, missed: null }); return `Moved ${t.title}.`; }
+    if (a.action === 'add_reminder') { await rec('reminder', { text: title, details: String(a.details || '').slice(0, 1000), on: date, done: false, doneAt: null, createdAt: Date.now() }); return 'Reminder saved.'; }
+    if (a.action === 'add_note' || a.action === 'build_note') {
+      const now = Date.now(), forClaude = a.action === 'build_note';
+      await rec('note', { title: forClaude ? `For Claude: ${title || 'an idea'}` : title, body: String(a.details || '').slice(0, 4000), pinned: forClaude, createdAt: now, updatedAt: now });
+      return forClaude ? 'Saved in Notes for Claude.' : 'Note saved.';
+    }
+    throw new Error('I can\'t do that one yet.');
+  }
+  function asGo(a) {
+    if (a.action === 'camera') { location.href = 'cam.html?op=' + Math.max(1, Math.min(6, a.camera | 0)); return; }
+    if (a.action === 'fullscreen') { $('#fsBtn').click(); return; }
+    const k = a.section;
+    if (k === 'camplot') { location.href = 'cam.html'; return; }
+    if (k === 'settings') { openSettings(); return; }
+    if (WORK_PARTS.includes(k)) { setWorkSub(k); setTab('work'); return; }
+    if (views[k]) setTab(k);
+  }
+
   // "everything": the full Home, with a way back to quiet
   const vHomeAll = () => `<div class="qh-back"><button type="button" class="qh-link" data-act="qh-quiet">← Quiet</button></div>${vHome()}`;
 
@@ -2489,11 +2575,13 @@ dialog::backdrop{background:transparent}
     // how lively it is eases toward the mood, so a change of mood swells in rather than snapping
     const want = mood === 2 ? 1.35 : mood ? 1.05 : 0.8;
     ORB.k = ORB.k ? ORB.k + (want - ORB.k) * Math.min(1, dt * 1.5) : want;
-    ORB.tt = (ORB.tt || 0) + (still ? 0 : dt * ORB.k);
-    const t = ORB.tt, k = ORB.k;
+    // your voice while it listens, and its own while it talks back
+    const v = ASSIST ? ASSIST.level() : 0, hearing = !!(ASSIST && ASSIST.busy());
+    ORB.tt = (ORB.tt || 0) + (still ? 0 : dt * (ORB.k + v * 1.8));
+    const t = ORB.tt, k = ORB.k + v * 0.9;
     const cr = cv.getBoundingClientRect(), sr = slot.getBoundingClientRect();
     const cx = sr.left - cr.left + sr.width / 2, cy = sr.top - cr.top + sr.height / 2;
-    const R = Math.min(sr.width, sr.height) * (w < 760 ? 0.43 : 0.45) * (1 + 0.022 * Math.sin(t * 0.9));
+    const R = Math.min(sr.width, sr.height) * (w < 760 ? 0.43 : 0.45) * (1 + 0.022 * Math.sin(t * 0.9) + 0.07 * v);
     if (!ORB.seed || ORB.seedN !== (w < 700 ? 280 : 420)) { ORB.seedN = w < 700 ? 280 : 420; ORB.seed = orbSeed(ORB.seedN); }
     if (!ORB.trails) orbWorld();
     const warm = mood === 2;
@@ -2544,7 +2632,7 @@ dialog::backdrop{background:transparent}
 
     // the threads: each leaves the core, sways in a current that its neighbours share, and ends in a cap
     const ST = ORB.seed, SEG = 22, ends = [];
-    const pulse = (t * 0.32) % 1.6; // a ring of light travels out along the threads now and then
+    const pulse = (t * (0.32 + v * 0.5)) % 1.6; // a ring of light travels out along the threads now and then
     const faint = new Path2D(), bright = new Path2D(), lit = new Path2D();
     const swayA = 0.04 * k, swayB = 0.016 * k;
     for (const s of ST) {
@@ -2579,10 +2667,10 @@ dialog::backdrop{background:transparent}
     gr.addColorStop(0.24, warm ? 'rgba(255,160,110,.5)' : 'rgba(214,218,255,.5)');
     gr.addColorStop(0.5, warm ? 'rgba(255,96,48,.14)' : 'rgba(130,134,255,.16)');
     gr.addColorStop(1, 'rgba(90,90,255,0)');
-    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 0.5 * (1 + 0.06 * Math.sin(t * (warm ? 3.2 : 1.6))), 0, Math.PI * 2); g.fill();
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 0.5 * (1 + 0.06 * Math.sin(t * (warm ? 3.2 : 1.6)) + 0.35 * v), 0, Math.PI * 2); g.fill();
     // a glow along the rim
     gr = g.createRadialGradient(cx, cy, R * 0.7, cx, cy, R * 1.3);
-    gr.addColorStop(0, 'rgba(120,124,255,0)'); gr.addColorStop(0.5, `rgba(130,134,255,${(0.1 + 0.04 * k).toFixed(3)})`); gr.addColorStop(1, 'rgba(120,124,255,0)');
+    gr.addColorStop(0, 'rgba(120,124,255,0)'); gr.addColorStop(0.5, `rgba(130,134,255,${(0.1 + 0.04 * k + (hearing ? 0.08 : 0) + 0.12 * v).toFixed(3)})`); gr.addColorStop(1, 'rgba(120,124,255,0)');
     g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 1.3, 0, Math.PI * 2); g.fill();
     g.restore();
     // the membrane: soft bands along the rim, under the caps
@@ -3452,7 +3540,7 @@ dialog::backdrop{background:transparent}
   }
   function render() {
     if (TV && TV.busy()) { renderLater = true; TV.wantRender(); return; }
-    if (mk || mv || bd || so || wd || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy())) { renderLater = true; return; }
+    if (mk || mv || bd || so || wd || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy()) || (ASSIST && ASSIST.holding())) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -4600,6 +4688,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('contextmenu', e => { if (mk || mv || mz || (e.target.closest && e.target.closest('.tl'))) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (mk && mk.on) endMark(false); if (mv && mv.on) endMove(false); } });
+  document.addEventListener('focusout', e => { if (e.target && e.target.id === 'asInput') setTimeout(() => { if (renderLater) render(); }, 0); });
   function flushLater() { if (renderLater) setTimeout(() => { if (renderLater && !mk && !mv && !bd && !so && !wd && !scopeOpen && !typingInMeeting()) render(); }, 0); }
 
   // timeline zoom. Keeps the time under your fingers (or pointer) in place while the hours stretch or squeeze.
@@ -5211,6 +5300,7 @@ dialog::backdrop{background:transparent}
     if (tab === 'home' && was !== 'home') aimHome();
     if (tab === 'home') S.homeAll = false; // Home always opens quiet
     if (tab === 'home' && was !== 'home') S.qhEnter = true;
+    if (tab !== 'home' && ASSIST && ASSIST.busy()) ASSIST.act('as-close');
     if (TV && tab === 'tv' && was !== 'tv') TV.shown(true);
     setTimeout(() => loadEvents(false), 0);
     setDrawer(false);
@@ -5448,6 +5538,7 @@ dialog::backdrop{background:transparent}
     if (act.startsWith('pl-')) { if (PLT) PLT.act(act, b, e); return; }
     if (act.startsWith('pk-')) { if (PKG) PKG.act(act, b, e); return; }
     if (act.startsWith('hl-')) { if (HEALTH) HEALTH.act(act, b, e); return; }
+    if (act.startsWith('as-')) { if (ASSIST) ASSIST.act(act, b, e); return; }
     if (act === 'edit') openTask(b.dataset.id);
     else if (act === 'done') askDone(b.dataset.id);
     else if (act === 'swipe-hint') toast('Swipe the arrow to the right to complete');
@@ -5592,7 +5683,7 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(() => ASSIST && ASSIST.status(true), 0); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
@@ -5666,6 +5757,7 @@ dialog::backdrop{background:transparent}
     if (window.POSLook) POSLook.refresh();
     fillHome();
     $('#s_name').value = IDENT.name;
+    if (ASSIST) { ASSIST.fillSettings(); ASSIST.status(true); }
     $('#s_gcal').value = S.gcal || '';
     $('#setErr').hidden = true;
     $('#setStatus').textContent = S.gcal ? (S.evErr ? `Google Calendar: ${S.evErr}` : `Connected: ${S.gcalName || 'Google Calendar'}. ${S.events.length} events loaded.`) : 'No calendar connected yet.';
@@ -5772,6 +5864,7 @@ dialog::backdrop{background:transparent}
   // Claude usage: the PC sends it every few minutes; POS looks every minute, which also keeps "Updated … ago" true
   setInterval(cluLoad, 60e3);
   setInterval(ackLoad, 60e3); // a Got it on another screen clears it here too
+  setInterval(() => { if (ASSIST && S.user) ASSIST.status(); }, 60e3); // the assistant key's age (asks the server every few hours)
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
@@ -5812,6 +5905,7 @@ dialog::backdrop{background:transparent}
     if (window.POSGear) GEAR = window.POSGear({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSWork) WORK = window.POSWork({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSReminders) REM = window.POSReminders({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
+    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
     const { data } = await sb.auth.getSession();
     S.booted = true;
