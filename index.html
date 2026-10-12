@@ -35,25 +35,27 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012014616">
-<script src="finance.js?v=20261012014616"></script>
-<link rel="stylesheet" href="car.css?v=20261012014616">
-<script src="car.js?v=20261012014616"></script>
-<link rel="stylesheet" href="sections.css?v=20261012014616">
-<script src="records.js?v=20261012014616"></script>
-<script src="people.js?v=20261012014616"></script>
-<script src="wheels.js?v=20261012014616"></script>
-<script src="keyboard.js?v=20261012014616"></script>
-<script src="notes.js?v=20261012014616"></script>
-<script src="reminders.js?v=20261012014616"></script>
-<script src="lights.js?v=20261012014616"></script>
-<script src="work.js?v=20261012014616"></script>
-<script src="health.js?v=20261012014616"></script>
-<script src="pets.js?v=20261012014616"></script>
-<script src="places.js?v=20261012014616"></script>
-<script src="placestab.js?v=20261012014616"></script>
-<script src="usmap.js?v=20261012014616"></script>
-<script src="packages.js?v=20261012014616"></script>
+<link rel="stylesheet" href="finance.css?v=20261012030537">
+<script src="finance.js?v=20261012030537"></script>
+<link rel="stylesheet" href="car.css?v=20261012030537">
+<script src="car.js?v=20261012030537"></script>
+<link rel="stylesheet" href="sections.css?v=20261012030537">
+<link rel="stylesheet" href="tv.css?v=20261012030537">
+<script src="records.js?v=20261012030537"></script>
+<script src="people.js?v=20261012030537"></script>
+<script src="wheels.js?v=20261012030537"></script>
+<script src="keyboard.js?v=20261012030537"></script>
+<script src="notes.js?v=20261012030537"></script>
+<script src="reminders.js?v=20261012030537"></script>
+<script src="lights.js?v=20261012030537"></script>
+<script src="tv.js?v=20261012030537"></script>
+<script src="work.js?v=20261012030537"></script>
+<script src="health.js?v=20261012030537"></script>
+<script src="pets.js?v=20261012030537"></script>
+<script src="places.js?v=20261012030537"></script>
+<script src="placestab.js?v=20261012030537"></script>
+<script src="usmap.js?v=20261012030537"></script>
+<script src="packages.js?v=20261012030537"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -199,9 +201,9 @@ body[data-auth="out"] #view{overflow-y:auto}
 .cal{flex:1;min-height:0;display:flex;flex-direction:column}
 .cal .tl{height:auto;flex:1 1 0;min-height:0}
 .cal-hint{display:none}
-.fin,.car,.pets,.lights,.notes,.health,.work,.rem,.plc,.pkgs{flex:1;min-height:0}
-.fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll,.work-scroll,.rem-scroll,.plc-scroll,.pkgs-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
-.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.lights-scroll::-webkit-scrollbar,.work-scroll::-webkit-scrollbar,.rem-scroll::-webkit-scrollbar,.plc-scroll::-webkit-scrollbar,.pkgs-scroll::-webkit-scrollbar,.health-scroll::-webkit-scrollbar,.g-next .list::-webkit-scrollbar{display:none}
+.fin,.car,.pets,.lights,.notes,.health,.work,.rem,.plc,.pkgs,.tvr{flex:1;min-height:0}
+.fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll,.work-scroll,.rem-scroll,.plc-scroll,.pkgs-scroll,.tvr-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin:-6px -18px 0;padding:6px 18px 24px}
+.cols::-webkit-scrollbar,.fin-scroll::-webkit-scrollbar,.car-scroll::-webkit-scrollbar,.pets-scroll::-webkit-scrollbar,.lights-scroll::-webkit-scrollbar,.work-scroll::-webkit-scrollbar,.rem-scroll::-webkit-scrollbar,.plc-scroll::-webkit-scrollbar,.pkgs-scroll::-webkit-scrollbar,.tvr-scroll::-webkit-scrollbar,.health-scroll::-webkit-scrollbar,.g-next .list::-webkit-scrollbar{display:none}
 @media (min-width:760px){ .app{padding-inline:32px;padding-block:28px 116px} }
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--ink-2);min-height:36px;text-shadow:var(--halo)}
 .top .right{display:flex;align-items:center;gap:14px}
@@ -1069,6 +1071,15 @@ body.marking,body.marking *{cursor:ns-resize!important}
   #rail .r-line{margin:4px 0}
   #rail .r-add{width:40px;height:40px;margin:4px 0 2px}
 }
+@media (min-width:760px) and (min-height:500px) and (max-height:780px){
+  #rail{padding:8px 0 6px}
+  #rail .r-btn{padding:0}
+  #rail .r-btn .ic{width:33px;height:33px;border-radius:11px}
+  #rail .r-btn .ic svg.i{width:18px;height:18px}
+  #rail .r-mark{height:28px}
+  #rail .r-line{margin:3px 0}
+  #rail .r-add{width:36px;height:36px;margin:3px 0 1px}
+}
 @media (min-width:760px) and (min-height:500px){
   #grab,#drawer,#scrim{display:none!important}
   .app{max-width:none;margin:0;padding-left:calc(12px + var(--rail) + 10px);padding-right:12px}
@@ -1085,7 +1096,7 @@ body.marking,body.marking *{cursor:ns-resize!important}
   .cal .tl,.daycal .tl{height:auto;flex:1 1 0;min-height:0}
   .cal-hint{display:none}
   .cols{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr);overflow:visible;margin:0;padding:0}
-  .fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll,.work-scroll,.rem-scroll,.plc-scroll,.pkgs-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
+  .fin-scroll,.car-scroll,.pets-scroll,.lights-scroll,.health-scroll,.work-scroll,.rem-scroll,.plc-scroll,.pkgs-scroll,.tvr-scroll{padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col{min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 24px 48px;margin:-6px -24px -12px}
   .cols > .col::-webkit-scrollbar{display:none}
   /* the add button lives at the foot of the rail, so nothing sits in the bottom-right corner */
@@ -1236,6 +1247,7 @@ dialog::backdrop{background:transparent}
   <button type="button" class="r-btn" data-tab="pets" aria-label="Pets" title="Pets"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg></span><span class="pip" id="railPetBadge" hidden></span></button>
   <i class="r-line"></i>
   <button type="button" class="r-btn" data-tab="lights" aria-label="Lights" title="Lights"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg></span></button>
+  <button type="button" class="r-btn" data-tab="tv" aria-label="TV remote" title="TV remote"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M9 20.5h6M12 17v3.5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="notes" aria-label="Notes" title="Notes"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg></span></button>
   <button type="button" class="r-btn" data-tab="reminders" aria-label="Reminders" title="Reminders"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span><span class="pip" id="railRemBadge" hidden></span></button>
   <div class="r-foot">
@@ -1264,6 +1276,7 @@ dialog::backdrop{background:transparent}
     <button type="button" data-tab="packages"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/></svg><span>Packages</span><span class="badge" id="pkgBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="pets"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="4.6" ry="3.8"/><circle cx="6" cy="10.5" r="1.9"/><circle cx="9.5" cy="6.5" r="1.9"/><circle cx="14.5" cy="6.5" r="1.9"/><circle cx="18" cy="10.5" r="1.9"/></svg><span>Pets</span><span class="badge" id="petBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="lights"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.1v.4h4v-.4c0-.8.5-1.6 1.2-2.1A5.5 5.5 0 0 0 12 3.5z"/></svg><span>Lights</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
+    <button type="button" data-tab="tv"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M9 20.5h6M12 17v3.5"/></svg><span>TV</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="notes"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M13.5 3.5V8h5M8.5 12.5h7M8.5 16h5"/></svg><span>Notes</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
     <button type="button" data-tab="reminders"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span>Reminders</span><span class="badge" id="remBadge" hidden></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg></button>
   </nav>
@@ -1426,13 +1439,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012014616"></script>
+<script src="appearance.js?v=20261012030537"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012014616';
+  const VERSION = '20261012030537';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -1529,7 +1542,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- state ---------- */
-  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', work: 'Work', meetings: 'Meetings', finance: 'Finance', health: 'Health', car: 'Car', places: 'Places', packages: 'Packages', pets: 'Pets', lights: 'Lights', notes: 'Notes', reminders: 'Reminders' };
+  const TITLES = { home: 'Home', tasks: 'Tasks', calendar: 'Calendar', work: 'Work', meetings: 'Meetings', finance: 'Finance', health: 'Health', car: 'Car', places: 'Places', packages: 'Packages', pets: 'Pets', lights: 'Lights', tv: 'TV', notes: 'Notes', reminders: 'Reminders' };
   const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']];
   function savedCalView() {
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
@@ -1550,7 +1563,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null;
+  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2756,7 +2769,7 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- render ---------- */
-  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, work: vWork, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), reminders: () => (REM ? REM.view() : notReady()), places: () => (PLT && PLACES && S.user ? PLT.view() : notReady()), packages: () => (PKG ? PKG.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
+  const views = { home: vHome, tasks: vTasks, calendar: vCalendar, work: vWork, meetings: vMeetings, finance: () => (FIN ? FIN.view() : notReady()), car: () => (CAR ? CAR.view() : notReady()), pets: () => (PETS ? PETS.view() : notReady()), lights: () => (LIGHTS ? LIGHTS.view() : notReady()), tv: () => (TV ? TV.view() : notReady()), notes: () => (NOTES ? NOTES.view() : notReady()), reminders: () => (REM ? REM.view() : notReady()), places: () => (PLT && PLACES && S.user ? PLT.view() : notReady()), packages: () => (PKG ? PKG.view() : notReady()), health: () => (HEALTH ? HEALTH.view() : notReady()) };
   function vLogin() {
     const up = S.authMode === 'up';
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -2799,6 +2812,7 @@ dialog::backdrop{background:transparent}
     follow(L, R);
   }
   function render() {
+    if (TV && TV.busy()) { renderLater = true; TV.wantRender(); return; }
     if (mk || mv || bd || so || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy())) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
@@ -4303,6 +4317,7 @@ dialog::backdrop{background:transparent}
     try { history.replaceState(null, '', '#' + tab); } catch (e) {}
     if (tab === 'calendar' && was !== 'calendar') aimTimeline();
     if (tab === 'home' && was !== 'home') aimHome();
+    if (TV && tab === 'tv' && was !== 'tv') TV.shown(true);
     setTimeout(() => loadEvents(false), 0);
     setDrawer(false);
     render();
@@ -4451,6 +4466,7 @@ dialog::backdrop{background:transparent}
     if (S.tab === 'car') { if (CAR && S.canSave) CAR.add(); return; }
     if (S.tab === 'pets') { if (PETS && S.canSave) PETS.add(); return; }
     if (S.tab === 'lights') { if (LIGHTS && S.canSave) LIGHTS.add(); return; }
+    if (S.tab === 'tv') { if (TV) TV.add(); return; }
     if (S.tab === 'notes') { if (NOTES && S.canSave) NOTES.add(); return; }
     if (S.tab === 'reminders') { if (REM && S.canSave) REM.add(); return; }
     if (S.tab === 'places') { if (PLT && S.canSave) PLT.add(); return; }
@@ -4473,6 +4489,7 @@ dialog::backdrop{background:transparent}
     if (act.startsWith('bday-')) { if (PEOPLE) PEOPLE.act(act, b, e); return; }
     if (act.startsWith('pet-')) { if (PETS) PETS.act(act, b, e); return; }
     if (act.startsWith('lt-')) { if (LIGHTS) LIGHTS.act(act, b, e); return; }
+    if (act.startsWith('tv-')) { if (TV) TV.act(act, b, e); return; }
     if (act.startsWith('wk-')) { if (WORK) WORK.act(act, b, e); return; }
     if (act.startsWith('nt-')) { if (NOTES) NOTES.act(act, b, e); return; }
     if (act.startsWith('rm-')) { if (REM) REM.act(act, b, e); return; }
@@ -4614,13 +4631,14 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
       if (PEOPLE) PEOPLE.stop();
       if (PETS) PETS.stop();
       if (LIGHTS) LIGHTS.stop();
+      if (TV) TV.stop();
       if (WORK) WORK.stop();
       if (REM) REM.stop();
       if (PKG) PKG.stop();
@@ -4783,7 +4801,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);
@@ -4815,6 +4833,7 @@ dialog::backdrop{background:transparent}
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
     if (window.POSNotes) NOTES = window.POSNotes({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSLights) LIGHTS = window.POSLights({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
+    if (window.POSTV) TV = window.POSTV({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSWork) WORK = window.POSWork({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSReminders) REM = window.POSReminders({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
