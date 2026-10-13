@@ -58,6 +58,8 @@ window.POSAssistant = function (ctx) {
         let s = 0; for (let i = 0; i < L.buf.length; i++) { const x = (L.buf[i] - 128) / 128; s += x * x; }
         want = Math.min(1, Math.sqrt(s / L.buf.length) * 5.5);
       } else want = 0.12 + L.bump * 0.6;
+    } else if (ctx.voice && ctx.voice.speaking()) {
+      want = Math.min(1, ctx.voice.level() * 1.3);
     } else if (window.speechSynthesis && speechSynthesis.speaking) {
       const t = performance.now() / 1000;
       want = 0.25 + 0.3 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 2.9)) + L.bump * 0.3;
@@ -87,17 +89,31 @@ window.POSAssistant = function (ctx) {
   }
   const pitchNow = () => { const p = parseFloat(get('pos.as.pitch')); return p > 0 ? p : 0.82; };
   if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { voice = null; pickVoice(); fillVoices(); };
+  // ears off while it talks (in a session), back on after
+  const earsOff = () => { if (X.on) { X.paused = true; if (X.rec) try { X.rec.abort(); } catch (e) {} } };
+  const earsOn = () => { if (X.on) { X.paused = false; setTimeout(sessionListen, 150); } };
   function speak(text, force) {
-    if (!text || (!speakOn() && !force) || !window.speechSynthesis) return;
+    if (!text || (!speakOn() && !force)) return;
+    const V = ctx.voice;
+    if (V && V.active()) {
+      if (V.ready()) { if (window.speechSynthesis) speechSynthesis.cancel(); earsOff(); V.say(text, undefined, { onend: earsOn }).catch(() => { earsOn(); deviceSpeak(text); }); return; }
+      V.warm(); // not on this device yet: the device's voice this time
+    }
+    deviceSpeak(text);
+  }
+  function deviceSpeak(text) {
+    if (!window.speechSynthesis) return;
+    if (ctx.voice) ctx.voice.stop();
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.97; u.pitch = pitchNow(); const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; }
     u.onboundary = () => { L.bump = 1; };
-    if (X.on) { X.paused = true; if (X.rec) try { X.rec.abort(); } catch (e) {} u.onend = u.onerror = () => { X.paused = false; setTimeout(sessionListen, 150); }; }
+    if (X.on) { earsOff(); u.onend = u.onerror = earsOn; }
     speechSynthesis.speak(u);
   }
   // iPhone and iPad only let a page speak after a tap: a silent word during the tap unlocks it for the reply later
   function unlockSpeech() {
+    if (ctx.voice) ctx.voice.unlock();
     if (!window.speechSynthesis || !speakOn()) return;
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
   }
@@ -209,6 +225,7 @@ window.POSAssistant = function (ctx) {
   /* ---------- listening ---------- */
   function startListening() {
     if (window.speechSynthesis) speechSynthesis.cancel();
+    if (ctx.voice) ctx.voice.stop();
     clearTimeout(T.closeT);
     T.said = ''; if (T.phase !== 'confirm') { T.reply = ''; T.act = null; T.note = ''; }
     const keepConfirm = T.phase === 'confirm';
@@ -441,6 +458,8 @@ window.POSAssistant = function (ctx) {
   }
   function fillSettings() {
     fillVoices();
+    const vs = $('#asVoiceSum'); if (vs && ctx.voice) vs.textContent = ctx.voice.summary();
+    const dev = !ctx.voice || !ctx.voice.active(); for (const r of document.querySelectorAll('.as-devvoice')) r.hidden = !dev;
     const info = $('#asKeyInfo'), note = $('#asNote'), rm = $('#asRemove'), sp = $('#asSpeak');
     if (!info) return;
     const d = daysLeft();

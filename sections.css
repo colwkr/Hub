@@ -899,3 +899,40 @@ body.in-session .top{padding-top:44px}
 
 .as-voice{flex:1;min-width:0;max-width:280px;border:0;background:rgba(255,255,255,.05);color:var(--qink);border-radius:3px;padding:9px 10px;font:400 14px var(--font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 .as-voice option{background:#111318;color:#eceef2}
+
+/* ---------- the Voice Lab ---------- */
+.vl-dlg{width:min(920px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:0;border:0;border-radius:6px;background:rgba(12,14,22,.96);color:var(--qink);box-shadow:inset 0 0 0 1px rgba(150,180,255,.16),0 40px 80px -30px rgba(0,0,0,.95);overflow:auto}
+.vl-dlg::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.vl{display:flex;flex-direction:column;gap:16px;padding:18px 20px 20px}
+.vl-head{display:flex;align-items:center;gap:14px}
+.vl-head h2{margin:0;flex:1;font:500 12px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase}
+.vl-head h2::before{content:"";display:inline-block;width:7px;height:7px;margin-right:10px;background:#9fb4ff;box-shadow:0 0 10px rgba(159,180,255,.9);vertical-align:1px}
+.vl-note{margin:0;color:var(--qdim);font-size:14px}
+.vl-try{display:flex;gap:8px}
+.vl-try input{flex:1;min-width:0;border:0;background:rgba(255,255,255,.05);color:var(--qink);border-radius:3px;padding:10px 12px;font:400 15px var(--font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.vl-play{min-width:96px}
+.vl-row{display:flex;flex-direction:column;gap:8px}
+.vl-gl{font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--qdim)}
+.vl-chips{display:flex;flex-wrap:wrap;gap:6px}
+.vl-chip{border:0;border-radius:3px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);color:var(--qink);padding:8px 13px;font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.vl-chip.on{background:#dfe6ff;color:#0a0c14;box-shadow:none}
+.vl-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.vl-model{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;border:0;border-radius:3px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:var(--qink);padding:10px 12px;cursor:pointer}
+.vl-model b{font:500 15px/1.2 var(--font)}
+.vl-model span{font-size:12px;color:var(--qdim)}
+.vl-model small{font:500 9.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--qdim)}
+.vl-model.on{box-shadow:inset 0 0 0 1px rgba(159,180,255,.7);background:rgba(159,180,255,.1)}
+.vl-knobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.vl-grp{display:flex;flex-direction:column;gap:6px;padding:12px 12px 10px;border-radius:3px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.vl-k{display:grid;grid-template-columns:78px minmax(0,1fr) 74px;align-items:center;gap:8px;font-size:13px}
+.vl-kl{color:var(--qdim)}
+.vl-k output{font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--qink);text-align:right;white-space:nowrap}
+.vl-k input[type=range]{width:100%;accent-color:#9fb4ff;height:22px}
+.vl-live{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--qdim)}
+.vl-live input{accent-color:#9fb4ff}
+.vl-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.as-vsum{flex:1;font:500 11px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--qink)}
+.as-devvoice[hidden]{display:none}
+@media (max-width:600px){ .vl{padding:14px} .vl-k{grid-template-columns:70px minmax(0,1fr) 64px} }
+dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin:auto;inset:0}
+@media (max-width:600px){ dialog#voiceLab.vl-dlg{width:calc(100vw - 12px);max-height:calc(100dvh - 12px)} }
