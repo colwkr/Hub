@@ -384,3 +384,5 @@
 @media (min-width:600px){ .fin .acct-grid{grid-template-columns:1fr 1fr} }
 .fin .bl{margin-bottom:0}
 #finSheet .f-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* the place this merchant went last time: first, and outlined, but still only a suggestion you tap */
+.fin .chip.usual{box-shadow:var(--lift-sm),inset 0 0 0 1.5px var(--ink-2)}

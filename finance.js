@@ -1,6 +1,7 @@
 // POS Finance: the Split Ledger, running inside the Personal Operating System.
 // Accounts hold a balance set from the bank; savings accounts are split into goals; spending limits reset monthly;
-// every charge waits in "Needs approval" until it is sorted. Amounts are whole cents, times are epoch ms.
+// every charge waits in "Needs approval" until you sort it yourself: nothing is ever sorted for you (a place you've sorted
+// before is only suggested first). Amounts are whole cents, times are epoch ms.
 // Records live in Supabase table fin_docs (one row per account, bucket or transaction, owner-only).
 window.POSFinance = function (ctx) {
   const { sb, toast, rerender, esc, clamp } = ctx;
@@ -85,8 +86,6 @@ window.POSFinance = function (ctx) {
     const relabel = window.POSRelabel || (x => x);
     for (const r of data) if (S[r.kind]) S[r.kind].push({ ...r.data, ...(r.kind === 'txns' && r.data.merchant ? { merchant: relabel(r.data.merchant) } : {}), id: r.id });
     rerender();
-    if (S.bills.length) await autoPay();
-    autoSort();
     await autoIncome();
     dropStrayExamples();
     saveMonths();
@@ -564,9 +563,10 @@ window.POSFinance = function (ctx) {
   function chargeCard(t) {
     const billChips = billsNear(t).slice(0, 3).map(b =>
       `<button type="button" class="chip bill" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="bill:${esc(b.id)}">${esc(b.name)}<span>${b.amount ? fmt(b.amount) + ' ' : ''}${groupOf(b) === 'sub' ? 'subscription' : 'bill'}</span></button>`);
-    const chips = billChips.concat(kind('limit').map(l => {
-      const lim = limitFor(l), left = (lim || 0) - limitSpent(l);
-      return `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}">${esc(l.name)}<span>${!lim ? fmt(limitSpent(l)) + ' this month' : left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
+    const usual = usualFor(t), limits = kind('limit').slice().sort((a, b) => (b === usual) - (a === usual));
+    const chips = billChips.concat(limits.map(l => {
+      const lim = limitFor(l), left = (lim || 0) - limitSpent(l), u = l === usual;
+      return `<button type="button" class="chip${u ? ' usual' : ''}" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(l.id)}"${u ? ' title="Where this place went last time"' : ''}>${esc(l.name)}<span>${u ? 'Last time · ' : ''}${!lim ? fmt(limitSpent(l)) + ' this month' : left >= 0 ? fmt(left) + ' left' : fmt(-left) + ' over'}</span></button>`;
     })).concat(kind('goal').filter(g => g.accountId === t.accountId).map(g =>
       `<button type="button" class="chip" data-act="fin-sort" data-txn="${esc(t.id)}" data-bucket="${esc(g.id)}">${esc(g.name)}<span>${fmt(catLeft(g))}</span></button>`
     ));
@@ -1175,24 +1175,14 @@ window.POSFinance = function (ctx) {
   const GENERIC = /^(charge|deposit|card or withdrawal|transfer (sent|received))$/;
   async function learnMerchant(bucketId, t) {
     const g = bucket(bucketId), key = merchantKey(t.merchant);
-    if (!g || !key || GENERIC.test(key)) return;
-    // one place belongs to one category: take it off any other
-    for (const o of S.buckets.filter(x => x.id !== g.id && (x.merchants || []).includes(key))) await save(refs.buckets.doc(o.id).update({ merchants: o.merchants.filter(k => k !== key) }));
-    if (!(g.merchants || []).includes(key)) await save(refs.buckets.doc(g.id).update({ merchants: [...(g.merchants || []), key] }));
+    if (!g || !key || GENERIC.test(key) || !/[a-z]{3,}/.test(key)) return;
+    // remembered only to suggest it next time ("usual"; the older "merchants" list sorted on its own and is no longer read)
+  // one place belongs to one category: take it off any other
+    for (const o of S.buckets.filter(x => x.id !== g.id && (x.usual || []).includes(key))) await save(refs.buckets.doc(o.id).update({ usual: o.usual.filter(k => k !== key) }));
+    if (!(g.usual || []).includes(key)) await save(refs.buckets.doc(g.id).update({ usual: [...(g.usual || []), key] }));
   }
-  let sortBusy = false;
-  async function autoSort() {
-    if (sortBusy || !canSave()) return;
-    sortBusy = true;
-    try {
-      for (const t of inbox()) {
-        const key = merchantKey(t.merchant), g = key && S.buckets.find(b => (b.merchants || []).includes(key));
-        if (!g) continue;
-        if (!(await save(refs.txns.doc(t.id).update({ bucketId: g.id })))) break;
-        toast(`${t.merchant}, ${fmt(t.amount)}: sorted to ${g.name}`);
-      }
-    } finally { sortBusy = false; }
-  }
+  // the category you put this place in last time (a name with letters in it, never a bare card or phone number)
+  const usualFor = t => { const key = merchantKey(t.merchant); return key && /[a-z]{3,}/.test(key) && !GENERIC.test(key) ? S.buckets.find(b => (b.usual || []).includes(key)) || null : null; };
   async function sortTxn(id, bucketId) {
     const t = S.txns.find(x => x.id === id);
     if (!t) return;
@@ -1236,24 +1226,6 @@ window.POSFinance = function (ctx) {
     if (was) delete paid[mk]; else paid[mk] = { at: Date.now() };
     if (await save(refs.bills.doc(id).update({ paid })))
       toast(was ? `${b.name} is no longer checked off for ${month}` : `${b.name} checked off for ${month}`, () => save(refs.bills.doc(id).update({ paid: before })));
-  }
-  // Charges that arrive (by hand now, from the bank's alert emails later) check off the bill they match.
-  // Only a single clear match counts; anything that could be two bills waits in Needs approval.
-  let autoBusy = false;
-  async function autoPay() {
-    if (autoBusy || !canSave()) return;
-    autoBusy = true;
-    try {
-      const floor = Date.now() - 45 * DAY;
-      for (const t of S.txns.filter(x => isOut(x) && !x.bucketId && x.at >= floor)) {
-        const hits = S.bills.filter(b => matchMonth(b, t));
-        if (hits.length !== 1) continue;
-        const b = hits[0];
-        if (!(await save(refs.txns.doc(t.id).update({ bucketId: 'bill:' + b.id })))) break;
-        const learned = await linkBill(b.id, t, true);
-        toast(`${b.name}: charge confirmed, ${fmt(t.amount)}${learned && learned.length ? `. Now ${learned.join(', ')}` : ''}`);
-      }
-    } finally { autoBusy = false; }
   }
   // moving it on the calendar moves its day for every month
   async function moveBill(id, day) {
@@ -1477,7 +1449,7 @@ window.POSFinance = function (ctx) {
         body: field('Spending on', `<input id="ff_name" autocomplete="off" maxlength="40" placeholder="Gas" value="${esc(l.name)}">`)
           + field(`Limit for ${mkName(mk)}`, `<input id="ff_monthly" class="amount" inputmode="decimal" autocomplete="off" placeholder="No limit" value="${lim ? plain(lim) : ''}">`, `Leave it blank to just track what goes here. It carries on into the months after; to lower it later instead, plan ${esc(mkName(mkAdd(cur, 1)))} on the Spending page.`)
           + plans
-          + ((l.merchants || []).length ? `<p class="where">Charges from <b>${esc(l.merchants.join(', '))}</b> sort here on their own.</p>` : ''),
+          + ((l.usual || []).length ? `<p class="where">Charges from <b>${esc(l.usual.join(', '))}</b> are suggested here first. You still approve each one.</p>` : ''),
       };
     },
   };
