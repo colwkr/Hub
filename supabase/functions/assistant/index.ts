@@ -3,7 +3,7 @@
 // counts), never the whole database. Claude answers through one tool: a short reply to speak, and at most one action.
 // POS asks before it changes anything. Build changes (new features, a different look) are never attempted here; the
 // reply says it's a job for Claude and offers to save the idea as a note.
-// Actions (the owner, signed in to POS): status, set-key, clear-key, ask.
+// Actions (the owner, signed in to POS): status, set-key, clear-key, ask, wrap (sums up a talking session).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -75,8 +75,25 @@ Always answer with the respond tool, with one action at most:
 - camera: open one camera's operate view in the camera plot.
 - build_note: if he asks for something POS can't do yet (a new feature, a new section, changing how it looks or works), don't pretend you can. Say that's a build change for Claude and offer to save it as a note; put the idea in title and details.
 POS shows any change and asks him before doing it, so word those replies as the thing you're about to do ("Add call the bank for Friday?").
-If you didn't catch what he meant, ask one short question with action none.`;
+If you didn't catch what he meant, ask one short question with action none.
+In a talking session you also get what he's been saying lately; "this", "that" or "it" usually means the last thing he said before talking to you. Speech recognition makes mistakes, so read past obvious mishearings.`;
 }
+
+// the end of a talking session: what he talked through, the ideas worth keeping, real to-dos, and changes to POS itself
+const WRAP = {
+  name: "wrap_up",
+  description: "Sum up a session where the owner talked out loud while he worked.",
+  input_schema: {
+    type: "object",
+    properties: {
+      summary: { type: "string", description: "Two to four plain sentences: what he talked through." },
+      ideas: { type: "array", items: { type: "string" }, description: "Ideas worth keeping, one line each, in his words where possible." },
+      tasks: { type: "array", items: { type: "object", properties: { title: { type: "string" }, date: { type: "string", description: "YYYY-MM-DD if he said when, else empty." } }, required: ["title"] }, description: "Things he said he needs to do. Only real to-dos." },
+      build: { type: "array", items: { type: "object", properties: { title: { type: "string" }, details: { type: "string" } }, required: ["title", "details"] }, description: "Changes he wants made to POS itself (features, how it looks or works), for Claude to build later. Enough detail to act on." },
+    },
+    required: ["summary", "ideas", "tasks", "build"],
+  },
+};
 
 // one call to Claude. If the model name isn't one this key can use, it picks one from the key's own list and
 // remembers it; if a setting isn't accepted, it tries again without it. Failures are kept (never the key) to read later.
@@ -162,7 +179,7 @@ Deno.serve(async (req) => {
         max_tokens: 400,
         system: system(String(body.name || ""), ctx),
         tools: [TOOL], tool_choice: { type: "tool", name: "respond" },
-        messages: [{ role: "user", content: `Summary of his data:\n${summary}\n\nHe said: "${text}"` }],
+        messages: [{ role: "user", content: `Summary of his data:\n${summary}\n\n${body.recent ? `What he's been saying lately (newest last):\n${String(body.recent).slice(-1500)}\n\n` : ""}He said${body.recent ? " to you" : ""}: "${text}"` }],
       });
       if (!out.ok) {
         const msg = out.msg || "";
@@ -178,6 +195,29 @@ Deno.serve(async (req) => {
       const said = (call?.input || {}) as Record<string, unknown>;
       if (!ACTIONS.includes(String(said.action))) said.action = "none";
       return json({ ok: true, reply: String(said.reply || "").slice(0, 400), act: said });
+    }
+    if (action === "wrap") {
+      const s = await secret(db);
+      if (!s) return json({ error: "no-key" }, 200);
+      const u = await usage(db);
+      if (u.n >= DAY_CAP) return json({ error: "cap" }, 200);
+      const lines = String(body.transcript || "").slice(-24000);
+      if (lines.trim().length < 20) return json({ ok: true, wrap: { summary: "", ideas: [], tasks: [], build: [] } });
+      const out = await claude(db, s, {
+        max_tokens: 1500,
+        system: `You sum up talking sessions for the owner of POS, his personal operating system. Today is ${nyDay()}. The transcript comes from speech recognition, so fix obvious mishearings, but never invent anything he didn't say. Lines marked CAPTURED are ones he asked to keep: always include each one, as an idea, a task or a build change, whichever it is. Answer with the wrap_up tool.`,
+        tools: [WRAP], tool_choice: { type: "tool", name: "wrap_up" },
+        messages: [{ role: "user", content: `The session, oldest first:\n${lines}` }],
+      });
+      if (!out.ok) {
+        if (out.status === 401 || out.status === 403) return json({ error: "key" });
+        if (/credit balance|billing|spend limit|usage limit/i.test(out.msg || "")) return json({ error: "credits" });
+        return json({ error: "failed", detail: (out.msg || "").slice(0, 160) });
+      }
+      const use = out.j?.usage || {};
+      await db.from("pos_secrets").upsert({ id: "anthropic-usage", data: { day: u.day, n: u.n + 1, month: u.month, m: u.m + 1, inTok: u.inTok + (use.input_tokens || 0), outTok: u.outTok + (use.output_tokens || 0) }, updated_at: new Date().toISOString() });
+      const call = (out.j?.content || []).find((c: { type: string }) => c.type === "tool_use");
+      return json({ ok: true, wrap: call?.input || { summary: "", ideas: [], tasks: [], build: [] } });
     }
   } catch (e) {
     return json({ error: "failed", detail: String((e as Error)?.message || e).slice(0, 160) }, 200);

@@ -41,30 +41,30 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013003029">
-<script src="finance.js?v=20261013003029"></script>
-<link rel="stylesheet" href="car.css?v=20261013003029">
-<script src="car.js?v=20261013003029"></script>
-<link rel="stylesheet" href="sections.css?v=20261013003029">
-<link rel="stylesheet" href="tv.css?v=20261013003029">
-<link rel="stylesheet" href="noir.css?v=20261013003029">
-<script src="records.js?v=20261013003029"></script>
-<script src="people.js?v=20261013003029"></script>
-<script src="wheels.js?v=20261013003029"></script>
-<script src="keyboard.js?v=20261013003029"></script>
-<script src="notes.js?v=20261013003029"></script>
-<script src="reminders.js?v=20261013003029"></script>
-<script src="gear.js?v=20261013003029"></script>
-<script src="lights.js?v=20261013003029"></script>
-<script src="tv.js?v=20261013003029"></script>
-<script src="work.js?v=20261013003029"></script>
-<script src="health.js?v=20261013003029"></script>
-<script src="pets.js?v=20261013003029"></script>
-<script src="places.js?v=20261013003029"></script>
-<script src="placestab.js?v=20261013003029"></script>
-<script src="usmap.js?v=20261013003029"></script>
-<script src="assistant.js?v=20261013003029"></script>
-<script src="packages.js?v=20261013003029"></script>
+<link rel="stylesheet" href="finance.css?v=20261013003431">
+<script src="finance.js?v=20261013003431"></script>
+<link rel="stylesheet" href="car.css?v=20261013003431">
+<script src="car.js?v=20261013003431"></script>
+<link rel="stylesheet" href="sections.css?v=20261013003431">
+<link rel="stylesheet" href="tv.css?v=20261013003431">
+<link rel="stylesheet" href="noir.css?v=20261013003431">
+<script src="records.js?v=20261013003431"></script>
+<script src="people.js?v=20261013003431"></script>
+<script src="wheels.js?v=20261013003431"></script>
+<script src="keyboard.js?v=20261013003431"></script>
+<script src="notes.js?v=20261013003431"></script>
+<script src="reminders.js?v=20261013003431"></script>
+<script src="gear.js?v=20261013003431"></script>
+<script src="lights.js?v=20261013003431"></script>
+<script src="tv.js?v=20261013003431"></script>
+<script src="work.js?v=20261013003431"></script>
+<script src="health.js?v=20261013003431"></script>
+<script src="pets.js?v=20261013003431"></script>
+<script src="places.js?v=20261013003431"></script>
+<script src="placestab.js?v=20261013003431"></script>
+<script src="usmap.js?v=20261013003431"></script>
+<script src="assistant.js?v=20261013003431"></script>
+<script src="packages.js?v=20261013003431"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1262,6 +1262,7 @@ dialog::backdrop{background:transparent}
     <div class="win-l"><button type="button" class="win-home" data-tab="home" aria-label="Home"><i aria-hidden="true"></i><span data-appname>POS</span></button><span class="win-sep" aria-hidden="true">/</span><h1 id="title">Home</h1></div>
     <div class="right">
       <span class="date" id="today"></span>
+      <button type="button" class="win-sess" id="winSess" data-act="as-sess" hidden>Session</button>
       <button type="button" class="win-add" id="winAdd" aria-label="Add" title="Add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
     </div>
   </header>
@@ -1524,13 +1525,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013003029"></script>
+<script src="appearance.js?v=20261013003431"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013003029';
+  const VERSION = '20261013003431';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2561,12 +2562,12 @@ dialog::backdrop{background:transparent}
       <div class="qh-stage">
         <button type="button" class="qh-orbbtn qh-talk" id="qhSlot" data-act="as-talk" aria-label="Talk to ${esc(appName())}"></button>
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
-        ${ASSIST && ASSIST.busy() ? ASSIST.panel() : vDock()}
+        ${ASSIST && ASSIST.inStage() ? ASSIST.panel() : vDock()}
       </div>
       ${n ? `<div class="qh-cards" id="qhCards" data-keep>${cards.map(qCard).join('')}</div>` : ''}
       ${S.peek ? vPeek() : ''}
       <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
-      <div class="qh-c q-br">${canFull ? `<button type="button" class="qh-link" data-act="qh-full">${isFull ? 'Exit full screen' : 'Full screen'}</button>` : ''}</div>
+      <div class="qh-c q-br">${ASSIST && ASSIST.canSession() ? `<button type="button" class="qh-link qh-sess${ASSIST.sessionOn() ? ' on' : ''}" data-act="as-sess">${ASSIST.sessionOn() ? 'End session' : 'Start session'}</button>` : ''}${canFull ? `<button type="button" class="qh-link" data-act="qh-full">${isFull ? 'Exit full screen' : 'Full screen'}</button>` : ''}</div>
     </div>`;
     S.dockSwap = false;
     return html;
@@ -3763,6 +3764,7 @@ dialog::backdrop{background:transparent}
     const me = whoAmI();
     $('#meName').textContent = me.name;
     $('#fab').disabled = !S.canSave; $('#railAdd').disabled = !S.canSave; $('#winAdd').disabled = !S.canSave;
+    { const ws = $('#winSess'), ok = !!(ASSIST && ASSIST.canSession()); ws.hidden = !ok; if (ok) { const on = ASSIST.sessionOn(); ws.textContent = on ? 'End session' : 'Session'; ws.classList.toggle('on', on); } }
     renderWake();
     wxFx();
   }

@@ -14,6 +14,7 @@ window.POSAssistant = function (ctx) {
   const T = { phase: 'idle', said: '', reply: '', act: null, typed: false, note: '', rec: null, closeT: 0 };
   const K = { known: false, key: false, setAt: null, days: null, model: null, today: 0, month: 0, cap: 300, at: 0 };
   const speakOn = () => get('pos.as.speak') !== '0';
+  const redraw = () => { ctx.rerender(); paintFloat(); };
 
   /* ---------- talking to the assistant function ---------- */
   async function call(body) {
@@ -25,7 +26,7 @@ window.POSAssistant = function (ctx) {
   async function status(force) {
     if (!ctx.canSave()) { clearTimeout(retry); retry = setTimeout(() => status(force), 2500); return K; } // still connecting
     if (!force && K.known && Date.now() - K.at < 6 * 36e5) return K;
-    try { Object.assign(K, await call({ action: 'status' }), { known: true, at: Date.now() }); ctx.rerender(); fillSettings(); } catch (e) { /* try again later */ }
+    try { Object.assign(K, await call({ action: 'status' }), { known: true, at: Date.now() }); redraw(); fillSettings(); } catch (e) { /* try again later */ }
     return K;
   }
   // days left on a key that expires; null for one that doesn't
@@ -51,7 +52,7 @@ window.POSAssistant = function (ctx) {
   // 0 to 1: your voice while it listens, a talking rhythm while it speaks
   function level() {
     let want = 0;
-    if (T.phase === 'listen') {
+    if (T.phase === 'listen' || (X.on && !X.paused)) {
       if (L.an) {
         L.an.getByteTimeDomainData(L.buf);
         let s = 0; for (let i = 0; i < L.buf.length; i++) { const x = (L.buf[i] - 128) / 128; s += x * x; }
@@ -81,6 +82,7 @@ window.POSAssistant = function (ctx) {
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 1.03; const v = pickVoice(); if (v) u.voice = v;
     u.onboundary = () => { L.bump = 1; };
+    if (X.on) { X.paused = true; if (X.rec) try { X.rec.abort(); } catch (e) {} u.onend = u.onerror = () => { X.paused = false; setTimeout(sessionListen, 150); }; }
     speechSynthesis.speak(u);
   }
   // iPhone and iPad only let a page speak after a tap: a silent word during the tap unlocks it for the reply later
@@ -107,6 +109,8 @@ window.POSAssistant = function (ctx) {
       .replace(/^(?:can you|could you|would you|will you|please|go ahead and|i want to|i'd like to|let me)\s+/, '').replace(/^please\s+/, '')
       .replace(/\s+(?:please|for me|real quick|now)$/, '').trim();
     if (/^(stop|cancel|never ?mind|nothing|forget it)$/.test(s)) return { reply: 'Okay.', act: { action: 'close' } };
+    if (/^(?:start|begin|open|let's start|turn on) (?:a |the |my )?(?:talking |work |build )?session$/.test(s)) return { reply: '', act: { action: 'session' } };
+    if (/^(?:end|stop|close|finish|turn off) (?:the |this |my )?session$/.test(s)) return { reply: '', act: { action: 'session-end' } };
     let m = s.match(/^(?:(?:operate|run|use|open|show|go to|pull up)\s+)?cam(?:era)?\s*(\d|one|two|to|too|three|four|for|five|six)$/);
     if (m) { const n = +m[1] || NUM[m[1]]; return { reply: `Camera ${n}.`, act: { action: 'camera', camera: n } }; }
     m = s.match(/^(?:open|show(?: me)?|go to|take me to|pull up|bring up|switch to)\s+(?:the |my )?(.+)$/);
@@ -124,7 +128,7 @@ window.POSAssistant = function (ctx) {
     stopListening(true);
     clearTimeout(T.closeT);
     Object.assign(T, { phase: 'idle', said: '', reply: '', act: null, note: '' });
-    ctx.rerender();
+    redraw();
   }
   const later = (ms) => { clearTimeout(T.closeT); T.closeT = setTimeout(() => { if (T.phase === 'reply') close(); }, ms); };
   async function handle(text) {
@@ -141,9 +145,9 @@ window.POSAssistant = function (ctx) {
     }
     let r = local(text);
     if (!r) {
-      T.phase = 'think'; ctx.rerender();
+      T.phase = 'think'; redraw();
       try {
-        const d = await call({ action: 'ask', text, ctx: ctx.summary(), name: ctx.name() });
+        const d = await call({ action: 'ask', text, ctx: ctx.summary(), name: ctx.name(), ...(X.on ? { recent: recentText() } : {}) });
         if (d.error) r = { reply: errText(d.error), act: { action: 'none' }, fail: d.error };
         else r = { reply: d.reply || '', act: d.act || { action: 'none' } };
         if (d.error === 'key' || d.error === 'no-key') status(true);
@@ -151,11 +155,13 @@ window.POSAssistant = function (ctx) {
     }
     const a = r.act || { action: 'none' };
     if (a.action === 'close') { close(); return; }
+    if (a.action === 'session') { close(); startSession(); return; }
+    if (a.action === 'session-end') { close(); endSession(); return; }
     if (WRITES.includes(a.action)) {
       const what = ctx.describe(a);
       if (!what) { show("I couldn't find that one. Try saying it another way.", null); speak("I couldn't find that one."); later(6000); return; }
       T.phase = 'confirm'; T.act = a; T.reply = r.reply || (a.action === 'build_note' ? "That's a build change for Claude. Save it as a note?" : 'Do this?');
-      T.note = what; ctx.rerender(); speak(T.reply);
+      T.note = what; redraw(); speak(T.reply);
       return;
     }
     // a list opens at the side of Home right away and the answer stays; anything else opens at once, the answer as a toast
@@ -172,7 +178,7 @@ window.POSAssistant = function (ctx) {
     show(r.reply, null); speak(r.reply);
     later(Math.max(6000, (r.reply || '').length * 90));
   }
-  function show(reply, act) { T.phase = 'reply'; T.reply = reply || ''; T.act = act; ctx.rerender(); }
+  function show(reply, act) { T.phase = 'reply'; T.reply = reply || ''; T.act = act; redraw(); }
   async function doIt() {
     const a = T.act; if (!a) return;
     T.act = null;
@@ -196,7 +202,7 @@ window.POSAssistant = function (ctx) {
     T.said = ''; if (T.phase !== 'confirm') { T.reply = ''; T.act = null; T.note = ''; }
     const keepConfirm = T.phase === 'confirm';
     unlockSpeech();
-    if (!SR || T.typed) { T.typed = true; T.phase = keepConfirm ? 'confirm' : 'listen'; ctx.rerender(); setTimeout(() => { const i = $('#asInput'); if (i) i.focus(); }, 30); return; }
+    if (!SR || T.typed) { T.typed = true; T.phase = keepConfirm ? 'confirm' : 'listen'; redraw(); setTimeout(() => { const i = $('#asInput'); if (i) i.focus(); }, 30); return; }
     const rec = new SR();
     rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
     let heard = '', ended = false;
@@ -212,12 +218,12 @@ window.POSAssistant = function (ctx) {
     rec.onend = () => {
       if (ended) return; ended = true;
       T.rec = null; meterOff();
-      if (T.mic === 'blocked' && !heard) { T.mic = ''; T.phase = 'listen'; ctx.rerender(); toast("The mic isn't available here. Type instead."); setTimeout(() => { const i = $('#asInput'); if (i) i.focus(); }, 30); return; }
-      if (heard.trim()) handle(heard); else if (T.phase === 'listen') close(); else ctx.rerender();
+      if (T.mic === 'blocked' && !heard) { T.mic = ''; T.phase = 'listen'; redraw(); toast("The mic isn't available here. Type instead."); setTimeout(() => { const i = $('#asInput'); if (i) i.focus(); }, 30); return; }
+      if (heard.trim()) handle(heard); else if (T.phase === 'listen') close(); else redraw();
     };
     T.rec = rec; T.prev = keepConfirm ? 'confirm' : null;
-    T.phase = 'listen'; ctx.rerender();
-    meterOn().finally(() => { try { rec.start(); } catch (e) { T.typed = true; ctx.rerender(); } });
+    T.phase = 'listen'; redraw();
+    meterOn().finally(() => { try { rec.start(); } catch (e) { T.typed = true; redraw(); } });
   }
   function stopListening(drop) {
     if (T.rec) { const r = T.rec; if (drop) { r.onend = null; r.onresult = null; T.rec = null; } try { r.stop(); } catch (e) {} }
@@ -227,6 +233,10 @@ window.POSAssistant = function (ctx) {
   /* ---------- on Home ---------- */
   const busy = () => T.phase !== 'idle';
   function panel() {
+    if (T.phase === 'idle' || X.on) return '';
+    return panelHtml();
+  }
+  function panelHtml() {
     if (T.phase === 'idle') return '';
     const lab = T.phase === 'listen' ? (T.typed ? 'Type it' : 'Listening') : T.phase === 'think' ? 'Thinking' : T.phase === 'confirm' ? 'Check this' : ctx.name();
     const said = T.said ? `<p class="as-said" id="asSaid">${esc(T.said)}</p>` : T.phase === 'listen' && !T.typed ? '<p class="as-said as-hint" id="asSaid">Go ahead.</p>' : '';
@@ -238,9 +248,12 @@ window.POSAssistant = function (ctx) {
   }
   const holding = () => { const a = document.activeElement; return !!(a && a.id === 'asInput'); };
   function act(name, b, e) {
+    if (name === 'as-sess') { if (X.on) endSession(); else startSession(); return; }
+    if (name === 'as-wrap-add') { addWrapTasks(); return; }
+    if (name === 'as-wrap-x') { W.tasks = null; paintWrap(); return; }
     if (name === 'as-talk') { if (T.phase === 'listen' && T.rec) { stopListening(false); return; } startListening(); return; }
     if (name === 'as-close') { close(); return; }
-    if (name === 'as-type') { stopListening(true); T.typed = true; T.phase = 'listen'; ctx.rerender(); setTimeout(() => { const i = $('#asInput'); if (i) i.focus(); }, 30); return; }
+    if (name === 'as-type') { stopListening(true); T.typed = true; T.phase = 'listen'; redraw(); setTimeout(() => { const i = $('#asInput'); if (i) i.focus(); }, 30); return; }
     if (name === 'as-yes') { doIt(); return; }
     if (name === 'as-no') { show('Okay, I left it.', null); later(3000); return; }
   }
@@ -253,6 +266,156 @@ window.POSAssistant = function (ctx) {
     if (e.target.id === 'asKeyForm') { e.preventDefault(); saveKey(); }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && busy() && !document.querySelector('dialog[open]')) { e.stopPropagation(); close(); } }, true);
+
+  /* ---------- sessions, on computers: it listens the whole time and keeps a log, but only answers when you say its
+     name. "Capture this" keeps the last thing you said. Ending it (or 10 minutes of quiet) saves the log and a
+     wrap-up note: the ideas, the to-dos to confirm, and changes for Claude to build, pinned in Notes. ---------- */
+  const DESK = !IOS && !!(window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches);
+  const canSession = () => DESK && !!SR;
+  const X = { on: false, rec: null, log: [], startAt: 0, lastHeard: 0, id: null, live: '', paused: false, tick: 0, saveT: 0, dirty: false, saved: false, waitCmd: 0 };
+  const W = { tasks: null };
+  const QUIET_END = 10 * 60e3;
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  const recentText = () => X.log.filter(l => !l.cap && Date.now() - l.at < 120e3).slice(-8).map(l => l.text).join('\n');
+  async function startSession() {
+    if (!canSession()) { toast('Sessions run on a computer, in Chrome or Edge.'); return; }
+    if (X.on || !ctx.canSave()) return;
+    close();
+    Object.assign(X, { on: true, log: [], startAt: Date.now(), lastHeard: Date.now(), id: 'session-' + uuid(), live: '', paused: false, dirty: true, saved: false, waitCmd: 0 });
+    await meterOn();
+    sessionListen();
+    X.tick = setInterval(sessionTick, 1000);
+    paintLive(); redraw(); saveSession();
+    speak(`Session on. Say ${ctx.name()} when you need me.`);
+  }
+  function sessionListen() {
+    if (!X.on || X.rec || X.paused) return;
+    const rec = new SR();
+    rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+    rec.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) heard(String(r[0].transcript || '').trim()); else interim += r[0].transcript;
+      }
+      X.live = interim.trim(); L.bump = 1; paintLive();
+    };
+    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') { toast("The mic isn't allowed for POS here. Allow it in the browser's address bar, then start again."); endSession(true); } };
+    rec.onend = () => { if (X.rec === rec) X.rec = null; if (X.on && !X.paused) setTimeout(sessionListen, 250); }; // the browser stops now and then; start again
+    X.rec = rec;
+    try { rec.start(); } catch (e) { X.rec = null; }
+  }
+  // what counts as its name: "POS" (and how speech recognition tends to spell it), or the name you gave it
+  function nameIn(text) {
+    const nm = String(ctx.name() || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+    const names = ['pos', 'p o s', 'p\\.? ?o\\.? ?s\\.?', 'poss', 'pause'].concat(nm && nm !== 'pos' ? [nm] : []);
+    const re = new RegExp(`(?:^|\\b(?:hey|okay|ok|hi|yo)\\s+)(${names.join('|')})\\b[,.!?]?\\s*(.*)$`, 'i');
+    const m = String(text).match(re);
+    if (!m) return null;
+    if (/^pause$/i.test(m[1]) && !/\b(hey|okay|ok|hi|yo)\s+pause/i.test(text)) return null; // "pause" alone is just a word
+    return { rest: m[2].trim() };
+  }
+  function heard(text) {
+    if (!text || !X.on) return;
+    X.lastHeard = Date.now(); X.live = '';
+    const s = text.toLowerCase();
+    const line = { at: Date.now(), text };
+    X.log.push(line); X.dirty = true; paintLive();
+    if (/\b(?:end|stop|close|finish) (?:the |this |my )?session\b/.test(s)) { endSession(); return; }
+    // keep the last thing said (or what follows "capture this:")
+    const cap = s.match(/\b(?:capture|log|keep|note) (?:this|that)\b[:,.]?\s*(.*)$/);
+    if (cap) {
+      const after = text.slice(text.length - cap[1].length).trim();
+      const prev = X.log.slice(0, -1).filter(l => !l.cap && Date.now() - l.at < 90e3).slice(-2).map(l => l.text).join(' ');
+      const what = after.length > 3 ? after : prev;
+      if (what) { X.log.push({ at: Date.now(), text: what, cap: true }); toast(`Captured: ${what.slice(0, 80)}${what.length > 80 ? '…' : ''}`); L.bump = 1; }
+      else toast('Nothing to capture yet');
+      return;
+    }
+    if (T.phase === 'confirm' && T.act && /^(?:yes|yeah|yep|yup|sure|ok|okay|do it|go ahead|confirm|please do|no|nope|cancel|don't|never ?mind)\b/.test(s)) { handle(text); return; }
+    const m = nameIn(text);
+    if (m) { if (m.rest.split(' ').length >= 2) handle(m.rest); else { X.waitCmd = Date.now(); T.phase = 'reply'; T.said = ''; T.reply = 'Yes?'; redraw(); speak('Yes?'); } return; }
+    if (X.waitCmd && Date.now() - X.waitCmd < 10e3) { X.waitCmd = 0; handle(text); }
+  }
+  function sessionTick() {
+    if (!X.on) return;
+    if (Date.now() - X.lastHeard > QUIET_END) { endSession(); return; }
+    if (!X.rec && !X.paused) sessionListen();
+    paintLive();
+    if (X.dirty && Date.now() - (X.savedAt || 0) > 15e3) saveSession();
+  }
+  // the raw log lives in its own record (kind "session"), saved as it goes so nothing is lost
+  async function saveSession(final) {
+    if (!X.id) return;
+    X.dirty = false; X.savedAt = Date.now();
+    const data = { startedAt: X.startAt, endedAt: final ? Date.now() : null, lines: X.log.map(l => ({ at: l.at, text: l.text, ...(l.cap ? { cap: true } : {}) })) };
+    try {
+      if (!X.saved) { const { error } = await ctx.sb.from('records').insert({ id: X.id, kind: 'session', data }); if (error) throw error; X.saved = true; }
+      else { const { error } = await ctx.sb.from('records').update({ data }).eq('id', X.id); if (error) throw error; }
+    } catch (e) { X.dirty = true; }
+  }
+  const tFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+  const dtFmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  async function endSession(quiet) {
+    if (!X.on) return;
+    X.on = false; clearInterval(X.tick);
+    if (X.rec) { const r = X.rec; X.rec = null; r.onend = null; try { r.abort(); } catch (e) {} }
+    meterOff(); X.live = ''; paintLive(); redraw();
+    await saveSession(true);
+    const said = X.log.filter(l => !l.cap), caps = X.log.filter(l => l.cap);
+    if (quiet || (said.length < 2 && !caps.length)) { if (!quiet) toast('Session ended'); return; }
+    toast('Session ended. Writing it up…');
+    const transcript = X.log.map(l => `[${tFmt.format(new Date(l.at))}] ${l.cap ? 'CAPTURED: ' : ''}${l.text}`).join('\n');
+    let wrap = null;
+    try { const d = await call({ action: 'wrap', transcript }); if (!d.error) wrap = d.wrap; } catch (e) { /* saved without the write-up */ }
+    const title = `Session · ${dtFmt.format(new Date(X.startAt))}`;
+    const parts = [];
+    if (wrap && wrap.summary) parts.push(wrap.summary);
+    if (wrap && wrap.ideas && wrap.ideas.length) parts.push('Ideas\n' + wrap.ideas.map(x => '• ' + x).join('\n'));
+    else if (caps.length) parts.push('Captured\n' + caps.map(c => '• ' + c.text).join('\n'));
+    if (wrap && wrap.tasks && wrap.tasks.length) parts.push('To do\n' + wrap.tasks.map(t => '• ' + t.title + (t.date ? ` (${t.date})` : '')).join('\n'));
+    if (wrap && wrap.build && wrap.build.length) parts.push('For Claude\n' + wrap.build.map(b => '• ' + b.title).join('\n'));
+    if (!wrap) parts.push(`The full log is saved (${said.length} lines). The write-up needs the assistant key.`);
+    const now = Date.now(), note = async (t, body, pinned) => { const { error } = await ctx.sb.from('records').insert({ id: 'note-' + uuid(), kind: 'note', data: { title: t, body, pinned, createdAt: now, updatedAt: now } }); if (error) throw error; };
+    try {
+      await note(title, parts.join('\n\n') + `\n\nLog: ${X.id}`, false);
+      for (const b of (wrap && wrap.build) || []) await note(`For Claude: ${b.title}`, `${b.details || ''}\n\nFrom ${title}.`, true);
+    } catch (e) { toast('The write-up did not save. The log is safe.'); }
+    const nb = (wrap && wrap.build || []).length, nt = (wrap && wrap.tasks || []).length;
+    speak(`Session saved.${nb ? ` ${nb} for Claude.` : ''}${nt ? ` ${nt} ${nt === 1 ? 'task' : 'tasks'} to look at.` : ''}`);
+    if (nt) { W.tasks = wrap.tasks.map(t => ({ ...t, on: true })); paintWrap(); }
+  }
+  async function addWrapTasks() {
+    const pick = [...document.querySelectorAll('#asWrap input[type=checkbox]')].map((c, i) => c.checked && W.tasks[i]).filter(Boolean);
+    W.tasks = null; paintWrap();
+    for (const t of pick) { try { await ctx.run({ action: 'add_task', title: t.title, date: t.date || '' }); } catch (e) { toast('One task did not save.'); } }
+    if (pick.length) toast(`Added ${pick.length} ${pick.length === 1 ? 'task' : 'tasks'}`);
+  }
+  // the session's own surface: a LIVE bar on every screen, the conversation floating bottom right, and the tasks to confirm
+  function layer(id, cls) { let el = document.getElementById(id); if (!el) { el = document.createElement('div'); el.id = id; if (cls) el.className = cls; document.body.appendChild(el); } return el; }
+  function paintLive() {
+    const el = layer('sessLive');
+    if (!X.on) { el.hidden = true; el.innerHTML = ''; document.body.classList.remove('in-session'); return; }
+    document.body.classList.add('in-session');
+    const secs = Math.floor((Date.now() - X.startAt) / 1000), mm = Math.floor(secs / 60), ss = String(secs % 60).padStart(2, '0');
+    const last = X.live || (X.log.length ? X.log[X.log.length - 1].text : '');
+    const n = X.log.filter(l => l.cap).length;
+    el.hidden = false;
+    el.innerHTML = `<span class="sl-dot"></span><span class="sl-k">Live</span><span class="sl-k sl-time">${mm}:${ss}</span>${n ? `<span class="sl-k sl-cap">${n} captured</span>` : ''}<span class="sl-said${X.live ? ' now' : ''}">${esc(last.slice(-90))}</span><button type="button" class="sl-end" data-act="as-sess">End</button>`;
+  }
+  function paintFloat() {
+    const el = layer('asFloat');
+    const html = X.on ? panelHtml() : '';
+    if (el.innerHTML !== html) el.innerHTML = html;
+    el.hidden = !html;
+  }
+  function paintWrap() {
+    const el = layer('asWrap');
+    if (!W.tasks) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    el.innerHTML = `<div class="as-panel as-confirm-list"><div class="as-head"><span class="as-lab">From the session · add these?</span><button type="button" class="as-x" data-act="as-wrap-x" aria-label="Close">×</button></div>${W.tasks.map((t, i) => `<label class="as-wt"><input type="checkbox" checked data-i="${i}"><span>${esc(t.title)}${t.date ? ` <small>${esc(t.date)}</small>` : ''}</span></label>`).join('')}<div class="as-btns"><button type="button" class="btn" data-act="as-wrap-x">Not now</button><button type="button" class="btn solid" data-act="as-wrap-add">Add</button></div></div>`;
+  }
+  window.addEventListener('beforeunload', () => { if (X.on && X.dirty) saveSession(true); });
 
   /* ---------- Settings: the key, how long it lasts, and speaking out loud ---------- */
   let wantDays = 30;
@@ -290,5 +453,5 @@ window.POSAssistant = function (ctx) {
     wantDays = b.dataset.days === 'never' ? 'never' : +b.dataset.days; fillSettings();
   });
 
-  return { panel, act, busy, holding, level, status, keyWarn, fillSettings, listening: () => T.phase === 'listen' };
+  return { panel, act, busy, holding, level, status, keyWarn, fillSettings, listening: () => T.phase === 'listen' || (X.on && !X.paused), canSession, sessionOn: () => X.on, inStage: () => busy() && !X.on };
 };
