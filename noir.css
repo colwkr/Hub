@@ -134,3 +134,13 @@
   [data-noir] .btn{letter-spacing:.06em;padding:9px 11px}
 }
 [data-noir] dialog .where,[data-noir] dialog .f input,[data-noir] .nm-row input{border-radius:3px!important}
+
+/* phones turned sideways: iPhone won't let a web app lock rotation, so POS waits for you to turn it back upright
+   instead of squeezing itself into a layout it wasn't built for (tablets and computers are unaffected) */
+#turnBack{display:none}
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){
+  [data-noir] .app,[data-noir] #fxLayer,[data-noir] dialog[open]{visibility:hidden!important}
+  #turnBack{display:flex;position:fixed;inset:0;z-index:2147483001;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#040405;color:var(--qink);font:500 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase}
+  #turnBack svg{width:34px;height:34px;stroke:currentColor;fill:none;stroke-width:1.4;opacity:.8;animation:turnHint 1.6s ease-in-out infinite}
+  @keyframes turnHint{0%,30%{transform:rotate(-90deg)}60%,100%{transform:rotate(0)}}
+}

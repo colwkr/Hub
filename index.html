@@ -41,30 +41,30 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013001753">
-<script src="finance.js?v=20261013001753"></script>
-<link rel="stylesheet" href="car.css?v=20261013001753">
-<script src="car.js?v=20261013001753"></script>
-<link rel="stylesheet" href="sections.css?v=20261013001753">
-<link rel="stylesheet" href="tv.css?v=20261013001753">
-<link rel="stylesheet" href="noir.css?v=20261013001753">
-<script src="records.js?v=20261013001753"></script>
-<script src="people.js?v=20261013001753"></script>
-<script src="wheels.js?v=20261013001753"></script>
-<script src="keyboard.js?v=20261013001753"></script>
-<script src="notes.js?v=20261013001753"></script>
-<script src="reminders.js?v=20261013001753"></script>
-<script src="gear.js?v=20261013001753"></script>
-<script src="lights.js?v=20261013001753"></script>
-<script src="tv.js?v=20261013001753"></script>
-<script src="work.js?v=20261013001753"></script>
-<script src="health.js?v=20261013001753"></script>
-<script src="pets.js?v=20261013001753"></script>
-<script src="places.js?v=20261013001753"></script>
-<script src="placestab.js?v=20261013001753"></script>
-<script src="usmap.js?v=20261013001753"></script>
-<script src="assistant.js?v=20261013001753"></script>
-<script src="packages.js?v=20261013001753"></script>
+<link rel="stylesheet" href="finance.css?v=20261013003029">
+<script src="finance.js?v=20261013003029"></script>
+<link rel="stylesheet" href="car.css?v=20261013003029">
+<script src="car.js?v=20261013003029"></script>
+<link rel="stylesheet" href="sections.css?v=20261013003029">
+<link rel="stylesheet" href="tv.css?v=20261013003029">
+<link rel="stylesheet" href="noir.css?v=20261013003029">
+<script src="records.js?v=20261013003029"></script>
+<script src="people.js?v=20261013003029"></script>
+<script src="wheels.js?v=20261013003029"></script>
+<script src="keyboard.js?v=20261013003029"></script>
+<script src="notes.js?v=20261013003029"></script>
+<script src="reminders.js?v=20261013003029"></script>
+<script src="gear.js?v=20261013003029"></script>
+<script src="lights.js?v=20261013003029"></script>
+<script src="tv.js?v=20261013003029"></script>
+<script src="work.js?v=20261013003029"></script>
+<script src="health.js?v=20261013003029"></script>
+<script src="pets.js?v=20261013003029"></script>
+<script src="places.js?v=20261013003029"></script>
+<script src="placestab.js?v=20261013003029"></script>
+<script src="usmap.js?v=20261013003029"></script>
+<script src="assistant.js?v=20261013003029"></script>
+<script src="packages.js?v=20261013003029"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1255,6 +1255,7 @@ dialog::backdrop{background:transparent}
 <body>
 
 <div id="bg" aria-hidden="true"><div class="wall" id="wallLayer"></div></div>
+<div id="turnBack" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg>Turn your phone upright</div>
 
 <div class="app">
   <header class="top">
@@ -1523,13 +1524,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013001753"></script>
+<script src="appearance.js?v=20261013003029"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013001753';
+  const VERSION = '20261013003029';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -5420,6 +5421,17 @@ dialog::backdrop{background:transparent}
   }
   fitTop();
   window.addEventListener('resize', fitTop);
+  // phones: after an accidental turn sideways and back, iOS can leave the page zoomed or mis-sized; settle it again
+  if (navigator.maxTouchPoints > 0 && Math.min(screen.width, screen.height) < 500) {
+    const settle = () => {
+      if (window.innerWidth > window.innerHeight) return;
+      const vp = document.querySelector('meta[name="viewport"]'), c = vp.getAttribute('content');
+      vp.setAttribute('content', c + ',x=1'); requestAnimationFrame(() => vp.setAttribute('content', c));
+      window.scrollTo(0, 0); fitTop(); render();
+    };
+    window.addEventListener('orientationchange', () => setTimeout(settle, 350));
+    if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', () => setTimeout(settle, 350));
+  }
   document.addEventListener('fullscreenchange', fitTop);
   document.addEventListener('webkitfullscreenchange', fitTop);
   const goFull = async () => { const r = root.requestFullscreen ? root.requestFullscreen() : root.webkitRequestFullscreen(); if (r && r.then) await r; };
