@@ -39,7 +39,7 @@ window.POSPlacesTab = function (ctx) {
   /* ---------- markup ---------- */
   function meCard() {
     const pl = P(), m = pl.me();
-    if (!m) return `<div class="float plc-card"><span class="plc-ic">${ICON.me}</span><span class="lab">Where you are</span><span class="plc-big">Not shared yet</span><span class="meta">Open POS on your phone and it shares where you are.</span></div>`;
+    if (!m) return `<div class="float plc-card"><span class="plc-ic">${ICON.me}</span><span class="lab">Where you are</span><span class="plc-big">Not shared yet</span><span class="meta">Open ${posName()} on your phone and it shares where you are.</span></div>`;
     const k = pl.nearKnown(m);
     return `<div class="float plc-card"><span class="plc-ic">${ICON.me}</span><span class="lab">Where you are</span><span class="plc-big">${k ? esc(k.name) : 'Away'}</span><span class="meta">From your phone, ${esc(ago(m.at))}</span>
       <div class="plc-acts"><a class="btn" href="https://maps.apple.com/?ll=${m.lat},${m.lon}&q=You" target="_blank" rel="noopener">Show on a map</a></div></div>`;
@@ -90,7 +90,7 @@ window.POSPlacesTab = function (ctx) {
       title: p ? p.name : 'Add a place',
       body: links
         + f('Name', `<input id="pl_name" maxlength="60" autocomplete="off" placeholder="Small group" value="${esc(p ? p.name : '')}">`)
-        + f('Address', `<input id="pl_addr" maxlength="160" autocomplete="off" placeholder="123 Main St, Simpsonville" value="${esc(p ? p.addr || '' : '')}">`, p ? 'Change it and POS finds the new spot.' : 'A street address, or the name of a business.')
+        + f('Address', `<input id="pl_addr" maxlength="160" autocomplete="off" placeholder="123 Main St, Simpsonville" value="${esc(p ? p.addr || '' : '')}">`, p ? 'Change it and ' + posName() + ' finds the new spot.' : 'A street address, or the name of a business.')
         + f('Also goes by', `<input id="pl_alias" maxlength="200" autocomplete="off" placeholder="Optional, like Josh's house" value="${esc(p && p.aliases ? p.aliases.join(', ') : '')}">`, 'Type any of these as a place on the calendar and it lands here.'),
       delLabel: 'Delete place',
       remove: p && ctx.canSave() ? async () => { try { await pl.removeKnown(p.id); toast(`${p.name} deleted`); ctx.rerender(); return true; } catch (e) { toast('That did not delete. Check your connection.'); return false; } } : null,
@@ -98,7 +98,7 @@ window.POSPlacesTab = function (ctx) {
         const name = val('pl_name'), addr = val('pl_addr');
         const aliases = val('pl_alias').split(',').map(x => x.trim()).filter(Boolean).slice(0, 12);
         if (!name) return 'Give the place a name.';
-        if (!addr && !p) return 'Add the address so POS can find it.';
+        if (!addr && !p) return 'Add the address so ' + posName() + ' can find it.';
         let spot = p ? { lat: p.lat, lon: p.lon, addr: p.addr } : null;
         if (!p || addr !== (p.addr || '')) {
           const g = await pl.geocode(addr || name);
@@ -126,7 +126,7 @@ window.POSPlacesTab = function (ctx) {
       if (!ctx.canSave()) return;
       b.disabled = true;
       try { await pl.parkHere(); toast('Car saved right here'); }
-      catch (e) { toast(e && e.code === 1 ? 'POS needs your location for that. Allow it in Settings.' : 'Couldn’t get your location. Try again.'); }
+      catch (e) { toast(e && e.code === 1 ? '' + posName() + ' needs your location for that. Allow it in Settings.' : 'Couldn’t get your location. Try again.'); }
       b.disabled = false;
       ctx.rerender();
     } else if (name === 'pl-unpark') {

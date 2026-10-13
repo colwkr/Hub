@@ -19,7 +19,7 @@ window.POSAssistant = function (ctx) {
   /* ---------- talking to the assistant function ---------- */
   async function call(body) {
     const { data, error } = await ctx.sb.functions.invoke('assistant', { body });
-    if (error) { let msg = ''; try { msg = (await error.context.json()).error; } catch (e) { /* no detail */ } throw new Error(msg || 'POS could not reach the assistant.'); }
+    if (error) { let msg = ''; try { msg = (await error.context.json()).error; } catch (e) { /* no detail */ } throw new Error(msg || '' + posName() + ' could not reach the assistant.'); }
     return data || {};
   }
   let retry = 0;
@@ -124,13 +124,13 @@ window.POSAssistant = function (ctx) {
   function deviceNote() {
     if (toldDevice) return;
     toldDevice = true;
-    toast("Your POS voice isn't on this device yet, so it's using the device's voice. Open the Voice Lab here once to load it.");
+    toast("Your " + posName() + " voice isn't on this device yet, so it's using the device's voice. Open the Voice Lab here once to load it.");
   }
   function deviceSpeak(text, fin) {
     if (!window.speechSynthesis) { if (fin) fin(); return; }
     if (ctx.voice) ctx.voice.stop();
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(String(text).replace(/\bNERV\b/g, 'Nerve'));
     u.rate = 0.97; u.pitch = pitchNow(); const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; }
     u.onboundary = () => { L.bump = 1; };
     if (X.on) earsOff();
@@ -157,9 +157,8 @@ window.POSAssistant = function (ctx) {
   const sectionIs = x => { x = x.replace(/^(the|my) /, '').replace(/ (section|page|tab|view|screen)$/, '').trim(); for (const k in ALIAS) if (ALIAS[k].includes(x)) return k; return null; };
   function local(raw) {
     // "hey POS, can you open my tasks please" → "open my tasks"
-    const nm = String(ctx.name() || 'pos').toLowerCase();
     const s = raw.toLowerCase().replace(/[.,!?]/g, '').replace(/\s+/g, ' ').trim()
-      .replace(new RegExp(`^(?:(?:hey|hi|ok|okay|yo)\\s+)?(?:${nm.replace(/[^a-z0-9 ]/g, '')}|pos|p o s)?\\s*`), '')
+      .replace(new RegExp(`^(?:(?:hey|hi|ok|okay|yo)\\s+)?(?:(?:${wakeNames().join('|')})\\b)?\\s*`), '')
       .replace(/^(?:can you|could you|would you|will you|please|go ahead and|i want to|i'd like to|let me)\s+/, '').replace(/^please\s+/, '')
       .replace(/\s+(?:please|for me|real quick|now)$/, '').trim();
     if (/^(stop|cancel|never ?mind|nothing|forget it)$/.test(s)) return { reply: 'Okay.', act: { action: 'close' } };
@@ -259,7 +258,7 @@ window.POSAssistant = function (ctx) {
         const pending = amend ? Object.fromEntries(Object.entries(amend.pending).filter(([k, v]) => v != null && v !== '' && typeof v !== 'object')) : null;
         const d = await call({ action: 'ask', text, ctx: ctx.summary(), name: ctx.name(), ...(X.on ? { recent: recentText() } : {}), ...(pending ? { pending } : {}) });
         if (d.error) r = { reply: errText(d.error), act: { action: 'none' }, fail: d.error };
-        else r = { reply: d.reply || '', act: d.act || { action: 'none' } };
+        else r = { reply: String(d.reply || '').replace(/\bPOS\b/g, ctx.name()), act: d.act || { action: 'none' } };
         if (d.error === 'key' || d.error === 'no-key') status(true);
       } catch (e) { r = { reply: "I couldn't reach the assistant. Check the connection and try again.", act: { action: 'none' } }; }
     }
@@ -432,15 +431,21 @@ window.POSAssistant = function (ctx) {
       }
       X.live = interim.trim(); L.bump = 1; paintLive();
     };
-    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') { toast("The mic isn't allowed for POS here. Allow it in the browser's address bar, then start again."); endSession(true); } };
+    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') { toast("The mic isn't allowed for " + posName() + " here. Allow it in the browser's address bar, then start again."); endSession(true); } };
     rec.onend = () => { if (X.rec === rec) X.rec = null; if (X.on && !X.paused) setTimeout(sessionListen, 250); }; // the browser stops now and then; start again
     X.rec = rec;
     try { rec.start(); } catch (e) { X.rec = null; }
   }
   // what counts as its name: "POS" (and how speech recognition tends to spell it), or the name you gave it
+  // what it answers to: its name, and the ways speech recognition writes that name down. With a name set it answers
+  // only to that name (NERV: "nerv", "nerve", "nerf"); without one, to POS.
+  const SOUNDS = { pos: ['pos', 'p o s', 'p\\.? ?o\\.? ?s\\.?', 'poss', 'pause'], nerv: ['nerv', 'nerve', 'nerves', 'nerf', 'n e r v', 'n\\.? ?e\\.? ?r\\.? ?v\\.?', 'merv', 'nervy'] };
+  function wakeNames() {
+    const nm = String(ctx.name() || 'pos').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim() || 'pos';
+    return SOUNDS[nm] || [nm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')];
+  }
   function nameIn(text) {
-    const nm = String(ctx.name() || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
-    const names = ['pos', 'p o s', 'p\\.? ?o\\.? ?s\\.?', 'poss', 'pause'].concat(nm && nm !== 'pos' ? [nm] : []);
+    const names = wakeNames();
     const re = new RegExp(`(?:^|\\b(?:hey|okay|ok|hi|yo)\\s+)(${names.join('|')})\\b[,.!?]?\\s*(.*)$`, 'i');
     const m = String(text).match(re);
     if (!m) return null;

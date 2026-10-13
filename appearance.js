@@ -229,7 +229,7 @@ window.POSLook = (function () {
       if (my !== turn) { if (s) URL.revokeObjectURL(s.url); return; }
       if (!s) {
         wall = 'none'; put('pos.wall', null);
-        toast('That wallpaper could not be loaded, so POS went back to no wallpaper.');
+        toast('That wallpaper could not be loaded, so ' + posName() + ' went back to no wallpaper.');
         return apply();
       }
       if (shown) URL.revokeObjectURL(shown.url);

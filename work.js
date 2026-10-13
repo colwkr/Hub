@@ -71,7 +71,7 @@ window.POSWork = function (ctx) {
   const SHORT = { 'simp-cg1': 'Simpsonville CG1', 'simp-cg2': 'CG2', 'simp-north': 'North Aud.' };
   const fmtDue = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   function cgList() {
-    if (S.failed) return '<section class="cg"><span class="lab">CG</span><p class="empty">Did not load. POS tries again when you come back.</p></section>';
+    if (S.failed) return '<section class="cg"><span class="lab">CG</span><p class="empty">Did not load. ' + posName() + ' tries again when you come back.</p></section>';
     if (!S.loaded) return '<section class="cg"><span class="lab">CG</span><p class="empty">Loading…</p></section>';
     const due = dueDate(), done = doneMap();
     const left = MACHINES.filter(m => !done[m.id]).length;

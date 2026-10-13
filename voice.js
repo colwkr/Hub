@@ -328,7 +328,10 @@ window.POSVoice = function (ctx) {
     A.speaking = false;
   }
   // say something: resolves when it has finished speaking (or was cut off)
+  // names written in capitals said the way they're meant (NERV is "nerve")
+  const spoken = t => String(t || '').replace(/\bNERV\b/g, 'Nerve');
   async function say(text, p = P, hooks = {}) {
+    text = spoken(text);
     stop();
     const my = ++A.gen;
     const v = await voiced(text, p);
@@ -352,7 +355,7 @@ window.POSVoice = function (ctx) {
   }
   // render to a WAV file (used to check presets, and to hand you a sample)
   async function render(text, p = P) {
-    const v = await voiced(text, p), tail = 1.5, sr = 44100;
+    const v = await voiced(spoken(text), p), tail = 1.5, sr = 44100;
     const oac = new OfflineAudioContext(2, Math.ceil((v.pcm.length / v.sr + tail) * sr), sr);
     const b = oac.createBuffer(1, v.pcm.length, v.sr); b.copyToChannel(v.pcm, 0);
     const src = oac.createBufferSource(); src.buffer = b;
@@ -412,8 +415,8 @@ window.POSVoice = function (ctx) {
     const presets = Object.entries(PRESETS).map(([k, v]) => `<button type="button" class="vl-chip${p.preset === k ? ' on' : ''}" data-vl="preset" data-id="${k}">${esc(v.name)}</button>`).join('');
     const knobs = KNOBS.map(([g, list]) => `<section class="vl-grp"><span class="vl-gl">${g}</span>${list.map(([k, l, mn, mx, st, f]) => `<label class="vl-k"><span class="vl-kl">${l}</span><input type="range" min="${mn}" max="${mx}" step="${st}" value="${p[k]}" data-k="${k}"><output id="vlo-${k}">${esc(f(p[k]))}</output></label>`).join('')}</section>`).join('');
     dlg.innerHTML = `<div class="vl">
-      <div class="vl-head"><h2>Voice Lab</h2><div class="vl-eng seg3" role="radiogroup" aria-label="Which voice"><button type="button" role="radio" data-vl="engine" data-id="neural" aria-checked="${p.engine === 'neural'}">POS voice</button><button type="button" role="radio" data-vl="engine" data-id="device" aria-checked="${p.engine === 'device'}">Device voice</button></div><button type="button" class="circle" data-vl="close" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
-      ${p.engine === 'device' ? `<p class="vl-note">The device's own voices can't be shaped; pick one in Settings. Switch to POS voice to build your own.</p>` : `
+      <div class="vl-head"><h2>Voice Lab</h2><div class="vl-eng seg3" role="radiogroup" aria-label="Which voice"><button type="button" role="radio" data-vl="engine" data-id="neural" aria-checked="${p.engine === 'neural'}">${esc(window.posName ? posName() : 'POS')} voice</button><button type="button" role="radio" data-vl="engine" data-id="device" aria-checked="${p.engine === 'device'}">Device voice</button></div><button type="button" class="circle" data-vl="close" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
+      ${p.engine === 'device' ? `<p class="vl-note">The device's own voices can't be shaped; pick one in Settings. Switch to ${posName()} voice to build your own.</p>` : `
       <div class="vl-try"><input id="vlText" type="text" value="${esc(LAB.text)}" aria-label="What to say"><button type="button" class="btn solid vl-play" data-vl="play">${LAB.busy ? 'Making…' : 'Play'}</button><button type="button" class="btn" data-vl="stop">Stop</button></div>
       <div class="vl-row"><span class="vl-gl">Start from</span><div class="vl-chips">${presets}</div></div>
       <div class="vl-row"><span class="vl-gl">Voice</span><div class="vl-models" role="radiogroup">${models}</div></div>

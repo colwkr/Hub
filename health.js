@@ -127,7 +127,7 @@ window.POSHealth = function (ctx) {
   }
   function view() {
     let body;
-    if (S.failed) body = '<p class="empty">Health did not load. Check the connection; POS tries again when you come back to it.</p>';
+    if (S.failed) body = '<p class="empty">Health did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading…</p>';
     else body = `${logBar()}<div class="hl-grid">${sleepCard()}${gymCard()}${runCard()}${habitsCard()}</div>`;
     return `<div class="health"><div class="health-scroll" id="healthScroll" data-keep>${body}</div></div>`;

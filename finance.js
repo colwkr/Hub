@@ -1156,7 +1156,7 @@ window.POSFinance = function (ctx) {
     const tabs = Object.entries(SUBS).map(([k, label]) =>
       `<button type="button" data-act="fin-sub" data-sub="${k}"${S.sub === k ? ' aria-current="page"' : ''}>${label}${n[k] ? `<span class="badge">${n[k]}</span>` : ''}</button>`).join('');
     let body;
-    if (S.failed) body = '<p class="empty">Your finances did not load. Check the connection; POS tries again when you come back to it.</p>';
+    if (S.failed) body = '<p class="empty">Your finances did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading your accounts and categories…</p>';
     else body = views[S.sub]();
     return `<div class="fin"><nav class="fin-tabs" aria-label="Finance sections">${tabs}</nav><div class="fin-scroll" id="finScroll" data-keep>${body}</div></div>`;

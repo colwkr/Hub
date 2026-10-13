@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <!-- Solid status bar on purpose: in black-translucent mode iOS 26+ lays a Liquid Glass blur over the top of the app. The bar takes theme-color, which always equals the app's top edge (--chrome). -->
-<meta name="apple-mobile-web-app-title" content="POS">
+<meta name="apple-mobile-web-app-title" content="NERV">
 <meta name="theme-color" content="#0B0C0E" id="themeColor">
 <script>
 /* pick light or dark, and the status bar color, before the first paint so the app never flashes the wrong look */
@@ -38,34 +38,34 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<title>POS</title>
+<title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013013029">
-<script src="finance.js?v=20261013013029"></script>
-<link rel="stylesheet" href="car.css?v=20261013013029">
-<script src="car.js?v=20261013013029"></script>
-<link rel="stylesheet" href="sections.css?v=20261013013029">
-<link rel="stylesheet" href="tv.css?v=20261013013029">
-<link rel="stylesheet" href="noir.css?v=20261013013029">
-<script src="records.js?v=20261013013029"></script>
-<script src="people.js?v=20261013013029"></script>
-<script src="wheels.js?v=20261013013029"></script>
-<script src="keyboard.js?v=20261013013029"></script>
-<script src="notes.js?v=20261013013029"></script>
-<script src="reminders.js?v=20261013013029"></script>
-<script src="gear.js?v=20261013013029"></script>
-<script src="lights.js?v=20261013013029"></script>
-<script src="tv.js?v=20261013013029"></script>
-<script src="work.js?v=20261013013029"></script>
-<script src="health.js?v=20261013013029"></script>
-<script src="pets.js?v=20261013013029"></script>
-<script src="places.js?v=20261013013029"></script>
-<script src="placestab.js?v=20261013013029"></script>
-<script src="usmap.js?v=20261013013029"></script>
-<script src="voice.js?v=20261013013029"></script>
-<script src="assistant.js?v=20261013013029"></script>
-<script src="packages.js?v=20261013013029"></script>
+<link rel="stylesheet" href="finance.css?v=20261013013718">
+<script src="finance.js?v=20261013013718"></script>
+<link rel="stylesheet" href="car.css?v=20261013013718">
+<script src="car.js?v=20261013013718"></script>
+<link rel="stylesheet" href="sections.css?v=20261013013718">
+<link rel="stylesheet" href="tv.css?v=20261013013718">
+<link rel="stylesheet" href="noir.css?v=20261013013718">
+<script src="records.js?v=20261013013718"></script>
+<script src="people.js?v=20261013013718"></script>
+<script src="wheels.js?v=20261013013718"></script>
+<script src="keyboard.js?v=20261013013718"></script>
+<script src="notes.js?v=20261013013718"></script>
+<script src="reminders.js?v=20261013013718"></script>
+<script src="gear.js?v=20261013013718"></script>
+<script src="lights.js?v=20261013013718"></script>
+<script src="tv.js?v=20261013013718"></script>
+<script src="work.js?v=20261013013718"></script>
+<script src="health.js?v=20261013013718"></script>
+<script src="pets.js?v=20261013013718"></script>
+<script src="places.js?v=20261013013718"></script>
+<script src="placestab.js?v=20261013013718"></script>
+<script src="usmap.js?v=20261013013718"></script>
+<script src="voice.js?v=20261013013718"></script>
+<script src="assistant.js?v=20261013013718"></script>
+<script src="packages.js?v=20261013013718"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1427,7 +1427,7 @@ dialog::backdrop{background:transparent}
     <div class="sheet-head" id="evHead"><div class="grab"></div><div class="bar"><h2 id="evTitle"></h2><button type="button" class="circle" id="evClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
     <p class="name" id="evWhen"></p>
     <p class="meta" id="evWhere" hidden></p>
-    <p class="where">From <b id="evCal">Google Calendar</b>. Change it there and POS picks it up within a few minutes.</p>
+    <p class="where">From <b id="evCal">Google Calendar</b>. Change it there and <span data-appname>POS</span> picks it up within a few minutes.</p>
   </div>
 </dialog>
 
@@ -1436,13 +1436,13 @@ dialog::backdrop{background:transparent}
     <div class="sheet-head" id="setHead"><div class="grab"></div><div class="bar"><h2 id="setTitle">Settings</h2><button type="button" class="circle" id="setClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
     <form class="set-sec" id="nameForm" aria-labelledby="nmLab" novalidate>
       <div class="set-head"><span class="lab" id="nmLab">Name</span><span class="set-note">Every device</span></div>
-      <p class="set-note">What it's called. The name shows wherever POS does now.</p>
+      <p class="set-note">What it's called. The name shows wherever <span data-appname>POS</span> does now.</p>
       <div class="set-row nm-row"><input id="s_name" type="text" maxlength="24" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Not named yet" aria-labelledby="nmLab"><button type="submit" class="btn solid" id="nameSave">Save</button></div>
     </form>
     <i class="set-line"></i>
     <section class="set-sec" id="asSet" aria-labelledby="asLab">
       <div class="set-head"><span class="lab" id="asLab">Assistant</span><span class="set-note" id="asNote"></span></div>
-      <p class="set-note">Tap the creature on Home and talk. Understanding runs on Claude, paid from your Max plan's monthly API credits. The key is kept on POS's server, never on this device. Your browser turns speech into text: Apple does it on iPhone and iPad, Google in Chrome.</p>
+      <p class="set-note">Tap the creature on Home and talk. Understanding runs on Claude, paid from your Max plan's monthly API credits. The key is kept on <span data-appname>POS</span>'s server, never on this device. Your browser turns speech into text: Apple does it on iPhone and iPad, Google in Chrome.</p>
       <form class="set-row nm-row" id="asKeyForm" autocomplete="off" novalidate><input id="as_key" class="as-secret" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your Claude API key (sk-ant-…)" aria-label="Claude API key"><button type="submit" class="btn solid" id="asSave">Save</button></form>
       <div class="set-row as-days"><span class="set-note">The key lasts</span><div class="seg3" id="asDays" role="radiogroup" aria-label="How long the key lasts"><button type="button" role="radio" data-days="30" aria-checked="true">30 days</button><button type="button" role="radio" data-days="90" aria-checked="false">90 days</button><button type="button" role="radio" data-days="never" aria-checked="false">Never</button></div></div>
       <p class="set-note" id="asKeyInfo"></p>
@@ -1481,7 +1481,7 @@ dialog::backdrop{background:transparent}
     <i class="set-line"></i>
     <section class="set-sec" aria-labelledby="meLab">
       <div class="set-head"><span class="lab" id="meLab">Where you are</span><span class="set-note" id="meNote"></span></div>
-      <p class="set-note">Your phone tells every device where you are, so the next drive on the calendar starts from there. It updates while POS is open on the phone.</p>
+      <p class="set-note">Your phone tells every device where you are, so the next drive on the calendar starts from there. It updates while <span data-appname>POS</span> is open on the phone.</p>
       <div class="set-row"><button type="button" class="switch" id="meSrc" data-act="me-src" role="switch" aria-checked="false"><span>This is my phone</span><span class="sw" aria-hidden="true"></span></button></div>
     </section>
     <i class="set-line"></i>
@@ -1531,13 +1531,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013013029"></script>
+<script src="appearance.js?v=20261013013718"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013013029';
+  const VERSION = '20261013013718';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1901,7 +1901,7 @@ dialog::backdrop{background:transparent}
     `<section class="sec ${cls}"><div class="sec-head"><h2 class="lab">${title}</h2>${extra}</div><div class="float list">${inner}</div></section>`;
   function notReady() {
     if (!S.booted) return '<p class="empty">Loading your tasks…</p>';
-    if (S.failed) return '<p class="empty">Tasks could not load. Check the connection; POS tries again when you come back to it.</p>';
+    if (S.failed) return '<p class="empty">Tasks could not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     return '<p class="empty">Loading your tasks…</p>';
   }
 
@@ -2278,6 +2278,7 @@ dialog::backdrop{background:transparent}
      Until then it's POS. ---------- */
   const IDENT = { name: (() => { try { return localStorage.getItem('pos.name') || ''; } catch (e) { return ''; } })() };
   const appName = () => IDENT.name || 'POS';
+  window.posName = appName;
   function paintName() {
     for (const el of document.querySelectorAll('[data-appname]')) el.textContent = appName();
     document.title = appName();
@@ -4228,7 +4229,7 @@ dialog::backdrop{background:transparent}
     el.hidden = false;
     const time = $('#f_time').value;
     let h;
-    if (!PLACES || !PLACES.home()) h = `<span>To add the drive, POS needs to know where home is.</span><button type="button" class="link" data-act="home-here">Use where I am now</button>`;
+    if (!PLACES || !PLACES.home()) h = `<span>To add the drive, ${posName()} needs to know where home is.</span><button type="button" class="link" data-act="home-here">Use where I am now</button>`;
     else if (F.placeBusy || !p.from) h = '<span>Finding it…</span>';
     else if (p.missing) h = '<span>Nothing by that name near home. It’s kept as you wrote it, without a drive.</span>';
     else h = `<span class="pl-name"><b>${esc(p.name)}</b>${p.addr ? ` · ${esc(p.addr)}` : ''}</span><span class="pl-drive"><b>${p.drive} min drive</b> · ${esc(String(p.mi))} mi${time ? ` · leave at ${esc(fmtTime((toMin(time) - p.drive + 1440) % 1440))}` : ''}</span>`;
@@ -6014,7 +6015,7 @@ dialog::backdrop{background:transparent}
       fillHome();
       placeSweep();
     } catch (e) {
-      toast(e && e.code === 1 ? 'Location is off for POS. Allow it for this site in Settings, then try again.' : 'Couldn’t get your location. Try again.');
+      toast(e && e.code === 1 ? 'Location is off for ' + posName() + '. Allow it for this site in Settings, then try again.' : 'Couldn’t get your location. Try again.');
     }
   }
   function fillHome() {
@@ -6097,7 +6098,7 @@ dialog::backdrop{background:transparent}
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
       const { data, error } = await sb.functions.invoke('gcal', { body: { from, to, tz } });
       if (error) {
-        let msg = 'it did not load. POS tries again in a few minutes.';
+        let msg = 'it did not load. ' + posName() + ' tries again in a few minutes.';
         try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
         S.evErr = msg;
       } else {
@@ -6107,7 +6108,7 @@ dialog::backdrop{background:transparent}
         S.gcalName = data.calendar || 'Google Calendar';
         S.evWin = { from, to, at: Date.now() };
       }
-    } catch (e) { S.evErr = 'it did not load. POS tries again in a few minutes.'; }
+    } catch (e) { S.evErr = 'it did not load. ' + posName() + ' tries again in a few minutes.'; }
     evBusy = false;
     render();
   }
@@ -6260,7 +6261,7 @@ dialog::backdrop{background:transparent}
     loadWeather(false);
     checkVersion();
     if (!window.supabase) {
-      S.booted = true; S.loginNote = 'POS could not reach its sign-in service. Check the connection and reopen it.'; S.loginRedraw = true; render(); return;
+      S.booted = true; S.loginNote = '' + posName() + ' could not reach its sign-in service. Check the connection and reopen it.'; S.loginRedraw = true; render(); return;
     }
     sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });

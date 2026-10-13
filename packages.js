@@ -149,14 +149,14 @@ window.POSPackages = function (ctx) {
       ${ctx.canSave() ? `<form class="pk-keyform" id="pkKey" autocomplete="off"><input id="pk_key" placeholder="Paste your Track123 key" autocomplete="off" spellcheck="false"><button type="submit" class="btn solid">Turn on</button></form>` : ''}</section>`;
   }
   function view() {
-    if (S.failed) return '<div class="pkgs"><p class="empty">Packages did not load. Check the connection; POS tries again when you come back to it.</p></div>';
+    if (S.failed) return '<div class="pkgs"><p class="empty">Packages did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p></div>';
     if (!S.loaded) return '<div class="pkgs"><p class="empty">Loading…</p></div>';
     askKey();
     const all = S.package.slice().sort((a, b) => (etaOf(a) || '9').localeCompare(etaOf(b) || '9') || (b.createdAt || 0) - (a.createdAt || 0));
     const recent = p => p.stage === 'delivered' && Date.now() - (p.deliveredAt || p.checkedAt || 0) > 2 * 86400000;
     const active = all.filter(p => !recent(p)), done = all.filter(recent).sort((a, b) => (b.deliveredAt || 0) - (a.deliveredAt || 0)).slice(0, 10);
     const body = (UI.key === false ? keyCard() : '')
-      + (active.length ? active.map(card).join('') : `<div class="float pk-empty"><span class="pk-ric">${ICON.box}</span><p>Nothing on its way. Add a tracking number, or POS picks them up from shipping emails.</p>${ctx.canSave() ? '<button type="button" class="btn solid" data-act="pk-add">Add a package</button>' : ''}</div>`)
+      + (active.length ? active.map(card).join('') : `<div class="float pk-empty"><span class="pk-ric">${ICON.box}</span><p>Nothing on its way. Add a tracking number, or ${posName()} picks them up from shipping emails.</p>${ctx.canSave() ? '<button type="button" class="btn solid" data-act="pk-add">Add a package</button>' : ''}</div>`)
       + (done.length ? `<section class="sec"><div class="sec-head"><span class="lab">Delivered</span></div><div class="float list">${done.map(doneRow).join('')}</div></section>` : '');
     return `<div class="pkgs"><div class="pkgs-scroll" id="pkgsScroll" data-keep>${body}</div></div>`;
   }
@@ -164,7 +164,7 @@ window.POSPackages = function (ctx) {
   /* ---------- talking to the packages function ---------- */
   const call = async body => {
     const { data, error } = await ctx.sb.functions.invoke('packages', { body });
-    if (error) { let msg = ''; try { msg = (await error.context.json()).error; } catch (e) { /* no detail */ } throw new Error(msg || 'POS could not reach the tracker.'); }
+    if (error) { let msg = ''; try { msg = (await error.context.json()).error; } catch (e) { /* no detail */ } throw new Error(msg || '' + posName() + ' could not reach the tracker.'); }
     return data || {};
   };
   async function askKey() {

@@ -197,7 +197,7 @@ window.POSGear = function (ctx) {
   }
   function view(dept) {
     dept = TREE[dept] ? dept : 'video';
-    if (S.failed) return '<p class="empty">The gear list did not load. POS tries again when you come back to it.</p>';
+    if (S.failed) return '<p class="empty">The gear list did not load. ' + posName() + ' tries again when you come back to it.</p>';
     if (!S.loaded) return '<p class="empty">Loading…</p>';
     const nodes = walk(dept), here = nodes[nodes.length - 1], ids = nodes.slice(1).map(n => n.id), list = cams();
     const sel = here.id === 'cameras' && UI.sel ? list.find(c => c.id === UI.sel) || null : null;

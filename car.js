@@ -183,7 +183,7 @@ window.POSCar = function (ctx) {
   }
   function oilCard() {
     const d = oilDue();
-    if (!d) return `<article class="float car-oil"><span class="lab">Next oil change</span><p class="empty">Log your last oil change and POS works out when the next one is due.</p>${canSave() ? `<div><button type="button" class="btn solid" data-act="car-form" data-form="service" data-type="oil">Log an oil change</button></div>` : ''}</article>`;
+    if (!d) return `<article class="float car-oil"><span class="lab">Next oil change</span><p class="empty">Log your last oil change and ${posName()} works out when the next one is due.</p>${canSave() ? `<div><button type="button" class="btn solid" data-act="car-form" data-form="service" data-type="oil">Log an oil change</button></div>` : ''}</article>`;
     const pill = d.st === 'due' ? `<span class="pill late">${ICON.warn}Due now</span>` : d.st === 'soon' ? `<span class="pill soonp">${ICON.warn}Soon</span>` : '<span class="pill okp">On track</span>';
     const big = d.left == null ? `<span class="fig xl">${Math.max(0, Math.ceil(d.daysLeft))}</span><span class="unit">days left</span>`
       : d.left > 0 ? `<span class="fig xl">${mi(d.left)}</span><span class="unit">miles left</span>`
@@ -312,7 +312,7 @@ window.POSCar = function (ctx) {
   }
   function view() {
     let body;
-    if (S.failed) body = '<p class="empty">Your car records did not load. Check the connection; POS tries again when you come back to it.</p>';
+    if (S.failed) body = '<p class="empty">Your car records did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading your car…</p>';
     else {
       const v = car();
@@ -369,7 +369,7 @@ window.POSCar = function (ctx) {
       const odo = odometer();
       return {
         title: o ? 'Mileage check' : 'Update mileage', del: !!o,
-        body: field('Odometer', `<input id="cf_miles" class="big" inputmode="numeric" autocomplete="off" placeholder="${odo ? mi(odo.est) : ''}" value="${o ? mi(o.miles) : ''}">`, odo && !o ? `POS estimates about ${mi(odo.est)}. Type what the dash says.` : '')
+        body: field('Odometer', `<input id="cf_miles" class="big" inputmode="numeric" autocomplete="off" placeholder="${odo ? mi(odo.est) : ''}" value="${o ? mi(o.miles) : ''}">`, odo && !o ? `${posName()} estimates about ${mi(odo.est)}. Type what the dash says.` : '')
           + field('Date', `<input id="cf_date" type="date" value="${dateInput(o ? o.at : Date.now())}">`)
           + field('Note', `<input id="cf_note" autocomplete="off" maxlength="200" placeholder="Optional" value="${esc(o ? o.note || '' : '')}">`),
       };

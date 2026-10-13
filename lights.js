@@ -211,7 +211,7 @@ window.POSLights = function (ctx) {
   }
   function view() {
     let body;
-    if (S.failed) body = '<p class="empty">Lights did not load. Check the connection; POS tries again when you come back to it.</p>';
+    if (S.failed) body = '<p class="empty">Lights did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading…</p>';
     else if (!S.room.length) body = `<p class="empty">No rooms yet. Add a room, then the lights in it.</p>${ctx.canSave() ? '<div><button type="button" class="btn solid" data-act="lt-room-edit">Add a room</button></div>' : ''}`;
     else {
@@ -223,7 +223,7 @@ window.POSLights = function (ctx) {
         + '</div></div>';
     }
     if (S.loaded && ctx.canSave() && Date.now() - CL.at > 15000) setTimeout(pull, 0);
-    const note = !S.light.some(l => l.node) ? '' : CL.expired ? `<div class="lt-note warn lt-conn"><span>The lights' sign-in ran out. Sign in to Oasis once and POS keeps them connected.</span>${ctx.canSave() ? '<button type="button" class="btn solid" data-act="lt-connect">Connect lights</button>' : ''}</div>`
+    const note = !S.light.some(l => l.node) ? '' : CL.expired ? `<div class="lt-note warn lt-conn"><span>The lights' sign-in ran out. Sign in to Oasis once and ${posName()} keeps them connected.</span>${ctx.canSave() ? '<button type="button" class="btn solid" data-act="lt-connect">Connect lights</button>' : ''}</div>`
       : CL.down ? "<p class=\"lt-note warn\">The lights aren't answering right now.</p>" : '';
     return `<div class="lights">${note}<div class="lights-scroll" id="lightsScroll" data-keep>${body}</div></div>`;
   }
@@ -393,7 +393,7 @@ window.POSLights = function (ctx) {
     window.POSSheet.open({
       title: 'Connect lights',
       saveLabel: 'Connect',
-      body: '<p class="lt-why">Sign in with your Oasis account. It goes straight to Oasis, like their app. POS keeps only the key Oasis sends back, never your email or password.</p>'
+      body: '<p class="lt-why">Sign in with your Oasis account. It goes straight to Oasis, like their app. ' + posName() + ' keeps only the key Oasis sends back, never your email or password.</p>'
         + f('Oasis email', '<input id="lo_user" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you@example.com">')
         + f('Password', '<input id="lo_pass" type="password" autocomplete="current-password">'),
       ready: () => {
@@ -417,7 +417,7 @@ window.POSLights = function (ctx) {
         if (!j.accesstoken) return j.error_code === 101009 ? "Oasis didn't accept that email or password." : `Oasis said: ${j.description || 'no'}`;
         if (!j.refreshtoken) return "Oasis signed in but didn't send a renew key. Tell Claude.";
         let d = null;
-        try { d = await call({ action: 'connect', access: j.accesstoken, refresh: j.refreshtoken }); } catch (e) { return "Signed in to Oasis, but POS couldn't save the key. Try again."; }
+        try { d = await call({ action: 'connect', access: j.accesstoken, refresh: j.refreshtoken }); } catch (e) { return "Signed in to Oasis, but " + posName() + " couldn't save the key. Try again."; }
         j = null;
         if (!d || d.error) return d && d.error || 'That did not work.';
         wipe();
@@ -465,7 +465,7 @@ window.POSLights = function (ctx) {
     if (!S.loaded) return { ok: false, say: "The lights haven't loaded yet." };
     if (!ctx.canSave()) return { ok: false, say: 'Sign in to change the lights.' };
     const f = find(c.target);
-    if (!S.light.length) return { ok: false, say: 'No lights are set up in POS yet.' };
+    if (!S.light.length) return { ok: false, say: 'No lights are set up in ' + posName() + ' yet.' };
     if (!f || !f.list.length) return { ok: false, say: `I don't see a light called ${c.target}.` };
     const level = Number.isFinite(+c.level) && c.level !== '' && c.level != null ? Math.max(0, Math.min(100, Math.round(+c.level))) : null;
     const kelvin = Number.isFinite(+c.kelvin) && c.kelvin ? Math.max(KMIN, Math.min(KMAX, Math.round(+c.kelvin / 100) * 100)) : null;
@@ -474,7 +474,7 @@ window.POSLights = function (ctx) {
     if (on == null) return { ok: false, say: 'On or off?' };
     await setLights(f.list, l => ({ on, ...(on ? { level: level || (l.level > 0 ? l.level : 100) } : {}), ...(kelvin ? { kelvin, mode: 'white' } : {}) }));
     const nm = f.all ? 'Lights' : f.name.charAt(0).toUpperCase() + f.name.slice(1);
-    if (CL.expired) return { ok: false, say: `I set ${f.all ? 'the lights' : f.name} in POS, but the lights' sign-in ran out. Open Lights and press Connect.` };
+    if (CL.expired) return { ok: false, say: `I set ${f.all ? 'the lights' : f.name} in ${posName()}, but the lights' sign-in ran out. Open Lights and press Connect.` };
     return { ok: true, say: !on ? `${nm} off.` : `${nm} on${level ? ` at ${level}%` : ''}${kelvin ? `, ${kName(kelvin).toLowerCase()}` : ''}.` };
   }
   // a line for the assistant's summary: rooms, lights and what's on

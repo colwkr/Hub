@@ -46,7 +46,7 @@ window.POSReminders = function (ctx) {
   }
   const sec = (label, list) => (list.length ? `<section class="sec"><div class="sec-head"><span class="lab">${label}</span></div><div class="float list rm-list">${list.map(row).join('')}</div></section>` : '');
   function view() {
-    if (S.failed) return '<div class="rem"><p class="empty">Reminders did not load. Check the connection; POS tries again when you come back to it.</p></div>';
+    if (S.failed) return '<div class="rem"><p class="empty">Reminders did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p></div>';
     if (!S.loaded) return '<div class="rem"><p class="empty">Loading…</p></div>';
     const now = nowList(), later = laterList(), done = doneList();
     const add = ctx.canSave() ? `<form class="rm-add float" id="rmAdd" data-hold-render autocomplete="off"><span class="rm-add-ic">${ICON.plus}</span><input id="rm_text" maxlength="200" placeholder="Remind me to…" enterkeyhint="done"><input id="rm_on" type="date" aria-label="Bring it up on (optional)" title="Bring it up on (optional)"><button type="submit" class="btn solid">Add</button></form>` : '';

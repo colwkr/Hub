@@ -131,7 +131,7 @@ window.POSTV = function (ctx) {
     if (ph === 'hello') return 'Reaching the TV link on your PC…';
     if (ph === 'gone') return 'The TV link runs on your PC. Make sure it’s on and awake.';
     if (ph === 'searching') return 'Finding the TV on your Wi-Fi…';
-    if (ph === 'pairing') return 'The TV is asking to allow POS. Press Accept with the TV remote.';
+    if (ph === 'pairing') return 'The TV is asking to allow ' + posName() + '. Press Accept with the TV remote.';
     if (ph === 'unpaired') return 'The TV didn’t allow the connection.';
     const bits = [];
     if (isOn() && tv.appName) bits.push(tv.appName);
@@ -146,7 +146,7 @@ window.POSTV = function (ctx) {
       + (ic ? `<img src="${ic.src}" alt="" draggable="false">` : `<span>${esc(w.name)}</span>`) + '</button>';
   }
   function view() {
-    if (S.failed) return '<div class="tvr"><p class="empty">The TV remote did not load. POS tries again when you come back to it.</p></div>';
+    if (S.failed) return '<div class="tvr"><p class="empty">The TV remote did not load. ' + posName() + ' tries again when you come back to it.</p></div>';
     if (!S.loaded && !tv) return '<div class="tvr"><p class="empty">Loading…</p></div>';
     const ph = phase(), on = isOn();
     const playing = tv && tv.play === 'playing';

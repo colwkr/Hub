@@ -1,6 +1,6 @@
 {
-  "name": "Personal Operating System",
-  "short_name": "POS",
+  "name": "NERV",
+  "short_name": "NERV",
   "description": "Personal Operating System: tasks, calendar, finance, weather and more.",
   "start_url": "./",
   "scope": "./",

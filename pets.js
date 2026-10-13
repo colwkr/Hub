@@ -101,7 +101,7 @@ window.POSPets = function (ctx) {
   }
   function view() {
     let body;
-    if (S.failed) body = '<p class="empty">Pets did not load. Check the connection; POS tries again when you come back to it.</p>';
+    if (S.failed) body = '<p class="empty">Pets did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading…</p>';
     else if (!S.pet.length) body = `<p class="empty">No pets yet.</p>${ctx.canSave() ? '<div><button type="button" class="btn solid" data-act="pet-form" data-form="pet">Add a pet</button></div>' : ''}`;
     else body = pets().map(p => `<div class="pet-grid"><div class="pet-col">${petCard(p)}${foodCard(p)}${forHim(p)}</div><div class="pet-col">${visitList(p)}${noteList(p)}</div></div>`).join('');

@@ -75,7 +75,7 @@ window.POSNotes = function (ctx) {
     </div>`;
   }
   function view() {
-    if (S.failed) return '<div class="notes"><p class="empty">Notes did not load. Check the connection; POS tries again when you come back to it.</p></div>';
+    if (S.failed) return '<div class="notes"><p class="empty">Notes did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p></div>';
     if (!S.loaded) return '<div class="notes"><p class="empty">Loading…</p></div>';
     return `<div class="notes${UI.sel ? ' has-sel' : ''}">
       <div class="nt-side">
