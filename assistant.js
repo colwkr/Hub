@@ -68,19 +68,30 @@ window.POSAssistant = function (ctx) {
   }
 
   /* ---------- speaking back ---------- */
+  // its voice: a low male voice, a little slower and deeper than the device's default. Each device has its own set
+  // of voices (Edge's natural voices are the best; Chrome and Safari have fewer), so the pick is per device.
+  const MALE = [/Andrew.*Natural/i, /Guy.*Natural/i, /Davis.*Natural/i, /Christopher.*Natural/i, /Brian.*Natural/i, /Eric.*Natural/i, /Roger.*Natural/i, /Steffan.*Natural/i, /Ryan.*Natural/i,
+    /Google UK English Male/i, /\bDaniel\b/i, /\bArthur\b/i, /\bAaron\b/i, /\bEvan\b/i, /\bNathan\b/i, /\bTom\b/i, /\bAlex\b/i, /Microsoft (Guy|Mark|David|Andrew|Brian|Davis)/i, /\bRocko\b/i, /\bFred\b/i, /\bRalph\b/i, /\bReed\b/i, /\b(male|man)\b/i];
+  const FEMALE = /Samantha|Ava|Allison|Susan|Zira|Aria|Jenny|Emma|Michelle|Sonia|Libby|Karen|Moira|Tessa|Victoria|Fiona|Kate|Serena|Nicky|Google US English|female/i;
+  const englishVoices = () => (window.speechSynthesis ? speechSynthesis.getVoices().filter(v => /^en(-|_)/i.test(v.lang)) : []);
+  function rankedVoices() {
+    const vs = englishVoices(), score = v => { const i = MALE.findIndex(re => re.test(v.name)); return i >= 0 ? i : FEMALE.test(v.name) ? 900 : 500; };
+    return vs.slice().sort((a, b) => score(a) - score(b) || (/en.US/i.test(b.lang) - /en.US/i.test(a.lang)));
+  }
   let voice = null;
   function pickVoice() {
     if (voice || !window.speechSynthesis) return voice;
-    const vs = speechSynthesis.getVoices().filter(v => /^en(-|_)/i.test(v.lang));
-    voice = vs.find(v => /Samantha|Ava|Allison|Google US English|Aria|Jenny/i.test(v.name)) || vs.find(v => /en.US/i.test(v.lang)) || vs[0] || null;
+    const want = get('pos.as.voice'), vs = englishVoices();
+    voice = (want && vs.find(v => v.name === want)) || rankedVoices()[0] || null;
     return voice;
   }
-  if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { voice = null; pickVoice(); };
-  function speak(text) {
-    if (!text || !speakOn() || !window.speechSynthesis) return;
+  const pitchNow = () => { const p = parseFloat(get('pos.as.pitch')); return p > 0 ? p : 0.82; };
+  if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { voice = null; pickVoice(); fillVoices(); };
+  function speak(text, force) {
+    if (!text || (!speakOn() && !force) || !window.speechSynthesis) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.03; const v = pickVoice(); if (v) u.voice = v;
+    u.rate = 0.97; u.pitch = pitchNow(); const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; }
     u.onboundary = () => { L.bump = 1; };
     if (X.on) { X.paused = true; if (X.rec) try { X.rec.abort(); } catch (e) {} u.onend = u.onerror = () => { X.paused = false; setTimeout(sessionListen, 150); }; }
     speechSynthesis.speak(u);
@@ -257,6 +268,7 @@ window.POSAssistant = function (ctx) {
     if (name === 'as-yes') { doIt(); return; }
     if (name === 'as-no') { show('Okay, I left it.', null); later(3000); return; }
   }
+  document.addEventListener('change', e => { if (e.target && e.target.id === 'asVoice') { put('pos.as.voice', e.target.value || null); voice = null; speak(`${ctx.name()} online.`, true); } });
   document.addEventListener('submit', e => {
     if (e.target.id === 'asForm') {
       e.preventDefault();
@@ -420,7 +432,15 @@ window.POSAssistant = function (ctx) {
   /* ---------- Settings: the key, how long it lasts, and speaking out loud ---------- */
   let wantDays = 30;
   const dFmt = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+  function fillVoices() {
+    const sel = $('#asVoice');
+    if (!sel) return;
+    const want = get('pos.as.voice') || '', list = rankedVoices();
+    sel.innerHTML = `<option value="">Automatic${list[0] ? ` (${esc(list[0].name.replace(/^Microsoft /, '').replace(/ Online \(Natural\)/, ''))})` : ''}</option>` + list.map(v => `<option value="${esc(v.name)}"${v.name === want ? ' selected' : ''}>${esc(v.name.replace(/^Microsoft /, '').replace(/ Online \(Natural\)/, ' · natural'))}</option>`).join('');
+    for (const b of document.querySelectorAll('#asDepth button')) b.setAttribute('aria-checked', String(Math.abs(parseFloat(b.dataset.depth) - pitchNow()) < 0.02));
+  }
   function fillSettings() {
+    fillVoices();
     const info = $('#asKeyInfo'), note = $('#asNote'), rm = $('#asRemove'), sp = $('#asSpeak');
     if (!info) return;
     const d = daysLeft();
@@ -446,8 +466,10 @@ window.POSAssistant = function (ctx) {
     btn.disabled = false;
   }
   document.addEventListener('click', async e => {
-    const b = e.target.closest && e.target.closest('#asDays button, #asRemove, #asSpeak');
+    const b = e.target.closest && e.target.closest('#asDays button, #asRemove, #asSpeak, #asDepth button, #asVoiceTest');
     if (!b) return;
+    if (b.id === 'asVoiceTest') { speak(`${ctx.name()} online. All systems running.`, true); return; }
+    if (b.dataset.depth) { put('pos.as.pitch', b.dataset.depth); fillVoices(); speak('Like this.', true); return; }
     if (b.id === 'asRemove') { try { await call({ action: 'clear-key' }); toast('Assistant key removed'); await status(true); } catch (err) { toast(err.message); } return; }
     if (b.id === 'asSpeak') { put('pos.as.speak', speakOn() ? '0' : null); fillSettings(); return; }
     wantDays = b.dataset.days === 'never' ? 'never' : +b.dataset.days; fillSettings();

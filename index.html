@@ -41,30 +41,30 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013003431">
-<script src="finance.js?v=20261013003431"></script>
-<link rel="stylesheet" href="car.css?v=20261013003431">
-<script src="car.js?v=20261013003431"></script>
-<link rel="stylesheet" href="sections.css?v=20261013003431">
-<link rel="stylesheet" href="tv.css?v=20261013003431">
-<link rel="stylesheet" href="noir.css?v=20261013003431">
-<script src="records.js?v=20261013003431"></script>
-<script src="people.js?v=20261013003431"></script>
-<script src="wheels.js?v=20261013003431"></script>
-<script src="keyboard.js?v=20261013003431"></script>
-<script src="notes.js?v=20261013003431"></script>
-<script src="reminders.js?v=20261013003431"></script>
-<script src="gear.js?v=20261013003431"></script>
-<script src="lights.js?v=20261013003431"></script>
-<script src="tv.js?v=20261013003431"></script>
-<script src="work.js?v=20261013003431"></script>
-<script src="health.js?v=20261013003431"></script>
-<script src="pets.js?v=20261013003431"></script>
-<script src="places.js?v=20261013003431"></script>
-<script src="placestab.js?v=20261013003431"></script>
-<script src="usmap.js?v=20261013003431"></script>
-<script src="assistant.js?v=20261013003431"></script>
-<script src="packages.js?v=20261013003431"></script>
+<link rel="stylesheet" href="finance.css?v=20261013003959">
+<script src="finance.js?v=20261013003959"></script>
+<link rel="stylesheet" href="car.css?v=20261013003959">
+<script src="car.js?v=20261013003959"></script>
+<link rel="stylesheet" href="sections.css?v=20261013003959">
+<link rel="stylesheet" href="tv.css?v=20261013003959">
+<link rel="stylesheet" href="noir.css?v=20261013003959">
+<script src="records.js?v=20261013003959"></script>
+<script src="people.js?v=20261013003959"></script>
+<script src="wheels.js?v=20261013003959"></script>
+<script src="keyboard.js?v=20261013003959"></script>
+<script src="notes.js?v=20261013003959"></script>
+<script src="reminders.js?v=20261013003959"></script>
+<script src="gear.js?v=20261013003959"></script>
+<script src="lights.js?v=20261013003959"></script>
+<script src="tv.js?v=20261013003959"></script>
+<script src="work.js?v=20261013003959"></script>
+<script src="health.js?v=20261013003959"></script>
+<script src="pets.js?v=20261013003959"></script>
+<script src="places.js?v=20261013003959"></script>
+<script src="placestab.js?v=20261013003959"></script>
+<script src="usmap.js?v=20261013003959"></script>
+<script src="assistant.js?v=20261013003959"></script>
+<script src="packages.js?v=20261013003959"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1446,6 +1446,8 @@ dialog::backdrop{background:transparent}
       <div class="set-row as-days"><span class="set-note">The key lasts</span><div class="seg3" id="asDays" role="radiogroup" aria-label="How long the key lasts"><button type="button" role="radio" data-days="30" aria-checked="true">30 days</button><button type="button" role="radio" data-days="90" aria-checked="false">90 days</button><button type="button" role="radio" data-days="never" aria-checked="false">Never</button></div></div>
       <p class="set-note" id="asKeyInfo"></p>
       <div class="set-row"><button type="button" class="switch" id="asSpeak" role="switch" aria-checked="true"><span>Speak replies out loud</span><span class="sw" aria-hidden="true"></span></button></div>
+      <div class="set-row as-days"><span class="set-note">Voice</span><select id="asVoice" class="as-voice" aria-label="Voice"></select><button type="button" class="btn" id="asVoiceTest">Test</button></div>
+      <div class="set-row as-days"><span class="set-note">Depth</span><div class="seg3" id="asDepth" role="radiogroup" aria-label="How deep the voice is"><button type="button" role="radio" data-depth="1" aria-checked="false">Normal</button><button type="button" role="radio" data-depth="0.82" aria-checked="true">Deep</button><button type="button" role="radio" data-depth="0.68" aria-checked="false">Deeper</button></div></div>
       <div class="set-row"><button type="button" class="btn" id="asRemove" hidden>Remove key</button></div>
     </section>
     <i class="set-line"></i>
@@ -1525,13 +1527,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013003431"></script>
+<script src="appearance.js?v=20261013003959"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013003431';
+  const VERSION = '20261013003959';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -896,3 +896,6 @@ body.in-session #asWrap{display:none}
 .win-sess.on{color:var(--qink);box-shadow:inset 0 0 0 1px rgba(255,90,40,.5);background:rgba(255,90,40,.12)}
 .win-sess[hidden]{display:none}
 body.in-session .top{padding-top:44px}
+
+.as-voice{flex:1;min-width:0;max-width:280px;border:0;background:rgba(255,255,255,.05);color:var(--qink);border-radius:3px;padding:9px 10px;font:400 14px var(--font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.as-voice option{background:#111318;color:#eceef2}
