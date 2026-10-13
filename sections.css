@@ -986,3 +986,31 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 .wxp-day .rng span{position:absolute;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,rgb(112,214,255),rgb(255,196,124))}
 .sl-fol{color:rgb(112,214,255)}
 @media (prefers-reduced-motion:reduce){ .wxp > *,.wxp-fit,.wxm-home::after{animation:none} }
+
+/* ---------- tasks with a day but no time, in the Day and Week any-time row ---------- */
+.cal-any .any-cell{container-type:inline-size}
+.cal-any .any-cell .achip.tk{display:flex;align-items:center;gap:0;padding:0 8px 0 0;min-height:26px;flex:none;color:var(--ink);box-shadow:inset 2px 0 0 var(--ink-2),inset 0 0 0 1px var(--hair)}
+.cal-any .any-cell .achip.tk.late{box-shadow:inset 2px 0 0 rgb(255,110,64),inset 0 0 0 1px var(--hair)}
+.cal-any .any-cell .achip.tk .bchk{width:26px;height:26px;flex:none;align-self:stretch}
+.cal-any .any-cell .achip.tk .bchk::before{left:7px;top:calc(50% - 7px);width:14px;height:14px}
+.cal-any .any-cell .achip.tk .bchk svg.i{left:9.5px;top:calc(50% - 4.5px);width:9px;height:9px}
+.cal-any .any-cell .achip.tk .bmain{flex:1;min-width:0;border:0;background:none;padding:5px 0;color:inherit;font:inherit;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-any .any-cell .achip.tk.done{text-decoration:none}
+.cal-any .any-cell .achip.tk.done .bmain{text-decoration:line-through}
+.cal-any .any-cell .achip.more{flex:none;text-align:center;color:var(--ink-2);background:none;box-shadow:inset 0 0 0 1px var(--hair);font-variant-numeric:tabular-nums}
+/* the same rule as a block that's too small: narrower columns get smaller words, then none */
+@container (max-width:96px){
+  .cal-any .any-cell .achip{font-size:10px;padding:4px 5px}
+  .cal-any .any-cell .achip.tk{padding:0 5px 0 0;min-height:22px}
+  .cal-any .any-cell .achip.tk .bchk{width:20px;height:22px}
+  .cal-any .any-cell .achip.tk .bchk::before{left:5px;width:12px;height:12px;top:calc(50% - 6px)}
+  .cal-any .any-cell .achip.tk .bchk svg.i{left:7px;width:8px;height:8px;top:calc(50% - 4px)}
+}
+@container (max-width:58px){
+  .cal-any .any-cell .achip:not(.more){font-size:0;line-height:0;padding:0;min-height:0;height:9px}
+  .cal-any .any-cell .achip:not(.more) svg.i{display:none}
+  .cal-any .any-cell .achip.tk .bchk{display:none}
+  .cal-any .any-cell .achip.tk .bmain{font-size:0;padding:0;height:9px}
+  .cal-any .any-cell .achip.more{font-size:9.5px;padding:2px 0}
+}
+:root[data-noir] .cal-any .any-cell .achip{border-radius:3px}

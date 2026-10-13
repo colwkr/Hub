@@ -41,31 +41,31 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013025735">
-<script src="finance.js?v=20261013025735"></script>
-<link rel="stylesheet" href="car.css?v=20261013025735">
-<script src="car.js?v=20261013025735"></script>
-<link rel="stylesheet" href="sections.css?v=20261013025735">
-<link rel="stylesheet" href="tv.css?v=20261013025735">
-<link rel="stylesheet" href="noir.css?v=20261013025735">
-<script src="records.js?v=20261013025735"></script>
-<script src="people.js?v=20261013025735"></script>
-<script src="wheels.js?v=20261013025735"></script>
-<script src="keyboard.js?v=20261013025735"></script>
-<script src="notes.js?v=20261013025735"></script>
-<script src="reminders.js?v=20261013025735"></script>
-<script src="gear.js?v=20261013025735"></script>
-<script src="lights.js?v=20261013025735"></script>
-<script src="tv.js?v=20261013025735"></script>
-<script src="work.js?v=20261013025735"></script>
-<script src="health.js?v=20261013025735"></script>
-<script src="pets.js?v=20261013025735"></script>
-<script src="places.js?v=20261013025735"></script>
-<script src="placestab.js?v=20261013025735"></script>
-<script src="usmap.js?v=20261013025735"></script>
-<script src="voice.js?v=20261013025735"></script>
-<script src="assistant.js?v=20261013025735"></script>
-<script src="packages.js?v=20261013025735"></script>
+<link rel="stylesheet" href="finance.css?v=20261013143835">
+<script src="finance.js?v=20261013143835"></script>
+<link rel="stylesheet" href="car.css?v=20261013143835">
+<script src="car.js?v=20261013143835"></script>
+<link rel="stylesheet" href="sections.css?v=20261013143835">
+<link rel="stylesheet" href="tv.css?v=20261013143835">
+<link rel="stylesheet" href="noir.css?v=20261013143835">
+<script src="records.js?v=20261013143835"></script>
+<script src="people.js?v=20261013143835"></script>
+<script src="wheels.js?v=20261013143835"></script>
+<script src="keyboard.js?v=20261013143835"></script>
+<script src="notes.js?v=20261013143835"></script>
+<script src="reminders.js?v=20261013143835"></script>
+<script src="gear.js?v=20261013143835"></script>
+<script src="lights.js?v=20261013143835"></script>
+<script src="tv.js?v=20261013143835"></script>
+<script src="work.js?v=20261013143835"></script>
+<script src="health.js?v=20261013143835"></script>
+<script src="pets.js?v=20261013143835"></script>
+<script src="places.js?v=20261013143835"></script>
+<script src="placestab.js?v=20261013143835"></script>
+<script src="usmap.js?v=20261013143835"></script>
+<script src="voice.js?v=20261013143835"></script>
+<script src="assistant.js?v=20261013143835"></script>
+<script src="packages.js?v=20261013143835"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1531,13 +1531,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013025735"></script>
+<script src="appearance.js?v=20261013143835"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013025735';
+  const VERSION = '20261013143835';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3342,7 +3342,7 @@ dialog::backdrop{background:transparent}
     for (let k = from; k <= to; k = addDays(k, 1)) {
       for (const b of billsOn(k)) put(k, { b, s: -3 });
       for (const p of bdaysOn(k)) put(k, { p, s: -4 });
-      for (const t of dayItems(k)) if (t.kind !== 'marker' && (t.kind !== 'task' || t.time)) put(k, { t, s: t.time ? toMin(t.time) : -1 });
+      for (const t of dayItems(k)) if (t.kind !== 'marker' && t.kind !== 'task') put(k, { t, s: t.time ? toMin(t.time) : -1 }); // tasks live on Day and Week
     }
     for (const k in m) m[k].sort((a, b) => a.s - b.s);
     return m;
@@ -3598,7 +3598,7 @@ dialog::backdrop{background:transparent}
     // so the calendar itself runs the full height of the screen
     const [big, small] = calTitleParts();
     const sideWeek = v === 'day' || v === '3day' ? `<i class="r-line"></i><div class="cs-week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker' && (t.kind !== 'task' || t.time)).length;
+      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
       const cls = ['csd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} things` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>` : '';
@@ -3617,7 +3617,7 @@ dialog::backdrop{background:transparent}
     if (v === 'month') return wrap(head + err + vMonth());
     if (v === 'year') return wrap(head + err + vYear());
     const strip = n === 7 ? '' : `<div class="week" role="group" aria-label="Pick a day">${week.map(k => {
-      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker' && (t.kind !== 'task' || t.time)).length;
+      const cnt = dayItems(k).filter(t => !t.done && t.kind !== 'marker').length;
       const cls = ['wd', k === tk ? 'today' : '', days.includes(k) ? 'in' : '', k === S.calDay ? 'sel' : ''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-act="cal-day" data-day="${k}" aria-label="${esc(shortFmt.format(fromKey(k)))}${cnt ? `, ${cnt} open` : ''}"><span>${esc(wdFmt.format(fromKey(k)).slice(0, 3))}</span><b>${fromKey(k).getDate()}</b><i>${'<u></u>'.repeat(Math.min(3, cnt))}</i></button>`;
     }).join('')}</div>`;
@@ -3633,13 +3633,26 @@ dialog::backdrop{background:transparent}
     const allByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : S.events.filter(g => g.date === k && g.allDay));
     const billByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : billsOn(k));
     const bdayByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : bdaysOn(k));
-    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length) || billByDay.some(a => a.length) || bdayByDay.some(a => a.length)
-      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyByDay.map((list, i) => `<div class="any-cell" data-day="${lanes[i][0]}">${bdayByDay[i].map(x => bdayChip(x, 'achip')).join('')}${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${list.map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div>`).join('')}</div>`
+    // the day's tasks that have a day but no time (a task with a time is a block on the timeline): open ones first
+    const taskByDay = lanes.map(([k, lane]) => lane === 'tasks' ? [] : dayItems(k).filter(t => t.kind === 'task' && kindOf(t) === 'anytime').sort((a, b) => (a.done - b.done) || cmp(a, b)));
+    // one day's cell: birthdays, bills, all-day events, anytime events, then tasks; past a few it says how many more
+    const anyCell = i => {
+      const k = lanes[i][0], cap = S.anyOpen === k ? Infinity : n === 1 ? 10 : 4;
+      const chips = [...bdayByDay[i].map(x => bdayChip(x, 'achip')), ...billByDay[i].map(x => billChip(x, 'achip')),
+        ...allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}" title="${esc(g.title)}">${esc(g.title)}</button>`),
+        ...anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}" title="${esc(t.title)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`),
+        ...taskByDay[i].map(taskChip)];
+      const more = chips.length > cap ? `<button type="button" class="achip more" data-act="any-more" data-day="${k}" aria-label="Show ${chips.length - cap + 1} more on ${esc(shortFmt.format(fromKey(k)))}">+${chips.length - cap + 1}</button>`
+        : S.anyOpen === k && chips.length > (n === 1 ? 10 : 4) ? `<button type="button" class="achip more" data-act="any-more" data-day="" aria-label="Show fewer">Less</button>` : '';
+      return `<div class="any-cell" data-day="${k}">${(more ? chips.slice(0, cap - 1) : chips).join('')}${more}</div>`;
+    };
+    const anyRow = anyByDay.some(a => a.length) || allByDay.some(a => a.length) || billByDay.some(a => a.length) || bdayByDay.some(a => a.length) || taskByDay.some(a => a.length)
+      ? `<div class="cal-any"><span class="lab">Any<br>time</span>${lanes.map((_, i) => anyCell(i)).join('')}</div>`
       : '';
     if (split) {
       // Calendar on the left at the normal scale; Tasks on the right magnified to a few hours, scrolling in step
-      const anyFor = i => anyByDay[i].length || allByDay[i].length || billByDay[i].length || bdayByDay[i].length
-        ? `<div class="cal-any"><span class="lab">Any<br>time</span><div class="any-cell" data-day="${lanes[i][0]}">${bdayByDay[i].map(x => bdayChip(x, 'achip')).join('')}${billByDay[i].map(x => billChip(x, 'achip')).join('')}${allByDay[i].map(g => `<button type="button" class="achip evt" data-act="event" data-ev="${esc(g.id)}">${esc(g.title)}</button>`).join('')}${anyByDay[i].map(t => `<button type="button" class="achip${t.done ? ' done' : ''}${t.kind === 'event' ? ' evt' : t.kind === 'meeting' ? ' mtg' : ''}" data-act="edit" data-id="${esc(t.id)}">${t.kind === 'meeting' ? ICON.people : ''}${esc(t.title)}</button>`).join('')}</div></div>` : '';
+      const anyFor = i => anyByDay[i].length || allByDay[i].length || billByDay[i].length || bdayByDay[i].length || taskByDay[i].length
+        ? `<div class="cal-any"><span class="lab">Any<br>time</span>${anyCell(i)}</div>` : '';
       return wrap(`${head}${err}
       ${strip}
       <div class="cal-split">
@@ -3661,6 +3674,9 @@ dialog::backdrop{background:transparent}
         <div class="tl" id="tl" data-keep><div class="tl-grid">${hoursCol()}${cols}</div></div>
       </section>`);
   }
+  // a task with a day but no time, on Day and Week: its done circle and its name, the name going first when the column
+  // is too narrow (the same as a block that's too short), and the circle after it; an overdue one keeps a hot edge
+  const taskChip = t => `<span class="achip tk${t.done ? ' done' : ''}${isOverdue(t) ? ' late' : ''}" title="${esc(t.title)}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, task${isOverdue(t) ? ', overdue' : ''}">${esc(t.title)}</button></span>`;
   // Tasks beside the Day calendar: not a timeline, just the day's tasks in the order they come, starting with what's next
   function vTaskQueue(k) {
     const tk = todayKey(), nm = nowMin(), today = k === tk;
@@ -5936,6 +5952,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'qh-all') { S.homeAll = true; aimHome(); render(); }
     else if (act === 'qh-quiet') { S.homeAll = false; render(); }
     else if (act === 'dock') { S.dock = b.dataset.grp; S.dockSwap = true; render(); }
+    else if (act === 'any-more') { S.anyOpen = b.dataset.day || null; render(); }
     else if (act === 'qp-open') openPeek(b.dataset.peek);
     else if (act === 'qp-close') closePeek();
     else if (act === 'qp-full') { const p = PEEKS[S.peek], r = $('#qhPeek').getBoundingClientRect(); growOrigin = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; S.peek = null; ORB.pulled = null; if (p) { if (WORK_PARTS.includes(p.full)) setWorkSub(p.full); setTab(WORK_PARTS.includes(p.full) ? 'work' : p.full); } }
