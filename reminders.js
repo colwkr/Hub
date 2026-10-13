@@ -109,5 +109,7 @@ window.POSReminders = function (ctx) {
   const homeDue = () => (S.loaded ? open().filter(r => r.on && r.on <= today()).map(r => ({ id: r.id, text: r.text, late: r.on < today() })) : []);
   // a few open reminders for the assistant: what it says and the day, nothing more
   const summary = () => (S.loaded ? nowList().concat(laterList()).slice(0, 10).map(r => ({ text: String(r.text || '').slice(0, 80), on: r.on || null })) : []);
-  return { view, act, add, due, homeDue, summary, start: R.start, stop: R.stop };
+  // for Home: each open reminder is a strand
+  const items = () => (S.loaded ? nowList().concat(laterList()).slice(0, 30).map(r => ({ id: r.id, text: String(r.text || ''), on: r.on || null, when: onText(r.on) })) : []);
+  return { view, act, add, due, homeDue, summary, items, start: R.start, stop: R.stop };
 };

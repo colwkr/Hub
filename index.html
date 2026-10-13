@@ -41,30 +41,30 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261012235131">
-<script src="finance.js?v=20261012235131"></script>
-<link rel="stylesheet" href="car.css?v=20261012235131">
-<script src="car.js?v=20261012235131"></script>
-<link rel="stylesheet" href="sections.css?v=20261012235131">
-<link rel="stylesheet" href="tv.css?v=20261012235131">
-<link rel="stylesheet" href="noir.css?v=20261012235131">
-<script src="records.js?v=20261012235131"></script>
-<script src="people.js?v=20261012235131"></script>
-<script src="wheels.js?v=20261012235131"></script>
-<script src="keyboard.js?v=20261012235131"></script>
-<script src="notes.js?v=20261012235131"></script>
-<script src="reminders.js?v=20261012235131"></script>
-<script src="gear.js?v=20261012235131"></script>
-<script src="lights.js?v=20261012235131"></script>
-<script src="tv.js?v=20261012235131"></script>
-<script src="work.js?v=20261012235131"></script>
-<script src="health.js?v=20261012235131"></script>
-<script src="pets.js?v=20261012235131"></script>
-<script src="places.js?v=20261012235131"></script>
-<script src="placestab.js?v=20261012235131"></script>
-<script src="usmap.js?v=20261012235131"></script>
-<script src="assistant.js?v=20261012235131"></script>
-<script src="packages.js?v=20261012235131"></script>
+<link rel="stylesheet" href="finance.css?v=20261013001753">
+<script src="finance.js?v=20261013001753"></script>
+<link rel="stylesheet" href="car.css?v=20261013001753">
+<script src="car.js?v=20261013001753"></script>
+<link rel="stylesheet" href="sections.css?v=20261013001753">
+<link rel="stylesheet" href="tv.css?v=20261013001753">
+<link rel="stylesheet" href="noir.css?v=20261013001753">
+<script src="records.js?v=20261013001753"></script>
+<script src="people.js?v=20261013001753"></script>
+<script src="wheels.js?v=20261013001753"></script>
+<script src="keyboard.js?v=20261013001753"></script>
+<script src="notes.js?v=20261013001753"></script>
+<script src="reminders.js?v=20261013001753"></script>
+<script src="gear.js?v=20261013001753"></script>
+<script src="lights.js?v=20261013001753"></script>
+<script src="tv.js?v=20261013001753"></script>
+<script src="work.js?v=20261013001753"></script>
+<script src="health.js?v=20261013001753"></script>
+<script src="pets.js?v=20261013001753"></script>
+<script src="places.js?v=20261013001753"></script>
+<script src="placestab.js?v=20261013001753"></script>
+<script src="usmap.js?v=20261013001753"></script>
+<script src="assistant.js?v=20261013001753"></script>
+<script src="packages.js?v=20261013001753"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1523,13 +1523,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261012235131"></script>
+<script src="appearance.js?v=20261013001753"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261012235131';
+  const VERSION = '20261013001753';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1643,7 +1643,7 @@ dialog::backdrop{background:transparent}
     booted: false, canSave: false, failed: false, loaded: false,
     all: [], tasks: [], items: [], projects: [], steps: [], missQ: new Set(), weather: null, mtgId: null, prjId: null,
     workSub: (() => { try { const v = localStorage.getItem('pos.workSub'); return ['projects', 'meetings', 'audio', 'video', 'lighting'].includes(v) ? v : v === 'gear' ? 'video' : 'overview'; } catch (e) { return 'overview'; } })(),
-    tab: 'home', dock: 'main', qhEnter: true, dockSwap: false, calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
+    tab: 'home', dock: 'main', qhEnter: true, dockSwap: false, peek: null, calDay: todayKey(), calView: savedCalView(), homeDay: todayKey(), showDone: false, confirmClear: false,
     taskTag: (() => { try { const v = localStorage.getItem('pos.taskTag'); return v === 'personal' || v === 'work' ? v : ''; } catch (e) { return ''; } })(),
     wxMode: (() => { try { const v = localStorage.getItem('pos.wxMode'); return v === 'day' || v === 'ahead' ? v : 'now'; } catch (e) { return 'now'; } })(),
     wxSkyNow: (() => { try { return localStorage.getItem('pos.wxSkyNow') === '1'; } catch (e) { return false; } })(),
@@ -2393,6 +2393,117 @@ dialog::backdrop{background:transparent}
     return `<div class="qh-card${c.sticky ? ' sticky' : ''}${c.warn ? ' warn' : ''}"><button type="button" class="qh-open" ${c.open}><span class="qh-lab">${esc(c.lab)}</span>${body}</button>${right}</div>`;
   }
   const qDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  /* ---------- the data the creature is made of: one node for each open thing ---------- */
+  const urgOf = k => { if (!k) return 0.2; const n = Math.round((fromKey(k) - fromKey(todayKey())) / 864e5); return n < 0 ? 1 : n === 0 ? 0.9 : n === 1 ? 0.72 : n <= 7 ? 0.5 : 0.32; };
+  const whenSub = (k, tm) => [k ? dayWord(k) : 'No day', tm ? fmtTime(toMin(tm)) : ''].filter(Boolean).join(' · ');
+  function strandItems() {
+    if (!S.loaded) return [];
+    const tk = todayKey(), nm = nowMin(), until = addDays(tk, 14), out = [];
+    const soon = (k, tm, mins) => !!(k === tk && tm && (d => d <= 60 && d > -(mins || 30))(toMin(tm) - nm));
+    for (const t of S.tasks.filter(t => !t.done && (!t.date || t.date <= until)).sort(cmp).slice(0, 80)) out.push({ id: 't:' + t.id, ref: t.id, kind: 'task', day: t.date, title: t.title, sub: isOverdue(t) ? 'Overdue' : whenSub(t.date, t.time), u: urgOf(t.date), hot: isOverdue(t) || soon(t.date, t.time, effMins(t)) });
+    for (const m of S.items.filter(x => x.kind === 'meeting' && x.date && x.date >= tk && x.date <= until && !x.done).sort(cmp).slice(0, 20)) out.push({ id: 'm:' + m.id, ref: m.id, kind: 'meeting', day: m.date, title: m.title, sub: whenSub(m.date, m.time), u: urgOf(m.date), hot: soon(m.date, m.time, effMins(m)) });
+    for (const g of (S.events || []).filter(g => g.date >= tk && g.date <= addDays(tk, 7)).slice(0, 30)) out.push({ id: 'e:' + g.id, ref: g.id, kind: 'event', day: g.date, title: g.title, sub: whenSub(g.date, g.allDay ? null : g.start), u: urgOf(g.date), hot: !g.allDay && soon(g.date, g.start, g.mins || 60) });
+    for (const r of (REM && REM.items ? REM.items() : [])) out.push({ id: 'r:' + r.id, ref: r.id, kind: 'reminder', day: r.on, title: r.text, sub: r.when || 'Anytime', u: r.on ? urgOf(r.on) : 0.3, hot: !!(r.on && r.on < tk) });
+    for (const p of (PKG && PKG.items ? PKG.items() : [])) out.push({ id: 'p:' + p.id, ref: p.id, kind: 'package', title: p.name, sub: `${p.big}${p.small ? ' · ' + p.small : ''}`, u: p.tone === 'now' ? 0.9 : 0.5, hot: p.tone === 'now' });
+    for (const n of (NOTES && NOTES.list ? NOTES.list() : []).slice(0, 24)) out.push({ id: 'n:' + n.id, ref: n.id, kind: 'note', title: n.title, sub: n.pinned ? 'Pinned' : '', u: n.pinned ? 0.5 : 0.15, hot: false });
+    return out;
+  }
+
+  /* ---------- peeks: one kind of data pulled out of the creature and laid along the side, with Home still all there ---------- */
+  const PEEKS = { tasks: { kind: 'task', n: 'Tasks', full: 'tasks' }, meetings: { kind: 'meeting', n: 'Meetings', full: 'meetings' }, reminders: { kind: 'reminder', n: 'Reminders', full: 'reminders' },
+    notes: { kind: 'note', n: 'Notes', full: 'notes' }, packages: { kind: 'package', n: 'Packages', full: 'packages' }, today: { kind: null, n: 'Today', full: 'calendar' } };
+  function peekItems(key) {
+    const all = strandItems(), p = PEEKS[key], tk = todayKey();
+    if (!p) return [];
+    if (key === 'today') return all.filter(it => (it.kind === 'task' || it.kind === 'meeting' || it.kind === 'event' || it.kind === 'reminder') && it.day && it.day <= tk);
+    return all.filter(it => it.kind === p.kind);
+  }
+  function peekRow(it) {
+    const col = it.hot ? HOT : KINDS[it.kind].c, ref = esc(it.ref);
+    const chk = it.kind === 'task' ? `<button type="button" class="qp-chk" data-act="done" data-id="${ref}" aria-label="Complete: ${esc(it.title)}"></button>`
+      : it.kind === 'reminder' ? `<button type="button" class="qp-chk" data-act="rm-done" data-id="${ref}" aria-label="Done with: ${esc(it.title)}"></button>` : '<i class="qp-dot"></i>';
+    const open = it.kind === 'task' ? `data-act="edit" data-id="${ref}"` : it.kind === 'meeting' ? `data-act="meeting" data-id="${ref}"` : it.kind === 'event' ? `data-act="event" data-ev="${ref}"`
+      : it.kind === 'reminder' ? `data-act="rm-edit" data-id="${ref}"` : it.kind === 'note' ? `data-act="qp-note" data-id="${ref}"` : 'data-act="qp-pkg"';
+    return `<div class="qp-row${it.hot ? ' hot' : ''}" data-sid="${esc(it.id)}" style="--c:${col}">${chk}<button type="button" class="qp-main" ${open}><span class="qp-t">${esc(it.title)}</span>${it.sub ? `<span class="qp-s">${esc(it.sub)}</span>` : ''}</button></div>`;
+  }
+  function vPeek() {
+    const p = PEEKS[S.peek];
+    if (!p) return '';
+    const list = peekItems(S.peek), col = p.kind ? KINDS[p.kind].c : '240,244,255';
+    return `<aside class="qh-peek" id="qhPeek" aria-label="${esc(p.n)}"><div class="qp-head"><span class="qp-lab" style="--c:${col}"><i></i>${esc(p.n)}<b>${list.length}</b></span><span class="qp-tools">${S.canSave ? '<button type="button" class="qp-tool" data-act="qp-add" aria-label="Add">+</button>' : ''}<button type="button" class="qp-tool" data-act="qp-full">Open</button><button type="button" class="qp-tool qp-x" data-act="qp-close" aria-label="Close">×</button></span></div><div class="qp-list" id="qpList" data-keep>${list.length ? list.map(peekRow).join('') : '<p class="qp-empty">Nothing here right now.</p>'}</div></aside>`;
+  }
+  // the moving parts live in a layer above everything, so nothing clips them on the way
+  function fxLayer() { let l = document.getElementById('fxLayer'); if (!l) { l = document.createElement('div'); l.id = 'fxLayer'; l.setAttribute('aria-hidden', 'true'); document.body.appendChild(l); } return l; }
+  // each row leaves its node and flies to its place in the list (or back again), under 0.4 s
+  function peekFly(back) {
+    const box = $('#qhPeek');
+    if (!box) return Promise.resolve();
+    box.classList.remove('qp-open', 'qp-out'); void box.offsetWidth; box.classList.add(back ? 'qp-out' : 'qp-open');
+    if (stillMotion()) return new Promise(res => setTimeout(res, back ? 120 : 0));
+    const layer = fxLayer(), c = ORB.center || { x: innerWidth / 2, y: innerHeight / 2 };
+    const lr = box.querySelector('.qp-list').getBoundingClientRect();
+    const vis = [...box.querySelectorAll('.qp-row')].filter(r => { const b = r.getBoundingClientRect(); return b.bottom > lr.top && b.top < lr.bottom; }).slice(0, 18);
+    vis.forEach((row, i) => {
+      const b = row.getBoundingClientRect(), n = ORB.at.get(row.dataset.sid) || c;
+      const cl = row.cloneNode(true);
+      for (const x of [cl, ...cl.querySelectorAll('[data-act],[id],[data-sid]')]) { x.removeAttribute('data-act'); x.removeAttribute('id'); x.removeAttribute('data-sid'); }
+      cl.classList.add('qp-fly'); if (back) cl.classList.add('back');
+      Object.assign(cl.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
+      cl.style.setProperty('--fx', (n.x - b.left - 16).toFixed(1) + 'px'); cl.style.setProperty('--fy', (n.y - b.top - b.height / 2).toFixed(1) + 'px'); cl.style.setProperty('--fi', back ? 0 : Math.min(i, 9));
+      layer.appendChild(cl);
+      row.style.visibility = 'hidden';
+    });
+    return new Promise(res => setTimeout(() => { for (const r of vis) r.style.visibility = ''; for (const x of [...layer.querySelectorAll('.qp-fly')]) x.remove(); res(); }, back ? 250 : 400));
+  }
+  let peekBusy = false;
+  async function openPeek(key) {
+    if (!PEEKS[key] || peekBusy) return;
+    if (S.tab !== 'home') { S.peek = key; ORB.pulled = PEEKS[key].kind ? { kind: PEEKS[key].kind } : { ids: new Set(peekItems(key).map(i => i.id)) }; setTab('home'); setTimeout(() => peekFly(false), 30); return; }
+    if (S.peek === key) { closePeek(); return; }
+    if (S.peek) await closePeek();
+    S.peek = key;
+    ORB.pulled = PEEKS[key].kind ? { kind: PEEKS[key].kind } : { ids: new Set(peekItems(key).map(i => i.id)) };
+    render(); peekFly(false);
+  }
+  async function closePeek() {
+    if (!S.peek || peekBusy) return;
+    peekBusy = true;
+    await peekFly(true);
+    S.peek = null; ORB.pulled = null; peekBusy = false;
+    render();
+  }
+  // tapping a node opens that one thing
+  function openNode(it) {
+    if (it.kind === 'task') openTask(it.ref);
+    else if (it.kind === 'meeting') openMeeting(it.ref);
+    else if (it.kind === 'event') openEvent(it.ref);
+    else if (it.kind === 'note') { if (NOTES && NOTES.open) NOTES.open(it.ref); growOrigin = ORB.center; setTab('notes'); }
+    else openPeek(it.kind === 'reminder' ? 'reminders' : 'packages');
+  }
+  const KIND_NAME = { task: 'Task', meeting: 'Meeting', event: 'Calendar', reminder: 'Reminder', package: 'Package', note: 'Note' };
+  document.addEventListener('click', e => {
+    if (!(e.target.closest && e.target.closest('#qhSlot')) || !ORB.center) return;
+    const d = Math.hypot(e.clientX - ORB.center.x, e.clientY - ORB.center.y);
+    const hit = d > ORB.R * 0.3 ? orbHit(e.clientX, e.clientY, e.pointerType === 'mouse' || !e.pointerType ? 16 : 24) : null;
+    if (!hit) return; // the core, or empty space: talk
+    e.stopPropagation(); e.preventDefault();
+    openNode(hit.it);
+  }, true);
+  // a mouse over a node: what it is
+  document.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const over = e.target.closest && e.target.closest('#qhSlot');
+    const hit = over ? orbHit(e.clientX, e.clientY, 16) : null;
+    let tip = document.getElementById('orbTip');
+    ORB.hover = hit ? hit.id : null;
+    if (!hit) { if (tip) tip.hidden = true; if (over) over.style.cursor = ''; return; }
+    if (!tip) { tip = document.createElement('div'); tip.id = 'orbTip'; fxLayer().appendChild(tip); }
+    tip.innerHTML = `<b style="--c:${hit.it.hot ? HOT : KINDS[hit.it.kind].c}">${esc(KIND_NAME[hit.it.kind])}</b><span>${esc(hit.it.title)}</span>${hit.it.sub ? `<small>${esc(hit.it.sub)}</small>` : ''}`;
+    tip.hidden = false;
+    tip.style.left = Math.min(innerWidth - 260, e.clientX + 16) + 'px'; tip.style.top = Math.max(8, e.clientY - 12) + 'px';
+    over.style.cursor = 'pointer';
+  }, { passive: true });
+
   /* ---------- the dock: a few icons under the status, the only way around POS. Work and Personal swap the row
      for their own sections; each icon opens its section over the whole screen. ---------- */
   const DOCK_SVG = {};
@@ -2400,9 +2511,9 @@ dialog::backdrop{background:transparent}
   const BACK_SVG = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>';
   function dockRows() {
     return {
-      main: [['tasks', 'Tasks'], ['calendar', 'Calendar'], ['notes', 'Notes'], ['reminders', 'Reminders'], '|', ['@work', 'Work'], ['@personal', 'Personal'], '|', ['!settings', 'Settings']],
-      work: [['<', 'Back'], ...WORK_SUBS.map(([k, l]) => ['work:' + k, l])],
-      personal: [['<', 'Back'], ['finance', 'Finance'], ['health', 'Health'], ['car', 'Car'], ['places', 'Places'], ['packages', 'Packages'], ['pets', 'Pets'], ['lights', 'Lights'], ['tv', 'TV']],
+      main: [['~tasks', 'Tasks'], ['calendar', 'Calendar'], ['~notes', 'Notes'], ['~reminders', 'Reminders'], '|', ['@work', 'Work'], ['@personal', 'Personal'], '|', ['!settings', 'Settings']],
+      work: [['<', 'Back'], ...WORK_SUBS.map(([k, l]) => [k === 'meetings' ? '~meetings' : 'work:' + k, l])],
+      personal: [['<', 'Back'], ['finance', 'Finance'], ['health', 'Health'], ['car', 'Car'], ['places', 'Places'], ['~packages', 'Packages'], ['pets', 'Pets'], ['lights', 'Lights'], ['tv', 'TV']],
     };
   }
   function dockCounts() {
@@ -2422,9 +2533,10 @@ dialog::backdrop{background:transparent}
       else if (id[0] === '@') { attrs = `data-act="dock" data-grp="${id.slice(1)}"`; icon = dockSvg(`[data-grp="${id.slice(1)}"]`); }
       else if (id[0] === '!') { attrs = `data-act="${id.slice(1)}"`; icon = dockSvg(`[data-act="${id.slice(1)}"]`); }
       else if (id.startsWith('work:')) { attrs = `data-tab="work" data-wsub="${id.slice(5)}"`; icon = dockSvg(`[data-wsub="${id.slice(5)}"]`); }
+      else if (id[0] === '~') { const k = id.slice(1); attrs = `data-act="qp-open" data-peek="${k}"`; icon = dockSvg(k === 'meetings' ? '[data-wsub="meetings"]' : `.nav [data-tab="${k}"]`); }
       else { attrs = `data-tab="${id}"`; icon = dockSvg(`.nav [data-tab="${id}"]`); }
-      const cnt = n[id] || 0;
-      return `<button type="button" class="dk${id[0] === '@' ? ' dk-grp' : ''}${id === '<' ? ' dk-back' : ''}" ${attrs} data-dk="${esc(id)}" style="--i:${i}" aria-label="${esc(label)}${cnt ? `, ${cnt}` : ''}"><span class="dk-ic">${icon}${cnt ? `<b class="dk-n">${cnt}</b>` : ''}</span><span class="dk-l">${esc(label)}</span></button>`;
+      const cnt = n[id] || n[id.replace(/^~/, '')] || 0;
+      return `<button type="button" class="dk${id[0] === '@' ? ' dk-grp' : ''}${id === '<' ? ' dk-back' : ''}${id[0] === '~' && S.peek === id.slice(1) ? ' on' : ''}" ${attrs} data-dk="${esc(id)}" style="--i:${i}" aria-label="${esc(label)}${cnt ? `, ${cnt}` : ''}"><span class="dk-ic">${icon}${cnt ? `<b class="dk-n">${cnt}</b>` : ''}</span><span class="dk-l">${esc(label)}</span></button>`;
     };
     let i = 0;
     const html = rows[grp].map(x => (x === '|' ? '<i class="dk-sep" aria-hidden="true"></i>' : item(x[0], x[1], i++))).join('');
@@ -2439,6 +2551,7 @@ dialog::backdrop{background:transparent}
     const statusSub = !S.loaded ? '' : n ? (sticky ? 'One starts soon' : 'Got it moves one off Home') : 'Nothing needs you right now';
     const canFull = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled), isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
     const enter = S.qhEnter; S.qhEnter = false;
+    ORB.items = strandItems(); orbSync();
     const html = `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}${enter ? ' enter' : ''}" id="qh">
       <canvas id="qhOrb" class="qh-field" aria-hidden="true"></canvas>
       <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
@@ -2450,6 +2563,7 @@ dialog::backdrop{background:transparent}
         ${ASSIST && ASSIST.busy() ? ASSIST.panel() : vDock()}
       </div>
       ${n ? `<div class="qh-cards" id="qhCards" data-keep>${cards.map(qCard).join('')}</div>` : ''}
+      ${S.peek ? vPeek() : ''}
       <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
       <div class="qh-c q-br">${canFull ? `<button type="button" class="qh-link" data-act="qh-full">${isFull ? 'Exit full screen' : 'Full screen'}</button>` : ''}</div>
     </div>`;
@@ -2522,6 +2636,8 @@ dialog::backdrop{background:transparent}
     if (a.action === 'camera') { location.href = 'cam.html?op=' + Math.max(1, Math.min(6, a.camera | 0)); return; }
     if (a.action === 'fullscreen') { $('#fsBtn').click(); return; }
     const k = a.section;
+    if (PEEKS[k]) { openPeek(k); return; }
+    growOrigin = ORB.center;
     if (k === 'camplot') { location.href = 'cam.html'; return; }
     if (k === 'settings') { openSettings(); return; }
     if (WORK_PARTS.includes(k)) { setWorkSub(k); setTab('work'); return; }
@@ -2531,36 +2647,53 @@ dialog::backdrop{background:transparent}
   // "everything": the full Home, with a way back to quiet
   const vHomeAll = () => `<div class="qh-back"><button type="button" class="qh-link" data-act="qh-quiet">← Quiet</button></div>${vHome()}`;
 
-  /* ---------- the entity: a living thing of light. A bright core, a few hundred threads streaming out of it and
-     swaying in slow currents, each ending in a small cap; a soft membrane along the rim, a lavender halo, and
-     dotted trails drifting through the dark behind it. Calm when nothing needs you; livelier when something does;
-     its core burns orange and it pulses faster when something starts within the hour.
-     One canvas covers Home; the creature sits in the middle of the stage, always centered. ---------- */
-  const ORB = { raf: 0, t0: performance.now(), last: 0, mood: 0, k: 0, seed: null, trails: null, motes: null, w: 0, h: 0, R: 0 };
-  function orbSeed(n) {
-    let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const st = [];
-    for (let i = 0; i < n; i++) {
-      const th = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.05;
-      st.push({ th, len: 0.84 + r() * 0.2, r0: 0.01 + r() * 0.07, ph: 1.1 * Math.sin(th * 3 + 0.6) + 0.8 * Math.sin(th * 7 + 2.1) + r() * 2.6,
-        cap: 0.6 + r() * 0.8, twin: r() < 0.14, lav: r() < 0.4, hi: r() < 0.3, warm: r() < 0.1 });
-    }
-    st.sort((a, b) => a.th - b.th);
-    return st;
+  /* ---------- the entity: your data, alive. Every open task, meeting, calendar event, reminder, note and package is a
+     bright node inside a glowing, wobbling membrane; each kind keeps to its own part of the sphere, linked to the core
+     and to its neighbours. The whole thing turns slowly in 3D. Ask for tasks and the task nodes leave the sphere and
+     become the list at the side. Calm blue when nothing needs you, brighter when something does, and its lower edge
+     burns orange when something starts within the hour. It swells and ripples with your voice, and with its own.
+     One canvas covers Home; the creature sits in the middle of the stage. ---------- */
+  const ORB = { raf: 0, t0: performance.now(), last: 0, mood: 0, k: 0, tt: 0, items: [], nodes: new Map(), shell: null, at: new Map(), center: null, R: 0, pulled: null, hover: null, caps: [] };
+  const KINDS = { task: { c: '240,244,255', band: 0 }, meeting: { c: '186,170,255', band: 1 }, event: { c: '112,214,255', band: 2 }, reminder: { c: '255,196,124', band: 3 }, package: { c: '96,230,200', band: 4 }, note: { c: '196,200,226', band: 5 } };
+  const HOT = '255,110,64';
+  const hashOf = (s, salt = 0) => { let h = 2166136261 ^ salt; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
+  function orbShell(n) {
+    const pts = [], ga = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < n; i++) { const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), a = i * ga; pts.push([Math.cos(a) * r, y, Math.sin(a) * r]); }
+    return pts;
   }
-  function orbWorld() {
-    let s = 3; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    ORB.trails = Array.from({ length: 7 }, (_, i) => ({ orbit: i < 2, a: r(), b: r(), c: r(), f: 1.5 + r() * 2.5, sp: 0.015 + r() * 0.03, ph: r() * 6.3, amp: 0.05 + r() * 0.12 }));
-    const tint = ['255,80,96', '64,214,192', '150,130,255'];
-    ORB.motes = Array.from({ length: 90 }, () => ({ x: r(), y: r(), z: 1 + r() * 2.4, vx: (r() - 0.5) * 0.004, vy: (r() - 0.5) * 0.004, c: r() < 0.12 ? tint[Math.floor(r() * 3)] : '236,238,255', a: 0.3 + r() * 0.6, tw: r() * 6.3 }));
+  // where a piece of data lives on the sphere: its kind's band of longitude, a latitude and spot of its own
+  function nodeHome(it) {
+    const b = KINDS[it.kind].band, h1 = hashOf(it.id, 1), h2 = hashOf(it.id, 2);
+    const lon = (b / 6) * Math.PI * 2 + (h1 - 0.5) * (Math.PI / 3) * 0.95, lat = (h2 - 0.5) * Math.PI * 0.8;
+    const r = 0.56 + 0.34 * it.u; // what's sooner sits nearer the skin
+    return [Math.cos(lat) * Math.sin(lon) * r, Math.sin(lat) * r, Math.cos(lat) * Math.cos(lon) * r];
+  }
+  // keep the node set in step with the data: new ones grow out of the core, finished ones sink back into it
+  function orbSync() {
+    const seen = new Set();
+    for (const it of ORB.items) {
+      seen.add(it.id);
+      let n = ORB.nodes.get(it.id);
+      if (!n) { n = { id: it.id, a: 0, grow: 0, trail: [], ph: hashOf(it.id, 3) * 6.283 }; ORB.nodes.set(it.id, n); }
+      Object.assign(n, { it, home: nodeHome(it), gone: false });
+    }
+    for (const n of ORB.nodes.values()) if (!seen.has(n.id)) n.gone = true;
+    // each node's nearest neighbours of the same kind, for the links between them
+    const list = [...ORB.nodes.values()].filter(n => !n.gone);
+    for (const n of list) {
+      const near = list.filter(m => m !== n && m.it.kind === n.it.kind).map(m => [m, (m.home[0] - n.home[0]) ** 2 + (m.home[1] - n.home[1]) ** 2 + (m.home[2] - n.home[2]) ** 2]).sort((a, b) => a[1] - b[1]).slice(0, 2).map(x => x[0]);
+      n.near = near;
+    }
   }
   function orbKick() { if (!ORB.raf) ORB.raf = requestAnimationFrame(orbFrame); }
+  const conic = (g, a, x, y) => (g.createConicGradient ? g.createConicGradient(a, x, y) : null);
   function orbFrame(now) {
     ORB.raf = 0;
     const cv = document.getElementById('qhOrb'), slot = document.getElementById('qhSlot');
     if (!cv || !slot || document.hidden) return; // a render or coming back starts it again
     ORB.raf = requestAnimationFrame(orbFrame);
-    if (now - ORB.last < 33) return; // about 30 frames a second is plenty for a slow thing
+    if (now - ORB.last < 33) return; // about 30 frames a second
     const dt = ORB.last ? Math.min(0.1, (now - ORB.last) / 1000) : 0.033;
     ORB.last = now;
     const w = cv.clientWidth, h = cv.clientHeight;
@@ -2571,136 +2704,168 @@ dialog::backdrop{background:transparent}
     const g = cv.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
     const still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const mood = ORB.mood;
-    // how lively it is eases toward the mood, so a change of mood swells in rather than snapping
-    const want = mood === 2 ? 1.35 : mood ? 1.05 : 0.8;
-    ORB.k = ORB.k ? ORB.k + (want - ORB.k) * Math.min(1, dt * 1.5) : want;
-    // your voice while it listens, and its own while it talks back
+    const mood = ORB.mood, warm = mood === 2;
     const v = ASSIST ? ASSIST.level() : 0, hearing = !!(ASSIST && ASSIST.busy());
-    ORB.tt = (ORB.tt || 0) + (still ? 0 : dt * (ORB.k + v * 1.8));
-    const t = ORB.tt, k = ORB.k + v * 0.9;
+    const want = warm ? 1.3 : mood ? 1.05 : 0.85;
+    ORB.k = ORB.k ? ORB.k + (want - ORB.k) * Math.min(1, dt * 1.5) : want;
+    ORB.tt += still ? 0 : dt * (ORB.k + v * 1.6);
+    const t = ORB.tt, k = ORB.k;
     const cr = cv.getBoundingClientRect(), sr = slot.getBoundingClientRect();
     const cx = sr.left - cr.left + sr.width / 2, cy = sr.top - cr.top + sr.height / 2;
-    const R = Math.min(sr.width, sr.height) * (w < 760 ? 0.43 : 0.45) * (1 + 0.022 * Math.sin(t * 0.9) + 0.07 * v);
-    if (!ORB.seed || ORB.seedN !== (w < 700 ? 280 : 420)) { ORB.seedN = w < 700 ? 280 : 420; ORB.seed = orbSeed(ORB.seedN); }
-    if (!ORB.trails) orbWorld();
-    const warm = mood === 2;
+    const R = Math.min(sr.width, sr.height) * (w < 760 ? 0.4 : 0.41) * (1 + 0.018 * Math.sin(t * 0.9) + 0.06 * v);
+    ORB.center = { x: cr.left + cx, y: cr.top + cy }; ORB.R = R;
+    // the turn: slow, with a tilt that breathes
+    const yaw = t * 0.16, tilt = 0.32 + 0.06 * Math.sin(t * 0.21);
+    const cyw = Math.cos(yaw), syw = Math.sin(yaw), ct = Math.cos(tilt), st = Math.sin(tilt), D = 3.4;
+    const proj = (x, y, z) => { const x1 = x * cyw + z * syw, z1 = -x * syw + z * cyw; const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct; const s = D / (D - z2); return [cx + x1 * R * s, cy - y2 * R * s, z2, s]; };
 
-    // the halo behind everything
-    let gr = g.createRadialGradient(cx, cy, R * 0.1, cx, cy, R * 2);
-    gr.addColorStop(0, warm ? 'rgba(150,120,255,.34)' : 'rgba(126,128,255,.32)');
-    gr.addColorStop(0.42, 'rgba(100,102,240,.2)'); gr.addColorStop(0.6, 'rgba(70,72,190,.08)'); gr.addColorStop(1, 'rgba(40,40,120,0)');
+    // the aura
+    let gr = g.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 2.3);
+    gr.addColorStop(0, `rgba(70,140,255,${(0.16 + 0.12 * v + (hearing ? 0.05 : 0)).toFixed(3)})`);
+    gr.addColorStop(0.42, `rgba(90,96,230,${(0.1 + 0.06 * k).toFixed(3)})`);
+    gr.addColorStop(0.7, warm ? 'rgba(255,100,60,.035)' : 'rgba(60,70,180,.04)');
+    gr.addColorStop(1, 'rgba(20,20,60,0)');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.save(); g.globalCompositeOperation = 'lighter';
 
-    // the trails: long dotted lines wandering through the dark, two of them circling the creature
-    g.lineWidth = 1;
-    for (const tr of ORB.trails) {
+    // the shell: a skin of fine points, wavy, brightest along its edge, cyan to violet to orange
+    if (!ORB.shell || ORB.shellN !== (w < 760 ? 520 : 820)) { ORB.shellN = w < 760 ? 520 : 820; ORB.shell = orbShell(ORB.shellN); }
+    const amp = 0.035 + 0.02 * k + 0.07 * v;
+    const pal = warm ? [[110, 200, 255], [170, 120, 255], [255, 104, 60]] : [[100, 210, 255], [150, 130, 255], [255, 120, 84]];
+    for (const p of ORB.shell) {
+      const d = 1 + amp * Math.sin(p[0] * 3.1 + t * 0.8) * Math.sin(p[1] * 2.7 - t * 0.6) + amp * 0.6 * Math.sin(p[2] * 4.3 + t * 1.1);
+      const q = proj(p[0] * d, p[1] * d, p[2] * d);
+      const edge = 1 - Math.abs(q[2]); // near the silhouette
+      const a = (0.09 + 0.75 * Math.pow(edge, 3) + 0.12 * (q[2] > 0 ? q[2] : 0)) * (0.9 + 0.1 * Math.sin(t * 2 + p[0] * 9)) * (1 + 0.5 * v);
+      if (a < 0.03) continue;
+      // colour by height: cool on top, warm underneath (warmer, and more of it, when something is close)
+      const f = Math.max(0, Math.min(1, (0.5 - p[1] * 0.5) * (warm ? 1.25 : 0.95)));
+      const c = f < 0.5 ? pal[0].map((x, i) => x + (pal[1][i] - x) * f * 2) : pal[1].map((x, i) => x + (pal[2][i] - x) * (f - 0.5) * 2);
+      g.fillStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${Math.min(0.9, a).toFixed(3)})`;
+      const z = 1.1 + q[3] * 0.8;
+      g.fillRect(q[0] - z / 2, q[1] - z / 2, z, z);
+    }
+
+    // the membrane: a few rims that wobble and fold, rim-lit like a drop of plasma
+    const rims = 4, M = 96;
+    for (let ri = 0; ri < rims; ri++) {
+      const o = ri * 1.7, rr = 1 + ri * 0.012;
       const pts = [];
-      const M = 60;
       for (let i = 0; i <= M; i++) {
-        const u = i / M;
-        let x, y;
-        if (tr.orbit) {
-          const a = u * Math.PI * 2 + t * tr.sp * 3 + tr.ph, rr = R * (1.38 + tr.a * 0.4) * (1 + tr.amp * 0.5 * Math.sin(a * 3 + t * 0.2 + tr.ph));
-          x = cx + Math.cos(a) * rr * (1.05 + tr.b * 0.25); y = cy + Math.sin(a) * rr * (0.82 + tr.c * 0.2);
-        } else {
-          x = w * (tr.a * 1.2 - 0.1) + w * 0.35 * (u - 0.5) * (tr.b - 0.5) * 2 + w * tr.amp * Math.sin(u * tr.f * 3 + t * tr.sp * 6 + tr.ph);
-          y = h * (u * 1.2 - 0.1) + h * tr.amp * 0.6 * Math.sin(u * tr.f * 2.3 + t * tr.sp * 5 + tr.ph * 1.3);
-        }
-        pts.push(x, y);
+        const a = (i / M) * Math.PI * 2;
+        const n = 0.035 * Math.sin(3 * a + t * 0.7 + o) + 0.026 * Math.sin(5 * a - t * 0.9 + o * 2) + 0.016 * Math.sin(8 * a + t * 1.4 + o) + v * 0.05 * Math.sin(11 * a + t * 5 + o);
+        pts.push(cx + Math.cos(a) * R * (rr + n) * 1.02, cy + Math.sin(a) * R * (rr + n) * 0.98);
       }
-      g.strokeStyle = 'rgba(150,152,255,.13)';
-      g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); g.stroke();
-      // the nodes slide along the line, like something travelling on it
-      const off = (t * tr.sp * 4) % 1;
-      g.fillStyle = 'rgba(220,222,255,.55)';
-      for (let j = 0; j < 30; j++) {
-        const u = ((j + off) / 30) * M, i0 = Math.floor(u), f = u - i0;
-        if (i0 >= M) continue;
-        const x = pts[i0 * 2] + (pts[i0 * 2 + 2] - pts[i0 * 2]) * f, y = pts[i0 * 2 + 1] + (pts[i0 * 2 + 3] - pts[i0 * 2 + 1]) * f;
-        const z = j % 7 === 0 ? 3.2 : 1.8;
-        g.fillRect(x - z / 2, y - z / 2, z, z);
-      }
+      const line = () => { g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); };
+      let st2 = conic(g, t * 0.35 + o, cx, cy);
+      if (st2) {
+        const bright = 0.5 + 0.3 * k + 0.4 * v;
+        st2.addColorStop(0, `rgba(120,220,255,${(0.9 * bright).toFixed(3)})`); st2.addColorStop(0.18, 'rgba(110,170,255,.08)'); st2.addColorStop(0.42, `rgba(160,130,255,${(0.6 * bright).toFixed(3)})`);
+        st2.addColorStop(0.62, 'rgba(120,120,255,.05)'); st2.addColorStop(0.8, warm ? `rgba(255,110,64,${(0.9 * bright).toFixed(3)})` : `rgba(140,200,255,${(0.55 * bright).toFixed(3)})`); st2.addColorStop(1, `rgba(120,220,255,${(0.9 * bright).toFixed(3)})`);
+      } else st2 = 'rgba(120,200,255,.6)';
+      g.strokeStyle = st2;
+      g.globalAlpha = ri === 0 ? 0.2 : 0.08; g.lineWidth = 14; line(); g.stroke();
+      g.globalAlpha = ri === 0 ? 0.14 : 0.06; g.lineWidth = 7; line(); g.stroke();
+      g.globalAlpha = ri === 0 ? 0.35 : 0.18; g.lineWidth = 3; line(); g.stroke();
+      g.globalAlpha = ri === 0 ? 0.95 : 0.4; g.lineWidth = ri === 0 ? 1.4 : 0.8; line(); g.stroke();
+      g.globalAlpha = 1;
     }
-    // motes: specks drifting in the dark, a few in color
-    for (const m of ORB.motes) {
-      if (!still) { m.x = (m.x + m.vx * dt + 1) % 1; m.y = (m.y + m.vy * dt + 1) % 1; }
-      const a = m.a * (0.6 + 0.4 * Math.sin(t * 1.3 + m.tw));
-      g.fillStyle = `rgba(${warm && m.c !== '236,238,255' ? '255,120,72' : m.c},${a.toFixed(3)})`;
-      g.fillRect(m.x * w, m.y * h, m.z, m.z);
+    // folds inside the membrane
+    g.lineWidth = 1;
+    for (let fi = 0; fi < 4; fi++) {
+      const a0 = t * 0.25 + fi * 1.6, span = 1.2, rr = 0.62 + 0.18 * Math.sin(t * 0.3 + fi);
+      g.beginPath();
+      for (let i = 0; i <= 24; i++) {
+        const a = a0 + (i / 24) * span, wob = 0.06 * Math.sin(a * 4 + t + fi);
+        const x = cx + Math.cos(a) * R * (rr + wob), y = cy + Math.sin(a) * R * (rr + wob) * 0.92;
+        if (i) g.lineTo(x, y); else g.moveTo(x, y);
+      }
+      g.strokeStyle = `rgba(110,180,255,${(0.07 + 0.05 * v).toFixed(3)})`; g.stroke();
     }
 
-    // the threads: each leaves the core, sways in a current that its neighbours share, and ends in a cap
-    const ST = ORB.seed, SEG = 22, ends = [];
-    const pulse = (t * (0.32 + v * 0.5)) % 1.6; // a ring of light travels out along the threads now and then
-    const faint = new Path2D(), bright = new Path2D(), lit = new Path2D();
-    const swayA = 0.04 * k, swayB = 0.016 * k;
-    for (const s of ST) {
-      const L = R * s.len, r0 = R * s.r0;
-      let px = 0, py = 0, qx = 0, qy = 0;
-      const ca = Math.cos(s.th), sa = Math.sin(s.th);
-      for (let i = 0; i <= SEG; i++) {
-        const u = i / SEG, r = r0 + (L - r0) * u;
-        const lat = R * ((swayA + 0.06 * k * u) * Math.sin(u * 5.2 - t * 1.05 + s.ph) + swayB * u * Math.sin(u * 11 - t * 1.7 + s.ph * 1.7));
-        const sw = 0.3 * Math.pow(1 - u, 3) * Math.sin(t * 0.13 + s.ph * 0.5) + 0.07 * Math.pow(1 - u, 2.5);
-        const c2 = Math.cos(sw), s2 = Math.sin(sw);
-        const dx = ca * c2 - sa * s2, dy = sa * c2 + ca * s2;
-        const x = cx + dx * r - dy * lat, y = cy + dy * r + dx * lat;
-        if (i === 0) { faint.moveTo(x, y); if (s.hi) bright.moveTo(x, y); }
-        else {
-          faint.lineTo(x, y); if (s.hi) bright.lineTo(x, y);
-          if (Math.abs(u - pulse) < 0.07) { lit.moveTo(px, py); lit.lineTo(x, y); }
-        }
-        qx = px; qy = py; px = x; py = y;
-      }
-      ends.push({ x: px, y: py, a: Math.atan2(py - qy, px - qx), s });
+    // the data: nodes, their links, their wakes
+    const ease = Math.min(1, dt * 4.5), fast = Math.min(1, dt * 9);
+    const pulledOf = n => ORB.pulled && (ORB.pulled.kind ? n.it.kind === ORB.pulled.kind : ORB.pulled.ids && ORB.pulled.ids.has(n.id));
+    const P = [];
+    ORB.at.clear(); ORB.caps = [];
+    for (const n of ORB.nodes.values()) {
+      const pulled = pulledOf(n);
+      n.grow += ((n.gone ? 0 : 1) - n.grow) * ease;
+      n.a += ((n.gone || pulled ? 0 : 1) - n.a) * (pulled ? fast : ease);
+      if (n.gone && n.grow < 0.02) { ORB.nodes.delete(n.id); continue; }
+      const drift = 0.025;
+      const hx = n.home[0] + drift * Math.sin(t * 0.7 + n.ph), hy = n.home[1] + drift * Math.cos(t * 0.6 + n.ph * 1.3), hz = n.home[2] + drift * Math.sin(t * 0.5 + n.ph * 0.7);
+      const q = proj(hx * n.grow, hy * n.grow, hz * n.grow);
+      n.x = q[0]; n.y = q[1]; n.z = q[2]; n.s = q[3];
+      ORB.at.set(n.id, { x: cr.left + q[0], y: cr.top + q[1] });
+      if (!still) { n.trail.push(q[0], q[1]); if (n.trail.length > 20) n.trail.splice(0, 2); }
+      if (n.a > 0.02) P.push(n);
+      if (!n.gone && !pulled && q[2] > -0.35) ORB.caps.push({ id: n.id, it: n.it, x: cr.left + q[0], y: cr.top + q[1] });
     }
-    g.save();
-    g.globalCompositeOperation = 'lighter';
-    g.lineWidth = 0.9; g.strokeStyle = `rgba(160,166,255,${(0.17 + 0.05 * k).toFixed(3)})`; g.stroke(faint);
-    g.lineWidth = 0.75; g.strokeStyle = 'rgba(232,234,255,.32)'; g.stroke(bright);
-    g.lineWidth = 1.4; g.strokeStyle = warm ? 'rgba(255,170,120,.55)' : 'rgba(235,238,255,.5)'; g.stroke(lit);
-    // the core: white heat where every thread begins
-    gr = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.5);
-    gr.addColorStop(0, 'rgba(255,255,255,1)');
-    gr.addColorStop(0.1, 'rgba(255,255,255,.8)');
-    gr.addColorStop(0.24, warm ? 'rgba(255,160,110,.5)' : 'rgba(214,218,255,.5)');
-    gr.addColorStop(0.5, warm ? 'rgba(255,96,48,.14)' : 'rgba(130,134,255,.16)');
-    gr.addColorStop(1, 'rgba(90,90,255,0)');
-    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 0.5 * (1 + 0.06 * Math.sin(t * (warm ? 3.2 : 1.6)) + 0.35 * v), 0, Math.PI * 2); g.fill();
-    // a glow along the rim
-    gr = g.createRadialGradient(cx, cy, R * 0.7, cx, cy, R * 1.3);
-    gr.addColorStop(0, 'rgba(120,124,255,0)'); gr.addColorStop(0.5, `rgba(130,134,255,${(0.1 + 0.04 * k + (hearing ? 0.08 : 0) + 0.12 * v).toFixed(3)})`); gr.addColorStop(1, 'rgba(120,124,255,0)');
-    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * 1.3, 0, Math.PI * 2); g.fill();
+    // to the core: one fibre each, bending a little as it goes
+    const byKind = {};
+    for (const n of P) {
+      const col = n.it.hot ? HOT : KINDS[n.it.kind].c, depth = (n.z + 1) / 2;
+      const key = col + '|' + (depth > 0.5 ? 1 : 0);
+      const path = byKind[key] || (byKind[key] = { col, front: depth > 0.5, p: new Path2D(), a: 0, n: 0 });
+      const mx = (cx + n.x) / 2, my = (cy + n.y) / 2, bend = R * 0.14 * Math.sin(t * 0.8 + n.ph);
+      const nx = -(n.y - cy), ny = n.x - cx, nl = Math.hypot(nx, ny) || 1;
+      path.p.moveTo(cx, cy); path.p.quadraticCurveTo(mx + nx / nl * bend, my + ny / nl * bend, n.x, n.y);
+      path.a += n.a; path.n++;
+      // links to the nearest of the same kind
+      for (const m of n.near || []) {
+        if (m.a < 0.05 || m.id < n.id) continue;
+        const lx = (n.x + m.x) / 2 + Math.sin(t + n.ph) * R * 0.05, ly = (n.y + m.y) / 2 + Math.cos(t + m.ph) * R * 0.05;
+        path.p.moveTo(n.x, n.y); path.p.quadraticCurveTo(lx, ly, m.x, m.y);
+      }
+    }
+    for (const b of Object.values(byKind)) {
+      g.strokeStyle = `rgba(${b.col},${((b.front ? 0.22 : 0.08) * Math.min(1, b.a / Math.max(1, b.n)) * (0.9 + 0.4 * v)).toFixed(3)})`;
+      g.lineWidth = b.front ? 0.9 : 0.6; g.stroke(b.p);
+    }
+    // pulses: a spark travels out along each fibre now and then, the creature thinking
+    for (const n of P) {
+      const ph = (t * (0.35 + 0.5 * v) + n.ph * 0.159) % 1.6;
+      if (ph > 1) continue;
+      const mx = (cx + n.x) / 2, my = (cy + n.y) / 2, bend = R * 0.14 * Math.sin(t * 0.8 + n.ph);
+      const nx = -(n.y - cy), ny = n.x - cx, nl = Math.hypot(nx, ny) || 1, qx = mx + nx / nl * bend, qy = my + ny / nl * bend;
+      const x = (1 - ph) * (1 - ph) * cx + 2 * (1 - ph) * ph * qx + ph * ph * n.x, y = (1 - ph) * (1 - ph) * cy + 2 * (1 - ph) * ph * qy + ph * ph * n.y;
+      g.fillStyle = `rgba(${n.it.hot ? HOT : KINDS[n.it.kind].c},${(0.7 * n.a * Math.sin(ph * Math.PI) * (0.4 + 0.6 * (n.z + 1) / 2)).toFixed(3)})`;
+      g.fillRect(x - 1, y - 1, 2, 2);
+    }
+    // wakes: where each node has just been
+    g.lineWidth = 1;
+    for (const n of P) {
+      if (n.trail.length < 6) continue;
+      g.beginPath(); g.moveTo(n.trail[0], n.trail[1]);
+      for (let i = 2; i < n.trail.length; i += 2) g.lineTo(n.trail[i], n.trail[i + 1]);
+      g.strokeStyle = `rgba(${n.it.hot ? HOT : KINDS[n.it.kind].c},${(0.18 * n.a * ((n.z + 1) / 2)).toFixed(3)})`; g.stroke();
+    }
+    // the core: dim until it listens or speaks
+    const coreA = 0.22 + 0.35 * k * 0.4 + 0.7 * v + (hearing ? 0.15 : 0);
+    gr = g.createRadialGradient(cx, cy, 0, cx, cy, R * (0.32 + 0.25 * v));
+    gr.addColorStop(0, `rgba(255,255,255,${Math.min(1, coreA).toFixed(3)})`); gr.addColorStop(0.25, `rgba(150,200,255,${(coreA * 0.5).toFixed(3)})`); gr.addColorStop(1, 'rgba(100,120,255,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R * (0.32 + 0.25 * v), 0, Math.PI * 2); g.fill();
+    // the nodes themselves, back to front
+    P.sort((a, b) => a.z - b.z);
+    for (const n of P) {
+      const depth = (n.z + 1) / 2, col = n.it.hot ? HOT : KINDS[n.it.kind].c;
+      const big = (1.6 + 2.6 * n.it.u) * (0.7 + 0.6 * depth) * (ORB.hover === n.id ? 1.8 : 1);
+      const a = n.a * (0.45 + 0.55 * depth);
+      gr = g.createRadialGradient(n.x, n.y, 0, n.x, n.y, big * 4);
+      gr.addColorStop(0, `rgba(${col},${(0.5 * a).toFixed(3)})`); gr.addColorStop(1, `rgba(${col},0)`);
+      g.fillStyle = gr; g.fillRect(n.x - big * 4, n.y - big * 4, big * 8, big * 8);
+      g.fillStyle = `rgba(${col},${Math.min(1, a * 1.2).toFixed(3)})`;
+      g.beginPath(); g.arc(n.x, n.y, big * 0.6, 0, Math.PI * 2); g.fill();
+      if (n.it.hot) { const pr = big * (2 + 2 * ((t * 1.2 + n.ph) % 1)); g.strokeStyle = `rgba(${HOT},${(0.6 * a * (1 - ((t * 1.2 + n.ph) % 1))).toFixed(3)})`; g.lineWidth = 1; g.beginPath(); g.arc(n.x, n.y, pr, 0, Math.PI * 2); g.stroke(); }
+    }
     g.restore();
-    // the membrane: soft bands along the rim, under the caps
-    g.lineCap = 'round'; g.lineJoin = 'round';
-    g.lineWidth = Math.max(4, R * 0.05); g.strokeStyle = 'rgba(150,152,245,.24)';
-    g.beginPath();
-    for (let i = 0; i < ends.length; i++) {
-      const e = ends[i], gi = Math.floor(i / 6);
-      if (gi % 3 === 2) continue; // gaps between the bands
-      const x = cx + (e.x - cx) * 0.955, y = cy + (e.y - cy) * 0.955;
-      if (i % 6 === 0) g.moveTo(x, y); else g.lineTo(x, y);
-    }
-    g.stroke();
-    // the caps: little half discs, domes facing out
-    const capW = new Path2D(), capL = new Path2D(), capO = new Path2D();
-    const cz = Math.max(2.2, R * 0.025);
-    for (const e of ends) {
-      const p = e.s.lav ? capL : warm && e.s.warm ? capO : capW;
-      const z = cz * e.s.cap;
-      p.moveTo(e.x + Math.cos(e.a - Math.PI / 2) * z, e.y + Math.sin(e.a - Math.PI / 2) * z);
-      p.arc(e.x, e.y, z, e.a - Math.PI / 2, e.a + Math.PI / 2); p.closePath();
-      if (e.s.twin) {
-        const x2 = e.x - Math.cos(e.a) * z * 2.4 + Math.cos(e.a + Math.PI / 2) * z * 1.4, y2 = e.y - Math.sin(e.a) * z * 2.4 + Math.sin(e.a + Math.PI / 2) * z * 1.4;
-        p.moveTo(x2 + Math.cos(e.a - Math.PI / 2) * z * 0.8, y2 + Math.sin(e.a - Math.PI / 2) * z * 0.8);
-        p.arc(x2, y2, z * 0.8, e.a - Math.PI / 2, e.a + Math.PI / 2); p.closePath();
-      }
-    }
-    g.fillStyle = 'rgba(240,242,255,.92)'; g.fill(capW);
-    g.fillStyle = 'rgba(172,174,248,.86)'; g.fill(capL);
-    g.fillStyle = 'rgba(255,128,80,.92)'; g.fill(capO);
+  }
+  // which node is under the pointer (front half only), within a fingertip
+  function orbHit(x, y, r) {
+    let best = null, bd = r * r;
+    for (const c of ORB.caps) { const d = (c.x - x) ** 2 + (c.y - y) ** 2; if (d < bd) { bd = d; best = c; } }
+    return best;
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) orbKick(); });
 
@@ -5301,6 +5466,7 @@ dialog::backdrop{background:transparent}
     if (tab === 'home') S.homeAll = false; // Home always opens quiet
     if (tab === 'home' && was !== 'home') S.qhEnter = true;
     if (tab !== 'home' && ASSIST && ASSIST.busy()) ASSIST.act('as-close');
+    if (tab !== 'home') { S.peek = null; ORB.pulled = null; }
     if (TV && tab === 'tv' && was !== 'tv') TV.shown(true);
     setTimeout(() => loadEvents(false), 0);
     setDrawer(false);
@@ -5311,7 +5477,7 @@ dialog::backdrop{background:transparent}
     if (NOIR && was !== tab) winMove(was, tab, ghost);
   }
   /* sections open out of the dock icon you tapped and fill the screen; going Home folds the section back into its icon */
-  let dockFrom = null;
+  let dockFrom = null, growOrigin = null;
   document.addEventListener('click', e => { const d = e.target.closest && e.target.closest('.dk[data-tab]'); dockFrom = d ? d.querySelector('.dk-ic').getBoundingClientRect() : null; }, true);
   const appEl = document.querySelector('.app');
   function winAim(el, r) { // how far the icon's middle is from the middle of the window
@@ -5337,8 +5503,9 @@ dialog::backdrop{background:transparent}
     if (stillMotion()) { dockFrom = null; return; }
     void appEl.offsetWidth;
     if (tab !== 'home') {
-      if (dockFrom) winAim(appEl, dockFrom); else { appEl.style.setProperty('--wx', '0px'); appEl.style.setProperty('--wy', '0px'); appEl.style.setProperty('--ws', '.94'); }
-      appEl.classList.add('win-in');
+      const o = growOrigin || (dockFrom ? { x: dockFrom.left + dockFrom.width / 2, y: dockFrom.top + dockFrom.height / 2 } : null) || ORB.center || { x: innerWidth / 2, y: innerHeight / 2 };
+      growOrigin = null;
+      growFrom(o);
     } else {
       appEl.classList.add('home-in');
       if (ghost) {
@@ -5352,9 +5519,41 @@ dialog::backdrop{background:transparent}
     }
     dockFrom = null;
   }
-  appEl.addEventListener('animationend', e => { if (e.target === appEl) appEl.classList.remove('win-in', 'home-in'); });
+  appEl.addEventListener('animationend', e => { if (e.target === appEl) appEl.classList.remove('win-in', 'home-in', 'win-fade'); });
+  // a full section bursts out of where you asked from: its pieces fly out and grow into place, all within 0.4 s
+  function growBlocks(root) {
+    const vh = innerHeight, vw = innerWidth, out = [], frames = [];
+    const walk = (el, depth) => {
+      for (const c of el.children) {
+        if (out.length >= 40) return;
+        const r = c.getBoundingClientRect();
+        if (!r.width || !r.height || r.bottom < 0 || r.top > vh) continue;
+        if ((r.height > vh * 0.5 || (r.width > vw * 0.75 && r.height > vh * 0.3)) && c.children.length && depth < 4) { frames.push(c); walk(c, depth + 1); }
+        else out.push([c, r]);
+      }
+    };
+    if (root) walk(root, 0);
+    out.frames = frames;
+    return out;
+  }
+  function growFrom(o) {
+    if (stillMotion()) return;
+    const els = growBlocks($('#view')), top = document.querySelector('.top');
+    if (top) els.unshift([top, top.getBoundingClientRect()]);
+    const o0 = o;
+    // the big panels the pieces land in open up too, just less
+    for (const el of els.frames || []) { el.classList.remove('grow-frame'); void el.offsetWidth; el.classList.add('grow-frame'); el.addEventListener('animationend', function done(ev) { if (ev.target === el) { el.classList.remove('grow-frame'); el.removeEventListener('animationend', done); } }); }
+    for (const [el, r] of els) {
+      const x = r.left + r.width / 2, y = r.top + r.height / 2, d = Math.hypot(o.x - x, o.y - y);
+      el.style.setProperty('--gx', ((o.x - x) * 0.6).toFixed(1) + 'px'); el.style.setProperty('--gy', ((o.y - y) * 0.6).toFixed(1) + 'px');
+      el.style.setProperty('--gd', Math.min(80, d / 14).toFixed(0) + 'ms');
+      el.classList.remove('grow-in'); void el.offsetWidth; el.classList.add('grow-in');
+      el.addEventListener('animationend', function done(ev) { if (ev.target === el) { el.classList.remove('grow-in'); el.removeEventListener('animationend', done); } });
+    }
+  }
   // Escape takes you back Home (when nothing else is open or being typed in)
   document.addEventListener('keydown', e => {
+    if (NOIR && e.key === 'Escape' && S.tab === 'home' && S.peek && !document.querySelector('dialog[open]')) { closePeek(); return; }
     if (!NOIR || e.key !== 'Escape' || S.tab === 'home' || e.defaultPrevented) return;
     const a = document.activeElement;
     if (document.querySelector('dialog[open]') || (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) || mk || mv || bd || so || wd) return;
@@ -5567,6 +5766,12 @@ dialog::backdrop{background:transparent}
     else if (act === 'qh-all') { S.homeAll = true; aimHome(); render(); }
     else if (act === 'qh-quiet') { S.homeAll = false; render(); }
     else if (act === 'dock') { S.dock = b.dataset.grp; S.dockSwap = true; render(); }
+    else if (act === 'qp-open') openPeek(b.dataset.peek);
+    else if (act === 'qp-close') closePeek();
+    else if (act === 'qp-full') { const p = PEEKS[S.peek], r = $('#qhPeek').getBoundingClientRect(); growOrigin = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; S.peek = null; ORB.pulled = null; if (p) { if (WORK_PARTS.includes(p.full)) setWorkSub(p.full); setTab(WORK_PARTS.includes(p.full) ? 'work' : p.full); } }
+    else if (act === 'qp-add') { const k = S.peek; if (k === 'tasks') openTask(null, {}, 'task'); else if (k === 'today') openTask(null, { date: todayKey() }, null); else if (k === 'meetings') newMeeting(); else if (k === 'reminders') { if (REM) REM.add(); } else if (k === 'packages') { if (PKG) PKG.add(); } else if (k === 'notes') { growOrigin = ORB.center; S.peek = null; ORB.pulled = null; setTab('notes'); if (NOTES) NOTES.add(); } }
+    else if (act === 'qp-note') { if (NOTES && NOTES.open) NOTES.open(b.dataset.id); const r = b.getBoundingClientRect(); growOrigin = { x: r.left + 20, y: r.top + r.height / 2 }; S.peek = null; ORB.pulled = null; setTab('notes'); }
+    else if (act === 'qp-pkg') { const r = b.getBoundingClientRect(); growOrigin = { x: r.left + 20, y: r.top + r.height / 2 }; S.peek = null; ORB.pulled = null; setTab('packages'); }
     else if (act === 'qh-full') { $('#fsBtn').click(); setTimeout(render, 400); }
     else if (act === 'wt-new') { if (S.canSave) openTask(null, { tag: 'work' }, 'task'); }
     else if (act.startsWith('mtg-') || act.startsWith('pt-')) mtAct(act, b);
@@ -5905,7 +6110,7 @@ dialog::backdrop{background:transparent}
     if (window.POSGear) GEAR = window.POSGear({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSWork) WORK = window.POSWork({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSReminders) REM = window.POSReminders({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
-    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo });
+    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo, stays: k => !!PEEKS[k] });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
     const { data } = await sb.auth.getSession();
     S.booted = true;

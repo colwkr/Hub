@@ -58,10 +58,16 @@
 @keyframes winOut{from{opacity:1;transform:none}to{opacity:0;transform:translate(var(--wx,0),var(--wy,0)) scale(var(--ws,.06))}}
 @keyframes homeIn{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
 [data-noir] .app.win-in{transform-origin:50% 50%;animation:winIn .5s cubic-bezier(.16,.9,.24,1)}
-[data-noir] .app.home-in{transform-origin:50% 50%;animation:homeIn .55s cubic-bezier(.2,.8,.2,1)}
+[data-noir] .app.home-in{transform-origin:50% 50%;animation:homeIn .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes winFade{from{opacity:0}to{opacity:1}}
+[data-noir] .app.win-fade{animation:winFade .14s ease-out both}
+@keyframes growIn{0%{opacity:.15;transform:translate(var(--gx,0),var(--gy,0)) scale(.4)}35%{opacity:1}100%{opacity:1;transform:none}}
+[data-noir] .grow-in{animation:growIn .3s cubic-bezier(.16,.9,.24,1) both;animation-delay:var(--gd,0ms)}
+@keyframes growFrame{0%{opacity:.2;transform:scale(.95)}100%{opacity:1;transform:none}}
+[data-noir] .grow-frame{animation:growFrame .24s cubic-bezier(.2,.9,.25,1) both}
 .win-ghost{z-index:4;pointer-events:none;transform-origin:50% 50%;overflow:hidden}
-.win-ghost.out{animation:winOut .38s cubic-bezier(.5,0,.8,.3) forwards}
-@media (prefers-reduced-motion:reduce){ [data-noir] .app.win-in,[data-noir] .app.home-in,.win-ghost.out{animation:none} }
+.win-ghost.out{animation:winOut .28s cubic-bezier(.5,0,.8,.3) forwards}
+@media (prefers-reduced-motion:reduce){ [data-noir] .app.win-in,[data-noir] .app.home-in,[data-noir] .app.win-fade,[data-noir] .grow-in,[data-noir] .grow-frame,.win-ghost.out{animation:none} }
 /* Settings: the old light/dark and wallpaper choices don't apply to this look */
 [data-noir] #setSheet .set-sec[aria-labelledby="apLab"],[data-noir] #setSheet .set-sec[aria-labelledby="wlLab"],[data-noir] #setSheet .set-sec[aria-labelledby="wlLab"] + .set-line{display:none}
 /* corner marks frame every section */

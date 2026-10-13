@@ -222,5 +222,8 @@ window.POSPackages = function (ctx) {
   // what's on its way, for the assistant: a name and the line you'd read first
   const summary = () => (S.loaded ? S.package.slice().sort((a, b) => (a.stage === 'delivered') - (b.stage === 'delivered') || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8)
     .map(p => { const h = headline(p); return { name: String(p.name || p.store || p.trackNo || 'Package').slice(0, 60), status: `${h.big}${h.small ? ' · ' + h.small : ''}`.slice(0, 80) }; }) : []);
-  return { view, act, add: addSheet, badge, homeToday, summary, start: R.start, stop: () => { R.stop(); UI.asked = false; UI.key = null; } };
+  // for Home: each package still coming (or in today) is a strand
+  const items = () => (S.loaded ? S.package.filter(p => p.stage !== 'delivered' || (p.events && p.events[0] && daysTo(dkey(evTime(p.events[0]))) === 0)).slice(0, 12)
+    .map(p => { const h = headline(p); return { id: p.id, name: String(p.name || p.store || p.trackNo || 'Package'), big: h.big, small: h.small, tone: h.tone }; }) : []);
+  return { view, act, add: addSheet, badge, homeToday, summary, items, start: R.start, stop: () => { R.stop(); UI.asked = false; UI.key = null; } };
 };

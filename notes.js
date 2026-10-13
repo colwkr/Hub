@@ -206,5 +206,8 @@ window.POSNotes = function (ctx) {
   }
   const add = () => act('nt-new', null);
   function stop() { flush(); R.stop(); UI.saved.clear(); UI.local.clear(); UI.sel = null; }
-  return { view, act, add, start: R.start, stop };
+  // for Home: each note is a strand; opening one goes straight to it
+  const list = () => (S.loaded ? sorted().slice(0, 40).map(n => ({ id: n.id, title: headOf(n), updatedAt: n.updatedAt || 0, pinned: !!n.pinned })) : []);
+  const open = id => { UI.sel = id; UI.state = ''; };
+  return { view, act, add, list, open, start: R.start, stop };
 };

@@ -96,11 +96,16 @@ window.POSAssistant = function (ctx) {
     lighting: ['lighting'], work: ['work', 'work overview'], finance: ['finance', 'finances', 'money', 'bills', 'budget', 'spending', 'banking'],
     health: ['health', 'sleep', 'gym'], car: ['car', 'truck'], places: ['places', 'map'], packages: ['packages', 'package', 'deliveries', 'shipping'], pets: ['pets', 'pet'],
     lights: ['lights', 'home lights'], tv: ['tv', 'television', 'remote', 'tv remote'], camplot: ['cam plot', 'camera plot', 'camplot', '3d cam plot', '3d camera plot'],
-    settings: ['settings'], home: ['home', 'home screen'] };
+    settings: ['settings'], home: ['home', 'home screen'], today: ['today', 'my day', 'agenda', 'today\'s agenda'] };
   const NUM = { one: 1, two: 2, to: 2, too: 2, three: 3, four: 4, for: 4, five: 5, six: 6 };
   const sectionIs = x => { x = x.replace(/^(the|my) /, '').replace(/ (section|page|tab|view|screen)$/, '').trim(); for (const k in ALIAS) if (ALIAS[k].includes(x)) return k; return null; };
   function local(raw) {
-    const s = raw.toLowerCase().replace(/[.,!?]/g, '').replace(/\s+/g, ' ').trim();
+    // "hey POS, can you open my tasks please" → "open my tasks"
+    const nm = String(ctx.name() || 'pos').toLowerCase();
+    const s = raw.toLowerCase().replace(/[.,!?]/g, '').replace(/\s+/g, ' ').trim()
+      .replace(new RegExp(`^(?:(?:hey|hi|ok|okay|yo)\\s+)?(?:${nm.replace(/[^a-z0-9 ]/g, '')}|pos|p o s)?\\s*`), '')
+      .replace(/^(?:can you|could you|would you|will you|please|go ahead and|i want to|i'd like to|let me)\s+/, '').replace(/^please\s+/, '')
+      .replace(/\s+(?:please|for me|real quick|now)$/, '').trim();
     if (/^(stop|cancel|never ?mind|nothing|forget it)$/.test(s)) return { reply: 'Okay.', act: { action: 'close' } };
     let m = s.match(/^(?:(?:operate|run|use|open|show|go to|pull up)\s+)?cam(?:era)?\s*(\d|one|two|to|too|three|four|for|five|six)$/);
     if (m) { const n = +m[1] || NUM[m[1]]; return { reply: `Camera ${n}.`, act: { action: 'camera', camera: n } }; }
@@ -108,7 +113,7 @@ window.POSAssistant = function (ctx) {
     if (m) { const k = sectionIs(m[1]); if (k) return { reply: '', act: { action: 'open', section: k } }; }
     { const k = sectionIs(s); if (k) return { reply: '', act: { action: 'open', section: k } }; }
     if (/^full ?screen$/.test(s)) return { reply: '', act: { action: 'fullscreen' } };
-    if (/^(?:what(?:'s| is)?|whats) (?:(?:due|on|happening|left|going on) )*(?:for )?today|^show (?:me )?today|^(?:what(?:'s| is)? )?my day|^how(?:'s| is) (?:my )?today/.test(s)) return { reply: ctx.dayText(0), act: { action: 'none' } };
+    if (/^(?:what(?:'s| is)?|whats) (?:(?:due|on|happening|left|going on) )*(?:for )?today|^show (?:me )?today|^(?:what(?:'s| is)? )?my day|^how(?:'s| is) (?:my )?today/.test(s)) return { reply: ctx.dayText(0), act: { action: 'open', section: 'today' } };
     if (/^(?:what(?:'s| is)?|whats) (?:(?:due|on|happening) )*(?:for )?tomorrow|^show (?:me )?tomorrow/.test(s)) return { reply: ctx.dayText(1), act: { action: 'none' } };
     return null;
   }
@@ -153,11 +158,18 @@ window.POSAssistant = function (ctx) {
       T.note = what; ctx.rerender(); speak(T.reply);
       return;
     }
-    show(r.reply, null); speak(r.reply);
-    if (a.action === 'open' || a.action === 'camera' || a.action === 'fullscreen') {
-      setTimeout(() => { if (r.reply) toast(r.reply); Object.assign(T, { phase: 'idle', said: '', reply: '', act: null }); ctx.go(a); }, r.reply ? 700 : 150);
+    // a list opens at the side of Home right away and the answer stays; anything else opens at once, the answer as a toast
+    if (a.action === 'open' && ctx.stays && ctx.stays(a.section)) {
+      ctx.go(a);
+      if (r.reply) { show(r.reply, null); speak(r.reply); later(Math.max(4000, r.reply.length * 80)); } else close();
       return;
     }
+    if (a.action === 'open' || a.action === 'camera' || a.action === 'fullscreen') {
+      if (r.reply) { toast(r.reply); speak(r.reply); }
+      Object.assign(T, { phase: 'idle', said: '', reply: '', act: null }); ctx.go(a);
+      return;
+    }
+    show(r.reply, null); speak(r.reply);
     later(Math.max(6000, (r.reply || '').length * 90));
   }
   function show(reply, act) { T.phase = 'reply'; T.reply = reply || ''; T.act = act; ctx.rerender(); }

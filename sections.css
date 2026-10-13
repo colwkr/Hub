@@ -722,7 +722,7 @@ body.qmode .top{display:none}
   .qh > .qh-c.q-tl,.qh > .qh-c.q-tr,.qh > .qh-stage,.qh > .qh-cards{width:auto}
   body.qmode .app{padding-top:max(16px,env(safe-area-inset-top,0px))}
   /* three columns: the stage always sits in the middle one, so cards on the right never push it over */
-  .qh{height:calc(100dvh - 40px);min-height:480px;margin:0 6px;align-content:stretch;grid-template-columns:minmax(305px,1fr) minmax(0,620px) minmax(305px,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top top" ". stage cards" "foot foot foot"}
+  .qh{height:calc(100dvh - 40px);min-height:480px;margin:0 6px;align-content:stretch;grid-template-columns:minmax(305px,1fr) minmax(0,620px) minmax(305px,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top top" "peek stage cards" "foot foot foot"}
   .qh-c.q-tl,.qh-c.q-tr{padding:10px 14px}
   .qh-c.q-bl,.qh-c.q-br{display:flex;grid-area:foot;flex-direction:row;align-items:center;gap:8px;padding:8px 14px}
   .qh-c.q-bl{justify-self:start}.qh-c.q-br{justify-self:end}
@@ -817,3 +817,54 @@ body.qmode .top{display:none}
 .as-secret{-webkit-text-security:disc}
 .as-days{align-items:center;gap:12px}
 #setSheet .set-note.warn{color:var(--qacc)}
+
+/* ---------- a peek: one kind of data pulled out of the creature, laid along the side ---------- */
+.qh-peek{grid-area:peek;position:relative;z-index:3;align-self:center;justify-self:start;width:min(400px,100%);max-height:100%;display:flex;flex-direction:column;
+  background:rgba(14,16,26,.6);-webkit-backdrop-filter:blur(18px) saturate(120%);backdrop-filter:blur(18px) saturate(120%);border-radius:4px;
+  box-shadow:inset 0 0 0 1px rgba(150,180,255,.16),0 30px 60px -30px rgba(0,0,0,.9);margin-left:14px}
+.qp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 12px 10px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.qp-lab{display:flex;align-items:center;gap:9px;font:500 10.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--qink)}
+.qp-lab i{width:7px;height:7px;background:rgb(var(--c));box-shadow:0 0 10px rgba(var(--c),.8)}
+.qp-lab b{font-weight:500;color:var(--qdim);margin-left:2px}
+.qp-tools{display:flex;gap:4px}
+.qp-tool{border:0;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:var(--qink);border-radius:3px;min-width:30px;height:30px;padding:0 9px;font:500 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.qp-tool:hover{background:rgba(255,255,255,.1)}
+.qp-x{font:300 18px/1 var(--font);letter-spacing:0;padding:0}
+.qp-list{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding:6px 6px 8px}
+.qp-list::-webkit-scrollbar{display:none}
+.qp-row{display:flex;align-items:center;gap:12px;padding:0 8px 0 10px;border-radius:3px;min-height:52px}
+.qp-row:hover{background:rgba(255,255,255,.035)}
+.qp-chk{flex:none;width:18px;height:18px;border:0;padding:0;border-radius:2px;background:none;box-shadow:inset 0 0 0 1.5px rgba(var(--c),.75);cursor:pointer}
+.qp-chk:hover{background:rgba(var(--c),.18)}
+.qp-dot{flex:none;width:18px;height:18px;display:grid;place-items:center}
+.qp-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:rgb(var(--c));box-shadow:0 0 10px rgba(var(--c),.9)}
+.qp-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;border:0;background:none;color:var(--qink);text-align:left;padding:9px 0;cursor:pointer}
+.qp-t{font:400 15.5px/1.3 var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qp-s{font:500 10px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--qdim)}
+.qp-row.hot .qp-s{color:var(--qacc)}
+.qp-empty{margin:0;padding:18px 12px;color:var(--qdim);font-size:14px}
+.dk.on .dk-ic{background:rgba(150,180,255,.16);box-shadow:inset 0 0 0 1px rgba(150,190,255,.5)}
+.dk.on .dk-l{color:var(--qink)}
+/* how it moves: the panel grows out from its edge; each row leaves its node and flies into place (or back) */
+@keyframes qpPanel{from{opacity:0;transform:translateX(-18px) scaleX(.9)}to{opacity:1;transform:none}}
+@keyframes qpPanelOut{to{opacity:0;transform:translateX(-14px) scaleX(.94)}}
+.qh-peek.qp-open{transform-origin:left center;animation:qpPanel .26s cubic-bezier(.2,.9,.25,1) both}
+.qh-peek.qp-out{transform-origin:left center;animation:qpPanelOut .24s cubic-bezier(.5,0,.8,.3) both}
+#fxLayer{position:fixed;inset:0;z-index:60;pointer-events:none}
+@keyframes qpIn{0%{opacity:0;transform:translate(var(--fx),var(--fy)) scale(.05)}30%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes qpOut{0%{opacity:1;transform:none}100%{opacity:0;transform:translate(var(--fx),var(--fy)) scale(.05)}}
+.qp-fly{position:fixed;margin:0;box-sizing:border-box;background:rgba(20,24,40,.55);transform-origin:16px 50%;animation:qpIn .3s cubic-bezier(.18,.9,.22,1) both;animation-delay:calc(var(--fi) * 9ms)}
+.qp-fly.back{animation:qpOut .24s cubic-bezier(.55,0,.8,.3) both}
+/* what a node is, under the mouse */
+#orbTip{position:fixed;max-width:250px;display:flex;flex-direction:column;gap:3px;padding:9px 11px;border-radius:3px;background:rgba(12,14,24,.86);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px rgba(150,180,255,.2);color:var(--qink);pointer-events:none}
+#orbTip b{font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:rgb(var(--c))}
+#orbTip span{font:400 14px/1.3 var(--font)}
+#orbTip small{font:500 9.5px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--qdim)}
+/* phones and upright tablets: the peek comes up from the bottom instead */
+@media (max-width:759px),(orientation:portrait){
+  .qh-peek{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom,0px));width:auto;max-height:56vh;margin:0;z-index:20;background:rgba(12,14,24,.82);justify-self:stretch;align-self:auto}
+  @keyframes qpPanel{from{opacity:0;transform:translateY(24px) scaleY(.92)}to{opacity:1;transform:none}}
+  @keyframes qpPanelOut{to{opacity:0;transform:translateY(20px) scaleY(.94)}}
+  .qh-peek.qp-open,.qh-peek.qp-out{transform-origin:center bottom}
+}
+@media (prefers-reduced-motion:reduce){ .qh-peek.qp-open,.qh-peek.qp-out,.qp-fly{animation:none} }
