@@ -46,9 +46,24 @@ window.POSVoice = function (ctx) {
     if (!ctx.sb || !ctx.canSave()) return;
     try {
       const { data } = await ctx.sb.from('records').select('data').eq('id', 'voice').maybeSingle();
-      if (data && data.data && data.data.params) { P = { ...DEF, ...data.data.params }; put('pos.voice', JSON.stringify(P)); warm(); }
+      if (data && data.data && data.data.params) {
+        const next = { ...DEF, ...data.data.params };
+        if (JSON.stringify(next) !== JSON.stringify(P)) { P = next; put('pos.voice', JSON.stringify(P)); }
+        warm();
+      }
     } catch (e) {}
   }
+  // a voice saved in another window or on another device takes over here too: at once from another tab of this browser,
+  // and from your account whenever POS comes back to the front
+  window.addEventListener('storage', e => {
+    if (e.key !== 'pos.voice' || !e.newValue) return;
+    try { P = { ...DEF, ...JSON.parse(e.newValue) }; A.cache.clear(); warm(); } catch (err) {}
+  });
+  let syncedAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || Date.now() - syncedAt < 20000) return;
+    syncedAt = Date.now(); loadSaved();
+  });
   async function saveToAccount(p) {
     const data = { params: p, at: Date.now() };
     const { data: rows, error: e1 } = await ctx.sb.from('records').select('id').eq('id', 'voice');

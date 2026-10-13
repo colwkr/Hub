@@ -395,6 +395,53 @@ window.POSTV = function (ctx) {
     } else if (name === 'tv-pair') { send({ c: 'pair' }); if (tv) { tv.tv = 'searching'; paint(); } }
   }
 
+  /* ---------- for the assistant: "turn on the TV", "volume 20", "put on Netflix" ---------- */
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // is the PC link answering? ask once and wait a moment
+  async function reach() {
+    if (!ch) return false;
+    if (alive()) return true;
+    hello();
+    for (let i = 0; i < 20; i++) { await sleep(100); if (alive()) return true; }
+    return false;
+  }
+  async function command(c) {
+    if (!ctx.canSave()) return { ok: false, say: 'Sign in to use the TV.' };
+    if (!topic) return { ok: false, say: "The TV link isn't set up yet." };
+    const up = await reach();
+    if (!up) return { ok: false, say: "The TV link on your PC isn't answering. Make sure the PC is on and awake." };
+    const cmd = String(c.command || ''), n = Number.isFinite(+c.level) ? Math.round(+c.level) : null;
+    if (cmd === 'power_on' || cmd === 'power_off') {
+      const on = cmd === 'power_on';
+      if (on === isOn()) return { ok: true, say: `The TV's already ${on ? 'on' : 'off'}.` };
+      send({ c: 'power', on }); tick();
+      if (tv) tv.tv = on ? 'waking' : 'off';
+      paint(); return { ok: true, say: on ? 'TV on.' : 'TV off.' };
+    }
+    if (!isOn()) return { ok: false, say: 'The TV is off. Say turn on the TV first.' };
+    if (cmd === 'volume_set' && n != null) { setVol(n, true); return { ok: true, say: `Volume ${Math.max(0, Math.min(100, n))}.` }; }
+    if (cmd === 'volume_up' || cmd === 'volume_down') {
+      const d = (cmd === 'volume_up' ? 1 : -1) * Math.max(1, Math.min(30, n || 5));
+      if (tv && tv.vol != null) { setVol(tv.vol + d, true); return { ok: true, say: `Volume ${tv.vol}.` }; }
+      for (let i = 0; i < Math.abs(d); i++) send({ c: 'volstep', d: Math.sign(d) });
+      return { ok: true, say: d > 0 ? 'Louder.' : 'Quieter.' };
+    }
+    if (cmd === 'mute' || cmd === 'unmute') { const on = cmd === 'mute'; if (tv) tv.muted = on; send({ c: 'mute', on }); paint(); return { ok: true, say: on ? 'Muted.' : 'Sound on.' }; }
+    if (cmd === 'play' || cmd === 'pause') { press(cmd === 'play' ? 'PLAY' : 'PAUSE'); if (tv) tv.play = cmd === 'play' ? 'playing' : 'paused'; paint(); return { ok: true, say: cmd === 'play' ? 'Playing.' : 'Paused.' }; }
+    if (cmd === 'home' || cmd === 'back') { press(cmd.toUpperCase()); return { ok: true, say: cmd === 'home' ? 'Home.' : 'Back.' }; }
+    if (cmd === 'open_app') {
+      const want = String(c.app || '').toLowerCase().replace(/[^a-z0-9+ ]/g, '').trim();
+      if (!want) return { ok: false, say: 'Which app?' };
+      const w = shelf().find(x => x.re.test(want) || x.name.toLowerCase() === want || want.includes(x.name.toLowerCase()));
+      const a = (w && w.app) || apps.find(x => x.title.toLowerCase() === want) || apps.find(x => x.title.toLowerCase().includes(want));
+      if (!a) return { ok: false, say: `I don't see ${c.app} on the TV.` };
+      send({ c: 'launch', id: a.id }); tick();
+      return { ok: true, say: `${w ? w.name : a.title} on the TV.` };
+    }
+    return { ok: false, say: "I didn't catch what to do with the TV." };
+  }
+  const brief = () => ({ link: !!topic, state: alive() ? tv.tv || 'searching' : 'unknown', app: alive() && isOn() ? tv.appName || '' : '', volume: alive() && isOn() ? tv.vol : null });
+
   // while the remote is open, keep the measure of how quick it is fresh
   setInterval(() => { if (ch && !document.hidden && document.querySelector('.tvr')) ping(); }, 15000);
   function shown(yes) { if (yes && ch) { hello(); iconsAsked = false; askIcons(); } }
@@ -403,5 +450,5 @@ window.POSTV = function (ctx) {
   function start() { R.start(); if (ch) hello(); }
   function stop() { leave(); R.stop(); }
   const add = () => act('tv-kb');
-  return { view, act, add, busy, wantRender, shown, start, stop, send };
+  return { view, act, add, busy, wantRender, shown, start, stop, send, command, brief };
 };

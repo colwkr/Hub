@@ -1,8 +1,10 @@
 // Oasis lights → POS. The lights live in the Oasis cloud (an ESP RainMaker service); this function talks to it for POS.
 // It keeps only the Oasis key in oasis_auth (an access key that lasts a day, and the refresh key that gets new ones),
 // never a login or password. Only the owner's signed-in POS can read or change the lights.
-// Actions: "state" (every light: on, brightness, white), "set" (change some lights), "store-key" (the owner's machine
-// hands over a new key; it proves itself with a nonce whose SHA-256 is below).
+// Actions: "state" (every light: on, brightness, white), "set" (change some lights), "connect" (the owner's signed-in POS
+// hands over the keys Oasis gave it after the owner signed in to Oasis in the browser; the email and password went only to
+// Oasis and never come here), "store-key" (the owner's machine hands over a new key; it proves itself with a nonce whose
+// SHA-256 is below).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -27,14 +29,15 @@ async function sha256(s: string) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 // when a key runs out (seconds since 1970), read from inside the key
-function expOf(jwt?: string): number {
+function claims(jwt?: string): Record<string, unknown> {
   try {
     const p = jwt!.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(p + "=".repeat((4 - (p.length % 4)) % 4))).exp || 0;
+    return JSON.parse(atob(p + "=".repeat((4 - (p.length % 4)) % 4))) || {};
   } catch (_) {
-    return 0;
+    return {};
   }
 }
+const expOf = (jwt?: string): number => Number(claims(jwt).exp) || 0;
 
 type Auth = { access?: string; refresh?: string; refreshed_at?: number; stored_at?: number };
 async function readAuth(db: SupabaseClient): Promise<Auth> {
@@ -52,16 +55,35 @@ async function accessKey(db: SupabaseClient, force = false): Promise<{ tok?: str
   if (!force && auth.access && expOf(auth.access) - Date.now() / 1000 > 120) return { tok: auth.access, auth };
   const refresh = auth.refresh || Deno.env.get("OASIS_REFRESH");
   if (!refresh) return { auth, why: "no-refresh" };
+  let tok = "", nextRefresh = "", why = "";
+  // 1) straight to the Oasis sign-in service (Cognito) with the refresh key
   const r = await fetch(COGNITO, {
     method: "POST",
     headers: { "Content-Type": "application/x-amz-json-1.1", "X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth" },
     body: JSON.stringify({ AuthFlow: "REFRESH_TOKEN_AUTH", ClientId: CLIENT_ID, AuthParameters: { REFRESH_TOKEN: refresh } }),
-  });
-  const j = await r.json().catch(() => ({}));
-  const res = j?.AuthenticationResult;
-  if (!res?.AccessToken) return { auth, why: String(j?.__type || r.status) };
-  const next: Auth = { ...auth, access: res.AccessToken, refreshed_at: Date.now() };
-  if (res.RefreshToken) next.refresh = res.RefreshToken;
+  }).catch(() => null);
+  const j = r ? await r.json().catch(() => ({})) : {};
+  if (j?.AuthenticationResult?.AccessToken) {
+    tok = j.AuthenticationResult.AccessToken;
+    nextRefresh = j.AuthenticationResult.RefreshToken || "";
+  } else {
+    why = String(j?.__type || r?.status || "no answer");
+    // 2) the Oasis cloud's own renew (the same thing their app does), with the account id read from the old key
+    const who = String(claims(auth.access).username || claims(auth.access)["cognito:username"] || "");
+    const tries = [...(who ? [{ user_name: who, refreshtoken: refresh }] : []), { refreshtoken: refresh }];
+    for (const path of ["/login2", "/login"]) {
+      for (const b of tries) {
+        const r2 = await fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }).catch(() => null);
+        const j2 = r2 ? await r2.json().catch(() => ({})) : {};
+        if (j2?.accesstoken) { tok = j2.accesstoken; nextRefresh = j2.refreshtoken || ""; break; }
+        why += ` / ${path}: ${j2?.error_code || r2?.status || "no answer"}`;
+      }
+      if (tok) break;
+    }
+  }
+  if (!tok) return { auth, why };
+  const next: Auth = { ...auth, access: tok, refreshed_at: Date.now() };
+  if (nextRefresh) next.refresh = nextRefresh;
   await writeAuth(db, next);
   return { tok: next.access, auth: next };
 }
@@ -109,6 +131,20 @@ Deno.serve(async (req) => {
   const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: who } = jwt ? await db.auth.getUser(jwt) : { data: { user: null } };
   if (who?.user?.id !== OWNER) return json({ error: "sign in to POS first" }, 401);
+
+  // the owner signed in to Oasis from POS in the browser; only the keys Oasis handed back arrive here
+  if (action === "connect") {
+    const access = typeof body.access === "string" ? body.access.trim() : "";
+    const refresh = typeof body.refresh === "string" ? body.refresh.trim() : "";
+    if (expOf(access) * 1000 < Date.now() || refresh.length < 20) return json({ error: "Those aren't working Oasis keys." });
+    const auth = await readAuth(db);
+    await writeAuth(db, { ...auth, access, refresh, stored_at: Date.now(), refreshed_at: Date.now() });
+    // renew once now, so a refresh key that can't renew shows up today instead of tomorrow
+    const renew = await accessKey(db, true);
+    const r = await oasis(db, "/user/nodes?node_details=true&status=true&params=true");
+    if ("expired" in r) return json({ error: "Oasis didn't accept the new key.", why: r.why });
+    return json({ ok: r.ok, lights: (r.body?.node_details || []).length, until: r.until, renews: !!renew.tok, why: renew.why || "" });
+  }
 
   if (action === "state") {
     const r = await oasis(db, "/user/nodes?node_details=true&status=true&params=true");

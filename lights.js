@@ -223,7 +223,7 @@ window.POSLights = function (ctx) {
         + '</div></div>';
     }
     if (S.loaded && ctx.canSave() && Date.now() - CL.at > 15000) setTimeout(pull, 0);
-    const note = !S.light.some(l => l.node) ? '' : CL.expired ? "<p class=\"lt-note warn\">The lights' sign-in ran out. They'll answer again once the new key is in.</p>"
+    const note = !S.light.some(l => l.node) ? '' : CL.expired ? `<div class="lt-note warn lt-conn"><span>The lights' sign-in ran out. Sign in to Oasis once and POS keeps them connected.</span>${ctx.canSave() ? '<button type="button" class="btn solid" data-act="lt-connect">Connect lights</button>' : ''}</div>`
       : CL.down ? "<p class=\"lt-note warn\">The lights aren't answering right now.</p>" : '';
     return `<div class="lights">${note}<div class="lights-scroll" id="lightsScroll" data-keep>${body}</div></div>`;
   }
@@ -384,6 +384,105 @@ window.POSLights = function (ctx) {
     });
   }
 
+  /* ---------- connecting: sign in to Oasis from this browser ---------- */
+  // The email and password go from this browser straight to Oasis's own sign-in (the same place the Oasis app sends them).
+  // Oasis answers with keys; only the keys go to POS. Nothing typed here is kept, and the fields are wiped right away.
+  const OASIS_LOGIN = 'https://0sb7eb48mj.execute-api.us-east-1.amazonaws.com/dev/v1';
+  function wipe() { for (const id of ['lo_user', 'lo_pass']) { const el = document.getElementById(id); if (el) el.value = ''; } }
+  function openConnect() {
+    window.POSSheet.open({
+      title: 'Connect lights',
+      saveLabel: 'Connect',
+      body: '<p class="lt-why">Sign in with your Oasis account. It goes straight to Oasis, like their app. POS keeps only the key Oasis sends back, never your email or password.</p>'
+        + f('Oasis email', '<input id="lo_user" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you@example.com">')
+        + f('Password', '<input id="lo_pass" type="password" autocomplete="current-password">'),
+      ready: () => {
+        const sheet = document.getElementById('recSheet');
+        if (sheet) sheet.addEventListener('close', wipe, { once: true });
+      },
+      submit: async () => {
+        const u = document.getElementById('lo_user'), pw = document.getElementById('lo_pass');
+        const body = JSON.stringify({ user_name: (u && u.value || '').trim(), password: pw && pw.value || '' });
+        if (pw) pw.value = '';
+        if (!JSON.parse(body).user_name || !JSON.parse(body).password) return 'Enter the email and password for your Oasis account.';
+        let j = null;
+        for (const path of ['/login2', '/login']) {
+          try {
+            const r = await fetch(OASIS_LOGIN + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer' });
+            j = await r.json().catch(() => null);
+          } catch (e) { j = null; }
+          if (j && (j.accesstoken || j.error_code === 101009)) break;
+        }
+        if (!j) return "Couldn't reach Oasis. Check the connection and try again.";
+        if (!j.accesstoken) return j.error_code === 101009 ? "Oasis didn't accept that email or password." : `Oasis said: ${j.description || 'no'}`;
+        if (!j.refreshtoken) return "Oasis signed in but didn't send a renew key. Tell Claude.";
+        let d = null;
+        try { d = await call({ action: 'connect', access: j.accesstoken, refresh: j.refreshtoken }); } catch (e) { return "Signed in to Oasis, but POS couldn't save the key. Try again."; }
+        j = null;
+        if (!d || d.error) return d && d.error || 'That did not work.';
+        wipe();
+        CL.expired = false; CL.down = false; CL.at = 0;
+        toast(d.renews ? `Lights connected · ${d.lights} found` : `Lights connected for today · ${d.lights} found. Renewing didn't work yet; tell Claude.`);
+        pull();
+        return true;
+      },
+    });
+  }
+
+  /* ---------- for the assistant: "turn off the lights", "desk lights to 30%", "lamps warm" ---------- */
+  const STOP = new Set(['the', 'my', 'a', 'all', 'of', 'in', 'on', 'off', 'light', 'please', 'both', 'room', 'and', 'turn', 'set', 'to', 'up', 'down']);
+  const NUMW = { one: '1', two: '2', three: '3', four: '4', first: '1', second: '2' };
+  const sing = w => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w);
+  const wordsOf = t => String(t || '').toLowerCase().replace(/'s\b/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+  function find(target) {
+    const ws = wordsOf(target).map(w => NUMW[w] || w).map(sing);
+    const want = ws.filter(w => !STOP.has(w));
+    if (!want.length || want.every(w => /^(every|everything|house|whole)$/.test(w))) return { list: S.light.slice(), name: 'the lights', all: true };
+    // a room: a word of its name that names a room ("bedroom", "kitchen"), or "my room" when there's one
+    for (const r of S.room) {
+      const rw = wordsOf(r.name).map(sing).filter(w => /room$|^(kitchen|office|den|garage|hall|hallway|basement|studio|bath)$/.test(w));
+      if (rw.some(w => want.includes(w))) {
+        const rest = want.filter(w => !rw.includes(w));
+        const inRoom = lightsIn(r.id);
+        if (!rest.length) return { list: inRoom, name: r.name };
+        const some = inRoom.filter(l => rest.every(w => has(l, w)));
+        if (some.length) return { list: some, name: some.length === 1 ? some[0].name : group(rest) };
+      }
+    }
+    if (ws.includes('room') && want.length === 0 && S.room.length === 1) return { list: lightsIn(S.room[0].id), name: S.room[0].name };
+    const hit = S.light.filter(l => want.every(w => has(l, w)));
+    if (hit.length) return { list: hit, name: hit.length === 1 ? hit[0].name : group(want) };
+    return null;
+  }
+  // "lamps", "uplights", "desk lights"
+  const group = ws => (/^(lamp|uplight|bulb|strip)$/.test(ws[ws.length - 1]) ? ws.join(' ') + 's' : ws.join(' ') + ' lights');
+  // does a word pick this light: in its name, or its kind (lamp → a bulb lamp, uplight)
+  function has(l, w) {
+    const n = wordsOf(l.name).map(sing);
+    return n.includes(w) || l.type === w || (w === 'lamp' && l.type === 'bulb') || (w === 'uplighter' && l.type === 'uplight');
+  }
+  async function command(c) {
+    if (!S.loaded) return { ok: false, say: "The lights haven't loaded yet." };
+    if (!ctx.canSave()) return { ok: false, say: 'Sign in to change the lights.' };
+    const f = find(c.target);
+    if (!S.light.length) return { ok: false, say: 'No lights are set up in POS yet.' };
+    if (!f || !f.list.length) return { ok: false, say: `I don't see a light called ${c.target}.` };
+    const level = Number.isFinite(+c.level) && c.level !== '' && c.level != null ? Math.max(0, Math.min(100, Math.round(+c.level))) : null;
+    const kelvin = Number.isFinite(+c.kelvin) && c.kelvin ? Math.max(KMIN, Math.min(KMAX, Math.round(+c.kelvin / 100) * 100)) : null;
+    let on = c.power === 'on' ? true : c.power === 'off' ? false : null;
+    if (on == null && (level != null || kelvin != null)) on = level !== 0;
+    if (on == null) return { ok: false, say: 'On or off?' };
+    await setLights(f.list, l => ({ on, ...(on ? { level: level || (l.level > 0 ? l.level : 100) } : {}), ...(kelvin ? { kelvin, mode: 'white' } : {}) }));
+    const nm = f.all ? 'Lights' : f.name.charAt(0).toUpperCase() + f.name.slice(1);
+    if (CL.expired) return { ok: false, say: `I set ${f.all ? 'the lights' : f.name} in POS, but the lights' sign-in ran out. Open Lights and press Connect.` };
+    return { ok: true, say: !on ? `${nm} off.` : `${nm} on${level ? ` at ${level}%` : ''}${kelvin ? `, ${kName(kelvin).toLowerCase()}` : ''}.` };
+  }
+  // a line for the assistant's summary: rooms, lights and what's on
+  function brief() {
+    if (!S.loaded) return null;
+    return { rooms: S.room.map(r => r.name), lights: S.light.slice().sort(byCreated).map(l => `${l.name}${isOn(l) ? ` (on ${l.level ?? 100}%)` : ' (off)'}`), connected: !CL.expired };
+  }
+
   /* ---------- taps routed here by POS (data-act="lt-…") ---------- */
   function act(name, b) {
     if (name === 'lt-room') {
@@ -394,6 +493,8 @@ window.POSLights = function (ctx) {
       UI.pick = b.dataset.pick || 'house'; ctx.rerender();
     } else if (!ctx.canSave()) {
       return;
+    } else if (name === 'lt-connect') {
+      openConnect();
     } else if (name === 'lt-power') {
       if (b.dataset.id) { const l = lightById(b.dataset.id); if (l) { const on = !isOn(l); setLights([l], x => ({ on, level: on && !x.level ? 100 : x.level })); } }
       else { const list = b.dataset.house ? S.light.slice() : lightsIn(b.dataset.room), on = !list.some(isOn); setLights(list, x => ({ on, level: on && !x.level ? 100 : x.level })); }
@@ -407,5 +508,5 @@ window.POSLights = function (ctx) {
   const add = () => (S.room.length ? openLight(null, rooms()[0].id) : openRoom(null));
   function start() { R.start(); clearInterval(pollT); pollT = setInterval(poll, 5000); CL.at = 0; }
   function stop() { R.stop(); clearInterval(pollT); pollT = null; CL.nodes = new Map(); CL.at = 0; CL.expired = false; CL.down = false; }
-  return { view, act, add, busy, start, stop };
+  return { view, act, add, busy, start, stop, command, brief, find };
 };

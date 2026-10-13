@@ -41,31 +41,31 @@
 <title>POS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013005324">
-<script src="finance.js?v=20261013005324"></script>
-<link rel="stylesheet" href="car.css?v=20261013005324">
-<script src="car.js?v=20261013005324"></script>
-<link rel="stylesheet" href="sections.css?v=20261013005324">
-<link rel="stylesheet" href="tv.css?v=20261013005324">
-<link rel="stylesheet" href="noir.css?v=20261013005324">
-<script src="records.js?v=20261013005324"></script>
-<script src="people.js?v=20261013005324"></script>
-<script src="wheels.js?v=20261013005324"></script>
-<script src="keyboard.js?v=20261013005324"></script>
-<script src="notes.js?v=20261013005324"></script>
-<script src="reminders.js?v=20261013005324"></script>
-<script src="gear.js?v=20261013005324"></script>
-<script src="lights.js?v=20261013005324"></script>
-<script src="tv.js?v=20261013005324"></script>
-<script src="work.js?v=20261013005324"></script>
-<script src="health.js?v=20261013005324"></script>
-<script src="pets.js?v=20261013005324"></script>
-<script src="places.js?v=20261013005324"></script>
-<script src="placestab.js?v=20261013005324"></script>
-<script src="usmap.js?v=20261013005324"></script>
-<script src="voice.js?v=20261013005324"></script>
-<script src="assistant.js?v=20261013005324"></script>
-<script src="packages.js?v=20261013005324"></script>
+<link rel="stylesheet" href="finance.css?v=20261013013029">
+<script src="finance.js?v=20261013013029"></script>
+<link rel="stylesheet" href="car.css?v=20261013013029">
+<script src="car.js?v=20261013013029"></script>
+<link rel="stylesheet" href="sections.css?v=20261013013029">
+<link rel="stylesheet" href="tv.css?v=20261013013029">
+<link rel="stylesheet" href="noir.css?v=20261013013029">
+<script src="records.js?v=20261013013029"></script>
+<script src="people.js?v=20261013013029"></script>
+<script src="wheels.js?v=20261013013029"></script>
+<script src="keyboard.js?v=20261013013029"></script>
+<script src="notes.js?v=20261013013029"></script>
+<script src="reminders.js?v=20261013013029"></script>
+<script src="gear.js?v=20261013013029"></script>
+<script src="lights.js?v=20261013013029"></script>
+<script src="tv.js?v=20261013013029"></script>
+<script src="work.js?v=20261013013029"></script>
+<script src="health.js?v=20261013013029"></script>
+<script src="pets.js?v=20261013013029"></script>
+<script src="places.js?v=20261013013029"></script>
+<script src="placestab.js?v=20261013013029"></script>
+<script src="usmap.js?v=20261013013029"></script>
+<script src="voice.js?v=20261013013029"></script>
+<script src="assistant.js?v=20261013013029"></script>
+<script src="packages.js?v=20261013013029"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1531,13 +1531,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013005324"></script>
+<script src="appearance.js?v=20261013013029"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013005324';
+  const VERSION = '20261013013029';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2419,10 +2419,12 @@ dialog::backdrop{background:transparent}
 
   /* ---------- peeks: one kind of data pulled out of the creature and laid along the side, with Home still all there ---------- */
   const PEEKS = { tasks: { kind: 'task', n: 'Tasks', full: 'tasks' }, meetings: { kind: 'meeting', n: 'Meetings', full: 'meetings' }, reminders: { kind: 'reminder', n: 'Reminders', full: 'reminders' },
-    notes: { kind: 'note', n: 'Notes', full: 'notes' }, packages: { kind: 'package', n: 'Packages', full: 'packages' }, today: { kind: null, n: 'Today', full: 'calendar' } };
+    notes: { kind: 'note', n: 'Notes', full: 'notes' }, packages: { kind: 'package', n: 'Packages', full: 'packages' }, today: { kind: null, n: 'Today', full: 'calendar' },
+    weather: { kind: 'weather', n: 'Weather', full: null } };
   function peekItems(key) {
     const all = strandItems(), p = PEEKS[key], tk = todayKey();
     if (!p) return [];
+    if (key === 'weather') return [];
     if (key === 'today') return all.filter(it => (it.kind === 'task' || it.kind === 'meeting' || it.kind === 'event' || it.kind === 'reminder') && it.day && it.day <= tk);
     return all.filter(it => it.kind === p.kind);
   }
@@ -2437,9 +2439,147 @@ dialog::backdrop{background:transparent}
   function vPeek() {
     const p = PEEKS[S.peek];
     if (!p) return '';
+    if (S.peek === 'weather') return vWxPeek();
     const list = peekItems(S.peek), col = p.kind ? KINDS[p.kind].c : '240,244,255';
     return `<aside class="qh-peek" id="qhPeek" aria-label="${esc(p.n)}"><div class="qp-head"><span class="qp-lab" style="--c:${col}"><i></i>${esc(p.n)}<b>${list.length}</b></span><span class="qp-tools">${S.canSave ? '<button type="button" class="qp-tool" data-act="qp-add" aria-label="Add">+</button>' : ''}<button type="button" class="qp-tool" data-act="qp-full">Open</button><button type="button" class="qp-tool qp-x" data-act="qp-close" aria-label="Close">×</button></span></div><div class="qp-list" id="qpList" data-keep>${list.length ? list.map(peekRow).join('') : '<p class="qp-empty">Nothing here right now.</p>'}</div></aside>`;
   }
+  /* ---------- weather, pulled up beside the creature: what it's like now, the sky through the day, the radar, and
+     what to wear. The outfit call is worked out here from the forecast (feels-like through the waking hours, rain, wind,
+     sun), so it's there with or without Claude. ---------- */
+  const WEAR_IC = {
+    tee: '<path d="M8.5 4.5 4.5 7l1.8 3.2 2-1v10.3h7.4V9.2l2 1L19.5 7l-4-2.5c-.6 1.2-2 1.9-3.5 1.9S9.1 5.7 8.5 4.5Z"/>',
+    long: '<path d="M8.5 4.5 5.2 6.6 3.8 17.8h2.6L8.3 10v9.5h7.4V10l1.9 7.8h2.6L18.8 6.6l-3.3-2.1c-.6 1.2-2 1.9-3.5 1.9S9.1 5.7 8.5 4.5Z"/>',
+    hoodie: '<path d="M8.5 5.2 5.2 7 3.8 17.8h2.6L8.3 10.5v9h7.4v-9l1.9 7.3h2.6L18.8 7l-3.3-1.8"/><path d="M8.5 5.2C8.5 3.3 10 2.5 12 2.5s3.5.8 3.5 2.7c0 1.6-1.6 2.8-3.5 2.8S8.5 6.8 8.5 5.2ZM10 15h4M11 8v2.2M13 8v2.2"/>',
+    jacket: '<path d="M8.5 4.5 5.2 6.6 3.8 17.8h2.6L8.3 10v9.5h7.4V10l1.9 7.8h2.6L18.8 6.6l-3.3-2.1"/><path d="M8.5 4.5 12 8.2l3.5-3.7M12 8.2v11.3M9.4 14.5h1.2M13.4 14.5h1.2"/>',
+    coat: '<path d="M8.5 3.5 5 5.8 3.6 18.5h2.6L8 10v11.5h8V10l1.8 8.5h2.6L19 5.8l-3.5-2.3"/><path d="M8.5 3.5 12 7.5l3.5-4M12 7.5v14M13.8 11h.01M13.8 14.5h.01M13.8 18h.01"/>',
+    shorts: '<path d="M6.2 5.5h11.6l1.3 9.6h-5.4L12 10.4l-1.7 4.7H4.9z"/><path d="M6.2 7.8h11.6"/>',
+    pants: '<path d="M7 3.5h10l1 17h-4.1L12 10.2l-1.9 10.3H6z"/><path d="M7 6h10"/>',
+    umbrella: '<path d="M3.5 12.5a8.5 8.5 0 0 1 17 0Z"/><path d="M12 12.5v6a2 2 0 0 1-4 0M12 4V2.8"/>',
+    shades: '<path d="M2.8 9.5h18.4M5 9.5l.7 3.8a2.4 2.4 0 0 0 2.4 2h.5a2.4 2.4 0 0 0 2.3-1.9l.6-3.9M12.5 9.5l.6 3.9a2.4 2.4 0 0 0 2.3 1.9h.5a2.4 2.4 0 0 0 2.4-2l.7-3.8"/>',
+    hat: '<path d="M5.5 15.5a6.5 6.5 0 0 1 13 0Z"/><path d="M4.5 15.5h15v3h-15zM12 9V6.8"/><circle cx="12" cy="5.6" r="1.2"/>',
+    wind: '<path d="M3 9h10.5a2.5 2.5 0 1 0-2.5-2.5M3 13h14.5a2.5 2.5 0 1 1-2.5 2.5M3 17h6"/>',
+  };
+  const wearIc = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${WEAR_IC[k] || ''}</svg>`;
+  const wxHours = w => (w.hourly || []).map(h => ({ ...h, at: new Date(h.t).getTime(), feels: h.feels != null ? h.feels : h.temp, cloud: h.cloud != null ? h.cloud : codeCloud(h.code) }));
+  // the hours worth dressing for: the rest of today (to 10 PM, at least six hours), or tomorrow once it's evening
+  function wxSpan(w, tmr) {
+    const now = Date.now(), H = wxHours(w), late = tmr || new Date().getHours() >= 20;
+    if (late) { const t = fromKey(addDays(todayKey(), 1)).getTime(); return { when: 'tomorrow', H: H.filter(h => h.at >= t + 7 * 3600e3 && h.at <= t + 22 * 3600e3) }; }
+    const end = Math.max(fromKey(todayKey()).getTime() + 22 * 3600e3, now + 6 * 3600e3);
+    return { when: 'today', H: H.filter(h => h.at >= now - 3600e3 && h.at <= end) };
+  }
+  const hr12 = t => hourFmt.format(new Date(t)).replace(/\s/g, ' ');
+  function rainLine(w, tmr) {
+    const { H, when } = wxSpan(w, tmr);
+    if (!H.length) return '';
+    const wet = H.filter(h => h.pop >= 50 || wetCode(h.code)), top = H.reduce((a, h) => (h.pop > a.pop ? h : a), H[0]);
+    if (wet.length) return wet.length > 2 ? `Rain likely from ${hr12(wet[0].at)} to ${hr12(wet[wet.length - 1].at + 3600e3)}.` : `Rain likely around ${hr12(wet[0].at)}.`;
+    if (top.pop >= 25) return `${top.pop}% chance of rain around ${hr12(top.at)}.`;
+    return when === 'today' ? 'No rain coming.' : 'No rain tomorrow.';
+  }
+  const TOPS = [['tee', 'T-shirt'], ['long', 'Long sleeves'], ['hoodie', 'Hoodie'], ['jacket', 'Jacket'], ['coat', 'Heavy coat']];
+  const topRank = f => (f >= 68 ? 0 : f >= 58 ? 1 : f >= 48 ? 2 : f >= 36 ? 3 : 4);
+  function wearFor(w, tmr) {
+    const { H, when } = wxSpan(w, tmr);
+    if (!H.length) return null;
+    const feels = H.map(h => h.feels), lo = Math.min(...feels), hi = Math.max(...feels);
+    const loH = H[feels.indexOf(lo)], hiH = H[feels.indexOf(hi)];
+    const pop = Math.max(...H.map(h => h.pop || 0)), wind = Math.max(...H.map(h => h.wind || 0), when === 'today' && w.current ? w.current.wind || 0 : 0);
+    const sunny = H.filter(h => h.cloud < 40 && !wetCode(h.code) && new Date(h.at).getHours() >= 9 && new Date(h.at).getHours() <= 17).length >= 3;
+    const main = TOPS[topRank(hi)], cool = topRank(lo), items = [];
+    items.push({ ic: main[0], t: main[1] });
+    const legs = hi >= 78 ? ['shorts', 'Shorts'] : ['pants', 'Pants'];
+    items.push({ ic: legs[0], t: legs[1] });
+    let layer = '';
+    if (cool > topRank(hi)) {
+      const L = TOPS[Math.min(4, cool)], part = loH.at < hiH.at ? (when === 'today' && loH.at <= Date.now() + 3600e3 ? 'now' : 'the morning') : 'tonight';
+      items.push({ ic: L[0], t: `${L[1]} for ${part === 'now' ? 'now' : part}`, layer: true });
+      layer = `${L[1].toLowerCase()} for ${part}`;
+    }
+    if (pop >= 40) items.push({ ic: 'umbrella', t: pop >= 60 ? 'Umbrella' : 'Umbrella, just in case' });
+    if (lo < 34) items.push({ ic: 'hat', t: 'Hat and gloves' });
+    if (sunny && hi >= 60) items.push({ ic: 'shades', t: 'Sunglasses' });
+    if (wind >= 18) items.push({ ic: 'wind', t: `Windy, ${Math.round(wind)} mph` });
+    const art = t => (t === 'Long sleeves' ? 'long sleeves' : t === 'Heavy coat' ? 'a heavy coat' : 'a ' + t.replace(/^Hoodie|^Jacket/, x => x.toLowerCase()));
+    const line = `${when === 'today' ? 'Go with' : 'For tomorrow, go with'} ${art(main[1])} and ${legs[1].toLowerCase()}${layer ? `, plus ${art(TOPS[Math.min(4, cool)][1])} for ${layer.split(' for ')[1]}` : ''}.${pop >= 40 ? ' Bring an umbrella.' : ''}`;
+    return { when, items, line, lo: Math.round(lo), hi: Math.round(hi), loAt: loH.at, hiAt: hiH.at };
+  }
+  // what POS says out loud: the overview, or the outfit or the rain first when that's what was asked
+  function wxSay(kind, tmr) {
+    const w = S.weather;
+    if (!w || !w.current) return "I don't have the weather yet.";
+    const c = w.current, td = (w.daily || []).find(d => d.date === todayKey()), tm = (w.daily || []).find(d => d.date === addDays(todayKey(), 1));
+    const late = tmr || new Date().getHours() >= 20, r = Math.round, wear = wearFor(w, tmr);
+    const now = `${r(c.temp)} and ${wx(c.code, c.isDay)[0].toLowerCase()}${Math.abs(c.feels - c.temp) >= 3 ? `, feels like ${r(c.feels)}` : ''}.`;
+    const day = late && tm ? `Tomorrow, high ${r(tm.hi)}, low ${r(tm.lo)}.` : td ? `High ${r(td.hi)}, low ${r(td.lo)}.` : '';
+    const rain = rainLine(w, tmr), outfit = wear ? wear.line : '';
+    if (kind === 'wear') return [outfit, `It's ${now}`, rain].filter(Boolean).join(' ');
+    if (kind === 'rain') return [rain, now].filter(Boolean).join(' ');
+    return [now, day, rain, outfit].filter(Boolean).join(' ');
+  }
+  // the weather for the assistant's summary
+  function wxBrief() {
+    const w = S.weather;
+    if (!w || !w.current) return null;
+    const r = Math.round, c = w.current, wear = wearFor(w), now = Date.now();
+    const next = wxHours(w).filter(h => h.at > now - 1800e3).filter((h, i) => i % 3 === 0).slice(0, 6).map(h => `${hr12(h.at)} ${r(h.temp)}° ${h.pop}% rain`);
+    const days = (w.daily || []).filter(d => d.date >= todayKey()).slice(0, 3).map(d => `${d.date}: ${wx(d.code, true)[0]}, ${r(d.lo)}-${r(d.hi)}°, ${d.pop}% rain`);
+    return { place: w.place || 'Simpsonville', now: `${r(c.temp)}°F, ${wx(c.code, c.isDay)[0]}, feels ${r(c.feels)}°, wind ${r(c.wind)} mph`, next_hours: next, days, rain: rainLine(w), wear: wear ? wear.line : '' };
+  }
+  // the radar: the last frame from RainViewer over the OpenStreetMap map (turned dark here), centered on home; zoom 7 is
+  // as close as the free radar goes
+  const RADAR = { at: 0, url: null, time: 0, asking: false };
+  async function radarLoad() {
+    if (RADAR.asking || Date.now() - RADAR.at < 8 * 60e3) return;
+    RADAR.asking = true;
+    try {
+      const j = await (await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' })).json();
+      const last = ((j.radar || {}).past || []).slice(-1)[0];
+      if (last && /^https:\/\/[a-z0-9.-]+$/i.test(j.host) && /^\/[\w/]+$/.test(last.path)) { RADAR.url = j.host + last.path; RADAR.time = last.time * 1000; }
+      RADAR.at = Date.now();
+    } catch (e) { RADAR.at = Date.now() - 6 * 60e3; }
+    RADAR.asking = false;
+    if (S.peek === 'weather' && !$('#wxMap .wxm-rad')) { const m = $('#wxMap'); if (m) m.outerHTML = wxMap(); }
+  }
+  function wxMap() {
+    const z = 7, n = 1 << z, lat = +WXQ.get('latitude') * Math.PI / 180, lon = +WXQ.get('longitude');
+    const fx = (lon + 180) / 360 * n, fy = (1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2 * n;
+    const x0 = Math.floor(fx) - 1, y0 = Math.floor(fy) - 1, cx = (fx - x0) * 256, cy = (fy - y0) * 256;
+    let base = '', rad = '';
+    for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) {
+      const pos = `left:${i * 256}px;top:${j * 256}px`;
+      base += `<img src="https://tile.openstreetmap.org/${z}/${x0 + i}/${y0 + j}.png" style="${pos}" alt="" loading="lazy" draggable="false">`;
+      if (RADAR.url) rad += `<img class="wxm-rad" src="${RADAR.url}/256/${z}/${x0 + i}/${y0 + j}/2/1_1.png" style="${pos}" alt="" referrerpolicy="no-referrer" draggable="false">`;
+    }
+    const when = RADAR.time ? timeFmt.format(new Date(RADAR.time)) : '';
+    return `<div class="wxp-map" id="wxMap"><div class="wxm-tiles" style="--cx:${cx.toFixed(1)}px;--cy:${cy.toFixed(1)}px">${base}${rad}</div><i class="wxm-home" aria-hidden="true"></i>
+      <span class="wxm-tag">Radar${when ? ' · ' + esc(when) : ''}</span><span class="wxm-by">© OpenStreetMap contributors · RainViewer</span></div>`;
+  }
+  function vWxPeek() {
+    const w = S.weather;
+    if (!w || !w.current) return `<aside class="qh-peek qp-wx" id="qhPeek" aria-label="Weather"><div class="qp-head"><span class="qp-lab" style="--c:112,214,255"><i></i>Weather</span><span class="qp-tools"><button type="button" class="qp-tool qp-x" data-act="qp-close" aria-label="Close">×</button></span></div><p class="qp-empty">The forecast shows here once it loads.</p></aside>`;
+    radarLoad();
+    const tk = todayKey(), c = w.current, r = Math.round, [label, ic] = wx(c.code, c.isDay), td = (w.daily || []).find(d => d.date === tk), wear = wearFor(w);
+    const dayOf = k => (w.daily || []).find(d => d.date === k);
+    const isDayAt = iso => { const d = dayOf(iso.slice(0, 10)); if (!d) return true; const hm = iso.slice(11, 16); return hm >= d.sunrise && hm < d.sunset; };
+    const days = (w.daily || []).filter(d => d.date > tk).slice(0, 5);
+    let lo = Infinity, hi = -Infinity;
+    for (const d of days) { lo = Math.min(lo, d.lo); hi = Math.max(hi, d.hi); }
+    const span = Math.max(1, hi - lo);
+    const dayHtml = days.map(d => `<div class="wxp-day"><span>${esc(wdFmt.format(fromKey(d.date)))}</span>${wxIcon(wx(d.code, true)[1])}<span class="pop">${d.pop >= 20 ? d.pop + '%' : ''}</span><span class="num">${r(d.lo)}°</span><span class="rng"><span style="left:${((d.lo - lo) / span * 100).toFixed(1)}%;right:${((hi - d.hi) / span * 100).toFixed(1)}%"></span></span><span class="num">${r(d.hi)}°</span></div>`).join('');
+    const stale = Date.now() - (w.updatedAt || 0) > 3 * 3600e3;
+    return `<aside class="qh-peek qp-wx" id="qhPeek" aria-label="Weather">
+      <div class="qp-head"><span class="qp-lab" style="--c:112,214,255"><i></i>Weather<b>${esc(w.place || '')}</b></span><span class="qp-tools"><button type="button" class="qp-tool qp-x" data-act="qp-close" aria-label="Close">×</button></span></div>
+      <div class="qp-list wxp" id="qpList" data-keep>
+        <div class="wxp-now" style="--i:0"><span class="wxp-t">${r(c.temp)}°</span><div class="wxp-d">${wxIcon(ic)}<span class="wxp-c">${esc(label)}</span><span class="wxp-m">Feels ${r(c.feels)}° · Wind ${r(c.wind)} mph</span>${td ? `<span class="wxp-m">H ${r(td.hi)}° · L ${r(td.lo)}° · Rain ${td.pop}%</span>` : ''}${stale ? '<span class="wxp-m warn">Not updated in a while</span>' : ''}</div></div>
+        ${wear ? `<div class="wxp-wear" style="--i:1"><span class="wxp-k">Wear ${wear.when === 'today' ? 'today' : 'tomorrow'}</span><p class="wxp-line">${esc(wear.line.replace(/^For tomorrow, go/, 'Go'))}</p><div class="wxp-fits">${wear.items.map((x, i) => `<span class="wxp-fit${x.layer ? ' layer' : ''}" style="--j:${i}">${wearIc(x.ic)}<small>${esc(x.t)}</small></span>`).join('')}</div><span class="wxp-m">Feels ${wear.lo}° to ${wear.hi}° · ${esc(rainLine(w))}</span></div>` : ''}
+        <div class="wxp-sky" style="--i:2">${wxToday(w, tk, isDayAt)}</div>
+        <div style="--i:3" class="wxp-radar">${wxMap()}</div>
+        ${days.length ? `<div class="wxp-days" style="--i:4">${dayHtml}</div>` : ''}
+      </div>
+    </aside>`;
+  }
+
   // the moving parts live in a layer above everything, so nothing clips them on the way
   function fxLayer() { let l = document.getElementById('fxLayer'); if (!l) { l = document.createElement('div'); l.id = 'fxLayer'; l.setAttribute('aria-hidden', 'true'); document.body.appendChild(l); } return l; }
   // each row leaves its node and flies to its place in the list (or back again), under 0.4 s
@@ -2564,7 +2704,7 @@ dialog::backdrop{background:transparent}
       <canvas id="qhOrb" class="qh-field" aria-hidden="true"></canvas>
       <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
       <div class="qh-c q-tl"><span class="qh-k" data-appname>${esc(appName())}</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
-      <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<span class="qh-k qh-faint">${esc(wxText)}</span>` : ''}</div>
+      <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<button type="button" class="qh-k qh-faint qh-wxb${S.peek === 'weather' ? ' on' : ''}" data-act="qp-open" data-peek="weather" aria-label="Weather: ${esc(wxText)}">${esc(wxText)}</button>` : ''}</div>
       <div class="qh-stage">
         <button type="button" class="qh-orbbtn qh-talk" id="qhSlot" data-act="as-talk" aria-label="Talk to ${esc(appName())}"></button>
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
@@ -2588,7 +2728,7 @@ dialog::backdrop{background:transparent}
     const tk = todayKey(), end = addDays(tk, 7);
     const t2 = t => ({ ...(realId(t.id) ? { id: t.id } : {}), title: String(t.title || '').slice(0, 80), ...(t.date ? { date: t.date } : {}), ...(t.time ? { time: t.time } : {}), ...(t.tag ? { tag: t.tag } : {}), ...(isOverdue(t) ? { late: true } : {}) });
     return {
-      today: tk, weekday: asWd.format(new Date()), now: fmtTime(nowMin()), section: S.tab,
+      today: tk, weekday: asWd.format(new Date()), now: fmtTime(nowMin()), clock: `${pad(Math.floor(nowMin() / 60))}:${pad(nowMin() % 60)}`, section: S.tab,
       tasks: S.tasks.filter(t => !t.done && (!t.date || t.date <= end)).sort(cmp).slice(0, 30).map(t2),
       meetings: S.items.filter(x => x.kind === 'meeting' && x.date && x.date >= tk && x.date <= end && !x.done).sort(cmp).slice(0, 8).map(m => ({ title: String(m.title || '').slice(0, 80), date: m.date, ...(m.time ? { time: m.time } : {}) })),
       calendar: (S.events || []).filter(g => g.date >= tk && g.date <= addDays(tk, 3)).slice(0, 10).map(g => ({ title: String(g.title || '').slice(0, 80), date: g.date, time: g.allDay ? 'all day' : g.start })),
@@ -2596,7 +2736,16 @@ dialog::backdrop{background:transparent}
       packages: PKG && PKG.summary ? PKG.summary() : [],
       due: { bills: FIN ? FIN.badge() : 0, car: CAR ? CAR.badge() : 0, pet_checkups: PETS ? PETS.badge() : 0, cg_left: WORK && WORK.left ? WORK.left() : null },
       on_home: homeCards().slice(0, 6).map(c => `${c.lab}: ${c.title}`),
+      lights: LIGHTS && LIGHTS.brief ? LIGHTS.brief() : null,
+      tv: TV && TV.brief ? TV.brief() : null,
+      weather: wxBrief(),
     };
+  }
+  // the assistant working the house: lights and the TV, right away
+  async function asHome(a) {
+    if (a.action === 'lights') return LIGHTS && LIGHTS.command ? LIGHTS.command(a) : { ok: false, say: "The lights aren't ready yet." };
+    if (a.action === 'tv') return TV && TV.command ? TV.command(a) : { ok: false, say: "The TV remote isn't ready yet." };
+    return { ok: false, say: '' };
   }
   // the day, said out loud: "3 things today: Run at 6:15, Order SDI cables, and Production sync at 7:57."
   function dayText(off) {
@@ -2644,7 +2793,7 @@ dialog::backdrop{background:transparent}
     if (a.action === 'camera') { location.href = 'cam.html?op=' + Math.max(1, Math.min(6, a.camera | 0)); return; }
     if (a.action === 'fullscreen') { $('#fsBtn').click(); return; }
     const k = a.section;
-    if (PEEKS[k]) { openPeek(k); return; }
+    if (PEEKS[k]) { if (S.peek !== k || S.tab !== 'home') openPeek(k); return; }
     growOrigin = ORB.center;
     if (k === 'camplot') { location.href = 'cam.html'; return; }
     if (k === 'settings') { openSettings(); return; }
@@ -6048,12 +6197,12 @@ dialog::backdrop{background:transparent}
   const WXQ = new URLSearchParams({
     latitude: '34.76', longitude: '-82.2',
     current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
-    hourly: 'temperature_2m,weather_code,precipitation_probability,cloud_cover', past_days: '1',
+    hourly: 'temperature_2m,apparent_temperature,weather_code,precipitation_probability,cloud_cover,wind_speed_10m', past_days: '1',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset', forecast_days: '6',
     temperature_unit: 'fahrenheit', wind_speed_unit: 'mph', timezone: 'America/New_York',
   });
   // cached weather is usable when it reaches back to yesterday (the centered graph looks 12 hours back) and has cloud cover
-  const wxFresh = w => { const h0 = (w.hourly || [])[0] || {}, y = fromKey(todayKey()); y.setDate(y.getDate() - 1); return h0.t <= `${dkey(y)}T00:00` && 'cloud' in h0; };
+  const wxFresh = w => { const h0 = (w.hourly || [])[0] || {}, y = fromKey(todayKey()); y.setDate(y.getDate() - 1); return h0.t <= `${dkey(y)}T00:00` && 'cloud' in h0 && 'feels' in h0; };
   async function loadWeather(force) {
     if (!force && S.weather && Date.now() - (S.weather.updatedAt || 0) < 25 * 60e3 && (S.weather.daily || []).length >= 6 && wxFresh(S.weather)) return;
     try {
@@ -6063,7 +6212,7 @@ dialog::backdrop{background:transparent}
       S.weather = {
         place: 'Simpsonville', updatedAt: Date.now(),
         current: { temp: c.temperature_2m, feels: c.apparent_temperature, code: c.weather_code, wind: c.wind_speed_10m, isDay: !!c.is_day },
-        hourly: h.time.map((t, i) => ({ t, temp: h.temperature_2m[i], code: h.weather_code[i], pop: h.precipitation_probability[i] || 0, cloud: h.cloud_cover ? h.cloud_cover[i] : null })),
+        hourly: h.time.map((t, i) => ({ t, temp: h.temperature_2m[i], feels: h.apparent_temperature ? h.apparent_temperature[i] : null, code: h.weather_code[i], pop: h.precipitation_probability[i] || 0, cloud: h.cloud_cover ? h.cloud_cover[i] : null, wind: h.wind_speed_10m ? h.wind_speed_10m[i] : null })),
         daily: d.time.map((t, i) => ({ date: t, hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i], code: d.weather_code[i], pop: d.precipitation_probability_max[i] || 0, sunrise: d.sunrise[i].slice(11, 16), sunset: d.sunset[i].slice(11, 16) })),
       };
       try { localStorage.setItem('hub.wx', JSON.stringify(S.weather)); } catch (e) {}
@@ -6132,7 +6281,7 @@ dialog::backdrop{background:transparent}
     if (window.POSWork) WORK = window.POSWork({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSReminders) REM = window.POSReminders({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSVoice) VOICE = window.POSVoice({ sb, toast, esc, canSave: () => S.canSave, name: appName, onChange: () => ASSIST && ASSIST.fillSettings() });
-    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, voice: VOICE, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo, stays: k => !!PEEKS[k] });
+    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, voice: VOICE, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo, stays: k => !!PEEKS[k], home: asHome, wxSay, isLight: t => !!(LIGHTS && LIGHTS.find && LIGHTS.find(t)) });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
     const { data } = await sb.auth.getSession();
     S.booted = true;

@@ -3,6 +3,7 @@
 // counts), never the whole database. Claude answers through one tool: a short reply to speak, and at most one action.
 // POS asks before it changes anything. Build changes (new features, a different look) are never attempted here; the
 // reply says it's a job for Claude and offers to save the idea as a note.
+// Lights and the TV are the exception: they happen at once (the browser does them; nothing here touches them).
 // Actions (the owner, signed in to POS): status, set-key, clear-key, ask, wrap (sums up a talking session).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
@@ -39,8 +40,9 @@ async function usage(db: SupabaseClient) {
   return { day, month, n: u.day === day ? u.n || 0 : 0, m: u.month === month ? u.m || 0 : 0, inTok: u.month === month ? u.inTok || 0 : 0, outTok: u.month === month ? u.outTok || 0 : 0 };
 }
 
-const SECTIONS = ["home", "tasks", "calendar", "notes", "reminders", "work", "projects", "meetings", "audio", "video", "lighting", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "camplot", "settings"];
-const ACTIONS = ["none", "open", "add_task", "complete_task", "move_task", "add_reminder", "add_note", "camera", "build_note"];
+const SECTIONS = ["home", "weather", "tasks", "calendar", "notes", "reminders", "work", "projects", "meetings", "audio", "video", "lighting", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "camplot", "settings"];
+const ACTIONS = ["none", "open", "add_task", "complete_task", "move_task", "add_reminder", "add_note", "camera", "build_note", "lights", "tv"];
+const TV_CMDS = ["power_on", "power_off", "volume_set", "volume_up", "volume_down", "mute", "unmute", "play", "pause", "home", "back", "open_app"];
 const TOOL = {
   name: "respond",
   description: "Answer the owner and, if he asked for something to be done, pick one action for POS to take.",
@@ -58,25 +60,34 @@ const TOOL = {
       mins: { type: "integer", description: "For add_task: how many minutes it takes, only if he said." },
       tag: { type: "string", enum: ["work", "personal", ""], description: "For add_task: work or personal, if it's clear." },
       camera: { type: "integer", description: "For camera: which camera, 1 to 6." },
+      target: { type: "string", description: "For lights: 'all', or a room or light name from the summary's lights, or a word that picks some of them (lamps, uplights, desk)." },
+      power: { type: "string", enum: ["on", "off", ""], description: "For lights: on or off, or empty to leave as is." },
+      level: { type: "integer", description: "For lights: brightness 1-100. For tv volume_set: the volume 0-100. For tv volume_up and volume_down: how many steps (default 5)." },
+      kelvin: { type: "integer", description: "For lights: tone 1000-6500 (1000 deep red, 2000 candlelight, 2700 warm white, 4000 neutral, 6500 daylight)." },
+      command: { type: "string", enum: TV_CMDS, description: "For tv." },
+      app: { type: "string", description: "For tv open_app: the app's name (YouTube, Netflix, Crunchyroll, Prime Video, Hulu, Spotify, Disney+, Apple TV, HBO Max)." },
     },
     required: ["reply", "action"],
   },
 };
 function system(name: string, ctx: Record<string, unknown>) {
-  return `You are ${name || "POS"}, the assistant built into POS, the owner's personal operating system: tasks, calendar, notes, reminders, work (he runs broadcast production at Upstate Church: cameras, audio, video, lighting, CG), finance, health, car, places, packages, pets, home lights and a TV remote.
-Today is ${ctx.today} (${ctx.weekday}); it is ${ctx.now} in America/New_York.
+  return `You are ${name || "POS"}, the assistant built into POS, the owner's personal operating system: tasks, calendar, notes, reminders, work (he runs broadcast production at Upstate Church: cameras, audio, video, lighting, CG), finance, health, car, places, packages, pets, home lights, a TV remote and the weather where he lives.
+Today is ${ctx.today} (${ctx.weekday}); it is ${ctx.now} (${ctx.clock || ""}) in America/New_York. "In 30 minutes" or "in an hour" means today at that clock time (HH:MM, 24-hour).
 Below is a short summary of his data. Use only what it says. Never invent tasks, ids, amounts or facts. If the answer isn't in it, say so briefly and offer to open the section that has it.
 Always answer with the respond tool, with one action at most:
 - none: just answer (what's today, what's next, how many, when).
-- open: show a section. camplot is the 3D camera plot.
+- open: show a section. camplot is the 3D camera plot. weather pulls the weather panel up beside him: use it whenever he asks about the weather, rain, or what to wear, and answer from the summary's weather (now, the rest of today, and an outfit call he can act on: layers, jacket, shorts, umbrella).
 - add_task, complete_task, move_task: tasks. Copy ids exactly from the summary. Turn "tomorrow", "Friday", "next week" into dates from today.
 - add_reminder: something to keep in mind that isn't a task, maybe on a day.
 - add_note: save a note.
 - camera: open one camera's operate view in the camera plot.
+- lights: control his home lights right now: on or off, brightness, tone. POS does it without asking.
+- tv: control his LG TV right now: power, volume, mute, play or pause, home, back, open an app. POS does it without asking.
 - build_note: if he asks for something POS can't do yet (a new feature, a new section, changing how it looks or works), don't pretend you can. Say that's a build change for Claude and offer to save it as a note; put the idea in title and details.
-POS shows any change and asks him before doing it, so word those replies as the thing you're about to do ("Add call the bank for Friday?").
+POS asks him before it adds or changes tasks, reminders and notes, so word those replies as the thing you're about to do ("Add call the bank for Friday?"). Lights and TV happen at once, so word those as done, very short ("Lights off.", "Netflix on the TV.").
 If you didn't catch what he meant, ask one short question with action none.
-In a talking session you also get what he's been saying lately; "this", "that" or "it" usually means the last thing he said before talking to you. Speech recognition makes mistakes, so read past obvious mishearings.`;
+In a talking session you also get what he's been saying lately; "this", "that" or "it" usually means the last thing he said before talking to you. Speech recognition makes mistakes, so read past obvious mishearings.
+For a minute after you answer in a session, what he says comes to you without your name, so it may be meant for someone else in the room. If it plainly isn't for you, answer with action none and an empty reply.`;
 }
 
 // the end of a talking session: what he talked through, the ideas worth keeping, real to-dos, and changes to POS itself
@@ -175,11 +186,12 @@ Deno.serve(async (req) => {
       if (u.n >= DAY_CAP) return json({ error: "cap" }, 200);
       const ctx = (body.ctx && typeof body.ctx === "object" ? body.ctx : {}) as Record<string, unknown>;
       const summary = JSON.stringify(ctx).slice(0, 7000); // a ceiling on what goes out, whatever the browser sends
+      const pending = body.pending && typeof body.pending === "object" ? JSON.stringify(body.pending).slice(0, 600) : "";
       const out = await claude(db, s, {
         max_tokens: 400,
         system: system(String(body.name || ""), ctx),
         tools: [TOOL], tool_choice: { type: "tool", name: "respond" },
-        messages: [{ role: "user", content: `Summary of his data:\n${summary}\n\n${body.recent ? `What he's been saying lately (newest last):\n${String(body.recent).slice(-1500)}\n\n` : ""}He said${body.recent ? " to you" : ""}: "${text}"` }],
+        messages: [{ role: "user", content: `Summary of his data:\n${summary}\n\n${body.recent ? `What he's been saying lately (newest last):\n${String(body.recent).slice(-1500)}\n\n` : ""}${pending ? `You asked him to confirm this, and it isn't done yet: ${pending}\nHis answer says yes or no and changes something. Answer with that same action and every field, changed as he asked (keep the rest as they were).\n\n` : ""}He said${body.recent ? " to you" : ""}: "${text}"` }],
       });
       if (!out.ok) {
         const msg = out.msg || "";
