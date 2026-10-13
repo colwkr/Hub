@@ -3,8 +3,9 @@
 // never a login or password. Only the owner's signed-in POS can read or change the lights.
 // Actions: "state" (every light: on, brightness, white), "set" (change some lights), "connect" (the owner's signed-in POS
 // hands over the keys Oasis gave it after the owner signed in to Oasis in the browser; the email and password went only to
-// Oasis and never come here), "store-key" (the owner's machine hands over a new key; it proves itself with a nonce whose
-// SHA-256 is below).
+// Oasis and never come here), "link" (the "Connect lights" helper on the owner's PC hands over the keys from a Google
+// sign-in to Oasis; they're kept only if they can see the lights NERV already knows), "store-key" (the owner's machine
+// hands over a new key; it proves itself with a nonce whose SHA-256 is below).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -39,7 +40,7 @@ function claims(jwt?: string): Record<string, unknown> {
 }
 const expOf = (jwt?: string): number => Number(claims(jwt).exp) || 0;
 
-type Auth = { access?: string; refresh?: string; refreshed_at?: number; stored_at?: number };
+type Auth = { access?: string; refresh?: string; refreshed_at?: number; stored_at?: number; use?: "id" };
 async function readAuth(db: SupabaseClient): Promise<Auth> {
   const { data } = await db.from("oasis_auth").select("data").eq("id", "main").maybeSingle();
   return (data?.data as Auth) || {};
@@ -64,7 +65,8 @@ async function accessKey(db: SupabaseClient, force = false): Promise<{ tok?: str
   }).catch(() => null);
   const j = r ? await r.json().catch(() => ({})) : {};
   if (j?.AuthenticationResult?.AccessToken) {
-    tok = j.AuthenticationResult.AccessToken;
+    // a Google sign-in may need the id key instead of the access key (see "link")
+    tok = auth.use === "id" && j.AuthenticationResult.IdToken ? j.AuthenticationResult.IdToken : j.AuthenticationResult.AccessToken;
     nextRefresh = j.AuthenticationResult.RefreshToken || "";
   } else {
     why = String(j?.__type || r?.status || "no answer");
@@ -127,6 +129,28 @@ Deno.serve(async (req) => {
     return json({ ok: true, until: expOf(next.access) * 1000, refresh: !!next.refresh });
   }
 
+  // the PC helper, after a Google sign-in to Oasis: the keys count only if they reach the owner's own lights
+  if (action === "link") {
+    const access = typeof body.access === "string" ? body.access.trim() : "";
+    const idt = typeof body.id === "string" ? body.id.trim() : "";
+    const refresh = typeof body.refresh === "string" ? body.refresh.trim() : "";
+    if (expOf(access) * 1000 < Date.now() || refresh.length < 20) return json({ error: "Those aren't working Oasis keys." }, 400);
+    const nodesFor = async (tok: string) => {
+      const r = await fetch(API + "/user/nodes", { headers: { Authorization: tok } }).catch(() => null);
+      const j = r && r.ok ? await r.json().catch(() => null) : null;
+      return new Set(((j?.nodes || []) as unknown[]).map(String));
+    };
+    const { data: lights } = await db.from("records").select("data").eq("user_id", OWNER).eq("kind", "light");
+    const known = (lights || []).map((x: any) => String(x?.data?.node || "")).filter(Boolean);
+    let use: "id" | undefined, seen = await nodesFor(access);
+    if (!known.some((n) => seen.has(n)) && idt && expOf(idt) * 1000 > Date.now()) { seen = await nodesFor(idt); use = "id"; }
+    if (!known.some((n) => seen.has(n))) return json({ error: "That Oasis account doesn't have these lights." }, 403);
+    const auth = await readAuth(db);
+    await writeAuth(db, { ...auth, access: use === "id" ? idt : access, refresh, use, stored_at: Date.now(), refreshed_at: Date.now() });
+    const renew = await accessKey(db, true);
+    return json({ ok: true, lights: seen.size, renews: !!renew.tok });
+  }
+
   // everything else: only the owner, signed in to POS
   const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: who } = jwt ? await db.auth.getUser(jwt) : { data: { user: null } };
@@ -138,7 +162,7 @@ Deno.serve(async (req) => {
     const refresh = typeof body.refresh === "string" ? body.refresh.trim() : "";
     if (expOf(access) * 1000 < Date.now() || refresh.length < 20) return json({ error: "Those aren't working Oasis keys." });
     const auth = await readAuth(db);
-    await writeAuth(db, { ...auth, access, refresh, stored_at: Date.now(), refreshed_at: Date.now() });
+    await writeAuth(db, { ...auth, access, refresh, use: undefined, stored_at: Date.now(), refreshed_at: Date.now() });
     // renew once now, so a refresh key that can't renew shows up today instead of tomorrow
     const renew = await accessKey(db, true);
     const r = await oasis(db, "/user/nodes?node_details=true&status=true&params=true");

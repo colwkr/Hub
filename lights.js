@@ -393,7 +393,7 @@ window.POSLights = function (ctx) {
     window.POSSheet.open({
       title: 'Connect lights',
       saveLabel: 'Connect',
-      body: '<p class="lt-why">Sign in with your Oasis account. It goes straight to Oasis, like their app. ' + posName() + ' keeps only the key Oasis sends back, never your email or password.</p>'
+      body: '<p class="lt-why">Sign in with your Oasis account. It goes straight to Oasis, like their app. ' + posName() + ' keeps only the key Oasis sends back, never your email or password.</p><p class="lt-why">Sign in to Oasis with Google? This box can\'t do that. On the PC, double-click <b>Connect lights</b> in your Clauude Projects folder instead.</p>'
         + f('Oasis email', '<input id="lo_user" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you@example.com">')
         + f('Password', '<input id="lo_pass" type="password" autocomplete="current-password">'),
       ready: () => {
@@ -414,7 +414,7 @@ window.POSLights = function (ctx) {
           if (j && (j.accesstoken || j.error_code === 101009)) break;
         }
         if (!j) return "Couldn't reach Oasis. Check the connection and try again.";
-        if (!j.accesstoken) return j.error_code === 101009 ? "Oasis didn't accept that email or password." : `Oasis said: ${j.description || 'no'}`;
+        if (!j.accesstoken) return j.error_code === 101009 ? "Oasis didn't accept that email or password. If you sign in to Oasis with Google, use Connect lights on the PC." : `Oasis said: ${j.description || 'no'}`;
         if (!j.refreshtoken) return "Oasis signed in but didn't send a renew key. Tell Claude.";
         let d = null;
         try { d = await call({ action: 'connect', access: j.accesstoken, refresh: j.refreshtoken }); } catch (e) { return "Signed in to Oasis, but " + posName() + " couldn't save the key. Try again."; }
