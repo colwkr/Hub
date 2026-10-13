@@ -41,31 +41,31 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261013143835">
-<script src="finance.js?v=20261013143835"></script>
-<link rel="stylesheet" href="car.css?v=20261013143835">
-<script src="car.js?v=20261013143835"></script>
-<link rel="stylesheet" href="sections.css?v=20261013143835">
-<link rel="stylesheet" href="tv.css?v=20261013143835">
-<link rel="stylesheet" href="noir.css?v=20261013143835">
-<script src="records.js?v=20261013143835"></script>
-<script src="people.js?v=20261013143835"></script>
-<script src="wheels.js?v=20261013143835"></script>
-<script src="keyboard.js?v=20261013143835"></script>
-<script src="notes.js?v=20261013143835"></script>
-<script src="reminders.js?v=20261013143835"></script>
-<script src="gear.js?v=20261013143835"></script>
-<script src="lights.js?v=20261013143835"></script>
-<script src="tv.js?v=20261013143835"></script>
-<script src="work.js?v=20261013143835"></script>
-<script src="health.js?v=20261013143835"></script>
-<script src="pets.js?v=20261013143835"></script>
-<script src="places.js?v=20261013143835"></script>
-<script src="placestab.js?v=20261013143835"></script>
-<script src="usmap.js?v=20261013143835"></script>
-<script src="voice.js?v=20261013143835"></script>
-<script src="assistant.js?v=20261013143835"></script>
-<script src="packages.js?v=20261013143835"></script>
+<link rel="stylesheet" href="finance.css?v=20261013144532">
+<script src="finance.js?v=20261013144532"></script>
+<link rel="stylesheet" href="car.css?v=20261013144532">
+<script src="car.js?v=20261013144532"></script>
+<link rel="stylesheet" href="sections.css?v=20261013144532">
+<link rel="stylesheet" href="tv.css?v=20261013144532">
+<link rel="stylesheet" href="noir.css?v=20261013144532">
+<script src="records.js?v=20261013144532"></script>
+<script src="people.js?v=20261013144532"></script>
+<script src="wheels.js?v=20261013144532"></script>
+<script src="keyboard.js?v=20261013144532"></script>
+<script src="notes.js?v=20261013144532"></script>
+<script src="reminders.js?v=20261013144532"></script>
+<script src="gear.js?v=20261013144532"></script>
+<script src="lights.js?v=20261013144532"></script>
+<script src="tv.js?v=20261013144532"></script>
+<script src="work.js?v=20261013144532"></script>
+<script src="health.js?v=20261013144532"></script>
+<script src="pets.js?v=20261013144532"></script>
+<script src="places.js?v=20261013144532"></script>
+<script src="placestab.js?v=20261013144532"></script>
+<script src="usmap.js?v=20261013144532"></script>
+<script src="voice.js?v=20261013144532"></script>
+<script src="assistant.js?v=20261013144532"></script>
+<script src="packages.js?v=20261013144532"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1531,13 +1531,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261013143835"></script>
+<script src="appearance.js?v=20261013144532"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261013143835';
+  const VERSION = '20261013144532';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1643,7 +1643,7 @@ dialog::backdrop{background:transparent}
     try { const v = localStorage.getItem('pos.calView'); if (CAL_VIEWS.some(x => x[0] === v)) return v; } catch (e) {}
     return window.innerWidth >= 680 ? 'week' : 'day';
   }
-  let mk = null, mv = null, bd = null, so = null, wd = null, renderLater = false, scopeOpen = false;
+  let mk = null, mv = null, bd = null, so = null, wd = null, ad = null, renderLater = false, scopeOpen = false;
   // how tall an hour is on the timelines; pinch (or middle-drag) changes it and each device remembers its own
   const H_MIN = 16, H_MAX = 480; // all the way in, a 5-minute block is tall enough for its name and its time
   try { const h = Number(localStorage.getItem('pos.hourH')); if (h >= H_MIN && h <= H_MAX) document.documentElement.style.setProperty('--h', h + 'px'); } catch (e) {} // a drag on the timeline (new task, or moving one) in progress; renders wait until it ends
@@ -3879,7 +3879,7 @@ dialog::backdrop{background:transparent}
   }
   function render() {
     if (TV && TV.busy()) { renderLater = true; TV.wantRender(); return; }
-    if (mk || mv || bd || so || wd || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy()) || (ASSIST && ASSIST.holding())) { renderLater = true; return; }
+    if (mk || mv || bd || so || wd || ad || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy()) || (ASSIST && ASSIST.holding())) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -5023,7 +5023,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('pointerup', e => { if (mk && e.pointerId === mk.pid) endMark(true); });
   document.addEventListener('pointercancel', e => { if (mk && e.pointerId === mk.pid) endMark(false); });
   // while drawing with a finger, the timeline must not scroll under it
-  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on) || (so && so.on) || (wd && wd.on)) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if ((mk && mk.on) || (mv && mv.on) || (bd && bd.on) || (so && so.on) || (wd && wd.on) || (ad && ad.on)) e.preventDefault(); }, { passive: false });
   // no right-click menu while dragging, or on a timeline (right button + drag zooms it)
   document.addEventListener('contextmenu', e => { if (mk || mv || mz || (e.target.closest && e.target.closest('.tl'))) e.preventDefault(); });
   window.addEventListener('blur', () => { endMark(false); endMove(false); });
@@ -5462,6 +5462,116 @@ dialog::backdrop{background:transparent}
   });
   document.addEventListener('pointerup', e => { if (bd && e.pointerId === bd.pid) endBillDrag(true); });
   document.addEventListener('pointercancel', e => { if (bd && e.pointerId === bd.pid) endBillDrag(false); });
+
+  /* ---------- a task in the Any time row: hold it (or drag it with a mouse) and drop it on the timeline to give it a
+     time (it snaps like any block, and is as long as its estimate), or on another day's Any time row to move its day ---------- */
+  function startAd() {
+    const d = ad;
+    if (!d || d.on) return;
+    clearTimeout(d.hold);
+    const t = task(d.id);
+    if (!d.chip.isConnected || !t) { endAd(false); return; }
+    d.on = true; sw = null; drag = null; d.t = t; d.len = effMins(t);
+    if (!d.mouse) haptic();
+    const r = d.chip.getBoundingClientRect();
+    d.dx = d.x0 - r.left; d.dy = d.y0 - r.top;
+    const g = d.chip.cloneNode(true);
+    for (const n of [g, ...g.querySelectorAll('[data-act],[data-id]')]) { n.removeAttribute('data-act'); n.removeAttribute('data-id'); }
+    g.setAttribute('aria-hidden', 'true');
+    g.classList.add('bill-ghost', 'ad-ghost');
+    g.style.width = Math.max(r.width, 140) + 'px'; g.style.height = Math.max(r.height, 24) + 'px';
+    document.body.appendChild(g);
+    d.ghost = g;
+    d.chip.classList.add('bill-origin');
+    document.body.classList.add('moving');
+    drawAd();
+    // near the top or bottom of the timeline, it scrolls so any hour can be reached
+    const loop = () => {
+      if (!ad || !ad.on) return;
+      const tl = ad.col && ad.col.closest('.tl');
+      if (tl) {
+        const b = tl.getBoundingClientRect(), edge = 44;
+        const v = ad.y < b.top + edge ? -(b.top + edge - ad.y) / 3 : ad.y > b.bottom - edge ? (ad.y - (b.bottom - edge)) / 3 : 0;
+        if (v) { tl.scrollTop += Math.max(-24, Math.min(24, v)); drawAd(); }
+      }
+      ad.raf = requestAnimationFrame(loop);
+    };
+    d.raf = requestAnimationFrame(loop);
+  }
+  function drawAd() {
+    const d = ad;
+    if (!d || !d.on) return;
+    d.ghost.style.transform = `translate(${d.x - d.dx}px, ${d.y - d.dy}px) scale(1.04)`;
+    if (d.pv) d.pv.style.display = 'none'; // so the point finds what's under the block, not the block
+    const el = document.elementFromPoint(d.x, d.y);
+    const col = el && el.closest ? el.closest('.tl-col[data-day]') : null;
+    const cell = !col && el && el.closest ? el.closest('.any-cell[data-day]') : null;
+    // over the timeline the chip becomes the block it will be; anywhere else it's the chip
+    d.ghost.style.visibility = col ? 'hidden' : '';
+    if (col) {
+      const st = stepOf(col), h = col.getBoundingClientRect().height;
+      const ns = clamp(Math.round((minAt(col, d.y) - 12 / h * 1440) / st) * st, 0, 1440 - st);
+      if (!d.pv) { d.pv = document.createElement('div'); d.pv.className = 'blk ghost'; d.pv.setAttribute('aria-hidden', 'true'); }
+      if (d.pv.parentElement !== col) { col.appendChild(d.pv); if (!d.mouse && d.nd) haptic(); }
+      d.pv.style.cssText = `left:3px;right:3px;top:${topAt(ns)};height:max(4px, calc(var(--h) * ${(d.len / 60).toFixed(4)} - 2px))`;
+      d.pv.classList.toggle('tight', d.len / 1440 * h < 38);
+      d.pv.innerHTML = `<b>${esc(d.t.title)}</b><small>${esc(fmtRange(ns, ns + d.len))}</small>`;
+      d.ns = ns; d.nd = col.dataset.day;
+    } else if (d.pv) { d.pv.remove(); d.pv = null; d.nd = null; }
+    d.col = col;
+    if (cell !== d.cell) {
+      if (d.cell) d.cell.classList.remove('bill-drop');
+      d.cell = cell;
+      if (cell && cell.dataset.day !== d.t.date) { cell.classList.add('bill-drop'); if (!d.mouse) haptic(); }
+    }
+  }
+  async function endAd(commit) {
+    const d = ad; ad = null;
+    if (!d) return;
+    clearTimeout(d.hold); cancelAnimationFrame(d.raf);
+    if (!d.on) { flushLater(); return; } // a plain tap: the click still lands
+    quietUntil = Date.now() + 400;
+    document.body.classList.remove('moving');
+    if (d.ghost) d.ghost.remove();
+    if (d.pv) d.pv.remove();
+    if (d.cell) d.cell.classList.remove('bill-drop');
+    d.chip.classList.remove('bill-origin');
+    renderLater = false;
+    const t = task(d.id);
+    let patch = null, msg = '';
+    if (commit && t && d.col && d.nd) { patch = { date: d.nd, time: hhmm(d.ns) }; msg = `${t.title}: ${dayLabel(d.nd)}, ${fmtTime(d.ns)}`; }
+    else if (commit && t && d.cell && d.cell.dataset.day !== t.date) { patch = { date: d.cell.dataset.day }; msg = `${t.title}: ${dayLabel(d.cell.dataset.day)}`; }
+    if (!patch) { render(); return; }
+    if (t.occ) {
+      const scope = await askScope('change', t.kind, true);
+      if (!scope) { render(); return; }
+      if (await applySeriesEdit(t.sid, t.date, patch, t.repeat.freq, scope)) toast(msg);
+      return;
+    }
+    const before = { date: t.date, time: t.time || null };
+    if (await save(store.update(t.id, { ...patch, missed: null }))) toast(msg, () => save(store.update(t.id, before)));
+  }
+  document.addEventListener('pointerdown', e => {
+    if (ad) endAd(false);
+    const chip = e.target.closest && e.target.closest('.any-cell .achip.tk');
+    if (!chip || e.target.closest('.bchk') || !e.isPrimary || !S.canSave) return; // the done circle stays a plain button
+    const btn = chip.querySelector('.bmain'), id = btn && btn.dataset.id;
+    const mouse = e.pointerType === 'mouse';
+    if (!id || (mouse && e.button !== 0)) return;
+    ad = { chip, id, mouse, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false };
+    ad.hold = setTimeout(startAd, mouse ? 350 : 420);
+  });
+  document.addEventListener('pointermove', e => {
+    if (!ad || e.pointerId !== ad.pid) return;
+    ad.x = e.clientX; ad.y = e.clientY;
+    if (ad.on) { drawAd(); return; }
+    const moved = Math.hypot(e.clientX - ad.x0, e.clientY - ad.y0);
+    if (!ad.mouse) { if (moved > 8) endAd(false); } // the finger is scrolling
+    else if (moved > 4) startAd();
+  });
+  document.addEventListener('pointerup', e => { if (ad && e.pointerId === ad.pid) endAd(true); });
+  document.addEventListener('pointercancel', e => { if (ad && e.pointerId === ad.pid) endAd(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && ad && ad.on) endAd(false); });
 
   /* ---------- Work: hold a task (or drag it with a mouse) and drop it on a day, or on No day ---------- */
   function startWd() {
