@@ -151,9 +151,8 @@ window.POSAssistant = function (ctx) {
     reminders: ['reminders', 'reminder'], projects: ['projects', 'project'], meetings: ['meetings', 'meeting'], audio: ['audio'], video: ['video', 'broadcast', 'cameras'],
     lighting: ['lighting'], work: ['work', 'work overview'], finance: ['finance', 'finances', 'money', 'bills', 'budget', 'spending', 'banking'],
     health: ['health', 'sleep', 'gym'], car: ['car', 'truck'], places: ['places', 'map'], packages: ['packages', 'package', 'deliveries', 'shipping'], pets: ['pets', 'pet'],
-    lights: ['lights', 'home lights'], tv: ['tv', 'television', 'remote', 'tv remote'], camplot: ['cam plot', 'camera plot', 'camplot', '3d cam plot', '3d camera plot'],
+    lights: ['lights', 'home lights'], tv: ['tv', 'television', 'remote', 'tv remote'],
     settings: ['settings'], weather: ['weather', 'forecast'], home: ['home', 'home screen'], today: ['today', 'my day', 'agenda', 'today\'s agenda'] };
-  const NUM = { one: 1, two: 2, to: 2, too: 2, three: 3, four: 4, for: 4, five: 5, six: 6 };
   const sectionIs = x => { x = x.replace(/^(the|my) /, '').replace(/ (section|page|tab|view|screen)$/, '').trim(); for (const k in ALIAS) if (ALIAS[k].includes(x)) return k; return null; };
   function local(raw) {
     // "hey POS, can you open my tasks please" → "open my tasks"
@@ -171,9 +170,7 @@ window.POSAssistant = function (ctx) {
       const kind = /rain|umbrella/.test(s) ? 'rain' : /wear|jacket|coat|hoodie|sweater|layer/.test(s) ? 'wear' : 'now';
       return { reply: ctx.wxSay(kind, /\btomorrow\b/.test(s)), act: { action: 'open', section: 'weather' } };
     }
-    let m = s.match(/^(?:(?:operate|run|use|open|show|go to|pull up)\s+)?cam(?:era)?\s*(\d|one|two|to|too|three|four|for|five|six)$/);
-    if (m) { const n = +m[1] || NUM[m[1]]; return { reply: `Camera ${n}.`, act: { action: 'camera', camera: n } }; }
-    m = s.match(/^(?:open|show(?: me)?|go to|take me to|pull up|bring up|switch to)\s+(?:the |my )?(.+)$/);
+    let m = s.match(/^(?:open|show(?: me)?|go to|take me to|pull up|bring up|switch to)\s+(?:the |my )?(.+)$/);
     if (m) { const k = sectionIs(m[1]); if (k) return { reply: '', act: { action: 'open', section: k } }; }
     { const k = sectionIs(s); if (k) return { reply: '', act: { action: 'open', section: k } }; }
     if (/^full ?screen$/.test(s)) return { reply: '', act: { action: 'fullscreen' } };
@@ -294,7 +291,7 @@ window.POSAssistant = function (ctx) {
       else { T.phase = 'reply'; T.reply = ''; followOn(); redraw(); afterTalk(); later(4000); }
       return;
     }
-    if (a.action === 'open' || a.action === 'camera' || a.action === 'fullscreen') {
+    if (a.action === 'open' || a.action === 'fullscreen') {
       if (r.reply) { toast(r.reply); speak(r.reply); }
       Object.assign(T, { phase: 'idle', said: '', reply: '', act: null }); ctx.go(a);
       if (X.on) followOn();
@@ -576,7 +573,7 @@ window.POSAssistant = function (ctx) {
     note.className = 'set-note' + (d != null && d <= 3 ? ' warn' : '');
     info.textContent = !K.known ? '' : K.key
       ? `Key added ${dFmt.format(new Date(K.setAt))}${K.days ? `, a ${K.days}-day key: ${d > 0 ? `${d} ${d === 1 ? 'day' : 'days'} left` : 'expired'}` : ', never expires'}. ${K.today} ${K.today === 1 ? 'ask' : 'asks'} today, ${K.month} this month.`
-      : 'No key yet. Until there is one, it knows a few set phrases: open a section, what\'s today, operate camera five.';
+      : 'No key yet. Until there is one, it knows a few set phrases: open a section, what\'s today, turn off the lights.';
     rm.hidden = !K.key;
     $('#as_key').placeholder = K.key ? 'Paste a new key to replace it' : 'Paste your Claude API key (sk-ant-…)';
     for (const b of document.querySelectorAll('#asDays button')) b.setAttribute('aria-checked', String(String(wantDays) === b.dataset.days));

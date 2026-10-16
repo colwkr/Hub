@@ -150,7 +150,7 @@ window.POSGear = function (ctx) {
   /* ---------- AVL: each department is a tree of areas; the deepest place you went is remembered per department ---------- */
   const TREE = {
     audio: { name: 'Audio', kids: [] },
-    video: { name: 'Video', kids: [{ id: 'broadcast', name: 'Broadcast', kids: [{ id: 'cameras', name: 'Cameras' }, { id: 'camplot', name: '3D cam plot', href: 'cam.html' }] }] },
+    video: { name: 'Video', kids: [{ id: 'broadcast', name: 'Broadcast', kids: [{ id: 'cameras', name: 'Cameras' }] }] },
     lighting: { name: 'Lighting', kids: [] },
   };
   const PATH = (() => { try { const p = JSON.parse(localStorage.getItem('pos.avlPath') || 'null'); return p && typeof p === 'object' ? p : { video: ['broadcast'] }; } catch (e) { return { video: ['broadcast'] }; } })();
@@ -183,7 +183,6 @@ window.POSGear = function (ctx) {
     const live = list.filter(inUse).length;
     const info = k.id === 'broadcast' ? [ICON.tower, live, live === 1 ? 'camera in use' : 'cameras in use']
       : k.id === 'cameras' ? [ICON.cam, list.length, `${list.length === 1 ? 'camera' : 'cameras'} · ${live} in use`]
-      : k.id === 'camplot' ? [ICON.cube, '', 'The room in 3D, each camera’s real view, and a multiview to practice cuts']
       : [ICON.chev, '', ''];
     const inner = `<span class="avl-ic">${info[0]}</span><span class="avl-name">${esc(k.name)}</span><span class="avl-fig">${info[1] !== '' ? `<b>${info[1]}</b>` : ''}<span>${esc(info[2])}</span></span>`;
     if (k.href) return `<a class="float avl-tile" href="${esc(k.href)}">${inner}</a>`;

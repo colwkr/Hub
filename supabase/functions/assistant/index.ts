@@ -40,8 +40,8 @@ async function usage(db: SupabaseClient) {
   return { day, month, n: u.day === day ? u.n || 0 : 0, m: u.month === month ? u.m || 0 : 0, inTok: u.month === month ? u.inTok || 0 : 0, outTok: u.month === month ? u.outTok || 0 : 0 };
 }
 
-const SECTIONS = ["home", "weather", "tasks", "calendar", "notes", "reminders", "work", "projects", "meetings", "audio", "video", "lighting", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "camplot", "settings"];
-const ACTIONS = ["none", "open", "add_task", "complete_task", "move_task", "add_reminder", "add_note", "camera", "build_note", "lights", "tv"];
+const SECTIONS = ["home", "weather", "tasks", "calendar", "notes", "reminders", "work", "projects", "meetings", "audio", "video", "lighting", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "settings"];
+const ACTIONS = ["none", "open", "add_task", "complete_task", "move_task", "add_reminder", "add_note", "build_note", "lights", "tv"];
 const TV_CMDS = ["power_on", "power_off", "volume_set", "volume_up", "volume_down", "mute", "unmute", "play", "pause", "home", "back", "open_app"];
 const TOOL = {
   name: "respond",
@@ -59,7 +59,6 @@ const TOOL = {
       time: { type: "string", description: "HH:MM, 24-hour, or empty. For add_task and move_task." },
       mins: { type: "integer", description: "For add_task: how many minutes it takes, only if he said." },
       tag: { type: "string", enum: ["work", "personal", ""], description: "For add_task: work or personal, if it's clear." },
-      camera: { type: "integer", description: "For camera: which camera, 1 to 6." },
       target: { type: "string", description: "For lights: 'all', or a room or light name from the summary's lights, or a word that picks some of them (lamps, uplights, desk)." },
       power: { type: "string", enum: ["on", "off", ""], description: "For lights: on or off, or empty to leave as is." },
       level: { type: "integer", description: "For lights: brightness 1-100. For tv volume_set: the volume 0-100. For tv volume_up and volume_down: how many steps (default 5)." },
@@ -76,11 +75,10 @@ Today is ${ctx.today} (${ctx.weekday}); it is ${ctx.now} (${ctx.clock || ""}) in
 Below is a short summary of his data. Use only what it says. Never invent tasks, ids, amounts or facts. If the answer isn't in it, say so briefly and offer to open the section that has it.
 Always answer with the respond tool, with one action at most:
 - none: just answer (what's today, what's next, how many, when).
-- open: show a section. camplot is the 3D camera plot. weather pulls the weather panel up beside him: use it whenever he asks about the weather, rain, or what to wear, and answer from the summary's weather (now, the rest of today, and an outfit call he can act on: layers, jacket, shorts, umbrella).
+- open: show a section. weather pulls the weather panel up beside him: use it whenever he asks about the weather, rain, or what to wear, and answer from the summary's weather (now, the rest of today, and an outfit call he can act on: layers, jacket, shorts, umbrella).
 - add_task, complete_task, move_task: tasks. Copy ids exactly from the summary. Turn "tomorrow", "Friday", "next week" into dates from today.
 - add_reminder: something to keep in mind that isn't a task, maybe on a day.
 - add_note: save a note.
-- camera: open one camera's operate view in the camera plot.
 - lights: control his home lights right now: on or off, brightness, tone. POS does it without asking.
 - tv: control his LG TV right now: power, volume, mute, play or pause, home, back, open an app. POS does it without asking.
 - build_note: if he asks for something POS can't do yet (a new feature, a new section, changing how it looks or works), don't pretend you can. Say that's a build change for Claude and offer to save it as a note; put the idea in title and details.
