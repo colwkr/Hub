@@ -1051,7 +1051,13 @@ window.POSFinance = function (ctx) {
     const sums = {};
     for (const g of MG_ORDER) sums[g] = rows.filter(r => r.g === g).reduce((t, r) => t + r.v, 0);
     const used = rows.reduce((t, r) => t + r.v, 0), ahead = mod.pays.filter(p => p.st === 'expected' || p.st === 'waiting').length;
-    return { mk, future, plan, inAll: tot.inAll, rows, used, left: tot.inAll - used, sums, missing: mod.missing || [], pays: mod.pays.length, ahead };
+    // each paycheck before taxes (a twenty-fourth of the salary, twice a month), and what taxes held back from it
+    let taxes = 0, taxesDone = 0;
+    for (const p of mod.pays) {
+      const inc = incById(p.incId), g = inc && inc.salary ? Math.round(inc.salary / checksPerYear(inc)) : 0, t = Math.max(0, g - (p.amount || 0));
+      taxes += t; if (p.st === 'got' || p.st === 'before') taxesDone += t;
+    }
+    return { mk, future, plan, inAll: tot.inAll, gross: tot.inAll + taxes, taxes, taxesDone, rows, used, left: tot.inAll - used, sums, missing: mod.missing || [], pays: mod.pays.length, ahead };
   }
   function monthStep(mk) {
     const cur = curMk(), prev = mkAdd(mk, -1), next = mkAdd(mk, 1), max = mkAdd(cur, 12);
@@ -1063,36 +1069,45 @@ window.POSFinance = function (ctx) {
       ${mk !== cur ? `<button type="button" class="link" data-act="fin-month" data-for="ov" data-mk="${cur}">Now</button>` : ''}</div>`;
   }
   function moneyCard(mk) {
-    const m = moneyModel(mk), cur = curMk(), pct = v => (m.inAll ? pctText(v / m.inAll) : '');
+    const m = moneyModel(mk), base = m.gross || m.inAll, pct = v => (base ? pctText(v / base) : '');
     const leftName = m.plan ? 'Left after everything' : 'Left over';
-    const tile = g => {
-      const v = m.sums[g], f = m.inAll ? v / m.inAll : null, [how, aim] = MG[g].aim, a = Math.round(aim * 100);
+    // the whole paycheck as one bar: taxes, giving, needs, wants, saved, and what's left (or how short it comes)
+    const parts = [];
+    if (m.taxes) parts.push({ k: 'tax', name: 'Taxes', v: m.taxes });
+    for (const g of MG_ORDER) if (m.sums[g] > 0) parts.push({ k: g, name: MG[g].name, v: m.sums[g] });
+    if (m.left > 0) parts.push({ k: 'left', name: 'Left', v: m.left });
+    else if (m.left < 0) parts.push({ k: 'short', name: 'Short', v: -m.left });
+    const seg = p => `<span class="mg-seg g-${p.k}" style="flex-grow:${p.v}" title="${esc(`${p.k === 'short' ? 'Short by' : p.name + ':'} ${fmt(p.v)}${p.k === 'short' ? '' : ', ' + pct(p.v)}`)}">
+        <span class="mg-sv"><b>${p.k === 'short' ? '−' + esc(dollars(p.v)) : esc(pct(p.v))}</b><small>${p.k === 'short' ? 'short' : esc(dollars(p.v))}</small><i>${esc(p.name)}</i></span></span>`;
+    const say = `${fmt(base)} pay before taxes. ` + parts.map(p => p.k === 'short' ? `short by ${fmt(p.v)}` : `${p.name} ${fmt(p.v)} (${pct(p.v)})`).join(', ');
+    const legend = parts.map(p => (p.k === 'short' ? `<span class="short"><i class="mg-key g-short"></i>Short ${esc(dollars(p.v))}</span>` : `<span><i class="mg-key g-${p.k}"></i>${esc(p.name)}</span>`)).join('');
+    // 50/30/20, measured on what's left of the pay once taxes and giving are out
+    const room = m.inAll - m.sums.give;
+    const rule = g => {
+      const f = room > 0 ? m.sums[g] / room : null, [how, aim] = MG[g].aim, a = Math.round(aim * 100);
       const ok = f == null ? null : how === 'under' ? f <= aim : f >= aim;
-      const st = f == null ? '' : ok ? `<span class="mg-s ok">${ICON.check}${how === 'under' ? `Under ${a}%` : `${a}% or more`}</span>`
-        : how === 'under' ? `<span class="mg-s bad">${ICON.warn}Over ${a}%</span>` : `<span class="mg-s">Aim for ${a}%</span>`;
-      return `<div class="mg-t"><span class="mg-k"><i class="mg-key g-${g}"></i>${MG[g].name}</span><span class="mg-p">${f == null ? '—' : esc(pctText(f))}</span><span class="mg-v">${esc(fmt(v))}</span>${st}</div>`;
+      return `<span class="mg-c${ok ? ' ok' : ok === false && how === 'under' ? ' bad' : ''}">${ok ? ICON.check : ok === false && how === 'under' ? ICON.warn : ''}<b>${MG[g].name} ${f == null ? '—' : esc(pctText(f))}</b><small>${how === 'under' ? 'under' : 'at least'} ${a}%</small></span>`;
     };
-    const total = Math.max(m.inAll, m.used, 1);
-    const segs = MG_ORDER.filter(g => m.sums[g] > 0).map(g => `<span class="mg-seg g-${g}" style="flex-grow:${m.sums[g]}" title="${esc(`${MG[g].name}: ${fmt(m.sums[g])}${m.inAll ? ', ' + pct(m.sums[g]) : ''}`)}"></span>`).join('')
-      + (m.left > 0 ? `<span class="mg-seg left" style="flex-grow:${m.left}" title="${esc(`${leftName}: ${fmt(m.left)}`)}"></span>` : '');
-    const say = `${fmt(m.inAll)} take-home. ` + MG_ORDER.filter(g => m.sums[g] > 0).map(g => `${MG[g].name} ${fmt(m.sums[g])}${m.inAll ? ' (' + pct(m.sums[g]) + ')' : ''}`).join(', ') + (m.left > 0 ? `, ${leftName.toLowerCase()} ${fmt(m.left)}` : '');
     const row = r => {
       const go = r.wait ? 'data-act="fin-todo"' : r.go ? `data-act="fin-sub" data-sub="${r.go}"${r.go === 'spending' ? ` data-mk="${mk}"` : ''}` : 'disabled';
       return `<button type="button" class="mg-r" ${go}><span class="mg-n"><b>${esc(r.name)}</b>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</span><span class="num">${esc(fmt(r.v))}</span><span class="pct">${esc(pct(r.v))}</span>
-        <span class="mg-bar" aria-hidden="true">${r.done ? `<i class="g-${r.g}" style="width:${Math.max(0.6, r.done / total * 100).toFixed(2)}%"></i>` : ''}${r.v > r.done ? `<i class="g-${r.g} rest" style="width:${Math.max(0.6, (r.v - r.done) / total * 100).toFixed(2)}%"></i>` : ''}</span></button>`;
+        <span class="mg-bar" aria-hidden="true">${r.done ? `<i class="g-${r.g}" style="width:${Math.max(0.6, r.done / base * 100).toFixed(2)}%"></i>` : ''}${r.v > r.done ? `<i class="g-${r.g} rest" style="width:${Math.max(0.6, (r.v - r.done) / base * 100).toFixed(2)}%"></i>` : ''}</span></button>`;
     };
-    const groups = MG_ORDER.filter(g => m.rows.some(r => r.g === g)).map(g => `<div class="mg-grp"><div class="mg-gh"><span><i class="mg-key g-${g}"></i>${MG[g].name}</span><span class="num">${esc(fmt(m.sums[g]))}</span><span class="pct">${esc(pct(m.sums[g]))}</span></div>
+    const head = (k, name, v) => `<div class="mg-gh"><span><i class="mg-key g-${k}"></i>${name}</span><span class="num">${esc(fmt(v))}</span><span class="pct">${esc(pct(v))}</span></div>`;
+    const taxRows = m.taxes ? `<div class="mg-grp">${head('tax', 'Taxes', m.taxes)}${row({ g: 'tax', name: 'Held back from your pay', sub: `${m.pays} ${m.pays === 1 ? 'paycheck' : 'paychecks'} · Social Security, Medicare, federal and state`, v: m.taxes, done: m.taxesDone })}</div>` : '';
+    const groups = MG_ORDER.filter(g => m.rows.some(r => r.g === g)).map(g => `<div class="mg-grp">${head(g, MG[g].name, m.sums[g])}
         ${m.rows.filter(r => r.g === g).sort((a, b) => b.v - a.v).map(row).join('')}</div>`).join('');
     const leftRow = m.inAll ? `<div class="mg-left${m.left < 0 ? ' over' : ''}"><span>${m.left < 0 ? (m.plan ? 'Short if you use every limit' : 'More than came in') : leftName}</span><span class="num">${esc(signed(m.left))}</span><span class="pct">${m.left > 0 ? esc(pct(m.left)) : ''}</span></div>` : '';
     const miss = m.missing.length ? `<p class="mg-miss">${ICON.warn}<span><b>${esc(m.missing.map(x => x.name).join(', ').replace(/, ([^,]*)$/, ' and $1'))}</b> ${m.missing.length === 1 ? 'has' : 'have'} no amount yet, so ${m.missing.length === 1 ? 'it isn’t' : 'they aren’t'} counted here.</span>${canSave() ? '<button type="button" class="link" data-act="fin-sub" data-sub="bills">Add on Bills</button>' : ''}</p>` : '';
-    const inSub = m.future ? 'coming in' : `take-home${m.ahead ? ` · ${m.ahead} ${m.ahead === 1 ? 'paycheck' : 'paychecks'} still to come` : ''}`;
+    const inSub = [m.taxes ? `before taxes · ${fmt(m.inAll)} take-home` : m.future ? 'coming in' : 'take-home', m.ahead ? `${m.ahead} ${m.ahead === 1 ? 'paycheck' : 'paychecks'} still to come` : ''].filter(Boolean).join(' · ');
     return `<article class="float mg">
       <div class="mg-head"><span class="lab">Where it goes</span>${monthStep(mk)}</div>
-      <div class="mg-in"><span class="fig">${big(m.inAll)}</span><span class="meta">${esc(inSub)}</span></div>
-      ${m.inAll || m.used ? `<div class="mg-tiles">${tile('need')}${tile('want')}${tile('save')}</div>
-      <div class="mg-stack" role="img" aria-label="${esc(say)}">${segs}</div>
-      <p class="mg-guide">${m.plan ? 'Every bill and spending limit counts in full, so what’s left is yours even if you use every limit. On each line, solid is already paid and faded is still to come. ' : ''}A common guide: needs under 50% of take-home, wants under 30%, and 20% or more saved.</p>
-      ${miss}<div class="mg-list">${groups}${leftRow}</div>` : `<p class="empty">Nothing in ${esc(mkName(mk))} yet.</p>`}
+      <div class="mg-in"><span class="fig">${big(base)}</span><span class="meta">${esc(inSub)}</span></div>
+      ${base || m.used ? `<div class="mg-stack" role="img" aria-label="${esc(say)}">${parts.map(seg).join('')}</div>
+      <div class="mg-legend" aria-hidden="true">${legend}</div>
+      ${room > 0 ? `<div class="mg-rule"><span class="mg-rl">50/30/20 of the ${esc(dollars(room))} left after taxes${m.sums.give ? ' and giving' : ''}</span><div class="mg-cs">${rule('need')}${rule('want')}${rule('save')}</div></div>` : ''}
+      ${m.plan ? '<p class="mg-guide">Every bill and spending limit counts in full, so what’s left is yours even if you use every limit. On each line, solid is already paid and faded is still to come.</p>' : ''}
+      ${miss}<div class="mg-list">${taxRows}${groups}${leftRow}</div>` : `<p class="empty">Nothing in ${esc(mkName(mk))} yet.</p>`}
     </article>`;
   }
 

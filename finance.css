@@ -421,6 +421,9 @@
 .fin .g-want{background:#d95926}
 .fin .g-save{background:#199e70}
 .fin .g-other{background:rgba(236,238,242,.38)}
+.fin .g-tax{background:#55585f}
+.fin .g-left{background:repeating-linear-gradient(135deg,rgba(236,238,242,.16) 0 1.5px,transparent 1.5px 6px);box-shadow:inset 0 0 0 1px rgba(236,238,242,.14)}
+.fin .g-short{background:repeating-linear-gradient(135deg,rgba(255,90,40,.28) 0 1.5px,transparent 1.5px 6px);box-shadow:inset 0 0 0 1.5px rgba(255,90,40,.7)}
 
 /* net worth */
 .fin .nw{padding:16px 18px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -472,19 +475,33 @@
 .fin .mg-mo{min-width:78px;text-align:center;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
 .fin .mg-in{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
 .fin .mg-in .fig{font-size:30px;font-weight:200;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fin .mg-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.fin .mg-t{display:flex;flex-direction:column;gap:4px;padding:12px 12px 11px;border-radius:3px;background:rgba(255,255,255,.025);box-shadow:inset 0 0 0 1px var(--hair);min-width:0}
-.fin .mg-k{display:flex;align-items:center;gap:7px;font:500 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .fin .mg-key{display:inline-block;width:9px;height:9px;border-radius:2px;flex:none}
-.fin .mg-p{font-size:30px;font-weight:200;line-height:1.1;font-variant-numeric:tabular-nums}
-.fin .mg-v{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fin .mg-s{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
-.fin .mg-s svg.i{width:13px;height:13px;stroke-width:2.2;flex:none}
-.fin .mg-s.ok{color:var(--good)}
-.fin .mg-s.bad{color:var(--warn)}
-.fin .mg-stack{display:flex;gap:2px;height:14px}
-.fin .mg-seg{flex:1 1 0;min-width:3px;border-radius:2px}
-.fin .mg-seg.left{background:repeating-linear-gradient(135deg,rgba(236,238,242,.2) 0 1.5px,transparent 1.5px 6px);box-shadow:inset 0 0 0 1px var(--hair)}
+/* the whole paycheck as one bar, each piece labeled inside; a narrow piece drops its name, then its dollars */
+.fin .mg-stack{display:flex;gap:2px;height:72px}
+.fin .mg-seg{position:relative;flex:1 1 0;min-width:4px;border-radius:3px;overflow:hidden;container-type:inline-size}
+.fin .mg-sv{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 9px;color:#0a0b0d;white-space:nowrap;pointer-events:none}
+.fin .mg-sv b{font-size:18px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fin .mg-sv small{font-size:12px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums;opacity:.82}
+.fin .mg-sv i{font:600 8.5px/1 var(--mono);font-style:normal;letter-spacing:.12em;text-transform:uppercase;opacity:.72}
+.fin .mg-seg.g-tax .mg-sv,.fin .mg-seg.g-left .mg-sv{color:var(--ink)}
+.fin .mg-seg.g-short .mg-sv{color:var(--bad)}
+@container (max-width:96px){ .fin .mg-sv i{display:none} }
+@container (max-width:60px){ .fin .mg-sv{padding:0 5px} .fin .mg-sv b{font-size:13.5px} .fin .mg-sv small{font-size:10.5px} }
+@container (max-width:44px){ .fin .mg-sv small{display:none} .fin .mg-sv{padding:0 3px;align-items:center} .fin .mg-sv b{font-size:12px} }
+@container (max-width:24px){ .fin .mg-sv{display:none} }
+@container (max-width:64px){ .fin .mg-seg.g-short .mg-sv{display:none} }
+.fin .mg-legend .short{color:var(--bad)}
+.fin .mg-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:-6px;font:500 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.fin .mg-legend span{display:inline-flex;align-items:center;gap:6px}
+.fin .mg-rule{display:flex;flex-direction:column;gap:8px;padding:11px 12px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--hair)}
+.fin .mg-rl{font:500 9.5px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.fin .mg-cs{display:flex;flex-wrap:wrap;gap:8px 18px}
+.fin .mg-c{display:inline-flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--ink-2)}
+.fin .mg-c b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.fin .mg-c small{font-size:11.5px;color:var(--ink-3)}
+.fin .mg-c svg.i{width:13px;height:13px;stroke-width:2.2;align-self:center;flex:none}
+.fin .mg-c.ok svg.i{color:var(--good)}
+.fin .mg-c.bad svg.i,.fin .mg-c.bad b{color:var(--warn)}
 .fin .mg-guide{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:-4px}
 .fin .mg-miss{display:flex;align-items:flex-start;gap:6px 9px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);line-height:1.4;padding:10px 12px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(242,184,94,.32)}
 .fin .mg-miss svg.i{width:15px;height:15px;color:var(--warn);flex:none;margin-top:1px}
@@ -510,7 +527,7 @@
 .fin .mg-left.over{color:var(--bad)}
 @media (hover:hover){ .fin .mg-r:not(:disabled):hover .mg-n b,.fin .sv-r:hover .sv-n{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px} }
 @container fin (max-width:440px){ .fin .nw-eq{gap:8px 9px} .fin .nw-eq b{font-size:15px} .fin .nw-eq i{font-size:15px} }
-@container fin (max-width:380px){ .fin .mg-p{font-size:24px} .fin .mg-t{padding:10px} .fin .nw-fig{font-size:34px} }
+@container fin (max-width:380px){ .fin .nw-fig{font-size:34px} }
 
 /* savings, at a glance */
 .fin .sv{padding:16px 18px 8px;display:flex;flex-direction:column;gap:6px;min-width:0}
