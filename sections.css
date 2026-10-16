@@ -1050,16 +1050,62 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 .apb.lifted .app-l{opacity:0}
 .apps-done{position:absolute;right:2px;top:-36px;border:0;border-radius:3px;padding:7px 12px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
   color:var(--qink);font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
-/* the NERV tile: app-sized, top left (in an app it's the red X in the same spot) */
+/* the NERV tile: app-sized, top left (in an app it's in the same spot, and takes you back Home) */
 .qh-c.q-tl{flex-direction:row;align-items:center;gap:14px}
 .qh-nerv{border:0;cursor:pointer;padding:0;flex-direction:column;gap:3px;display:flex;align-items:center;justify-content:center}
 .qh-nerv > svg.nerv-g{width:40%;height:40%;fill:none;stroke:rgb(112,214,255);stroke-width:1.4;filter:drop-shadow(0 0 6px rgba(112,214,255,.6))}
 .qh-nerv > span{font:600 8.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--qink)}
-.app-x{width:var(--ai);height:var(--ai);border-radius:24%;border:0;display:grid;place-items:center;flex:none;cursor:pointer;
-  background:linear-gradient(155deg,rgba(255,255,255,.11),rgba(255,255,255,.02) 55%),rgba(16,18,24,.78);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),inset 0 1px 0 rgba(255,255,255,.12),0 12px 26px -14px rgba(0,0,0,.9);transition:transform .12s ease}
-.app-x:active{transform:scale(.93)}
-.app-x > svg.i{width:42%;height:42%;fill:none;stroke:#ff5247;stroke-width:2.3;stroke-linecap:round}
+/* in an app, the same NERV tile sits top left and takes you back Home */
+.win-nerv{cursor:pointer}
+.win-nerv:active{transform:scale(.93)}
+.win-side{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:3px;flex:none;cursor:pointer;color:var(--qink);
+  background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.win-side[hidden]{display:none}
+.win-side svg.i{width:20px;height:20px}
+
+/* the sidebar: NERV on top, the fold under it, then the app's sections */
+.side[hidden]{display:none!important}
+.side{display:flex;flex-direction:column;gap:4px;min-height:0;padding:10px;border-radius:4px;overflow-y:auto;scrollbar-width:none;
+  background:var(--glass);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.side::-webkit-scrollbar{display:none}
+.side-home{margin:0 0 8px}
+.side-fold,.side-it{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:3px;background:none;cursor:pointer;
+  color:var(--qdim);font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;text-align:left;white-space:nowrap}
+.side-fold svg.i,.side-it svg.i{width:19px;height:19px;flex:none}
+.side-fold:hover,.side-it:hover{color:var(--qink);background:rgba(255,255,255,.045)}
+.side-fold:focus-visible,.side-it:focus-visible{outline:1.5px solid var(--qink);outline-offset:-1.5px}
+.side-it[aria-current="page"]{background:var(--qink);color:#060606}
+.side-nav{display:flex;flex-direction:column;gap:2px;margin-top:4px;padding-top:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.side-it .badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;font:600 10px/18px var(--mono);letter-spacing:0;text-align:center}
+.side-l{overflow:hidden;text-overflow:ellipsis}
+@media (min-width:760px) and (min-height:500px){
+  body.has-side{--side-w:212px}
+  body.has-side.side-folded{--side-w:84px}
+  body.has-side .app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:22px;row-gap:16px;
+    max-width:calc(var(--wrap) + var(--side-w) + 22px)}
+  body.has-side .side{grid-column:1;grid-row:1/span 2;align-self:stretch;margin:4px 0 0}
+  body.has-side .top{grid-column:2;grid-row:1}
+  body.has-side #view{grid-column:2;grid-row:2}
+  body.has-side .top .win-l > .win-nerv{display:none}
+  .win-side{display:none!important}
+  /* folded: icons only, the name on hover */
+  body.side-folded .side-l{display:none}
+  body.side-folded .side-fold,body.side-folded .side-it{justify-content:center;padding:0}
+  body.side-folded .side-fold svg.i{transform:scaleX(-1)}
+  body.side-folded .side-it .badge{position:absolute;top:5px;right:5px;min-width:15px;height:15px;padding:0 3px;font-size:9px;line-height:15px}
+}
+/* a phone: the sidebar slides over the page from the left */
+@media (max-width:759px),(max-height:499px){
+  body.has-side .app:not(.win-in):not(.home-in){transform:none}
+  .side{position:fixed;left:0;top:0;bottom:0;z-index:40;width:min(276px,84vw);border-radius:0 6px 6px 0;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));
+    background:#0c0d10;box-shadow:inset -1px 0 0 rgba(255,255,255,.08),24px 0 60px -20px rgba(0,0,0,.9);
+    transform:translateX(-104%);visibility:hidden;transition:transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s linear .26s}
+  body.side-open .side{transform:none;visibility:visible;transition:transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s}
+  .side-scrim{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.55)}
+  .side-scrim[hidden]{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .side{transition:none!important} }
 [data-noir] .top .win-l{gap:16px;padding:6px 8px 4px}
 [data-noir] .top{align-items:center}
 /* Home without the card list: the creature in the middle, the apps under it */
@@ -1076,3 +1122,4 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
   .qh-apps{margin-top:12px}
 }
 @media (prefers-reduced-motion:reduce){ .qh-apps.editing .apb .app-i,.qh.enter .apb{animation:none} }
+@media (max-width:759px){ body.has-side .top .win-l{gap:10px} body.has-side .win-side{width:38px;height:38px} }

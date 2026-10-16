@@ -41,31 +41,31 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261016180445">
-<script src="finance.js?v=20261016180445"></script>
-<link rel="stylesheet" href="car.css?v=20261016180445">
-<script src="car.js?v=20261016180445"></script>
-<link rel="stylesheet" href="sections.css?v=20261016180445">
-<link rel="stylesheet" href="tv.css?v=20261016180445">
-<link rel="stylesheet" href="noir.css?v=20261016180445">
-<script src="records.js?v=20261016180445"></script>
-<script src="people.js?v=20261016180445"></script>
-<script src="wheels.js?v=20261016180445"></script>
-<script src="keyboard.js?v=20261016180445"></script>
-<script src="notes.js?v=20261016180445"></script>
-<script src="reminders.js?v=20261016180445"></script>
-<script src="gear.js?v=20261016180445"></script>
-<script src="lights.js?v=20261016180445"></script>
-<script src="tv.js?v=20261016180445"></script>
-<script src="work.js?v=20261016180445"></script>
-<script src="health.js?v=20261016180445"></script>
-<script src="pets.js?v=20261016180445"></script>
-<script src="places.js?v=20261016180445"></script>
-<script src="placestab.js?v=20261016180445"></script>
-<script src="usmap.js?v=20261016180445"></script>
-<script src="voice.js?v=20261016180445"></script>
-<script src="assistant.js?v=20261016180445"></script>
-<script src="packages.js?v=20261016180445"></script>
+<link rel="stylesheet" href="finance.css?v=20261016185408">
+<script src="finance.js?v=20261016185408"></script>
+<link rel="stylesheet" href="car.css?v=20261016185408">
+<script src="car.js?v=20261016185408"></script>
+<link rel="stylesheet" href="sections.css?v=20261016185408">
+<link rel="stylesheet" href="tv.css?v=20261016185408">
+<link rel="stylesheet" href="noir.css?v=20261016185408">
+<script src="records.js?v=20261016185408"></script>
+<script src="people.js?v=20261016185408"></script>
+<script src="wheels.js?v=20261016185408"></script>
+<script src="keyboard.js?v=20261016185408"></script>
+<script src="notes.js?v=20261016185408"></script>
+<script src="reminders.js?v=20261016185408"></script>
+<script src="gear.js?v=20261016185408"></script>
+<script src="lights.js?v=20261016185408"></script>
+<script src="tv.js?v=20261016185408"></script>
+<script src="work.js?v=20261016185408"></script>
+<script src="health.js?v=20261016185408"></script>
+<script src="pets.js?v=20261016185408"></script>
+<script src="places.js?v=20261016185408"></script>
+<script src="placestab.js?v=20261016185408"></script>
+<script src="usmap.js?v=20261016185408"></script>
+<script src="voice.js?v=20261016185408"></script>
+<script src="assistant.js?v=20261016185408"></script>
+<script src="packages.js?v=20261016185408"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1259,8 +1259,14 @@ dialog::backdrop{background:transparent}
 <div id="turnBack" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg>Turn your phone upright</div>
 
 <div class="app">
+  <aside id="side" class="side" aria-label="Sections" hidden>
+    <button type="button" class="app-i qh-nerv win-nerv side-home" data-tab="home" aria-label="Back to Home" title="Home"><svg class="i nerv-g" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2"/></svg><span data-appname>POS</span></button>
+    <button type="button" class="side-fold" id="sideFold" aria-controls="side" aria-expanded="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15M15.5 10l-2 2 2 2"/></svg><span class="side-l">Collapse</span></button>
+    <nav class="side-nav" id="sideNav"></nav>
+  </aside>
+  <div class="side-scrim" id="sideScrim" hidden></div>
   <header class="top">
-    <div class="win-l"><button type="button" class="app-x" data-tab="home" aria-label="Close, back to Home" title="Home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button><h1 id="title">Home</h1></div>
+    <div class="win-l"><button type="button" class="app-i qh-nerv win-nerv" data-tab="home" aria-label="Back to Home" title="Home"><svg class="i nerv-g" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2"/></svg><span data-appname>POS</span></button><button type="button" class="win-side" id="winSide" aria-controls="side" aria-expanded="false" aria-label="Show sections" title="Sections" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15M13.5 10l2 2-2 2"/></svg></button><h1 id="title">Home</h1></div>
     <div class="right">
       <span class="date" id="today"></span>
       <button type="button" class="win-sess" id="winSess" data-act="as-sess" hidden>Session</button>
@@ -1531,7 +1537,7 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261016180445"></script>
+<script src="appearance.js?v=20261016185408"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
@@ -3981,6 +3987,48 @@ dialog::backdrop{background:transparent}
     R.addEventListener('scroll', onScroll(R, L), { passive: true });
     follow(L, R);
   }
+  /* ---------- the sidebar: an app with sections gets one. NERV (back to Home) on top, the fold under it, then the sections.
+     On a tablet or computer it sits beside the page, wide or folded to icons; on a phone it slides over the page. ---------- */
+  const SIDES = { finance: () => (FIN && FIN.side ? FIN.side() : null) };
+  const sideWide = () => !!(window.matchMedia && matchMedia('(min-width:760px) and (min-height:500px)').matches);
+  let sideOpen = false; // a phone's sidebar, over the page
+  const sideFolded = () => { try { return localStorage.getItem('pos.side.fold') === '1'; } catch (e) { return false; } };
+  function renderSide() {
+    const cfg = S.user && SIDES[S.tab] ? SIDES[S.tab]() : null, side = $('#side'), wide = sideWide();
+    document.body.classList.toggle('has-side', !!cfg);
+    side.hidden = !cfg; $('#winSide').hidden = !cfg;
+    if (!cfg) { sideOpen = false; document.body.classList.remove('side-open', 'side-folded'); $('#sideScrim').hidden = true; return; }
+    if (wide) sideOpen = false;
+    const folded = wide && sideFolded(), open = !wide && sideOpen;
+    document.body.classList.toggle('side-folded', folded);
+    document.body.classList.toggle('side-open', open);
+    $('#sideScrim').hidden = !open;
+    side.inert = !wide && !open;
+    const fold = $('#sideFold');
+    fold.setAttribute('aria-expanded', String(wide ? !folded : open));
+    fold.setAttribute('aria-label', wide ? (folded ? 'Expand the sidebar' : 'Collapse the sidebar') : 'Close the sidebar');
+    fold.title = fold.getAttribute('aria-label');
+    fold.querySelector('.side-l').textContent = wide ? 'Collapse' : 'Close';
+    $('#winSide').setAttribute('aria-expanded', String(open));
+    const nav = $('#sideNav');
+    nav.setAttribute('aria-label', `${cfg.label} sections`);
+    nav.innerHTML = cfg.items.map(it => `<button type="button" class="side-it" data-act="${esc(cfg.act)}" data-sub="${esc(it.key)}"${it.key === cfg.current ? ' aria-current="page"' : ''} title="${esc(it.label)}">${it.icon}<span class="side-l">${esc(it.label)}</span>${it.badge ? `<span class="badge" aria-label="${esc(String(it.badge))} to look at">${esc(String(it.badge))}</span>` : ''}</button>`).join('');
+  }
+  function sideToggle(open) {
+    if (sideWide()) { try { localStorage.setItem('pos.side.fold', sideFolded() ? '0' : '1'); } catch (e) {} renderSide(); return; }
+    sideOpen = open == null ? !sideOpen : open;
+    renderSide();
+    if (sideOpen) { const c = $('#sideNav [aria-current="page"]') || $('#sideNav .side-it'); if (c) c.focus({ preventScroll: true }); }
+    else $('#winSide').focus({ preventScroll: true });
+  }
+  $('#sideFold').addEventListener('click', () => sideToggle(sideWide() ? null : false));
+  $('#winSide').addEventListener('click', () => sideToggle(true));
+  $('#sideScrim').addEventListener('click', () => sideToggle(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sideOpen && !document.querySelector('dialog[open]')) { e.preventDefault(); sideToggle(false); } });
+  // picking a section on a phone closes the sidebar behind it
+  document.addEventListener('click', e => { if (sideOpen && e.target.closest && e.target.closest('#sideNav [data-act], #side [data-tab]')) sideOpen = false; }, true);
+  if (window.matchMedia) { const mq = matchMedia('(min-width:760px) and (min-height:500px)'); const on = () => renderSide(); if (mq.addEventListener) mq.addEventListener('change', on); else if (mq.addListener) mq.addListener(on); }
+
   function render() {
     if (TV && TV.busy()) { renderLater = true; TV.wantRender(); return; }
     if (mk || mv || bd || so || wd || ad || (ap && ap.on) || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy()) || (ASSIST && ASSIST.holding())) { renderLater = true; return; }
@@ -3989,6 +4037,7 @@ dialog::backdrop{background:transparent}
     if (S.booted && !S.user) {
       // keep whatever is half-typed in the form; only rebuild when the screen changes
       if (!$('#loginForm') || S.loginRedraw) { $('#view').innerHTML = vLogin(); S.loginRedraw = false; }
+      renderSide();
       return;
     }
     const keep = {};
@@ -4005,6 +4054,7 @@ dialog::backdrop{background:transparent}
     for (const b of document.querySelectorAll('#rail [data-grp]')) { if (b.dataset.grp === grpNow) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
     for (const b of document.querySelectorAll('.nav [data-grp]')) b.classList.toggle('has-cur', b.dataset.grp === grpNow);
     $('#view').innerHTML = views[S.tab]();
+    renderSide();
     if (S.tab === 'home' && !S.homeAll) orbKick();
     for (const el of document.querySelectorAll('#view [data-keep]')) {
       if (S.aim[el.id] != null) { el.scrollTop = S.aim[el.id]; delete S.aim[el.id]; }

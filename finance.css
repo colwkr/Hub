@@ -1,19 +1,13 @@
 /* POS Finance: the Split Ledger look, scoped under .fin (page) and #finSheet (its form sheet). */
 .fin{display:flex;flex-direction:column;gap:18px}
-.fin-tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--well);align-self:flex-start;max-width:100%;overflow-x:auto;scrollbar-width:none}
-.fin-tabs::-webkit-scrollbar{display:none}
-.fin-tabs button{position:relative;border:0;background:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
-.fin-tabs button[aria-current="page"]{background:var(--solid);color:var(--on-solid);box-shadow:var(--lift-sm)}
-.fin-tabs .badge{min-width:18px;height:18px;border-radius:9px;background:var(--solid);color:var(--on-solid);font-size:10px;font-weight:600;line-height:18px;text-align:center;padding:0 5px}
-.fin-tabs button[aria-current="page"] .badge{background:var(--on-solid);color:var(--solid)}
-.fin-scroll{display:flex;flex-direction:column;gap:26px;min-width:0}
+.fin-scroll{display:flex;flex-direction:column;gap:26px;min-width:0;container:fin/inline-size}
 .fin-page{display:flex;flex-direction:column;gap:26px;width:100%;max-width:640px}
 .fin-two{display:flex;flex-direction:column;gap:26px}
-@media (min-width:900px){
+@container fin (min-width:700px){
   .fin-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
   .fin-two > div{display:flex;flex-direction:column;gap:26px;min-width:0}
 }
-@media (max-width:899px){ .fin-two > div{display:contents} }
+@container fin (max-width:699.9px){ .fin-two > div{display:contents} }
 
 .fin .totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .fin .totals > div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -207,21 +201,12 @@
   .fin-scroll::-webkit-scrollbar{display:none}
 }
 @media (prefers-reduced-motion:no-preference){ .fin .meter span,.fin .track span,.fin .seg{transition:width .25s ease} }
-@media (max-width:520px){ .fin-tabs{gap:2px} .fin-tabs button{padding:8px 11px;font-size:12.5px;gap:6px} }
 .fin .l-short{display:none}
 @media (max-width:520px){ .fin .l-long{display:none} .fin .l-short{display:inline} }
 
-/* the overview's pictures: on hand, the bills line, spending rings and day bars */
+/* the bills line (on Bills) */
 .fin .cents{color:var(--ink-3)}
-.fin-viz{display:grid;gap:16px}
-@media (min-width:900px){ .fin-viz{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:stretch} .fin-viz.one{grid-template-columns:minmax(0,1fr)} }
-.fin .fh,.fin .bl,.fin .sc{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.fin .fh .fig.xl{line-height:1}
-.fin .fh-rows{display:flex;flex-direction:column}
-.fin .fh-row{display:flex;align-items:center;gap:10px;min-height:38px;font-size:15px}
-.fin .fh-row span:nth-of-type(1){flex:1;min-width:0}
-.fin .fh-row .num{font-variant-numeric:tabular-nums}
-.fin .fh-row.owed{color:var(--ink-2)}
+.fin .bl{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .fin .dot.hollow{background:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
 .fin .bl-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .fin .bl-head .meta b{color:var(--ink);font-weight:500}
@@ -283,25 +268,13 @@
 
 /* lists: to buy, to sell or give away */
 .fin .fl-grid{display:grid;gap:22px}
-@media (min-width:900px){ .fin .fl-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
+@container fin (min-width:700px){ .fin .fl-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
 .fin .fl-card{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .fin .fl-top{display:flex;flex-direction:column;gap:4px}
 .fin .fl-card .li-list{margin:0 -8px}
 
-/* the overview: small pieces up top (accounts, pay, the month's ring, its days), the bills under them */
-.fin .ov2{display:flex;flex-direction:column;gap:16px}
-.fin .ov-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.fin .ov-top .mo-nav{flex:1 1 auto;flex-wrap:nowrap}
-@media (max-width:520px){ .fin .ov-top .mo-name{min-width:120px} .fin .ov-top .mo-back{display:none} }
-.fin .ov-todo{margin-left:auto;font-variant-numeric:tabular-nums}
-.fin .ov-w{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
-.fin .ov-w > .ac,.fin .ov-w > .pay,.fin .ov-w > .hc-day{grid-column:1/-1}
-@media (min-width:700px){ .fin .ov-w > .ac,.fin .ov-w > .pay{grid-column:auto} }
-@media (min-width:1080px){ .fin .ov-w{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,.62fr) minmax(0,.95fr)} }
-.fin .ov-b{display:grid;gap:14px}
-@media (min-width:700px){ .fin .ov-b{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
-.fin .ac,.fin .mo{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.fin .ov-w .ac{padding:14px 14px 10px;gap:6px}
+.fin .ac{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fin .ov3 .ac{padding:14px 14px 10px;gap:6px}
 .fin .ac-list{display:flex;flex-direction:column;margin:0 -8px}
 .fin .ac-row{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:4px 0 10px}
 .fin .ac-row + .ac-row{box-shadow:inset 0 1px 0 var(--hair);padding-top:10px}
@@ -338,34 +311,6 @@
 .fin .mo-nav .circle:disabled{opacity:.3}
 .fin .mo-back{font-size:12.5px;margin-left:auto}
 
-/* the month: all its income as one ring, and where it goes */
-.fin .mo-main{display:grid;gap:22px;align-items:center}
-@media (min-width:640px){ .fin .mo-main{grid-template-columns:auto minmax(0,1fr);gap:30px} }
-.fin .dn-wrap{position:relative;width:min(230px,66vw);aspect-ratio:1;justify-self:center}
-.fin .dn{display:block;width:100%;height:100%;overflow:visible}
-.fin .dn-track{fill:none;stroke:var(--hair);stroke-width:20}
-.fin .dn-seg{fill:none;stroke:var(--ink);stroke-width:20;transition:stroke-dasharray .4s ease,stroke-dashoffset .4s ease}
-.fin .dn-seg.good{stroke:var(--good)}
-.fin .dn-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none}
-.fin .dn-mid .fig{font-size:26px;font-weight:200;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fin .mo-right{display:flex;flex-direction:column;gap:18px;min-width:0}
-.fin .mo-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px 20px}
-.fin .mo-fig{display:flex;flex-direction:column;gap:3px;min-width:0}
-.fin .mo-fig .fig{font-size:32px;font-weight:200;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fin .mo-fig.good .fig{color:var(--good)}
-.fin .mo-fig.good .fig .cents{color:inherit;opacity:.6}
-.fin .mo-fig.neg .fig{color:var(--bad)}
-.fin .mo-leg{display:flex;flex-direction:column}
-.fin .mo-leg-r{display:grid;grid-template-columns:14px minmax(0,1fr) auto 46px;gap:12px;align-items:center;border:0;background:none;color:var(--ink);text-align:left;width:100%;min-height:40px;padding:4px 0;font-size:15px}
-.fin .mo-leg-r + .mo-leg-r{box-shadow:inset 0 1px 0 var(--hair)}
-.fin button.mo-leg-r:hover .mo-leg-n{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px}
-.fin .mo-leg-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fin .mo-leg-r .num{font-variant-numeric:tabular-nums;font-weight:500}
-.fin .mo-leg-r .pct{font-size:13px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
-.fin .mo-leg-r.left .mo-leg-n,.fin .mo-leg-r.left .num{font-weight:600}
-.fin .dn-key{width:12px;height:12px;border-radius:3px;background:var(--ink)}
-.fin .dn-key.good{background:var(--good)}
-.fin .dn-key.hollow{background:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
 
 /* planning a month's limits ahead */
 .fin .pl-list{display:flex;flex-direction:column}
@@ -380,25 +325,25 @@
 .fin .plan-next{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 20px;border-radius:24px;box-shadow:inset 0 0 0 1.5px var(--hair)}
 .fin .l-was{display:block;font-size:11px;color:var(--ink-3);text-align:right;font-weight:400;letter-spacing:0}
 .fin .acct-grid{display:grid;gap:16px}
-@media (min-width:600px){ .fin .acct-grid{grid-template-columns:1fr 1fr} }
+@container fin (min-width:560px){ .fin .acct-grid{grid-template-columns:1fr 1fr} }
 .fin .bl{margin-bottom:0}
 #finSheet .f-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 /* the place this merchant went last time: first, and outlined, but still only a suggestion you tap */
 .fin .chip.usual{box-shadow:var(--lift-sm),inset 0 0 0 1.5px var(--ink-2)}
 
 /* accounts, smaller */
-.fin .ov-w .ac-list{margin:0 -6px}
-.fin .ov-w .ac-row{padding:0;gap:2px}
-.fin .ov-w .ac-row + .ac-row{padding-top:2px}
-.fin .ov-w .ac-main{grid-template-columns:44px minmax(0,1fr) auto;gap:10px;padding:7px 6px;border-radius:12px}
+.fin .ov3 .ac-list{margin:0 -6px}
+.fin .ov3 .ac-row{padding:0;gap:2px}
+.fin .ov3 .ac-row + .ac-row{padding-top:2px}
+.fin .ov3 .ac-main{grid-template-columns:44px minmax(0,1fr) auto;gap:10px;padding:7px 6px;border-radius:12px}
 .fin .ac-art{display:block;width:72px;height:46px}
-.fin .ov-w .ac-art{width:44px;height:28px}
-.fin .ov-w .ac-art > *{transform:scale(.611);transform-origin:0 0}
-.fin .ov-w .ac-n b{font-size:14px}
-.fin .ov-w .ac-n span{font-size:11px}
-.fin .ov-w .ac-v{font-size:17px;font-weight:400}
-.fin .ov-w .ac-short,.fin .ov-w .ac-sort{font-size:12px;margin:0 6px 6px 0}
-.fin .ov-w .ac-sort{min-height:30px;padding:5px 12px}
+.fin .ov3 .ac-art{width:44px;height:28px}
+.fin .ov3 .ac-art > *{transform:scale(.611);transform-origin:0 0}
+.fin .ov3 .ac-n b{font-size:14px}
+.fin .ov3 .ac-n span{font-size:11px}
+.fin .ov3 .ac-v{font-size:17px;font-weight:400}
+.fin .ov3 .ac-short,.fin .ov3 .ac-sort{font-size:12px;margin:0 6px 6px 0}
+.fin .ov3 .ac-sort{min-height:30px;padding:5px 12px}
 
 /* pay: the salary, and each check, month, year and week before taxes, the taxes, and what lands */
 .fin .pay{padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -428,12 +373,6 @@
 .fin .py-x .num{font-variant-numeric:tabular-nums}
 .fin .py-split .meta{font-size:11px;padding-top:4px}
 
-/* the month's ring, small: tap for the whole picture */
-.fin .pie{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:14px 14px 12px;border:0;color:var(--ink);text-align:left;cursor:pointer;min-width:0;font:inherit;transition:transform .15s ease}
-.fin .pie:active{transform:scale(.97)}
-.fin .pie-ring{flex:1;display:grid;place-items:center;min-height:0}
-.fin .pie .dn{width:100%;max-width:170px;height:auto;aspect-ratio:1}
-.fin .pie .dn-track,.fin .pie .dn-seg{stroke-width:26}
 
 /* the month's days as boxes: deeper color, more spent; today ringed */
 .fin .hc{padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -457,33 +396,130 @@
 .fin .hc-tx .num{grid-row:1/span 2;grid-column:2;font-variant-numeric:tabular-nums;font-size:15px}
 .fin .hc-tx small{font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* bills and subscriptions, plainly: name, its day and account, how much, paid or not */
-.fin .sb{padding:6px 0 4px;display:flex;flex-direction:column;min-width:0}
-.fin .sb-head{display:flex;align-items:center;gap:10px;padding:8px 10px 6px 18px}
-.fin .sb-head .lab{flex:none}
-.fin .sb-head .meta{flex:1;text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
-.fin .sb-add{width:32px;height:32px}
-.fin .sb-add svg.i{width:15px;height:15px}
-.fin .sb-row{display:flex;align-items:center;padding:0 12px 0 6px}
-.fin .sb-row + .sb-row{box-shadow:inset 0 1px 0 var(--hair)}
-.fin .sb-main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 12px;align-items:center;border:0;background:none;color:var(--ink);text-align:left;padding:9px 0;min-width:0;font:inherit}
-.fin .sb-n{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fin .sb-a{grid-row:1/span 2;grid-column:2;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fin .sb-d{font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fin .sb-row.paid .sb-n,.fin .sb-row.paid .sb-a{color:var(--ink-2)}
-.fin .sb-row.late .sb-d{color:var(--warn)}
-.fin .sb .empty{padding:6px 18px 12px}
 
-/* the ring, full screen */
-.fin-full{position:fixed;inset:0;z-index:66;display:flex;flex-direction:column;gap:8px;background:rgba(4,4,5,.93);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
-  padding:calc(env(safe-area-inset-top,0px) + 18px) max(24px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 8px) max(24px,env(safe-area-inset-left,0px))}
-.fin-full .ff-top{display:flex;align-items:center;gap:14px}
-.fin-full .ff-top .mo-nav{flex:1}
-.fin-full .ff-x{--ai:52px}
-.fin-full .ff-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:18px 0 32px}
-.fin-full .ff-scroll::-webkit-scrollbar{display:none}
-.fin-full .ff-main{display:grid;gap:30px;align-items:center;max-width:1080px;margin:0 auto;min-height:100%}
-@media (min-width:760px){ .fin-full .ff-main{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:56px} }
-.fin-full .dn-wrap{width:min(440px,78vw,62vh)}
-.fin-full .dn-mid .fig{font-size:34px}
-.fin-full .mo-right{gap:22px}
+
+/* the overview: how you're doing, in pictures. Two columns when there's room; one, in order, on a phone. */
+.fin .ov3{display:flex;flex-direction:column;gap:14px}
+.fin .ov-top{display:flex;justify-content:flex-end}
+.fin .ov-todo{font-variant-numeric:tabular-nums}
+.fin .ov-cols{display:flex;flex-direction:column;gap:14px}
+.fin .ov-l,.fin .ov-r{display:contents}
+.fin .ov3 .nw{order:1}
+.fin .ov3 .ac{order:2}
+.fin .ov3 .mg{order:3}
+.fin .ov3 .sv{order:4}
+.fin .ov3 .hc{order:5}
+.fin .ov3 .hc-day{order:6}
+.fin .ov3 .pay{order:7}
+@container fin (min-width:700px){
+  .fin .ov-cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;align-items:start}
+  .fin .ov-l,.fin .ov-r{display:flex;flex-direction:column;gap:14px;min-width:0}
+}
+/* the four kinds of money, one color each (checked for color blindness against the card) */
+.fin .g-give{background:#c98500}
+.fin .g-need{background:#3987e5}
+.fin .g-want{background:#d95926}
+.fin .g-save{background:#199e70}
+.fin .g-other{background:rgba(236,238,242,.38)}
+
+/* net worth */
+.fin .nw{padding:16px 18px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.fin .nw-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fin .nw-tt{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fin .nw-fig{font-size:40px;font-weight:200;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .nw-fig .neg{margin-right:1px}
+.fin .nw-d{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.fin .nw-d svg.i{width:14px;height:14px;stroke-width:2;flex:none}
+.fin .nw-d.good{color:var(--good)}
+.fin .nw-d.bad{color:var(--warn)}
+.fin .nw-tabs{display:flex;gap:2px;padding:3px;border-radius:4px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.fin .nw-tabs button{border:0;background:none;border-radius:2px;padding:8px 10px;min-height:32px;font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.fin .nw-tabs button[aria-pressed="true"]{background:var(--ink);color:#060606}
+.fin .nw-plot{position:relative;height:184px;touch-action:pan-y;cursor:crosshair;margin:4px 46px 0 0}
+.fin .nw-plot svg{display:block;width:100%;height:100%;overflow:visible}
+.fin .nw-g{fill:none;stroke:rgba(236,238,242,.07);stroke-width:1}
+.fin .nw-g.zero{stroke:rgba(236,238,242,.34);stroke-dasharray:3 4}
+.fin .nw-area{fill:url(#nwFade)}
+.fin .nw-line{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.fin .nw-plot.one .nw-line{stroke-dasharray:2 6;opacity:.5}
+.fin .nw-y{position:absolute;left:calc(100% + 10px);transform:translateY(-50%);white-space:nowrap;font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--ink-3);pointer-events:none}
+.fin .nw-y.zero{color:var(--ink-2)}
+.fin .nw-end,.fin .nw-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2.5px #111215;pointer-events:none}
+.fin .nw-dot{z-index:1}
+.fin .nw-xh{position:absolute;top:0;bottom:0;width:1px;background:rgba(236,238,242,.25);pointer-events:none}
+.fin .nw-tip{position:absolute;top:-8px;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:3px;background:var(--ink);color:#060606;white-space:nowrap;pointer-events:none;z-index:2;font-variant-numeric:tabular-nums}
+.fin .nw-tip b{font-size:13px;font-weight:600}
+.fin .nw-tip small{font-size:10.5px;opacity:.72}
+.fin .nw-axis{display:flex;justify-content:space-between;gap:10px;margin-right:46px;font:500 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.fin .nw-eq{display:flex;align-items:flex-end;gap:10px 14px;flex-wrap:wrap;padding-top:12px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .nw-eq span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fin .nw-eq small{font:500 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.fin .nw-eq b{font-size:17px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .nw-eq i{font-style:normal;color:var(--ink-3);font-size:17px;line-height:1.35}
+.fin .nw-note{font-size:13px;color:var(--ink-2);line-height:1.45}
+.fin .nw-note b{color:var(--ink);font-weight:500}
+.fin .nw-add{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;padding:10px 12px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--hair);font-size:13px;color:var(--ink-2);line-height:1.4}
+.fin .nw-add span{flex:1;min-width:200px}
+
+/* where the month's money goes */
+.fin .mg{padding:16px 18px 14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fin .mg-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fin .mg-nav{display:flex;align-items:center;gap:6px}
+.fin .mg-nav .circle{width:30px;height:30px}
+.fin .mg-nav .circle svg.i{width:14px;height:14px}
+.fin .mg-nav .circle:disabled{opacity:.3}
+.fin .mg-nav .link{margin-left:4px}
+.fin .mg-mo{min-width:78px;text-align:center;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.fin .mg-in{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.fin .mg-in .fig{font-size:30px;font-weight:200;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .mg-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fin .mg-t{display:flex;flex-direction:column;gap:4px;padding:12px 12px 11px;border-radius:3px;background:rgba(255,255,255,.025);box-shadow:inset 0 0 0 1px var(--hair);min-width:0}
+.fin .mg-k{display:flex;align-items:center;gap:7px;font:500 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.fin .mg-key{display:inline-block;width:9px;height:9px;border-radius:2px;flex:none}
+.fin .mg-p{font-size:30px;font-weight:200;line-height:1.1;font-variant-numeric:tabular-nums}
+.fin .mg-v{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fin .mg-s{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.fin .mg-s svg.i{width:13px;height:13px;stroke-width:2.2;flex:none}
+.fin .mg-s.ok{color:var(--good)}
+.fin .mg-s.bad{color:var(--warn)}
+.fin .mg-stack{display:flex;gap:2px;height:14px}
+.fin .mg-seg{flex:1 1 0;min-width:3px;border-radius:2px}
+.fin .mg-seg.left{background:repeating-linear-gradient(135deg,rgba(236,238,242,.2) 0 1.5px,transparent 1.5px 6px);box-shadow:inset 0 0 0 1px var(--hair)}
+.fin .mg-guide{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:-4px}
+.fin .mg-miss{display:flex;align-items:flex-start;gap:6px 9px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);line-height:1.4;padding:10px 12px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(242,184,94,.32)}
+.fin .mg-miss svg.i{width:15px;height:15px;color:var(--warn);flex:none;margin-top:1px}
+.fin .mg-miss span{flex:1;min-width:180px}
+.fin .mg-miss b{color:var(--ink);font-weight:500}
+.fin .mg-list{display:flex;flex-direction:column;gap:14px}
+.fin .mg-grp{display:flex;flex-direction:column}
+.fin .mg-gh,.fin .mg-r,.fin .mg-left{display:grid;grid-template-columns:minmax(0,1fr) auto 46px;gap:2px 12px;align-items:center}
+.fin .mg-gh{font:500 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);padding-bottom:7px}
+.fin .mg-gh > span:first-child{display:flex;align-items:center;gap:8px}
+.fin .mg-gh .num{color:var(--ink);font-variant-numeric:tabular-nums}
+.fin .mg-r{border:0;background:none;color:var(--ink);text-align:left;padding:8px 0 9px;width:100%;font:inherit;cursor:pointer;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .mg-r:disabled{cursor:default;color:var(--ink)}
+.fin .mg-n{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fin .mg-n b{font-weight:500;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .mg-n small{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .mg-r .num,.fin .mg-left .num{font-variant-numeric:tabular-nums;font-size:14.5px;white-space:nowrap}
+.fin .mg-r .pct,.fin .mg-gh .pct,.fin .mg-left .pct{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;color:var(--ink-2)}
+.fin .mg-bar{grid-column:1/-1;height:3px;border-radius:2px;background:rgba(236,238,242,.06);overflow:hidden;margin-top:5px}
+.fin .mg-bar i{display:block;height:100%;border-radius:2px}
+.fin .mg-left{padding-top:12px;box-shadow:inset 0 1px 0 var(--hair);font-size:14.5px;font-weight:500}
+.fin .mg-left.over{color:var(--bad)}
+@media (hover:hover){ .fin .mg-r:not(:disabled):hover .mg-n b,.fin .sv-r:hover .sv-n{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px} }
+@container fin (max-width:440px){ .fin .nw-eq{gap:8px 9px} .fin .nw-eq b{font-size:15px} .fin .nw-eq i{font-size:15px} }
+@container fin (max-width:380px){ .fin .mg-p{font-size:24px} .fin .mg-t{padding:10px} .fin .nw-fig{font-size:34px} }
+
+/* savings, at a glance */
+.fin .sv{padding:16px 18px 8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.fin .sv-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fin .sv-in{font-size:12.5px;color:var(--good);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .sv-fig{font-size:30px;font-weight:200;font-variant-numeric:tabular-nums}
+.fin .sv-list{display:flex;flex-direction:column;margin-top:4px}
+.fin .sv-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;border:0;background:none;color:var(--ink);text-align:left;padding:10px 0;width:100%;font:inherit;cursor:pointer;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .sv-n{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .sv-r .num{font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .sv-r .num small{color:var(--ink-3);font-size:11.5px}
+.fin .sv-bar{grid-column:1/-1;height:4px;border-radius:2px;background:rgba(236,238,242,.07);overflow:hidden}
+.fin .sv-bar i{display:block;height:100%;background:#199e70;border-radius:2px}
