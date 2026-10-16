@@ -148,8 +148,7 @@ window.POSAssistant = function (ctx) {
   /* ---------- the free set phrases ---------- */
   // the words for each section; a set phrase has to be one of these, nothing more, or it goes to Claude
   const ALIAS = { tasks: ['tasks', 'task', 'to dos', 'todos', 'to do list', 'task list'], calendar: ['calendar', 'schedule'], notes: ['notes', 'note'],
-    reminders: ['reminders', 'reminder'], projects: ['projects', 'project'], meetings: ['meetings', 'meeting'], audio: ['audio'], video: ['video', 'broadcast', 'cameras'],
-    lighting: ['lighting'], work: ['work', 'work overview'], finance: ['finance', 'finances', 'money', 'bills', 'budget', 'spending', 'banking'],
+    reminders: ['reminders', 'reminder'], finance: ['finance', 'finances', 'money', 'bills', 'budget', 'spending', 'banking'],
     health: ['health', 'sleep', 'gym'], car: ['car', 'truck'], places: ['places', 'map'], packages: ['packages', 'package', 'deliveries', 'shipping'], pets: ['pets', 'pet'],
     lights: ['lights', 'home lights'], tv: ['tv', 'television', 'remote', 'tv remote'],
     settings: ['settings'], weather: ['weather', 'forecast'], home: ['home', 'home screen'], today: ['today', 'my day', 'agenda', 'today\'s agenda'] };

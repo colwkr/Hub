@@ -40,7 +40,7 @@ async function usage(db: SupabaseClient) {
   return { day, month, n: u.day === day ? u.n || 0 : 0, m: u.month === month ? u.m || 0 : 0, inTok: u.month === month ? u.inTok || 0 : 0, outTok: u.month === month ? u.outTok || 0 : 0 };
 }
 
-const SECTIONS = ["home", "weather", "tasks", "calendar", "notes", "reminders", "work", "projects", "meetings", "audio", "video", "lighting", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "settings"];
+const SECTIONS = ["home", "weather", "tasks", "calendar", "notes", "reminders", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "settings"];
 const ACTIONS = ["none", "open", "add_task", "complete_task", "move_task", "add_reminder", "add_note", "build_note", "lights", "tv"];
 const TV_CMDS = ["power_on", "power_off", "volume_set", "volume_up", "volume_down", "mute", "unmute", "play", "pause", "home", "back", "open_app"];
 const TOOL = {
@@ -70,7 +70,7 @@ const TOOL = {
   },
 };
 function system(name: string, ctx: Record<string, unknown>) {
-  return `You are ${name || "POS"}, the assistant built into POS, the owner's personal operating system: tasks, calendar, notes, reminders, work (he runs broadcast production at Upstate Church: cameras, audio, video, lighting, CG), finance, health, car, places, packages, pets, home lights, a TV remote and the weather where he lives.
+  return `You are ${name || "POS"}, the assistant built into POS, the owner's personal operating system: tasks, calendar (with his meetings and events), notes, reminders, finance, health, car, places, packages, pets, home lights, a TV remote and the weather where he lives.
 Today is ${ctx.today} (${ctx.weekday}); it is ${ctx.now} (${ctx.clock || ""}) in America/New_York. "In 30 minutes" or "in an hour" means today at that clock time (HH:MM, 24-hour).
 Below is a short summary of his data. Use only what it says. Never invent tasks, ids, amounts or facts. If the answer isn't in it, say so briefly and offer to open the section that has it.
 Always answer with the respond tool, with one action at most:

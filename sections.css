@@ -1021,3 +1021,58 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 .achip.ad-ghost .bchk svg.i{display:none}
 .achip.ad-ghost .bmain{border:0;background:none;color:inherit;font:inherit;padding:0;overflow:hidden;text-overflow:ellipsis}
 .cal-any .any-cell .achip.tk .bmain{cursor:grab}
+
+/* ---------- Home is a set of apps: icons like a phone's, no groups. Hold one and they wiggle; drag to rearrange. ---------- */
+:root{--ai:62px}
+@media (min-width:760px) and (min-height:500px){ :root{--ai:64px} }
+.app-i{position:relative;width:var(--ai);height:var(--ai);border-radius:24%;display:grid;place-items:center;flex:none;
+  background:linear-gradient(155deg,rgba(255,255,255,.11),rgba(255,255,255,.02) 55%),rgba(16,18,24,.78);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),inset 0 1px 0 rgba(255,255,255,.12),0 12px 26px -14px rgba(0,0,0,.9);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:transform .12s ease}
+.app-i > svg.i{width:44%;height:44%;fill:none;stroke:var(--qink);stroke-width:1.5}
+.qh-apps{position:relative;width:100%;max-width:640px;margin:18px auto 0;z-index:2}
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:14px 4px;justify-items:center}
+.apb{display:flex;flex-direction:column;align-items:center;gap:8px;border:0;background:none;padding:2px 0;color:var(--qink);cursor:pointer;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.apb:active .app-i{transform:scale(.93)}
+.apb:hover .app-i{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 1px 0 rgba(255,255,255,.14),0 12px 26px -14px rgba(0,0,0,.9)}
+.app-l{font:500 9px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--qdim);white-space:nowrap}
+.app-n{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;display:grid;place-items:center;
+  background:rgb(255,110,64);color:#fff;font:600 11px/1 var(--font);box-shadow:0 0 0 2px #050505}
+.qh.enter .apb{animation:appIn .34s cubic-bezier(.2,.85,.25,1) both;animation-delay:calc(var(--i) * 16ms)}
+@keyframes appIn{from{opacity:0;transform:translateY(14px) scale(.8)}to{opacity:1;transform:none}}
+/* wiggling: every icon but the one in your hand */
+.qh-apps.editing .apps-grid{touch-action:none}
+.qh-apps.editing .apb:not(.lifted) .app-i{animation:appJiggle .24s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -41ms)}
+@keyframes appJiggle{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
+.apb.lifted{position:relative;z-index:30;pointer-events:none;animation:none!important}
+.apb.lifted .app-i{box-shadow:inset 0 0 0 1px rgba(255,255,255,.24),0 24px 44px -14px rgba(0,0,0,.95)}
+.apb.lifted .app-l{opacity:0}
+.apps-done{position:absolute;right:2px;top:-36px;border:0;border-radius:3px;padding:7px 12px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+  color:var(--qink);font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+/* the NERV tile: app-sized, top left (in an app it's the red X in the same spot) */
+.qh-c.q-tl{flex-direction:row;align-items:center;gap:14px}
+.qh-nerv{border:0;cursor:pointer;padding:0;flex-direction:column;gap:3px;display:flex;align-items:center;justify-content:center}
+.qh-nerv > svg.nerv-g{width:40%;height:40%;fill:none;stroke:rgb(112,214,255);stroke-width:1.4;filter:drop-shadow(0 0 6px rgba(112,214,255,.6))}
+.qh-nerv > span{font:600 8.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--qink)}
+.app-x{width:var(--ai);height:var(--ai);border-radius:24%;border:0;display:grid;place-items:center;flex:none;cursor:pointer;
+  background:linear-gradient(155deg,rgba(255,255,255,.11),rgba(255,255,255,.02) 55%),rgba(16,18,24,.78);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),inset 0 1px 0 rgba(255,255,255,.12),0 12px 26px -14px rgba(0,0,0,.9);transition:transform .12s ease}
+.app-x:active{transform:scale(.93)}
+.app-x > svg.i{width:42%;height:42%;fill:none;stroke:#ff5247;stroke-width:2.3;stroke-linecap:round}
+[data-noir] .top .win-l{gap:16px;padding:6px 8px 4px}
+[data-noir] .top{align-items:center}
+/* Home without the card list: the creature in the middle, the apps under it */
+@media (min-width:760px) and (min-height:500px){
+  .qh{grid-template-columns:minmax(280px,1fr) minmax(0,640px) minmax(280px,1fr)}
+  .qh-orbbtn{width:min(36vh,34vw,480px);height:min(36vh,34vw,480px)}
+}
+@media (min-width:760px) and (min-height:500px) and (orientation:portrait){
+  .qh{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "stage" "foot";grid-template-rows:auto minmax(0,1fr) auto}
+  .qh-orbbtn{width:min(34vh,66vw,520px);height:min(34vh,66vw,520px)}
+}
+@media (max-width:759px){
+  .qh-orbbtn{width:min(62vw,30vh);height:min(62vw,30vh)}
+  .qh-apps{margin-top:12px}
+}
+@media (prefers-reduced-motion:reduce){ .qh-apps.editing .apb .app-i,.qh.enter .apb{animation:none} }

@@ -41,31 +41,31 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261016172219">
-<script src="finance.js?v=20261016172219"></script>
-<link rel="stylesheet" href="car.css?v=20261016172219">
-<script src="car.js?v=20261016172219"></script>
-<link rel="stylesheet" href="sections.css?v=20261016172219">
-<link rel="stylesheet" href="tv.css?v=20261016172219">
-<link rel="stylesheet" href="noir.css?v=20261016172219">
-<script src="records.js?v=20261016172219"></script>
-<script src="people.js?v=20261016172219"></script>
-<script src="wheels.js?v=20261016172219"></script>
-<script src="keyboard.js?v=20261016172219"></script>
-<script src="notes.js?v=20261016172219"></script>
-<script src="reminders.js?v=20261016172219"></script>
-<script src="gear.js?v=20261016172219"></script>
-<script src="lights.js?v=20261016172219"></script>
-<script src="tv.js?v=20261016172219"></script>
-<script src="work.js?v=20261016172219"></script>
-<script src="health.js?v=20261016172219"></script>
-<script src="pets.js?v=20261016172219"></script>
-<script src="places.js?v=20261016172219"></script>
-<script src="placestab.js?v=20261016172219"></script>
-<script src="usmap.js?v=20261016172219"></script>
-<script src="voice.js?v=20261016172219"></script>
-<script src="assistant.js?v=20261016172219"></script>
-<script src="packages.js?v=20261016172219"></script>
+<link rel="stylesheet" href="finance.css?v=20261016174825">
+<script src="finance.js?v=20261016174825"></script>
+<link rel="stylesheet" href="car.css?v=20261016174825">
+<script src="car.js?v=20261016174825"></script>
+<link rel="stylesheet" href="sections.css?v=20261016174825">
+<link rel="stylesheet" href="tv.css?v=20261016174825">
+<link rel="stylesheet" href="noir.css?v=20261016174825">
+<script src="records.js?v=20261016174825"></script>
+<script src="people.js?v=20261016174825"></script>
+<script src="wheels.js?v=20261016174825"></script>
+<script src="keyboard.js?v=20261016174825"></script>
+<script src="notes.js?v=20261016174825"></script>
+<script src="reminders.js?v=20261016174825"></script>
+<script src="gear.js?v=20261016174825"></script>
+<script src="lights.js?v=20261016174825"></script>
+<script src="tv.js?v=20261016174825"></script>
+<script src="work.js?v=20261016174825"></script>
+<script src="health.js?v=20261016174825"></script>
+<script src="pets.js?v=20261016174825"></script>
+<script src="places.js?v=20261016174825"></script>
+<script src="placestab.js?v=20261016174825"></script>
+<script src="usmap.js?v=20261016174825"></script>
+<script src="voice.js?v=20261016174825"></script>
+<script src="assistant.js?v=20261016174825"></script>
+<script src="packages.js?v=20261016174825"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1260,7 +1260,7 @@ dialog::backdrop{background:transparent}
 
 <div class="app">
   <header class="top">
-    <div class="win-l"><button type="button" class="win-home" data-tab="home" aria-label="Home"><i aria-hidden="true"></i><span data-appname>POS</span></button><span class="win-sep" aria-hidden="true">/</span><h1 id="title">Home</h1></div>
+    <div class="win-l"><button type="button" class="app-x" data-tab="home" aria-label="Close, back to Home" title="Home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button><h1 id="title">Home</h1></div>
     <div class="right">
       <span class="date" id="today"></span>
       <button type="button" class="win-sess" id="winSess" data-act="as-sess" hidden>Session</button>
@@ -1531,13 +1531,13 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261016172219"></script>
+<script src="appearance.js?v=20261016174825"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261016172219';
+  const VERSION = '20261016174825';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2385,7 +2385,7 @@ dialog::backdrop{background:transparent}
     // packages: out for delivery, or delivered today
     for (const p of (PKG && PKG.homeToday ? PKG.homeToday() : [])) add({ key: `pkg:${p.id}:${p.out ? 'out' : 'in'}:${tk}`, kind: 'pkg', lab: p.out ? 'Package · Out for delivery' : 'Package · Delivered', title: p.name, open: 'data-tab="packages"', sort: 660 });
     // CG: Sunday, if it isn't all in
-    if (WORK && WORK.dueDate && dkey(WORK.dueDate()) === tk && WORK.left() > 0) add({ key: `cg:${tk}:${WORK.left()}`, kind: 'cg', lab: 'CG · Due today', title: `${WORK.left()} left to put in`, open: 'data-tab="work" data-wsub="overview"', sort: 2, warn: true });
+    // (Work and its CG checklist were taken out)
     // reminders whose day has come
     for (const r of (REM && REM.homeDue ? REM.homeDue() : [])) add({ key: `rem:${r.id}:${tk}`, kind: 'rem', lab: r.late ? 'Reminder · From before' : 'Reminder · Today', title: r.text, open: 'data-tab="reminders"', sort: 680 });
     // the car and the pets, only when something is actually due
@@ -2419,6 +2419,8 @@ dialog::backdrop{background:transparent}
   }
 
   /* ---------- peeks: one kind of data pulled out of the creature and laid along the side, with Home still all there ---------- */
+  // the two that pull up beside the creature (an answer, not an app); every app opens full screen
+  const SIDE = { today: true, weather: true };
   const PEEKS = { tasks: { kind: 'task', n: 'Tasks', full: 'tasks' }, meetings: { kind: 'meeting', n: 'Meetings', full: 'meetings' }, reminders: { kind: 'reminder', n: 'Reminders', full: 'reminders' },
     notes: { kind: 'note', n: 'Notes', full: 'notes' }, packages: { kind: 'package', n: 'Packages', full: 'packages' }, today: { kind: null, n: 'Today', full: 'calendar' },
     weather: { kind: 'weather', n: 'Weather', full: null } };
@@ -2627,7 +2629,7 @@ dialog::backdrop{background:transparent}
     else if (it.kind === 'meeting') openMeeting(it.ref);
     else if (it.kind === 'event') openEvent(it.ref);
     else if (it.kind === 'note') { if (NOTES && NOTES.open) NOTES.open(it.ref); growOrigin = ORB.center; setTab('notes'); }
-    else openPeek(it.kind === 'reminder' ? 'reminders' : 'packages');
+    else { growOrigin = ORB.center; setTab(it.kind === 'reminder' ? 'reminders' : 'packages'); }
   }
   const KIND_NAME = { task: 'Task', meeting: 'Meeting', event: 'Calendar', reminder: 'Reminder', package: 'Package', note: 'Note' };
   document.addEventListener('click', e => {
@@ -2653,17 +2655,37 @@ dialog::backdrop{background:transparent}
     over.style.cursor = 'pointer';
   }, { passive: true });
 
-  /* ---------- the dock: a few icons under the status, the only way around POS. Work and Personal swap the row
-     for their own sections; each icon opens its section over the whole screen. ---------- */
+  /* ---------- the apps: every part of NERV is an app icon on Home, like a phone's home screen. Tap one and it opens over
+     the whole screen; the red X in its corner brings you back. Hold one (or drag it with a mouse) and the icons start to
+     wiggle: drag them into any order. The order is kept in your account, so every device has it. ---------- */
+  const APPS = [['tasks', 'Tasks'], ['calendar', 'Calendar'], ['notes', 'Notes'], ['reminders', 'Reminders'], ['finance', 'Finance'], ['health', 'Health'],
+    ['car', 'Car'], ['places', 'Places'], ['packages', 'Packages'], ['pets', 'Pets'], ['lights', 'Lights'], ['tv', 'TV'], ['settings', 'Settings']];
+  const APP_NAME = Object.fromEntries(APPS);
   const DOCK_SVG = {};
   const dockSvg = sel => DOCK_SVG[sel] || (DOCK_SVG[sel] = ((document.querySelector(`#drawer ${sel} svg.i:not(.chev)`) || {}).outerHTML || ''));
-  const BACK_SVG = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>';
-  function dockRows() {
-    return {
-      main: [['~tasks', 'Tasks'], ['calendar', 'Calendar'], ['~notes', 'Notes'], ['~reminders', 'Reminders'], '|', ['@work', 'Work'], ['@personal', 'Personal'], '|', ['!settings', 'Settings']],
-      work: [['<', 'Back'], ...WORK_SUBS.map(([k, l]) => [k === 'meetings' ? '~meetings' : 'work:' + k, l])],
-      personal: [['<', 'Back'], ['finance', 'Finance'], ['health', 'Health'], ['car', 'Car'], ['places', 'Places'], ['~packages', 'Packages'], ['pets', 'Pets'], ['lights', 'Lights'], ['tv', 'TV']],
-    };
+  const appSvg = id => dockSvg(id === 'settings' ? '[data-act="settings"]' : `.nav [data-tab="${id}"]`);
+  const NERV_SVG = '<svg class="i nerv-g" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2"/></svg>';
+  let appOrder = (() => { try { const o = JSON.parse(localStorage.getItem('pos.apps') || 'null'); return Array.isArray(o) ? o : null; } catch (e) { return null; } })();
+  // your order, with any app it doesn't know yet at the end (and any that's gone left out)
+  const appsInOrder = () => { const known = (appOrder || []).filter(id => APP_NAME[id]); return known.concat(APPS.map(a => a[0]).filter(id => !known.includes(id))); };
+  async function appsLoad() {
+    if (!sb || !S.user) return;
+    try {
+      const { data } = await sb.from('records').select('data').eq('id', 'apps').maybeSingle();
+      const o = data && data.data && Array.isArray(data.data.order) ? data.data.order : null;
+      if (o && JSON.stringify(o) !== JSON.stringify(appOrder)) { appOrder = o; try { localStorage.setItem('pos.apps', JSON.stringify(o)); } catch (e) {} if (S.tab === 'home' && !ap) render(); }
+    } catch (e) {}
+  }
+  async function appsSave(order) {
+    appOrder = order;
+    try { localStorage.setItem('pos.apps', JSON.stringify(order)); } catch (e) {}
+    if (!sb || !S.canSave) return;
+    try {
+      const { data: rows } = await sb.from('records').select('id').eq('id', 'apps');
+      const data = { order, at: Date.now() };
+      const { error } = rows && rows.length ? await sb.from('records').update({ data }).eq('id', 'apps') : await sb.from('records').insert({ id: 'apps', kind: 'apps', data });
+      if (error) throw error;
+    } catch (e) { toast('The new order is saved on this device. It did not reach your account.'); }
   }
   function dockCounts() {
     const tk = todayKey(), c = {};
@@ -2671,52 +2693,136 @@ dialog::backdrop{background:transparent}
     c.tasks = S.tasks.filter(isOverdue).length + S.tasks.filter(t => t.date === tk && !t.done).length;
     c.reminders = REM ? REM.due() : 0;
     c.finance = FIN ? FIN.badge() : 0; c.car = CAR ? CAR.badge() : 0; c.pets = PETS ? PETS.badge() : 0; c.packages = PKG ? PKG.badge() : 0;
-    c['@personal'] = c.finance + c.car + c.pets + c.packages;
     return c;
   }
-  function vDock() {
-    const rows = dockRows(), grp = rows[S.dock] ? S.dock : 'main', n = dockCounts();
-    const item = (id, label, i) => {
-      let attrs, icon;
-      if (id === '<') { attrs = 'data-act="dock" data-grp="main"'; icon = BACK_SVG; }
-      else if (id[0] === '@') { attrs = `data-act="dock" data-grp="${id.slice(1)}"`; icon = dockSvg(`[data-grp="${id.slice(1)}"]`); }
-      else if (id[0] === '!') { attrs = `data-act="${id.slice(1)}"`; icon = dockSvg(`[data-act="${id.slice(1)}"]`); }
-      else if (id.startsWith('work:')) { attrs = `data-tab="work" data-wsub="${id.slice(5)}"`; icon = dockSvg(`[data-wsub="${id.slice(5)}"]`); }
-      else if (id[0] === '~') { const k = id.slice(1); attrs = `data-act="qp-open" data-peek="${k}"`; icon = dockSvg(k === 'meetings' ? '[data-wsub="meetings"]' : `.nav [data-tab="${k}"]`); }
-      else { attrs = `data-tab="${id}"`; icon = dockSvg(`.nav [data-tab="${id}"]`); }
-      const cnt = n[id] || n[id.replace(/^~/, '')] || 0;
-      return `<button type="button" class="dk${id[0] === '@' ? ' dk-grp' : ''}${id === '<' ? ' dk-back' : ''}${id[0] === '~' && S.peek === id.slice(1) ? ' on' : ''}" ${attrs} data-dk="${esc(id)}" style="--i:${i}" aria-label="${esc(label)}${cnt ? `, ${cnt}` : ''}"><span class="dk-ic">${icon}${cnt ? `<b class="dk-n">${cnt}</b>` : ''}</span><span class="dk-l">${esc(label)}</span></button>`;
-    };
-    let i = 0;
-    const html = rows[grp].map(x => (x === '|' ? '<i class="dk-sep" aria-hidden="true"></i>' : item(x[0], x[1], i++))).join('');
-    return `<nav class="qh-dock dk-${grp}${S.dockSwap ? ' swap' : ''}" aria-label="${grp === 'main' ? 'Sections' : grp === 'work' ? 'Work' : 'Personal'}">${grp !== 'main' ? `<span class="dk-head">${grp === 'work' ? 'Work' : 'Personal'}</span>` : ''}<div class="dk-row">${html}</div></nav>`;
+  function vApps() {
+    const n = dockCounts();
+    const icons = appsInOrder().map((id, i) => {
+      const cnt = n[id] || 0, label = APP_NAME[id];
+      const attrs = id === 'settings' ? 'data-act="settings"' : `data-tab="${id}"`;
+      return `<button type="button" class="apb" ${attrs} data-app="${id}" style="--i:${i}" aria-label="${esc(label)}${cnt ? `, ${cnt}` : ''}"><span class="app-i">${appSvg(id)}${cnt ? `<b class="app-n">${cnt}</b>` : ''}</span><span class="app-l">${esc(label)}</span></button>`;
+    }).join('');
+    return `<nav class="qh-apps${S.appEdit ? ' editing' : ''}" id="qhApps" aria-label="Apps">${S.appEdit ? '<button type="button" class="apps-done" data-act="apps-done">Done</button>' : ''}<div class="apps-grid">${icons}</div></nav>`;
   }
+
+  /* holding an icon: the icons wiggle and any of them can be dragged to a new place */
+  let ap = null;
+  const appEls = () => [...document.querySelectorAll('#qhApps .apb')];
+  function appsEdit(on) {
+    if (!!S.appEdit === on) return;
+    S.appEdit = on;
+    const nav = document.getElementById('qhApps');
+    if (nav) {
+      nav.classList.toggle('editing', on);
+      let done = nav.querySelector('.apps-done');
+      if (on && !done) nav.insertAdjacentHTML('afterbegin', '<button type="button" class="apps-done" data-act="apps-done">Done</button>');
+      if (!on && done) done.remove();
+    }
+    if (!on) flushLater();
+  }
+  function startAp() {
+    const d = ap;
+    if (!d || d.on) return;
+    clearTimeout(d.hold);
+    if (!d.el.isConnected) { endAp(false); return; }
+    d.on = true; sw = null; drag = null;
+    if (!d.mouse) haptic();
+    appsEdit(true);
+    const r = d.el.getBoundingClientRect();
+    d.gx = d.x0 - r.left; d.gy = d.y0 - r.top;
+    d.el.classList.add('lifted');
+    document.body.classList.add('moving');
+    drawAp();
+  }
+  function drawAp() {
+    const d = ap;
+    if (!d || !d.on) return;
+    // which icon the finger is over: the dragged one takes its place, and the others slide to make room
+    const others = appEls().filter(x => x !== d.el);
+    let over = null;
+    for (const o of others) { const r = o.getBoundingClientRect(); if (d.x >= r.left && d.x <= r.right && d.y >= r.top && d.y <= r.bottom) { over = o; break; } }
+    if (over && over !== d.over) {
+      const all = appEls(), before = new Map(all.map(x => [x, x.getBoundingClientRect()]));
+      const after = all.indexOf(over) > all.indexOf(d.el);
+      over.parentNode.insertBefore(d.el, after ? over.nextSibling : over);
+      for (const x of all) {
+        if (x === d.el) continue;
+        const a = before.get(x), b = x.getBoundingClientRect();
+        if (a.left !== b.left || a.top !== b.top) x.animate([{ transform: `translate(${a.left - b.left}px, ${a.top - b.top}px)` }, { transform: 'translate(0,0)' }], { duration: 200, easing: 'cubic-bezier(.2,.8,.25,1)' });
+      }
+      if (!d.mouse) haptic();
+    }
+    d.over = over;
+    d.el.style.transform = '';
+    const r = d.el.getBoundingClientRect();
+    d.el.style.transform = `translate(${d.x - d.gx - r.left}px, ${d.y - d.gy - r.top}px) scale(1.12)`;
+  }
+  function endAp(commit) {
+    const d = ap; ap = null;
+    if (!d) return;
+    clearTimeout(d.hold);
+    if (!d.on) { if (!S.appEdit) flushLater(); return; } // a plain tap opens the app
+    quietUntil = Date.now() + 400;
+    document.body.classList.remove('moving');
+    const r0 = d.el.getBoundingClientRect();
+    d.el.classList.remove('lifted'); d.el.style.transform = '';
+    const r1 = d.el.getBoundingClientRect();
+    d.el.animate([{ transform: `translate(${r0.left - r1.left}px, ${r0.top - r1.top}px) scale(1.12)` }, { transform: 'none' }], { duration: 180, easing: 'cubic-bezier(.2,.8,.25,1)' });
+    const order = appEls().map(x => x.dataset.app);
+    if (commit && order.join() !== appsInOrder().join()) appsSave(order);
+  }
+  document.addEventListener('pointerdown', e => {
+    if (ap) endAp(false);
+    const el = e.target.closest && e.target.closest('#qhApps .apb');
+    if (S.appEdit && !el && !(e.target.closest && e.target.closest('.apps-done'))) { appsEdit(false); return; } // tapping anywhere else stops the wiggle
+    if (!el || !e.isPrimary) return;
+    const mouse = e.pointerType === 'mouse';
+    if (mouse && e.button !== 0) return;
+    ap = { el, mouse, pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false };
+    if (!S.appEdit) ap.hold = setTimeout(startAp, 480); // hold to start; already wiggling, a move picks it up
+  });
+  document.addEventListener('pointermove', e => {
+    if (!ap || e.pointerId !== ap.pid) return;
+    ap.x = e.clientX; ap.y = e.clientY;
+    if (ap.on) { drawAp(); return; }
+    const moved = Math.hypot(e.clientX - ap.x0, e.clientY - ap.y0);
+    if (S.appEdit) { if (moved > 5) startAp(); }
+    else if (ap.mouse) { if (moved > 6) startAp(); }
+    else if (moved > 10) { clearTimeout(ap.hold); ap = null; } // the finger is scrolling
+  });
+  document.addEventListener('pointerup', e => { if (ap && e.pointerId === ap.pid) endAp(true); });
+  document.addEventListener('pointercancel', e => { if (ap && e.pointerId === ap.pid) endAp(false); });
+  document.addEventListener('touchmove', e => { if (ap && (ap.on || S.appEdit)) e.preventDefault(); }, { passive: false });
+  // while they wiggle, a tap doesn't open anything
+  document.addEventListener('click', e => { if (S.appEdit && e.target.closest && e.target.closest('#qhApps .apb')) { e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.appEdit) { appsEdit(false); e.stopPropagation(); } }, true);
+  document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('#qhApps')) e.preventDefault(); });
+
   function vQuiet() {
     const cards = homeCards(), n = cards.length, sticky = cards.some(c => c.sticky);
     ORB.mood = sticky ? 2 : n ? 1 : 0;
     const p = timeParts(nowMin()), w = S.weather && S.weather.current;
     const wxText = w ? `${Math.round(w.temp)}° · ${wx(w.code, w.isDay)[0]}` : '';
     const status = !S.loaded ? 'Waking up' : n ? `${n} ${n === 1 ? 'thing' : 'things'} for today` : 'All clear';
-    const statusSub = !S.loaded ? '' : n ? (sticky ? 'One starts soon' : 'Got it moves one off Home') : 'Nothing needs you right now';
+    // under the count: the next thing (the cards that listed them are gone; the apps hold the rest)
+    const statusSub = !S.loaded ? '' : n ? `${sticky ? 'Soon' : 'Next'}: ${cards[0].title}` : 'Nothing needs you right now';
     const canFull = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled), isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
     const enter = S.qhEnter; S.qhEnter = false;
     ORB.items = strandItems(); orbSync();
     const html = `<div class="qh${n ? ' has' : ''}${sticky ? ' urgent' : ''}${enter ? ' enter' : ''}" id="qh">
       <canvas id="qhOrb" class="qh-field" aria-hidden="true"></canvas>
       <i class="qh-mark q-tl"></i><i class="qh-mark q-tr"></i><i class="qh-mark q-bl"></i><i class="qh-mark q-br"></i>
-      <div class="qh-c q-tl"><span class="qh-k" data-appname>${esc(appName())}</span><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
+      <div class="qh-c q-tl"><button type="button" class="app-i qh-nerv" data-act="as-talk" aria-label="Talk to ${esc(appName())}" title="Talk to ${esc(appName())}">${NERV_SVG}<span data-appname>${esc(appName())}</span></button><span class="qh-clock"><b data-clock>${esc(p.bare)}</b><small data-ampm>${esc(p.per)}</small></span></div>
       <div class="qh-c q-tr"><span class="qh-k">${esc(qDate.format(new Date()).replace(',', ''))}</span>${wxText ? `<button type="button" class="qh-k qh-faint qh-wxb${S.peek === 'weather' ? ' on' : ''}" data-act="qp-open" data-peek="weather" aria-label="Weather: ${esc(wxText)}">${esc(wxText)}</button>` : ''}</div>
       <div class="qh-stage">
         <button type="button" class="qh-orbbtn qh-talk" id="qhSlot" data-act="as-talk" aria-label="Talk to ${esc(appName())}"></button>
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
-        ${ASSIST && ASSIST.inStage() ? ASSIST.panel() : vDock()}
+        ${ASSIST && ASSIST.inStage() ? ASSIST.panel() : vApps()}
       </div>
-      ${n ? `<div class="qh-cards" id="qhCards" data-keep>${cards.map(qCard).join('')}</div>` : ''}
       ${S.peek ? vPeek() : ''}
       <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
       <div class="qh-c q-br">${ASSIST && ASSIST.canSession() ? `<button type="button" class="qh-link qh-sess${ASSIST.sessionOn() ? ' on' : ''}" data-act="as-sess">${ASSIST.sessionOn() ? 'End session' : 'Start session'}</button>` : ''}${canFull ? `<button type="button" class="qh-link" data-act="qh-full">${isFull ? 'Exit full screen' : 'Full screen'}</button>` : ''}</div>
     </div>`;
-    S.dockSwap = false;
     return html;
   }
   /* ---------- the assistant's view of POS (small on purpose) and what it may do, once you say yes ---------- */
@@ -2735,7 +2841,7 @@ dialog::backdrop{background:transparent}
       calendar: (S.events || []).filter(g => g.date >= tk && g.date <= addDays(tk, 3)).slice(0, 10).map(g => ({ title: String(g.title || '').slice(0, 80), date: g.date, time: g.allDay ? 'all day' : g.start })),
       reminders: REM && REM.summary ? REM.summary() : [],
       packages: PKG && PKG.summary ? PKG.summary() : [],
-      due: { bills: FIN ? FIN.badge() : 0, car: CAR ? CAR.badge() : 0, pet_checkups: PETS ? PETS.badge() : 0, cg_left: WORK && WORK.left ? WORK.left() : null },
+      due: { bills: FIN ? FIN.badge() : 0, car: CAR ? CAR.badge() : 0, pet_checkups: PETS ? PETS.badge() : 0 },
       on_home: homeCards().slice(0, 6).map(c => `${c.lab}: ${c.title}`),
       lights: LIGHTS && LIGHTS.brief ? LIGHTS.brief() : null,
       tv: TV && TV.brief ? TV.brief() : null,
@@ -2793,7 +2899,7 @@ dialog::backdrop{background:transparent}
   function asGo(a) {
     if (a.action === 'fullscreen') { $('#fsBtn').click(); return; }
     const k = a.section;
-    if (PEEKS[k]) { if (S.peek !== k || S.tab !== 'home') openPeek(k); return; }
+    if (SIDE[k]) { if (S.peek !== k || S.tab !== 'home') openPeek(k); return; }
     growOrigin = ORB.center;
     if (k === 'settings') { openSettings(); return; }
     if (WORK_PARTS.includes(k)) { setWorkSub(k); setTab('work'); return; }
@@ -3877,7 +3983,7 @@ dialog::backdrop{background:transparent}
   }
   function render() {
     if (TV && TV.busy()) { renderLater = true; TV.wantRender(); return; }
-    if (mk || mv || bd || so || wd || ad || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy()) || (ASSIST && ASSIST.holding())) { renderLater = true; return; }
+    if (mk || mv || bd || so || wd || ad || (ap && ap.on) || scopeOpen || typingInMeeting() || (LIGHTS && LIGHTS.busy()) || (ASSIST && ASSIST.holding())) { renderLater = true; return; }
     renderLater = false;
     document.body.dataset.auth = S.user ? 'in' : S.booted ? 'out' : 'wait';
     if (S.booted && !S.user) {
@@ -3887,7 +3993,7 @@ dialog::backdrop{background:transparent}
     }
     const keep = {};
     for (const el of document.querySelectorAll('#view [data-keep]')) keep[el.id] = el.scrollTop;
-    $('#title').textContent = S.tab === 'work' ? `Work / ${(WORK_SUBS.find(([k]) => k === S.workSub) || ['', 'Overview'])[1]}` : TITLES[S.tab];
+    $('#title').textContent = TITLES[S.tab] || '';
     document.body.dataset.view = S.tab;
     document.body.classList.toggle('qmode', S.tab === 'home' && !S.homeAll);
     $('#today').innerHTML = S.tab === 'home' ? '' : `<i></i>${esc(shortFmt.format(new Date()))}`;
@@ -4508,8 +4614,7 @@ dialog::backdrop{background:transparent}
   /* ---------- meetings: open, create, and save as you type ---------- */
   function openMeeting(id) {
     if (!task(id)) return;
-    S.mtgId = id;
-    if (!onWork('meetings')) setTab('meetings'); else render();
+    openTask(id);
   }
   async function newMeeting() {
     if (!S.canSave) return;
@@ -5747,7 +5852,7 @@ dialog::backdrop{background:transparent}
 
   /* ---------- events ---------- */
   function setTab(tab) {
-    if (WORK_PARTS.includes(tab)) { setWorkSub(tab); tab = 'work'; }
+    if (tab === 'work' || WORK_PARTS.includes(tab)) tab = 'home'; // Work was taken out
     if (!views[tab]) return;
     mtFlush();
     if (typingInMeeting()) document.activeElement.blur();
@@ -5772,7 +5877,7 @@ dialog::backdrop{background:transparent}
   }
   /* sections open out of the dock icon you tapped and fill the screen; going Home folds the section back into its icon */
   let dockFrom = null, growOrigin = null;
-  document.addEventListener('click', e => { const d = e.target.closest && e.target.closest('.dk[data-tab]'); dockFrom = d ? d.querySelector('.dk-ic').getBoundingClientRect() : null; }, true);
+  document.addEventListener('click', e => { const d = e.target.closest && e.target.closest('#qhApps .apb[data-tab]'); dockFrom = d ? d.querySelector('.app-i').getBoundingClientRect() : null; }, true);
   const appEl = document.querySelector('.app');
   function winAim(el, r) { // how far the icon's middle is from the middle of the window
     const a = el.getBoundingClientRect();
@@ -5803,8 +5908,7 @@ dialog::backdrop{background:transparent}
     } else {
       appEl.classList.add('home-in');
       if (ghost) {
-        const key = was === 'work' ? 'work:' + S.workSub : was;
-        const ic = document.querySelector(`.dk[data-dk="${key}"] .dk-ic`) || (GROUP_OF[was] && document.querySelector(`.dk[data-dk="@${GROUP_OF[was]}"] .dk-ic`));
+        const ic = document.querySelector(`#qhApps .apb[data-app="${was}"] .app-i`);
         if (ic) winAim(ghost, ic.getBoundingClientRect()); else { ghost.style.setProperty('--wx', '0px'); ghost.style.setProperty('--wy', '0px'); ghost.style.setProperty('--ws', '.94'); }
         ghost.classList.add('out');
         const done = () => ghost.remove();
@@ -6059,7 +6163,7 @@ dialog::backdrop{background:transparent}
     else if (act === 'qh-ack') { const k = b.dataset.key, sec = b.dataset.sec; ack(k, true); toast(sec ? `Off Home. It's still in ${sec}.` : 'Off Home', () => ack(k, false)); }
     else if (act === 'qh-all') { S.homeAll = true; aimHome(); render(); }
     else if (act === 'qh-quiet') { S.homeAll = false; render(); }
-    else if (act === 'dock') { S.dock = b.dataset.grp; S.dockSwap = true; render(); }
+    else if (act === 'apps-done') appsEdit(false);
     else if (act === 'any-more') { S.anyOpen = b.dataset.day || null; render(); }
     else if (act === 'qp-open') openPeek(b.dataset.peek);
     else if (act === 'qp-close') closePeek();
@@ -6184,7 +6288,7 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(() => ASSIST && ASSIST.status(true), 0); setTimeout(() => VOICE && VOICE.loadSaved().then(() => VOICE.warm()), 1500); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(appsLoad, 0); setTimeout(() => ASSIST && ASSIST.status(true), 0); setTimeout(() => VOICE && VOICE.loadSaved().then(() => VOICE.warm()), 1500); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
@@ -6369,14 +6473,14 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { cluLoad(); ackLoad(); identLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { cluLoad(); ackLoad(); identLoad(); appsLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   if (window.POSLook) POSLook.setToast(toast);
   async function boot() {
     let tab = location.hash.slice(1);
     if (!views[tab] && !WORK_PARTS.includes(tab)) { try { tab = localStorage.getItem('hub.tab'); } catch (e) { tab = null; } }
-    if (WORK_PARTS.includes(tab)) { setWorkSub(tab); tab = 'work'; }
+    if (tab === 'work' || WORK_PARTS.includes(tab)) tab = 'home'; // Work was taken out
     if (views[tab]) S.tab = tab;
     try { S.wakeWant = localStorage.getItem('hub.wake') === '1'; } catch (e) {}
     try { const w = JSON.parse(localStorage.getItem('hub.wx') || 'null'); if (w && w.current) S.weather = w; } catch (e) {}
@@ -6407,7 +6511,7 @@ dialog::backdrop{background:transparent}
     if (window.POSWork) WORK = window.POSWork({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSReminders) REM = window.POSReminders({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSVoice) VOICE = window.POSVoice({ sb, toast, esc, canSave: () => S.canSave, name: appName, onChange: () => ASSIST && ASSIST.fillSettings() });
-    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, voice: VOICE, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo, stays: k => !!PEEKS[k], home: asHome, wxSay, isLight: t => !!(LIGHTS && LIGHTS.find && LIGHTS.find(t)) });
+    if (window.POSAssistant) ASSIST = window.POSAssistant({ sb, toast, esc, voice: VOICE, rerender: () => render(), canSave: () => S.canSave, name: appName, summary: asSummary, dayText, describe: asDescribe, run: asRun, go: asGo, stays: k => !!SIDE[k], home: asHome, wxSay, isLight: t => !!(LIGHTS && LIGHTS.find && LIGHTS.find(t)) });
     if (window.POSPets) PETS = window.POSPets({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, goals: re => (FIN && FIN.goals ? FIN.goals(re) : []), tasks: () => S.tasks, items: re => (FIN && FIN.listMatches ? FIN.listMatches(re) : []) });
     const { data } = await sb.auth.getSession();
     S.booted = true;
