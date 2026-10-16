@@ -288,11 +288,20 @@
 .fin .fl-top{display:flex;flex-direction:column;gap:4px}
 .fin .fl-card .li-list{margin:0 -8px}
 
-/* the overview: the accounts stacked on the left, the month on the right */
-.fin .ov{display:grid;gap:18px}
-.fin .ov-l,.fin .ov-r{display:flex;flex-direction:column;gap:18px;min-width:0}
-@media (min-width:900px){ .fin .ov{grid-template-columns:minmax(330px,.8fr) minmax(0,1.2fr);gap:22px;align-items:start} }
-.fin .ac,.fin .nx,.fin .mo{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+/* the overview: small pieces up top (accounts, pay, the month's ring, its days), the bills under them */
+.fin .ov2{display:flex;flex-direction:column;gap:16px}
+.fin .ov-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.fin .ov-top .mo-nav{flex:1 1 auto;flex-wrap:nowrap}
+@media (max-width:520px){ .fin .ov-top .mo-name{min-width:120px} .fin .ov-top .mo-back{display:none} }
+.fin .ov-todo{margin-left:auto;font-variant-numeric:tabular-nums}
+.fin .ov-w{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.fin .ov-w > .ac,.fin .ov-w > .pay,.fin .ov-w > .hc-day{grid-column:1/-1}
+@media (min-width:700px){ .fin .ov-w > .ac,.fin .ov-w > .pay{grid-column:auto} }
+@media (min-width:1080px){ .fin .ov-w{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,.62fr) minmax(0,.95fr)} }
+.fin .ov-b{display:grid;gap:14px}
+@media (min-width:700px){ .fin .ov-b{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
+.fin .ac,.fin .mo{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fin .ov-w .ac{padding:14px 14px 10px;gap:6px}
 .fin .ac-list{display:flex;flex-direction:column;margin:0 -8px}
 .fin .ac-row{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:4px 0 10px}
 .fin .ac-row + .ac-row{box-shadow:inset 0 1px 0 var(--hair);padding-top:10px}
@@ -321,16 +330,6 @@
 .fin .dcard.none span{position:relative;font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--ink-2);background:var(--lift-bg);padding:1px 5px;border-radius:4px}
 .fin .ac-ic{display:grid;place-items:center;width:72px;height:46px;color:var(--ink-3)}
 .fin .ac-ic svg.i{width:26px;height:26px;stroke-width:1.4}
-/* next up */
-.fin .nx-main{display:flex;align-items:center;justify-content:space-between;gap:14px;border:0;background:none;padding:0;text-align:left;color:var(--ink);width:100%;flex-wrap:wrap}
-.fin .nx-amt{font-size:38px;font-weight:200;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fin .nx-amt.in{color:var(--good)}
-.fin .nx-amt.in .cents{color:inherit;opacity:.6}
-.fin .nx-what{display:flex;flex-direction:column;gap:3px;align-items:flex-end;text-align:right;min-width:0}
-.fin .nx-what b{font-size:16px;font-weight:500}
-.fin .nx-what span{font-size:13px;color:var(--ink-2)}
-@media (max-width:520px){ .fin .nx-main{flex-direction:column;align-items:flex-start;gap:10px} .fin .nx-what{align-items:flex-start;text-align:left} }
-
 /* going month to month */
 .fin .mo-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .fin .mo-name{display:flex;flex-direction:column;min-width:148px;text-align:center;gap:1px}
@@ -386,3 +385,105 @@
 #finSheet .f-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 /* the place this merchant went last time: first, and outlined, but still only a suggestion you tap */
 .fin .chip.usual{box-shadow:var(--lift-sm),inset 0 0 0 1.5px var(--ink-2)}
+
+/* accounts, smaller */
+.fin .ov-w .ac-list{margin:0 -6px}
+.fin .ov-w .ac-row{padding:0;gap:2px}
+.fin .ov-w .ac-row + .ac-row{padding-top:2px}
+.fin .ov-w .ac-main{grid-template-columns:44px minmax(0,1fr) auto;gap:10px;padding:7px 6px;border-radius:12px}
+.fin .ac-art{display:block;width:72px;height:46px}
+.fin .ov-w .ac-art{width:44px;height:28px}
+.fin .ov-w .ac-art > *{transform:scale(.611);transform-origin:0 0}
+.fin .ov-w .ac-n b{font-size:14px}
+.fin .ov-w .ac-n span{font-size:11px}
+.fin .ov-w .ac-v{font-size:17px;font-weight:400}
+.fin .ov-w .ac-short,.fin .ov-w .ac-sort{font-size:12px;margin:0 6px 6px 0}
+.fin .ov-w .ac-sort{min-height:30px;padding:5px 12px}
+
+/* pay: the salary, and each check, month, year and week before taxes, the taxes, and what lands */
+.fin .pay{padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fin .py-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-4px -4px -4px 0}
+.fin .py-head .circle{width:34px;height:34px}
+.fin .py-head .circle svg.i{width:15px;height:15px}
+.fin .py-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fin .py-sal{font-size:24px;font-weight:300;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .py-sal small{font-size:12px;color:var(--ink-2);font-weight:400}
+.fin .py-pct{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.fin .py-add{align-self:flex-start;font-size:13px}
+.fin .py-t{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+.fin .py-t th,.fin .py-t td{padding:5px 0;text-align:right;white-space:nowrap}
+.fin .py-t th:first-child{text-align:left;padding-right:6px}
+.fin .py-t thead th{font:500 9.5px/1.2 var(--mono,inherit);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding-bottom:4px}
+.fin .py-t tbody th{font-weight:400;color:var(--ink-2)}
+.fin .py-t td{padding-left:8px}
+.fin .py-t tbody tr + tr > *{box-shadow:inset 0 1px 0 var(--hair)}
+.fin .py-t td.tax{color:var(--ink-2)}
+.fin .py-t td.net{font-weight:600;color:var(--ink)}
+.fin .py-t tr.py-yr td.net{color:var(--good)}
+.fin .py-foot{font-size:11.5px}
+.fin .py-more{align-self:flex-start;font-size:12.5px}
+.fin .py-split{display:flex;flex-direction:column;gap:2px;padding-top:4px;box-shadow:inset 0 1px 0 var(--hair)}
+.fin .py-x{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0}
+.fin .py-x small{color:var(--ink-3);font-size:11px}
+.fin .py-x .num{font-variant-numeric:tabular-nums}
+.fin .py-split .meta{font-size:11px;padding-top:4px}
+
+/* the month's ring, small: tap for the whole picture */
+.fin .pie{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:14px 14px 12px;border:0;color:var(--ink);text-align:left;cursor:pointer;min-width:0;font:inherit;transition:transform .15s ease}
+.fin .pie:active{transform:scale(.97)}
+.fin .pie-ring{flex:1;display:grid;place-items:center;min-height:0}
+.fin .pie .dn{width:100%;max-width:170px;height:auto;aspect-ratio:1}
+.fin .pie .dn-track,.fin .pie .dn-seg{stroke-width:26}
+
+/* the month's days as boxes: deeper color, more spent; today ringed */
+.fin .hc{padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fin .hc-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;max-width:330px;width:100%;align-self:center}
+.fin .hc-d,.fin .hc-pad{aspect-ratio:1;border-radius:22%}
+.fin .hc-d{position:relative;display:block;width:100%;border:0;padding:0;margin:0;background:var(--well);box-shadow:inset 0 0 0 1px var(--hair);cursor:pointer;overflow:hidden}
+.fin .hc-d::before{content:"";position:absolute;inset:0;background:var(--live);opacity:var(--a,0);border-radius:inherit}
+.fin .hc-d.later{background:none;cursor:default;opacity:.55}
+.fin .hc-d.today{outline:2px solid var(--live);outline-offset:2px}
+.fin .hc-d.sel{outline:2px solid var(--ink);outline-offset:2px}
+.fin .hc-d:not(.later):active{transform:scale(.9)}
+.fin .hc-day{padding:12px 16px 8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fin .hc-dh{display:flex;align-items:center;gap:12px}
+.fin .hc-dh .lab{flex:1}
+.fin .hc-close{width:32px;height:32px}
+.fin .hc-close svg.i{width:14px;height:14px}
+.fin .hc-list{display:flex;flex-direction:column}
+.fin .hc-tx{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 12px;align-items:center;border:0;background:none;color:var(--ink);text-align:left;padding:8px 0;width:100%;font:inherit}
+.fin .hc-tx + .hc-tx{box-shadow:inset 0 1px 0 var(--hair)}
+.fin .hc-tx b{font-weight:500;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .hc-tx .num{grid-row:1/span 2;grid-column:2;font-variant-numeric:tabular-nums;font-size:15px}
+.fin .hc-tx small{font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* bills and subscriptions, plainly: name, its day and account, how much, paid or not */
+.fin .sb{padding:6px 0 4px;display:flex;flex-direction:column;min-width:0}
+.fin .sb-head{display:flex;align-items:center;gap:10px;padding:8px 10px 6px 18px}
+.fin .sb-head .lab{flex:none}
+.fin .sb-head .meta{flex:1;text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
+.fin .sb-add{width:32px;height:32px}
+.fin .sb-add svg.i{width:15px;height:15px}
+.fin .sb-row{display:flex;align-items:center;padding:0 12px 0 6px}
+.fin .sb-row + .sb-row{box-shadow:inset 0 1px 0 var(--hair)}
+.fin .sb-main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 12px;align-items:center;border:0;background:none;color:var(--ink);text-align:left;padding:9px 0;min-width:0;font:inherit}
+.fin .sb-n{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .sb-a{grid-row:1/span 2;grid-column:2;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fin .sb-d{font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin .sb-row.paid .sb-n,.fin .sb-row.paid .sb-a{color:var(--ink-2)}
+.fin .sb-row.late .sb-d{color:var(--warn)}
+.fin .sb .empty{padding:6px 18px 12px}
+
+/* the ring, full screen */
+.fin-full{position:fixed;inset:0;z-index:66;display:flex;flex-direction:column;gap:8px;background:rgba(4,4,5,.93);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  padding:calc(env(safe-area-inset-top,0px) + 18px) max(24px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 8px) max(24px,env(safe-area-inset-left,0px))}
+.fin-full .ff-top{display:flex;align-items:center;gap:14px}
+.fin-full .ff-top .mo-nav{flex:1}
+.fin-full .ff-x{--ai:52px}
+.fin-full .ff-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:18px 0 32px}
+.fin-full .ff-scroll::-webkit-scrollbar{display:none}
+.fin-full .ff-main{display:grid;gap:30px;align-items:center;max-width:1080px;margin:0 auto;min-height:100%}
+@media (min-width:760px){ .fin-full .ff-main{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:56px} }
+.fin-full .dn-wrap{width:min(440px,78vw,62vh)}
+.fin-full .dn-mid .fig{font-size:34px}
+.fin-full .mo-right{gap:22px}

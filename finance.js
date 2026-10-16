@@ -37,7 +37,7 @@ window.POSFinance = function (ctx) {
   }
 
   const SUBS = { home: 'Overview', bills: 'Bills', loans: 'Loans', savings: 'Savings', lists: 'Lists', spending: 'Spending', activity: 'Activity' };
-  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], income: [], months: [], sub: 'home', open: new Set(), confirmClear: false, ovMk: null, spMk: null };
+  const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], income: [], months: [], sub: 'home', open: new Set(), confirmClear: false, ovMk: null, spMk: null, day: null, pie: false };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; } catch (e) {}
   let F = null; // the form currently in the sheet
   const charts = new Map();
@@ -538,27 +538,6 @@ window.POSFinance = function (ctx) {
     } finally { monthsBusy = false; }
   }
 
-  // what's next to come in or go out: paydays and bills, soonest first (a paycheck before a bill on the same day)
-  function upcoming(n = 4) {
-    const today = startOfDay(Date.now()), mk = curMk(), out = [];
-    for (const inc of S.income) for (const k of [mk, mkAdd(mk, 1), mkAdd(mk, 2)]) for (const p of paydays(inc, k)) {
-      if (p.at < today || ['got', 'before'].includes(payState(inc, p).st)) continue;
-      out.push({ kind: 'pay', at: p.at, amount: inc.amount || 0, name: 'Paycheck', sub: inc.name, id: inc.id, key: p.key });
-    }
-    const n0 = new Date(today);
-    for (const b of S.bills) {
-      if (!b.day || !b.amount) continue;
-      const loan = loanOfBill(b);
-      for (const off of [0, 1, 2]) {
-        const y = n0.getFullYear(), m = n0.getMonth() + off, due = dueOn(b, y, m);
-        if (due < today || paidIn(b, monthKeyOf(y, m)) || (off === 0 && !appliesIn(b, y, m))) continue;
-        out.push({ kind: 'bill', at: due, amount: b.amount, name: loan ? `${loan.name} payment` : b.name, sub: loan ? b.name : groupOf(b) === 'sub' ? 'Subscription' : 'Bill', id: b.id });
-        break;
-      }
-    }
-    return out.sort((a, b) => a.at - b.at || (a.kind === 'pay' ? -1 : b.kind === 'pay' ? 1 : b.amount - a.amount)).slice(0, n);
-  }
-
   /* ---------- pieces ---------- */
   function chargeCard(t) {
     const billChips = billsNear(t).slice(0, 3).map(b =>
@@ -730,22 +709,6 @@ window.POSFinance = function (ctx) {
   }
   // a share of the month's income: "12%", "4.5%", "<0.1%"
   const pctText = f => (f == null || !isFinite(f) ? '' : f <= 0 ? '0%' : f < 0.001 ? '<0.1%' : f < 0.1 ? (f * 100).toFixed(1).replace(/\.0$/, '') + '%' : Math.round(f * 100) + '%');
-  const relDay = at => { const d = Math.round((startOfDay(at) - startOfDay(Date.now())) / DAY); return d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : d > 1 && d < 7 ? `In ${d} days` : null; };
-
-  // the very next thing to come in or go out
-  function nextUp() {
-    const [x] = upcoming(1);
-    if (!x) return '';
-    const inn = x.kind === 'pay', rel = relDay(x.at);
-    return `<article class="float nx">
-      <span class="lab">Next up</span>
-      <button type="button" class="nx-main" data-act="fin-form" data-form="${inn ? 'income' : 'bill'}" data-id="${esc(x.id)}"${canSave() ? '' : ' disabled'}>
-        <span class="nx-amt${inn ? ' in' : ''}">${inn ? '+' : ''}${big(x.amount)}</span>
-        <span class="nx-what"><b>${esc(x.name)}</b><span>${esc(rel ? `${rel} · ${shortDay.format(x.at)}` : dayFmt.format(x.at))}</span></span>
-      </button>
-    </article>`;
-  }
-
   // can each account cover the bills it still has to pay this month?
   function coverage() {
     const toGo = S.bills.filter(b => b.amount && b.accountId && ['waiting', 'late', 'soon'].includes(billState(b).st));
@@ -780,7 +743,7 @@ window.POSFinance = function (ctx) {
       const sort = u && canSave() ? `<button type="button" class="ac-sort" data-act="fin-form" data-form="${cats ? 'allocate' : 'goal'}" ${cats ? `data-id="${esc(a.id)}"` : `data-account="${esc(a.id)}"`}>${u > 0 ? `Sort ${esc(fmt(u))}` : `Cover ${esc(fmt(-u))}`}</button>` : '';
       return `<div class="ac-row">
         <button type="button" class="ac-main" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(bal)}. Update the balance`)}">
-          ${cardArt(a)}
+          <span class="ac-art">${cardArt(a)}</span>
           <span class="ac-n"><b>${esc(a.name)}</b><span>${num ? '••' + esc(num) : ''}${credit ? (num ? ' · ' : '') + 'owed' : ''}</span></span>
           <span class="ac-v${credit ? ' owed' : ''}">${big(bal)}</span>
         </button>
@@ -790,20 +753,22 @@ window.POSFinance = function (ctx) {
     return `<article class="float ac"><span class="lab">Accounts</span><div class="ac-list">${rows}</div></article>`;
   }
 
-  // a month as one ring: all of its income, and where it goes. Bills, then spending, then what was saved; what's left stays empty.
+  // a month as one ring: all of its income, and where it goes. Bills, subscriptions, each category, then what was saved; what's left stays empty.
   function monthSlices(mk) {
     const cur = curMk(), future = mk > cur, mod = modelFor(mk), t = monthTotals(mod);
-    const bills = mod.lines.filter(l => ['bill', 'loan', 'sub'].includes(l.group)).reduce((s, l) => s + l.amount, 0);
-    const cats = mod.lines.filter(l => l.group === 'cat').map(l => ({ id: l.id, name: l.name, v: future ? l.limit || 0 : l.amount })).filter(c => c.v > 0).sort((a, b) => b.v - a.v);
-    const rest = mod.lines.filter(l => l.group === 'goal' || l.group === 'wait').reduce((s, l) => s + l.amount, 0);
+    const sum = gs => mod.lines.filter(l => gs.includes(l.group)).reduce((s, l) => s + l.amount, 0);
+    const cats = mod.lines.filter(l => l.group === 'cat').map(l => ({ key: l.id, name: l.name, v: future ? l.limit || 0 : l.amount, sub: 'spending' })).filter(c => c.v > 0).sort((a, b) => b.v - a.v);
+    const parts = [], bills = sum(['bill', 'loan']), subs = sum(['sub']), goals = sum(['goal']), wait = sum(['wait']);
+    if (bills) parts.push({ key: 'bills', name: 'Bills', v: bills, sub: 'bills' });
+    if (subs) parts.push({ key: 'subs', name: 'Subscriptions', v: subs, sub: 'bills' });
+    parts.push(...cats);
+    if (goals) parts.push({ key: 'goals', name: 'Spent from savings goals', v: goals, sub: 'savings' });
+    if (wait) parts.push({ key: 'wait', name: 'Not approved yet', v: wait, sub: null });
+    // the deepest shade first, fading by step, so each piece reads apart from the next
+    parts.forEach((p, i, all) => { p.shade = all.length > 1 ? +(1 - i * 0.8 / (all.length - 1)).toFixed(2) : 1; });
     const saved = t.saved;
-    const top = cats.slice(0, 3), fold = cats.slice(3).reduce((s, c) => s + c.v, 0) + rest;
-    const parts = [];
-    if (bills) parts.push({ key: 'bills', name: 'Bills', v: bills, shade: 1, sub: 'bills' });
-    top.forEach((c, i) => parts.push({ key: c.id, name: c.name, v: c.v, shade: [.66, .46, .32][i], sub: 'spending' }));
-    if (fold) parts.push({ key: 'other', name: cats.length > 3 ? 'Other spending' : 'Other', v: fold, shade: .2, sub: 'spending' });
     if (saved) parts.push({ key: 'saved', name: 'Saved', v: saved, good: true, sub: 'savings' });
-    const out = parts.filter(p => p.key !== 'saved').reduce((s, p) => s + p.v, 0);
+    const out = parts.filter(p => !p.good).reduce((s, p) => s + p.v, 0);
     return { parts, inAll: t.inAll, out, saved, left: t.inAll - out - saved, future };
   }
   function donut(m) {
@@ -817,26 +782,133 @@ window.POSFinance = function (ctx) {
     }).join('');
     return `<svg class="dn" viewBox="0 0 200 200" aria-hidden="true"><circle class="dn-track" cx="100" cy="100" r="${R}"/><g transform="rotate(-90 100 100)">${arcs}</g></svg>`;
   }
-  function monthCard(mk) {
+  const pieLabel = m => `${fmt(m.inAll)} in. ` + m.parts.map(p => `${p.name} ${fmt(p.v)}`).join(', ') + (m.left > 0 ? `, ${fmt(m.left)} left` : '');
+  // the small one on the overview: only the ring. Tap it for the whole picture.
+  function pieCard(mk) {
+    const m = monthSlices(mk);
+    return `<button type="button" class="float pie" data-act="fin-pie" aria-label="${esc(`${mkName(mk)}, where the money goes: ${pieLabel(m)}. Open it full screen`)}">
+      <span class="lab">${esc(mkShortName(mk))}</span><span class="pie-ring">${donut(m)}</span></button>`;
+  }
+  // the ring full screen: what came in, what went where, and what's left
+  function pieFull(mk) {
     const m = monthSlices(mk), share = v => (m.inAll ? pctText(v / m.inAll) : '');
     const fig = (label, v, cls = '') => `<div class="mo-fig${cls}"><span class="lab">${label}</span><span class="fig">${v < 0 ? '−' : ''}${big(Math.abs(v))}</span></div>`;
-    const figs = fig(m.future ? 'Planned out' : 'Out', m.out) + (m.saved ? fig('Saved', m.saved, ' good') : '') + fig(m.left < 0 ? 'Short' : 'Left', m.left, m.left < 0 ? ' neg' : '');
-    const row = p => `<button type="button" class="mo-leg-r" data-act="fin-sub" data-sub="${p.sub}"${p.sub === 'spending' ? ` data-mk="${mk}"` : ''}>
-        <i class="dn-key${p.good ? ' good' : ''}" style="${p.good ? '' : `opacity:${p.shade}`}"></i><span class="mo-leg-n">${esc(p.name)}</span><span class="num">${esc(fmt(p.v))}</span><span class="pct">${share(p.v)}</span></button>`;
+    const figs = fig(m.future ? 'Coming in' : 'In', m.inAll) + fig(m.future ? 'Planned out' : 'Out', m.out) + (m.saved ? fig('Saved', m.saved, ' good') : '') + fig(m.left < 0 ? 'Short' : 'Left', m.left, m.left < 0 ? ' neg' : '');
+    const row = p => {
+      const go = p.key === 'wait' ? 'data-act="fin-todo"' : `data-act="fin-sub" data-sub="${p.sub}"${p.sub === 'spending' ? ` data-mk="${mk}"` : ''}`;
+      return `<button type="button" class="mo-leg-r" ${go}><i class="dn-key${p.good ? ' good' : ''}" style="${p.good ? '' : `opacity:${p.shade}`}"></i><span class="mo-leg-n">${esc(p.name)}</span><span class="num">${esc(fmt(p.v))}</span><span class="pct">${share(p.v)}</span></button>`;
+    };
     const leg = m.parts.map(row).join('') + (m.left > 0 ? `<div class="mo-leg-r left"><i class="dn-key hollow"></i><span class="mo-leg-n">Left</span><span class="num">${esc(fmt(m.left))}</span><span class="pct">${share(m.left)}</span></div>` : '');
-    return `<article class="float mo" aria-label="${esc(mkLong(mk))}: money in and where it goes">
-      ${monthNav('ov', mk)}
-      <div class="mo-figs">${figs}</div>
-      <div class="mo-main">
-        <div class="dn-wrap" role="img" aria-label="${esc(`${fmt(m.inAll)} in. ` + m.parts.map(p => `${p.name} ${fmt(p.v)}`).join(', ') + (m.left > 0 ? `, ${fmt(m.left)} left` : ''))}">
-          ${donut(m)}
-          <div class="dn-mid"><span class="lab">In</span><span class="fig">${big(m.inAll)}</span></div>
-        </div>
-        <div class="mo-right">
-          <div class="mo-leg">${leg || '<p class="empty">Nothing yet this month.</p>'}</div>
+    return `<div class="fin-full" role="dialog" aria-modal="true" aria-label="${esc(mkLong(mk))}: where the money goes">
+      <div class="ff-top">${monthNav('ov', mk)}<button type="button" class="app-x ff-x" data-act="fin-pie-close" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+      <div class="ff-scroll" id="finFull" data-keep>
+        <div class="ff-main">
+          <div class="dn-wrap" role="img" aria-label="${esc(pieLabel(m))}">${donut(m)}<div class="dn-mid"><span class="lab">${m.future ? 'Planned' : 'Spent'}</span><span class="fig">${big(m.out)}</span></div></div>
+          <div class="mo-right"><div class="mo-figs">${figs}</div><div class="mo-leg">${leg || '<p class="empty">Nothing yet this month.</p>'}</div></div>
         </div>
       </div>
-    </article>`;
+    </div>`;
+  }
+
+  // what counts as spending on a day: every charge out, but not money moved between your accounts or marked "not spending"
+  const spentIn = mk => S.txns.filter(t => isOut(t) && !isTransfer(t) && t.bucketId !== '_none' && inMk(t.at, mk));
+  // the month as plain boxes, one a day: the more spent, the deeper the color. Today is ringed.
+  function heatCal(mk) {
+    const [y, m] = mkParts(mk), dim = new Date(y, m + 1, 0).getDate(), lead = new Date(y, m, 1).getDay(), cur = curMk();
+    const today = mk === cur ? new Date().getDate() : mk < cur ? dim + 1 : 0;
+    const day = new Array(dim + 1).fill(0), n = new Array(dim + 1).fill(0);
+    for (const t of spentIn(mk)) { const d = new Date(t.at).getDate(); day[d] += t.amount; n[d]++; }
+    const most = Math.max(...day, 1), sel = S.day && S.day.startsWith(mk + '-') ? +S.day.slice(8) : 0;
+    let cells = '<i class="hc-pad"></i>'.repeat(lead);
+    for (let d = 1; d <= dim; d++) {
+      const v = day[d], later = d > today, dt = new Date(y, m, d);
+      const a = v ? (0.22 + 0.78 * Math.sqrt(v / most)).toFixed(2) : '0';
+      const say = `${dayFmt.format(dt)}${d === today ? ', today' : ''}: ${later ? 'still to come' : v ? `${fmt(v)}, ${n[d]} ${n[d] === 1 ? 'charge' : 'charges'}` : 'nothing spent'}`;
+      cells += `<button type="button" class="hc-d${later ? ' later' : ''}${d === today ? ' today' : ''}${d === sel ? ' sel' : ''}" style="--a:${a}" data-act="fin-day" data-day="${mk}-${pad2(d)}" aria-pressed="${d === sel}" aria-label="${esc(say)}" title="${esc(say)}"${later ? ' disabled' : ''}></button>`;
+    }
+    return `<article class="float hc"><span class="lab">Spending</span><div class="hc-grid" role="group" aria-label="${esc(`Spending each day in ${mkName(mk)}`)}">${cells}</div></article>`;
+  }
+  // the day you tapped: each charge, where it went, and the total
+  function dayCard(mk) {
+    if (!S.day || !S.day.startsWith(mk + '-')) return '';
+    const [y, mo, d] = S.day.split('-').map(Number), dt = new Date(y, mo - 1, d), k = S.day;
+    const list = spentIn(mk).filter(t => dkey(t.at) === k).sort((a, b) => a.at - b.at), total = list.reduce((s, t) => s + t.amount, 0);
+    const rows = list.map(t => `<button type="button" class="hc-tx" data-act="fin-form" data-form="charge" data-id="${esc(t.id)}"${canSave() ? '' : ' disabled'}>
+        <b>${esc(t.merchant || 'Charge')}${exTag(t)}</b><span class="num">${esc(fmt(t.amount))}</span>
+        <small>${esc(timeFmt.format(t.at))} · ${esc(bucketLabel(t) || 'Needs approval')} · ${esc(acctLabel(acct(t.accountId)))}</small></button>`).join('');
+    return `<article class="float hc-day"><div class="hc-dh"><span class="lab">${esc(dayFmt.format(dt))}</span><span class="fig md">${esc(fmt(total))}</span>
+      <button type="button" class="circle hc-close" data-act="fin-day" data-day="${k}" aria-label="Close this day"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+      ${rows ? `<div class="hc-list">${rows}</div>` : '<p class="empty">Nothing spent this day.</p>'}</article>`;
+  }
+
+  // bills and subscriptions for the month you're looking at: the name, its day, its account, how much, and paid or not
+  function billsIn(g, mk) {
+    const [y, m] = mkParts(mk);
+    return S.bills.filter(b => groupOf(b) === g && mk >= createdMonth(b) && (!yearly(b) || (b.day ? dueOn(b, y, m) != null : b.month - 1 === m))).sort(byDay);
+  }
+  function simpleBill(b, mk) {
+    const [y, m] = mkParts(mk), p = paidIn(b, mk), a = b.accountId ? acct(b.accountId) : null, loan = loanOfBill(b);
+    const name = loan ? `${loan.name} payment` : b.name, due = dueOn(b, y, m), mon = mkName(mk);
+    const late = !p && due != null && startOfDay(Date.now()) - due > GRACE * DAY;
+    const when = !b.day ? 'No day set' : yearly(b) ? `On ${shortDay.format(due)}, once a year` : `On the ${ordinal(b.day)}`;
+    return `<div class="sb-row${p ? ' paid' : ''}${late ? ' late' : ''}">
+      <button type="button" class="b-chk" data-act="fin-bill-paid" data-id="${esc(b.id)}" data-mk="${mk}" aria-pressed="${!!p}" aria-label="${esc(p ? `${name} is paid for ${mon}. Undo` : `Mark ${name} paid for ${mon}`)}"${canSave() ? '' : ' disabled'}>${ICON.check}</button>
+      <button type="button" class="sb-main" data-act="fin-form" data-form="bill" data-id="${esc(b.id)}"${canSave() ? '' : ' disabled'}>
+        <span class="sb-n">${esc(name)}</span><span class="sb-a">${b.amount ? esc(fmt(b.amount)) : '<span class="b-none">Set amount</span>'}</span>
+        <span class="sb-d">${esc(when)} · ${esc(a ? a.name : 'No account')}${late ? ' · not paid yet' : ''}</span>
+      </button>
+    </div>`;
+  }
+  function billsBox(g, mk) {
+    const list = billsIn(g, mk), sub = g === 'sub', total = list.reduce((s, b) => s + (b.amount || 0), 0), paid = list.filter(b => paidIn(b, mk)).length;
+    return `<section class="float sb"><div class="sb-head"><span class="lab">${sub ? 'Subscriptions' : 'Bills'}</span>
+        <span class="meta">${list.length ? `${paid} of ${list.length} paid · ${esc(fmt(total))}` : ''}</span>
+        ${canSave() ? `<button type="button" class="circle sb-add" data-act="fin-form" data-form="bill" data-group="${g}" aria-label="New ${sub ? 'subscription' : 'bill'}">${ICON.plus}</button>` : ''}</div>
+      ${list.length ? list.map(b => simpleBill(b, mk)).join('') : `<p class="empty">No ${sub ? 'subscriptions' : 'bills'} yet.</p>`}</section>`;
+  }
+
+  /* ---------- pay: the salary, what lands, and what comes out for taxes ---------- */
+  // checks in a year: twice a month is 24, every two weeks is 26
+  const checksPerYear = inc => (inc.every === 14 ? 26 : inc.every === 7 ? 52 : Math.max(1, (inc.days || []).length) * 12);
+  // 2026, a single filer: federal on top of the $16,100 standard deduction; South Carolina from AGI less its own
+  // deduction ($15,000, phasing out between $40,000 and $95,000), 1.99% under $30,000 and 5.21% less $966 above it.
+  // An estimate of the split only: the real total is what the deposit shows.
+  function taxSplit(salary) {
+    const g = salary / 100, fedTaxable = Math.max(0, g - 16100);
+    const fedBands = [[12400, .10], [50400, .12], [105700, .22], [201775, .24], [256225, .32], [640600, .35], [Infinity, .37]];
+    let fed = 0, low = 0;
+    for (const [top, r] of fedBands) { if (fedTaxable > low) fed += (Math.min(fedTaxable, top) - low) * r; low = top; }
+    const scDed = g <= 40000 ? 15000 : g >= 95000 ? 0 : 15000 * (1 - (g - 40000) / 55000), scTaxable = Math.max(0, g - scDed);
+    const sc = scTaxable < 30000 ? scTaxable * 0.0199 : scTaxable * 0.0521 - 966;
+    const c = v => Math.round(v * 100);
+    return { ss: c(Math.min(g, 184500) * 0.062), med: c(g * 0.0145), fed: c(fed), sc: c(Math.max(0, sc)) };
+  }
+  function payCard(mk) {
+    if (!S.income.length) return `<article class="float pay"><span class="lab">Pay</span><p class="empty">Add your paycheck to see it here.</p>${canSave() ? '<div><button type="button" class="btn solid" data-act="fin-form" data-form="income">Add paycheck</button></div>' : ''}</article>`;
+    return S.income.slice().sort(byCreated).map(inc => {
+      const n = checksPerYear(inc), net = inc.amount || 0, sal = inc.salary || 0, yrNet = net * n;
+      const rows = [['Each check', sal / n, net], ['Month', sal / 12, yrNet / 12], ['Year', sal, yrNet], ['Week', sal / 52, yrNet / 52]];
+      const money = v => esc(fmt(Math.round(v)));
+      const tr = ([l, g, t]) => `<tr${l === 'Year' ? ' class="py-yr"' : ''}><th scope="row">${l}</th>${sal ? `<td>${money(g)}</td><td class="tax">${money(g - t)}</td>` : ''}<td class="net">${money(t)}</td></tr>`;
+      const sched = inc.every === 14 ? 'every two weeks' : inc.every === 7 ? 'every week' : (inc.days || []).length > 1 ? `the ${inc.days.map(ordinal).join(' and ')}` : inc.days && inc.days[0] ? `the ${ordinal(inc.days[0])}` : '';
+      const pays = paydays(inc, mk).map(p => payState(inc, p)), got = pays.filter(p => p.st === 'got' || p.st === 'before').length;
+      const out = sal ? sal / n - net : 0, key = 'tax-' + inc.id, open = S.open.has(key);
+      let split = '';
+      if (sal && open) {
+        const e = taxSplit(sal), per = v => v / n, known = per(e.ss) + per(e.med) + per(e.fed) + per(e.sc), rest = out - known;
+        const line = (l, v, note = '') => `<div class="py-x"><span>${l}${note ? ` <small>${note}</small>` : ''}</span><span class="num">${money(v)}</span></div>`;
+        split = `<div class="py-split">${line('Social Security', per(e.ss), '6.2%')}${line('Medicare', per(e.med), '1.45%')}${line('Federal income tax', per(e.fed), 'about')}${line('South Carolina income tax', per(e.sc), 'about')}
+          ${Math.abs(rest) >= 100 ? line(rest > 0 ? 'Everything else' : 'Less than the estimate', Math.abs(rest), rest > 0 ? 'benefits, or the estimate off' : '') : ''}
+          <p class="meta">Each check, worked out from 2026 rates for a single filer. A pay stub has the exact split.</p></div>`;
+      }
+      return `<article class="float pay">
+        <div class="py-head"><span class="lab">Pay · ${esc(inc.name || 'Paycheck')}</span>${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="income" data-id="${esc(inc.id)}" aria-label="Edit pay">${ICON.edit}</button>` : ''}</div>
+        ${sal ? `<div class="py-top"><span class="py-sal">${big(sal)}<small> a year before taxes</small></span><span class="py-pct">${(out / (sal / n) * 100).toFixed(1).replace(/\.0$/, '')}% taken out</span></div>` : `<button type="button" class="link py-add" data-act="fin-form" data-form="income" data-id="${esc(inc.id)}"${canSave() ? '' : ' disabled'}>Add your yearly salary to see taxes</button>`}
+        <table class="py-t"><thead><tr><th></th>${sal ? '<th>Before taxes</th><th>Taxes</th>' : ''}<th>Take-home</th></tr></thead><tbody>${rows.map(tr).join('')}</tbody></table>
+        <p class="meta py-foot">${n} checks a year${sched ? `, on ${esc(sched)}` : ''} · ${esc(mkName(mk))}: ${got} of ${pays.length} in</p>
+        ${sal ? `<button type="button" class="link py-more" data-act="fin-toggle" data-id="${esc(key)}" aria-expanded="${open}">${open ? 'Hide' : 'What comes out of each check'}</button>${split}` : ''}
+      </article>`;
+    }).join('');
   }
   // a payday that's passed with no deposit seen: did it come?
   function payNotes() {
@@ -847,13 +919,18 @@ window.POSFinance = function (ctx) {
   }
 
   /* ---------- views ---------- */
+  const ovMk = () => (S.ovMk && S.ovMk >= START ? S.ovMk : curMk());
+  // the overview: one month at a time. The arrows move the ring, the days and the bills together.
   function vHome() {
-    const todo = inbox(), due = billAlerts(), pays = payNotes();
-    let acts = '';
-    if (due.length || pays) acts += `<section class="sec"><div class="stack">${pays}${due.map(billNote).join('')}</div></section>`;
-    if (todo.length) acts += `<section class="sec"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>`;
-    const mk = S.ovMk && S.ovMk >= START ? S.ovMk : curMk();
-    return `<div class="ov"><div class="ov-l">${acctList()}${nextUp()}</div><div class="ov-r">${acts}${monthCard(mk)}</div></div>${examplesBar()}`;
+    const todo = inbox(), pays = payNotes(), mk = ovMk();
+    const appr = todo.length ? `<section class="sec" id="finTodo"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>` : '';
+    return `<div class="ov2">
+      <div class="ov-top">${monthNav('ov', mk)}${todo.length ? `<button type="button" class="btn ov-todo" data-act="fin-todo">${todo.length} to approve</button>` : ''}</div>
+      ${pays ? `<div class="stack">${pays}</div>` : ''}
+      <div class="ov-w">${acctList()}${payCard(mk)}${pieCard(mk)}${heatCal(mk)}${dayCard(mk)}</div>
+      <div class="ov-b">${billsBox('bill', mk)}${billsBox('sub', mk)}</div>
+      ${appr}
+    </div>${S.pie ? pieFull(mk) : ''}${examplesBar()}`;
   }
 
   // whether the Regions alert emails are reaching POS
@@ -1216,11 +1293,12 @@ window.POSFinance = function (ctx) {
     for (const k of Object.keys(paid)) if (paid[k] && paid[k].txnId === txnId) { delete paid[k]; hit = true; }
     return hit ? save(refs.bills.doc(billId).update({ paid })) : true;
   }
-  async function togglePaid(id) {
+  // checks a bill off for a month (this one, unless the overview is showing another)
+  async function togglePaid(id, forMk) {
     const b = billById(id);
     if (!b) return;
-    const now = new Date(), mk = monthKeyOf(now.getFullYear(), now.getMonth()), month = monthFmt.format(now);
-    if (yearly(b) && dueOn(b, now.getFullYear(), now.getMonth()) == null) { const d = dueAfter(b, now.getFullYear(), now.getMonth()); toast(`${b.name} renews ${d ? shortDay.format(d) + ', ' + new Date(d).getFullYear() : 'once a year'}`); return; }
+    const mk = /^\d{4}-\d{2}$/.test(forMk || '') ? forMk : curMk(), [y, m] = mkParts(mk), month = mkName(mk);
+    if (yearly(b) && dueOn(b, y, m) == null) { const d = dueAfter(b, y, m); toast(`${b.name} renews ${d ? shortDay.format(d) + ', ' + new Date(d).getFullYear() : 'once a year'}`); return; }
     const before = { ...(b.paid || {}) }, paid = { ...before };
     const was = !!paid[mk];
     if (was) delete paid[mk]; else paid[mk] = { at: Date.now() };
@@ -1320,6 +1398,7 @@ window.POSFinance = function (ctx) {
         title: inc ? 'Paycheck' : 'Add your paycheck', del: !!inc,
         body: field('From', `<input id="ff_name" autocomplete="off" maxlength="60" placeholder="Employer" value="${inc ? esc(inc.name) : ''}">`)
           + field('Take-home each paycheck', `<input id="ff_amount" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${inc && inc.amount ? plain(inc.amount) : ''}">`, 'What lands in the bank, after taxes.')
+          + field('Yearly salary, before taxes', `<input id="ff_salary" class="amount" inputmode="decimal" autocomplete="off" placeholder="Optional" value="${inc && inc.salary ? plain(inc.salary) : ''}">`, 'With it, the overview shows what comes out for taxes.')
           + `<div class="seg-ctl" role="radiogroup" aria-label="How often">
               <label><input type="radio" name="ff_sched" id="ff_sched_twice" value="twice"${every ? '' : ' checked'}><span>Twice a month</span></label>
               <label><input type="radio" name="ff_sched" id="ff_sched_every" value="every"${every ? ' checked' : ''}><span>Every two weeks</span></label>
@@ -1686,7 +1765,10 @@ window.POSFinance = function (ctx) {
       let days = null, anchor = null;
       if (every) { anchor = val('ff_anchor'); if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor)) return fail('Pick a recent payday.'); }
       else { days = [...new Set([val('ff_day1'), val('ff_day2')].map(Number).filter(Boolean))].sort((a, b) => a - b); if (!days.length) return fail('Pick the payday.'); }
-      const data = { name: val('ff_name').trim() || 'Paycheck', amount, every: every ? 14 : null, anchor, days, accountId: val('ff_acct') || null, match: val('ff_match').trim().slice(0, 120) };
+      const salary = val('ff_salary').trim() ? parseMoney(val('ff_salary')) : null;
+      if (salary != null && !(salary > 0)) return fail('Enter the yearly salary, like 48000, or leave it empty.');
+      if (salary && salary < amount) return fail('The yearly salary is less than one paycheck. Check the numbers.');
+      const data = { name: val('ff_name').trim() || 'Paycheck', amount, salary: salary || null, every: every ? 14 : null, anchor, days, accountId: val('ff_acct') || null, match: val('ff_match').trim().slice(0, 120) };
       if (!F.id) return save(refs.income.doc().set({ ...data, got: {}, createdAt: Date.now(), example: false }));
       return save(refs.income.doc(F.id).update(data));
     },
@@ -1825,13 +1907,41 @@ window.POSFinance = function (ctx) {
     if (l && extra !== (l.extra || 0)) save(refs.loans.doc(l.id).update({ extra }));
   });
 
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !S.pie || !document.querySelector('.fin-full') || document.querySelector('dialog[open]')) return;
+    e.preventDefault(); e.stopPropagation(); S.pie = false; rerender();
+  }, true);
+  document.addEventListener('click', e => { if (S.pie && e.target.closest && e.target.closest('[data-tab]')) S.pie = false; }, true);
+
   /* ---------- taps routed here by POS (data-act="fin-…") ---------- */
   function act(name, b) {
     if (name === 'fin-month') {
       const mk = b.dataset.mk, key = b.dataset.for === 'sp' ? 'spMk' : 'ovMk';
       if (!/^\d{4}-\d{2}$/.test(mk || '') || mk < START) return;
       S[key] = mk === curMk() ? null : mk;
+      if (key === 'ovMk') S.day = null;
       rerender();
+      return;
+    }
+    if (name === 'fin-pie' || name === 'fin-pie-close') {
+      S.pie = name === 'fin-pie';
+      rerender();
+      const f = document.querySelector('.fin-full');
+      if (f && S.pie && f.animate) f.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      if (!S.pie) { const p = document.querySelector('.fin .pie'); if (p) p.focus({ preventScroll: true }); }
+      return;
+    }
+    if (name === 'fin-day') {
+      const k = b.dataset.day;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(k || '')) return;
+      S.day = S.day === k ? null : k;
+      rerender();
+      if (S.day) { const c = document.querySelector('.fin .hc-day'); if (c && c.getBoundingClientRect().bottom > innerHeight) c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+      return;
+    }
+    if (name === 'fin-todo') {
+      S.pie = false; rerender();
+      const el = $('#finTodo'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (name === 'fin-card') {
@@ -1842,7 +1952,7 @@ window.POSFinance = function (ctx) {
     if (name === 'fin-sub') {
       if (!SUBS[b.dataset.sub]) return;
       if (b.dataset.mk) S.spMk = b.dataset.mk === curMk() ? null : b.dataset.mk;
-      S.sub = b.dataset.sub;
+      S.sub = b.dataset.sub; S.pie = false;
       try { localStorage.setItem('pos.fin.sub', S.sub); } catch (e) {}
       const sc = $('#finScroll'); if (sc) sc.scrollTop = 0;
       rerender();
@@ -1859,7 +1969,7 @@ window.POSFinance = function (ctx) {
       const items = (g.items || []).map(x => (x.id === b.dataset.item ? { ...x, got: !x.got } : x));
       save(refs.buckets.doc(g.id).update({ items }));
     }
-    else if (name === 'fin-bill-paid') togglePaid(b.dataset.id);
+    else if (name === 'fin-bill-paid') togglePaid(b.dataset.id, b.dataset.mk);
     else if (name === 'fin-toggle') { S.open.has(b.dataset.id) ? S.open.delete(b.dataset.id) : S.open.add(b.dataset.id); rerender(); }
     else if (name === 'fin-clear-ask') { S.confirmClear = true; rerender(); }
     else if (name === 'fin-clear-no') { S.confirmClear = false; rerender(); }
