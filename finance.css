@@ -503,8 +503,9 @@
 .fin .mg-n small{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fin .mg-r .num,.fin .mg-left .num{font-variant-numeric:tabular-nums;font-size:14.5px;white-space:nowrap}
 .fin .mg-r .pct,.fin .mg-gh .pct,.fin .mg-left .pct{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;color:var(--ink-2)}
-.fin .mg-bar{grid-column:1/-1;height:3px;border-radius:2px;background:rgba(236,238,242,.06);overflow:hidden;margin-top:5px}
-.fin .mg-bar i{display:block;height:100%;border-radius:2px}
+.fin .mg-bar{grid-column:1/-1;display:flex;gap:1px;height:3px;border-radius:2px;background:rgba(236,238,242,.06);overflow:hidden;margin-top:5px}
+.fin .mg-bar i{display:block;flex:none;height:100%;border-radius:2px}
+.fin .mg-bar i.rest{opacity:.32}
 .fin .mg-left{padding-top:12px;box-shadow:inset 0 1px 0 var(--hair);font-size:14.5px;font-weight:500}
 .fin .mg-left.over{color:var(--bad)}
 @media (hover:hover){ .fin .mg-r:not(:disabled):hover .mg-n b,.fin .sv-r:hover .sv-n{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px} }

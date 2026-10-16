@@ -1017,12 +1017,16 @@ window.POSFinance = function (ctx) {
   // a common guide for a paycheck: needs under half, wants under 30%, and 20% or more saved
   const MG = { give: { name: 'Giving' }, need: { name: 'Needs', aim: ['under', 0.5] }, want: { name: 'Wants', aim: ['under', 0.3] }, save: { name: 'Saved', aim: ['over', 0.2] }, other: { name: 'Other' } };
   const MG_ORDER = ['give', 'need', 'want', 'save', 'other'];
+  // This month and the ones ahead are a plan: every bill counts whether it's paid yet or not, and each spending category
+  // counts at its limit (or what's been spent, once that's more). What's left is yours even if every limit gets used.
+  // A month gone by shows what really went out.
   function moneyModel(mk) {
-    const future = mk > curMk(), mod = modelFor(mk), tot = monthTotals(mod), rows = [], subs = [];
+    const cur = curMk(), future = mk > cur, plan = mk >= cur, mod = modelFor(mk), tot = monthTotals(mod), rows = [], subs = [];
     for (const l of mod.lines) {
-      const v = l.group === 'cat' && future ? l.limit || 0 : l.amount || 0;
+      const spent = l.amount || 0, v = l.group === 'cat' && plan ? Math.max(l.limit || 0, spent) : spent;
       if (!v) continue;
-      if (l.group === 'sub') { subs.push({ ...l, amount: v }); continue; }
+      const done = DUE.has(l.st) ? 0 : l.group === 'cat' ? spent : v;
+      if (l.group === 'sub') { subs.push({ ...l, amount: v, done }); continue; }
       let g = 'other', sub = '', go = null;
       if (l.group === 'save') { g = 'save'; go = 'savings'; }
       else if (l.group === 'bill' || l.group === 'loan') {
@@ -1030,19 +1034,24 @@ window.POSFinance = function (ctx) {
         g = b && isGiving(b) ? 'give' : 'need'; go = l.group === 'loan' ? 'loans' : 'bills';
         sub = l.st === 'paid' ? `Paid${l.at ? ' ' + shortDay.format(l.at) : ''}` : l.st === 'late' ? `Due ${shortDay.format(l.at)} · no charge seen` : l.st === 'unseen' ? 'No charge seen'
           : l.st === 'before' ? shortDay.format(l.at) : l.at ? `Due ${shortDay.format(l.at)}` : 'No day set';
-      } else if (l.group === 'cat') { const c = bucket(l.id); g = c && isNeed(c) ? 'need' : 'want'; go = 'spending'; sub = l.limit ? `${fmtShort(l.limit)} limit` : 'No limit'; }
+      } else if (l.group === 'cat') {
+        const c = bucket(l.id), lim = l.limit || 0;
+        g = c && isNeed(c) ? 'need' : 'want'; go = 'spending';
+        sub = !plan ? (lim ? `${fmtShort(lim)} limit` : 'No limit') : !lim ? `${fmt(spent)} so far · no limit` : spent > lim ? `${fmt(spent)} spent · ${fmtShort(spent - lim)} over the limit` : `${fmt(spent)} of ${fmtShort(lim)} spent`;
+      }
       else if (l.group === 'goal') { sub = 'Paid from a savings goal'; go = 'savings'; }
       else if (l.group === 'wait') sub = 'Still to approve';
-      rows.push({ id: l.id, g, name: l.name, sub, v, go, wait: l.group === 'wait' });
+      rows.push({ id: l.id, g, name: l.name, sub, v, done, go, wait: l.group === 'wait' });
     }
     if (subs.length) {
       const top = subs.slice().sort((a, b) => b.amount - a.amount);
-      rows.push({ id: '_subs', g: 'want', name: `Subscriptions · ${subs.length}`, sub: top.slice(0, 3).map(x => x.name).join(', ') + (top.length > 3 ? ` and ${top.length - 3} more` : ''), v: subs.reduce((t, x) => t + x.amount, 0), go: 'bills' });
+      rows.push({ id: '_subs', g: 'want', name: `Subscriptions · ${subs.length}`, sub: top.slice(0, 3).map(x => x.name).join(', ') + (top.length > 3 ? ` and ${top.length - 3} more` : ''),
+        v: subs.reduce((t, x) => t + x.amount, 0), done: subs.reduce((t, x) => t + x.done, 0), go: 'bills' });
     }
     const sums = {};
     for (const g of MG_ORDER) sums[g] = rows.filter(r => r.g === g).reduce((t, r) => t + r.v, 0);
     const used = rows.reduce((t, r) => t + r.v, 0), ahead = mod.pays.filter(p => p.st === 'expected' || p.st === 'waiting').length;
-    return { mk, future, inAll: tot.inAll, rows, used, left: tot.inAll - used, sums, missing: mod.missing || [], pays: mod.pays.length, ahead };
+    return { mk, future, plan, inAll: tot.inAll, rows, used, left: tot.inAll - used, sums, missing: mod.missing || [], pays: mod.pays.length, ahead };
   }
   function monthStep(mk) {
     const cur = curMk(), prev = mkAdd(mk, -1), next = mkAdd(mk, 1), max = mkAdd(cur, 12);
@@ -1055,7 +1064,7 @@ window.POSFinance = function (ctx) {
   }
   function moneyCard(mk) {
     const m = moneyModel(mk), cur = curMk(), pct = v => (m.inAll ? pctText(v / m.inAll) : '');
-    const leftName = m.future ? 'Not planned yet' : mk === cur ? 'Not spent yet' : 'Left over';
+    const leftName = m.plan ? 'Left after everything' : 'Left over';
     const tile = g => {
       const v = m.sums[g], f = m.inAll ? v / m.inAll : null, [how, aim] = MG[g].aim, a = Math.round(aim * 100);
       const ok = f == null ? null : how === 'under' ? f <= aim : f >= aim;
@@ -1070,11 +1079,11 @@ window.POSFinance = function (ctx) {
     const row = r => {
       const go = r.wait ? 'data-act="fin-todo"' : r.go ? `data-act="fin-sub" data-sub="${r.go}"${r.go === 'spending' ? ` data-mk="${mk}"` : ''}` : 'disabled';
       return `<button type="button" class="mg-r" ${go}><span class="mg-n"><b>${esc(r.name)}</b>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</span><span class="num">${esc(fmt(r.v))}</span><span class="pct">${esc(pct(r.v))}</span>
-        <span class="mg-bar" aria-hidden="true"><i class="g-${r.g}" style="width:${Math.max(0.6, r.v / total * 100).toFixed(2)}%"></i></span></button>`;
+        <span class="mg-bar" aria-hidden="true">${r.done ? `<i class="g-${r.g}" style="width:${Math.max(0.6, r.done / total * 100).toFixed(2)}%"></i>` : ''}${r.v > r.done ? `<i class="g-${r.g} rest" style="width:${Math.max(0.6, (r.v - r.done) / total * 100).toFixed(2)}%"></i>` : ''}</span></button>`;
     };
     const groups = MG_ORDER.filter(g => m.rows.some(r => r.g === g)).map(g => `<div class="mg-grp"><div class="mg-gh"><span><i class="mg-key g-${g}"></i>${MG[g].name}</span><span class="num">${esc(fmt(m.sums[g]))}</span><span class="pct">${esc(pct(m.sums[g]))}</span></div>
         ${m.rows.filter(r => r.g === g).sort((a, b) => b.v - a.v).map(row).join('')}</div>`).join('');
-    const leftRow = m.inAll ? `<div class="mg-left${m.left < 0 ? ' over' : ''}"><span>${m.left < 0 ? 'More than came in' : leftName}</span><span class="num">${esc(signed(m.left))}</span><span class="pct">${m.left > 0 ? esc(pct(m.left)) : ''}</span></div>` : '';
+    const leftRow = m.inAll ? `<div class="mg-left${m.left < 0 ? ' over' : ''}"><span>${m.left < 0 ? (m.plan ? 'Short if you use every limit' : 'More than came in') : leftName}</span><span class="num">${esc(signed(m.left))}</span><span class="pct">${m.left > 0 ? esc(pct(m.left)) : ''}</span></div>` : '';
     const miss = m.missing.length ? `<p class="mg-miss">${ICON.warn}<span><b>${esc(m.missing.map(x => x.name).join(', ').replace(/, ([^,]*)$/, ' and $1'))}</b> ${m.missing.length === 1 ? 'has' : 'have'} no amount yet, so ${m.missing.length === 1 ? 'it isn’t' : 'they aren’t'} counted here.</span>${canSave() ? '<button type="button" class="link" data-act="fin-sub" data-sub="bills">Add on Bills</button>' : ''}</p>` : '';
     const inSub = m.future ? 'coming in' : `take-home${m.ahead ? ` · ${m.ahead} ${m.ahead === 1 ? 'paycheck' : 'paychecks'} still to come` : ''}`;
     return `<article class="float mg">
@@ -1082,7 +1091,7 @@ window.POSFinance = function (ctx) {
       <div class="mg-in"><span class="fig">${big(m.inAll)}</span><span class="meta">${esc(inSub)}</span></div>
       ${m.inAll || m.used ? `<div class="mg-tiles">${tile('need')}${tile('want')}${tile('save')}</div>
       <div class="mg-stack" role="img" aria-label="${esc(say)}">${segs}</div>
-      <p class="mg-guide">A common guide: needs under 50% of take-home, wants under 30%, and 20% or more saved.${m.sums.give ? '' : ' Giving shows here once your tithe has an amount.'}</p>
+      <p class="mg-guide">${m.plan ? 'Every bill and spending limit counts in full, so what’s left is yours even if you use every limit. On each line, solid is already paid and faded is still to come. ' : ''}A common guide: needs under 50% of take-home, wants under 30%, and 20% or more saved.</p>
       ${miss}<div class="mg-list">${groups}${leftRow}</div>` : `<p class="empty">Nothing in ${esc(mkName(mk))} yet.</p>`}
     </article>`;
   }
