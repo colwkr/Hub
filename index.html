@@ -41,31 +41,33 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261016193405">
-<script src="finance.js?v=20261016193405"></script>
-<link rel="stylesheet" href="car.css?v=20261016193405">
-<script src="car.js?v=20261016193405"></script>
-<link rel="stylesheet" href="sections.css?v=20261016193405">
-<link rel="stylesheet" href="tv.css?v=20261016193405">
-<link rel="stylesheet" href="noir.css?v=20261016193405">
-<script src="records.js?v=20261016193405"></script>
-<script src="people.js?v=20261016193405"></script>
-<script src="wheels.js?v=20261016193405"></script>
-<script src="keyboard.js?v=20261016193405"></script>
-<script src="notes.js?v=20261016193405"></script>
-<script src="reminders.js?v=20261016193405"></script>
-<script src="gear.js?v=20261016193405"></script>
-<script src="lights.js?v=20261016193405"></script>
-<script src="tv.js?v=20261016193405"></script>
-<script src="work.js?v=20261016193405"></script>
-<script src="health.js?v=20261016193405"></script>
-<script src="pets.js?v=20261016193405"></script>
-<script src="places.js?v=20261016193405"></script>
-<script src="placestab.js?v=20261016193405"></script>
-<script src="usmap.js?v=20261016193405"></script>
-<script src="voice.js?v=20261016193405"></script>
-<script src="assistant.js?v=20261016193405"></script>
-<script src="packages.js?v=20261016193405"></script>
+<link rel="stylesheet" href="finance.css?v=20261019165227">
+<script src="finance.js?v=20261019165227"></script>
+<link rel="stylesheet" href="car.css?v=20261019165227">
+<script src="car.js?v=20261019165227"></script>
+<link rel="stylesheet" href="sections.css?v=20261019165227">
+<link rel="stylesheet" href="tv.css?v=20261019165227">
+<link rel="stylesheet" href="noir.css?v=20261019165227">
+<link rel="stylesheet" href="focus.css?v=20261019165227">
+<script src="records.js?v=20261019165227"></script>
+<script src="people.js?v=20261019165227"></script>
+<script src="wheels.js?v=20261019165227"></script>
+<script src="keyboard.js?v=20261019165227"></script>
+<script src="notes.js?v=20261019165227"></script>
+<script src="reminders.js?v=20261019165227"></script>
+<script src="gear.js?v=20261019165227"></script>
+<script src="lights.js?v=20261019165227"></script>
+<script src="tv.js?v=20261019165227"></script>
+<script src="work.js?v=20261019165227"></script>
+<script src="health.js?v=20261019165227"></script>
+<script src="pets.js?v=20261019165227"></script>
+<script src="places.js?v=20261019165227"></script>
+<script src="placestab.js?v=20261019165227"></script>
+<script src="usmap.js?v=20261019165227"></script>
+<script src="voice.js?v=20261019165227"></script>
+<script src="assistant.js?v=20261019165227"></script>
+<script src="packages.js?v=20261019165227"></script>
+<script src="focus.js?v=20261019165227"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1423,6 +1425,7 @@ dialog::backdrop{background:transparent}
       <button type="button" id="sheetDel" class="btn danger" hidden>Delete</button>
       <button type="button" id="sheetDone" class="btn" hidden>Mark done</button>
       <button type="button" id="sheetNotes" class="btn" hidden>Open notes</button>
+      <button type="button" id="sheetFocus" class="btn focus-b" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg>Focus</button>
       <button type="submit" id="sheetSave" class="btn solid">Save</button>
     </div>
   </form>
@@ -1537,13 +1540,15 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261016193405"></script>
+<script src="appearance.js?v=20261019165227"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
-  const VERSION = '20261016193405';
+  // Drive times are switched off for now (they're coming back, reworked); the code for them stays, waiting on this.
+  const DRIVES = false;
+  const VERSION = '20261019165227';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1601,6 +1606,7 @@ dialog::backdrop{background:transparent}
   }
 
   const ICON = {
+    focus: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg>',
     car: '<svg class="i car-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 11.5 7.3 7.1a1.8 1.8 0 0 1 1.7-1.1h6a1.8 1.8 0 0 1 1.7 1.1l1.7 4.4"/><rect x="4" y="11.5" width="16" height="5.5" rx="2"/><path d="M6.5 17v2M17.5 17v2"/></svg>',
     pin: '<svg class="i pin-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-6-5.6-6-10.5a6 6 0 0 1 12 0c0 4.9-6 10.5-6 10.5z"/><circle cx="12" cy="10" r="2.2"/></svg>',
     rep: '<svg class="i rep-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 4.5l2.5 2.5L17 9.5"/><path d="M5 11V9.5A2.5 2.5 0 0 1 7.5 7h12M7 19.5 4.5 17 7 14.5"/><path d="M19 13v1.5a2.5 2.5 0 0 1-2.5 2.5h-12"/></svg>',
@@ -1665,7 +1671,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null, VOICE = null;
+  let sb = null, FOCUS = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null, VOICE = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2220,7 +2226,7 @@ dialog::backdrop{background:transparent}
         const cls = x.live ? ' live' : i === firstUp ? ' first' : '';
         const t = x.t, s0 = toMin(t.time), e0 = s0 + effMins(t);
         const when = x.live ? (t.mins ? `Now · ends ${fmtTime(e0 % 1440)}` : `Now · started ${fmtTime(s0)}`)
-          : t.place && t.place.drive ? `${fmtTime(s0)} at ${t.place.name || t.place.q} · leave ${fmtTime(((tripsOn(t.date).find(d => d.t.id === t.id && d.e === s0) || { s: s0 - t.place.drive }).s + 1440) % 1440)}`
+          : DRIVES && t.place && t.place.drive ? `${fmtTime(s0)} at ${t.place.name || t.place.q} · leave ${fmtTime(((tripsOn(t.date).find(d => d.t.id === t.id && d.e === s0) || { s: s0 - t.place.drive }).s + 1440) % 1440)}`
           : t.mins ? `${fmtRange(s0, s0 + t.mins)} · ${fmtDur(t.mins)}` : `${fmtTime(s0)} · no estimate`;
         return `${div}<div class="trow sw${cls}" data-swipe="${esc(t.id)}">
           <div class="sw-track" aria-hidden="true">${ICON.check}<span>Complete</span></div>
@@ -3483,8 +3489,27 @@ dialog::backdrop{background:transparent}
     if (m && age < 4 * 3600e3) return at(m, 'phone');
     return null;
   }
+  // what Focus follows: everything with a time on the calendar from yesterday through tomorrow (not markers), yours and Google's
+  function focusItems() {
+    const tk = todayKey(), out = [];
+    const at = (k, m) => { const [y, mo, d] = k.split('-').map(Number); return new Date(y, mo - 1, d, 0, m).getTime(); };
+    for (const off of [-1, 0, 1]) {
+      const k = addDays(tk, off);
+      for (const t of dayItems(k)) {
+        if (kindOf(t) !== 'timed' || t.kind === 'marker') continue;
+        const s = at(k, toMin(t.time));
+        out.push({ key: t.id, id: t.id, title: t.title, kind: t.kind, s, e: s + effMins(t) * 60000, done: !!t.done, place: t.place ? t.place.name || t.place.q : '' });
+      }
+      for (const g of S.events) {
+        if (g.date !== k || g.allDay || !g.start) continue;
+        const s = at(k, toMin(g.start));
+        out.push({ key: 'g:' + g.id, id: null, title: g.title, kind: 'gcal', s, e: s + Math.max(15, g.mins || 30) * 60000, done: false, place: g.location || '' });
+      }
+    }
+    return out;
+  }
   function tripsOn(k) {
-    if (!PLACES) return [];
+    if (!PLACES || !DRIVES) return [];
     const stops = dayItems(k).filter(t => t.time && t.place && Number.isFinite(t.place.lat) && t.place.drive && (t.kind === 'marker' || kindOf(t) === 'timed'))
       .map(t => { const s = toMin(t.time); return { t, p: t.place, s, e: s + (t.kind === 'marker' ? t.mins || 0 : effMins(t)) }; })
       .sort((a, b) => a.s - b.s || b.e - a.e);
@@ -3584,6 +3609,8 @@ dialog::backdrop{background:transparent}
     ].map(x => ({ ...x, e: Math.min(x.e, 1440) , full: x.e })));
     // happening now: on today, or started the day before and still going past midnight
     const liveAt = x => (k === tk && x.s <= nm && nm < x.full) || (addDays(k, 1) === tk && nm + 1440 < x.full);
+    // what's happening now gets a Focus button, laid over its block (shown only where the block has room)
+    const fx = (st, key, title) => (FOCUS ? `<div class="blk-fx" style="${st}" aria-hidden="false"><button type="button" class="fx-go" data-act="focus" data-key="${esc(key)}" aria-label="Focus on ${esc(title)}">${ICON.focus}<span>Focus</span></button></div>` : '');
     const blocks = items.map(x => {
       const len = x.e - x.s;
       if (x.dv) {
@@ -3598,19 +3625,19 @@ dialog::backdrop{background:transparent}
         const src = x.t || x.g, kindCls = x.g ? ' evt' : x.t.kind === 'meeting' ? ' mtg' : x.t.kind !== 'task' ? ' evt lev' : x.t.done ? ' done' : '';
         const when = fmtRange(x.from, x.e + 1440), live = !(x.t && x.t.done) && ((k === tk && nm < x.e) || (kp === tk && nm >= x.from)); // happening now: after midnight, or before it on the day it started
         const st = `top:1px;height:max(4px, calc(var(--h) * ${(Math.max(len, 5) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
-        return `<button type="button" class="blk cont${kindCls}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${st}" ${x.g ? `data-act="event" data-ev="${esc(x.g.id)}"` : `data-act="edit" data-id="${esc(x.t.id)}"`} title="${esc(src.title)} · ${esc(when)}" aria-label="${esc(src.title)}, ${esc(when)}, from the day before"><b>${esc(src.title)}</b><small>${esc(when)}</small></button>`;
+        return `<button type="button" class="blk cont${kindCls}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${st}" ${x.g ? `data-act="event" data-ev="${esc(x.g.id)}"` : `data-act="edit" data-id="${esc(x.t.id)}"`} title="${esc(src.title)} · ${esc(when)}" aria-label="${esc(src.title)}, ${esc(when)}, from the day before"><b>${esc(src.title)}</b><small>${esc(when)}</small></button>${live && k === tk ? fx(st, x.g ? 'g:' + x.g.id : x.t.id, src.title) : ''}`;
       }
       const style0 = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       if (x.g) {
         const when = fmtRange(x.s, x.s + (x.g.mins || 30));
-        return `<button type="button" class="blk evt${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${liveAt(x) ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>`;
+        return `<button type="button" class="blk evt${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${liveAt(x) ? ' now' : ''}" style="${style0}" data-act="event" data-ev="${esc(x.g.id)}" aria-label="${esc(x.g.title)}, ${esc(when)}, Google Calendar"><b>${esc(x.g.title)}</b><small>${esc(when)}</small></button>${liveAt(x) ? fx(style0, 'g:' + x.g.id, x.g.title) : ''}`;
       }
       const t = x.t;
       const grip0 = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges0 = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
       if (t.kind !== 'task') {
         // events and meetings: no done circle; tapping opens the edit sheet
         const mtg = t.kind === 'meeting', when = fmtRange(x.s, x.full) + placeTxt(t), live = liveAt(x);
-        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>`;
+        return `<button type="button" class="blk ${mtg ? 'mtg' : 'evt lev'}${x.full > 1440 ? ' spills' : ''}${isTight(len) ? ' tight' : ''}${live ? ' now' : ''}" style="${style0}" ${grip0} data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}, ${mtg ? 'meeting' : 'event'}${t.repeat ? ', repeats' : ''}"><b>${mtg ? ICON.people : ''}${esc(t.title)}${t.repeat ? ICON.rep : ''}</b><small>${esc(when)}</small>${edges0}</button>${live ? fx(style0, t.id, t.title) : ''}`;
       }
       const live = !t.done && liveAt(x);
       const cls = ['blk', x.full > 1440 ? 'spills' : '', t.done ? 'done' : '', live ? 'now' : '', t.mins ? '' : 'noest', isTight(len) ? 'tight' : '', withCheck ? 'has-chk' : ''].filter(Boolean).join(' ');
@@ -3618,8 +3645,9 @@ dialog::backdrop{background:transparent}
       const style = `top:calc(var(--h) * ${(x.s / 60).toFixed(4)} + 1px);height:max(4px, calc(var(--h) * ${(Math.max(Math.min(len, 1440 - x.s), minLen) / 60).toFixed(4)} - 2px));left:calc(${(x.lane / x.n * 100).toFixed(3)}% + 3px);width:calc(${(100 / x.n).toFixed(3)}% - 6px)`;
       const inner = `<b>${esc(t.title)}</b><small>${esc(when)}</small>`;
       const grip = `data-task="${esc(t.id)}" data-s="${x.s}" data-e="${x.full}"`, edges = '<span class="rz rz-t" aria-hidden="true"></span><span class="rz rz-b" aria-hidden="true"></span>';
-      if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>`;
-      return `<div class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>`;
+      const fxb = live ? fx(style, t.id, t.title) : '';
+      if (!withCheck) return `<button type="button" class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}${edges}</button>${fxb}`;
+      return `<div class="${cls}" style="${style}" ${grip} title="${esc(t.title)} · ${esc(when)}">${chk(t, 'bchk')}<button type="button" class="bmain" data-act="edit" data-id="${esc(t.id)}" aria-label="${esc(t.title)}, ${esc(when)}">${inner}</button>${edges}</div>${fxb}`;
     }).join('');
     const line = k === tk ? `<div class="nowline" data-nowline style="top:${nowTop()}"></div>` : '';
     // markers: a named moment (like waking up). A dashed line and a label, taking no time at all.
@@ -3806,7 +3834,7 @@ dialog::backdrop{background:transparent}
       // on the right: how long until today's coming tasks start, or just "Now" on the one that's on
       const cd = soon ? atEpoch(k, s0) : 0, cp = cd ? cdParts(cd - Date.now()) : null;
       const sr = live ? ', now' : soon ? `, in ${inMins(s0 - nm)}` : '';
-      const cdHtml = live ? `<span class="tq-cd now" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><b>Now</b></span>`
+      const cdHtml = live ? (FOCUS ? `<button type="button" class="tq-cd now tq-fx" data-act="focus" data-key="${esc(t.id)}" aria-label="Focus on ${esc(t.title)}">${ICON.focus}<b>Focus</b></button>` : `<span class="tq-cd now" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><b>Now</b></span>`)
         : cd ? `<span class="tq-cd" data-cd="${cd}" data-act="edit" data-id="${esc(t.id)}" aria-hidden="true"><small>in</small><b>${cp[0]}</b><small class="u">${cp[1]}</small></span>` : '';
       const big = cls === 'first' && !live, wait = blockedBy(t), isStep = !!t.parentId && !t.step, pj = projOf(t);
       // swipe right to complete, the same as Home's Next list; no checkboxes here
@@ -4093,6 +4121,7 @@ dialog::backdrop{background:transparent}
     { const ws = $('#winSess'), ok = !!(ASSIST && ASSIST.canSession()); ws.hidden = !ok; if (ok) { const on = ASSIST.sessionOn(); ws.textContent = on ? 'End session' : 'Session'; ws.classList.toggle('on', on); } }
     renderWake();
     wxFx();
+    if (FOCUS) FOCUS.refresh();
   }
 
   // keep the clock and the now-line moving without rebuilding the page every second
@@ -4190,7 +4219,7 @@ dialog::backdrop{background:transparent}
     set(nm < planned ? now5 : planned);
     box.hidden = false;
     // somewhere with a drive, and this device is home: it ended a drive before now
-    if (nm < planned + 180 && t.place && t.place.drive && PLACES && PLACES.home() && navigator.permissions) {
+    if (DRIVES && nm < planned + 180 && t.place && t.place.drive && PLACES && PLACES.home() && navigator.permissions) {
       const ask = ++cfAsk;
       navigator.permissions.query({ name: 'geolocation' }).then(st => {
         if (st.state !== 'granted') return null;
@@ -4333,6 +4362,7 @@ dialog::backdrop{background:transparent}
     if (sheet.open) requestAnimationFrame(() => POSWheels.sync()); // a wheel that just appeared needs placing
     $('#sheetDone').hidden = !(F.id && F.kind === 'task');
     $('#sheetNotes').hidden = !(F.id && F.kind === 'meeting');
+    { const t0 = F.id ? task(F.id) : null; $('#sheetFocus').hidden = !(FOCUS && t0 && F.kind !== 'marker' && kindOf(t0) === 'timed' && !t0.done); }
     refreshWhere();
   }
   // Sleep and Wake up markers pair up: the hours from one to the next are dimmed on the calendar
@@ -4399,6 +4429,13 @@ dialog::backdrop{background:transparent}
     el.hidden = false;
     const time = $('#f_time').value;
     let h;
+    if (!DRIVES) {
+      // no drives for now: just which place it found
+      if (!PLACES || !PLACES.home() || p.missing || F.placeBusy || !p.from) { el.hidden = true; el.innerHTML = ''; return; }
+      h = `<span class="pl-name"><b>${esc(p.name)}</b>${p.addr ? ` · ${esc(p.addr)}` : ''}</span>`;
+      if (el.innerHTML !== h) el.innerHTML = h;
+      return;
+    }
     if (!PLACES || !PLACES.home()) h = `<span>To add the drive, ${posName()} needs to know where home is.</span><button type="button" class="link" data-act="home-here">Use where I am now</button>`;
     else if (F.placeBusy || !p.from) h = '<span>Finding it…</span>';
     else if (p.missing) h = '<span>Nothing by that name near home. It’s kept as you wrote it, without a drive.</span>';
@@ -4575,6 +4612,7 @@ dialog::backdrop{background:transparent}
     }
   });
   $('#sheetNotes').addEventListener('click', () => { if (!F || !F.id) return; const id = F.occ ? F.sid : F.id; closeForm(); openMeeting(id); });
+  $('#sheetFocus').addEventListener('click', () => { if (!F || !F.id || !FOCUS) return; const id = F.id; closeForm(); FOCUS.open(id); });
 
   /* ---------- repeating items: which ones does a change or delete apply to? ---------- */
   const scopeSheet = $('#scopeSheet');
@@ -6186,6 +6224,7 @@ dialog::backdrop{background:transparent}
     if (act.startsWith('pk-')) { if (PKG) PKG.act(act, b, e); return; }
     if (act.startsWith('hl-')) { if (HEALTH) HEALTH.act(act, b, e); return; }
     if (act.startsWith('as-')) { if (ASSIST) ASSIST.act(act, b, e); return; }
+    if (act === 'focus') { if (FOCUS) FOCUS.open(b.dataset.key); return; }
     if (act === 'edit') openTask(b.dataset.id);
     else if (act === 'done') askDone(b.dataset.id);
     else if (act === 'swipe-hint') toast('Swipe the arrow to the right to complete');
@@ -6508,7 +6547,7 @@ dialog::backdrop{background:transparent}
       if (!r.ok) return;
       const j = await r.json();
       const typing = document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName);
-      if (j.v && j.v !== VERSION && !$('#sheet').open && !setSheet.open && !(FIN && FIN.sheetOpen()) && !(CAR && CAR.sheetOpen()) && !(window.POSSheet && POSSheet.isOpen()) && !typing) {
+      if (j.v && j.v !== VERSION && !(FOCUS && FOCUS.isOpen()) && !$('#sheet').open && !setSheet.open && !(FIN && FIN.sheetOpen()) && !(CAR && CAR.sheetOpen()) && !(window.POSSheet && POSSheet.isOpen()) && !typing) {
         // one reload per new version: if this copy still doesn't match after it, it stays put instead of reloading in a loop
         try { if (sessionStorage.getItem('pos.vtry') === j.v) return; sessionStorage.setItem('pos.vtry', j.v); } catch (e) {}
         location.replace(location.pathname + '?v=' + encodeURIComponent(j.v) + location.hash);
@@ -6545,6 +6584,7 @@ dialog::backdrop{background:transparent}
       S.booted = true; S.loginNote = '' + posName() + ' could not reach its sign-in service. Check the connection and reopen it.'; S.loginRedraw = true; render(); return;
     }
     sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
+    if (window.POSFocus) FOCUS = window.POSFocus({ esc, items: focusItems, done: id => askDone(id), edit: id => openTask(id), ready: () => !!(S.user && S.loaded) });
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });

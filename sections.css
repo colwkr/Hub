@@ -1123,3 +1123,7 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 }
 @media (prefers-reduced-motion:reduce){ .qh-apps.editing .apb .app-i,.qh.enter .apb{animation:none} }
 @media (max-width:759px){ body.has-side .top .win-l{gap:10px} body.has-side .win-side{width:38px;height:38px} }
+/* the task sheet's Focus button */
+#sheet .focus-b{display:inline-flex;align-items:center;gap:8px}
+#sheet .focus-b svg.i{width:16px;height:16px;color:#ff5a28}
+#sheet .focus-b[hidden]{display:none}

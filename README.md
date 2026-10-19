@@ -4,6 +4,8 @@ A personal operating system for a wall iPad, phone and PC: tasks that feed a cal
 
 - `index.html` is the app shell: sign-in, tasks, calendar, weather, settings. Data lives in Supabase.
 - `finance.js` / `finance.css` are the Finance section: accounts, savings goals, spending limits, charges to approve. Its overview tracks net worth day by day (`worth` docs in `fin_docs`, one per month) and splits each month's take-home into needs, wants and saved.
+- `focus.js` / `focus.css` are Focus: one thing full screen, counting down to the end of its calendar time, rolling into the next thing on the calendar. Opened from a task's sheet or the Focus button on what's on now.
+- `version.json` and the `VERSION` constant in `index.html` must always match, or open copies reload in a loop.
 - Apps with sections get a sidebar (`#side` in `index.html`): the NERV tile back to Home, a fold button, then the sections. A module offers it with a `side()` export.
 - `car.js` / `car.css` are the Car section: services and oil changes, mileage readings (the odometer is estimated between them), next oil change, notes. Stored in the general `records` table.
 - `supabase/functions/gcal` reads a private Google Calendar address and returns events (read-only).

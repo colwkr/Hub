@@ -1,0 +1,107 @@
+/* POS Focus: full screen, one thing, the clock running down. */
+body.fx-on{overflow:hidden}
+.fx[hidden]{display:none!important}
+.fx{position:fixed;inset:0;z-index:2147482000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(20px,env(safe-area-inset-left,0px));
+  background:radial-gradient(70% 55% at 50% 50%,rgba(255,255,255,.035),transparent 70%),#050506;color:#eceef2;
+  font-family:'Outfit',system-ui,sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.fx::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s ease;
+  background:radial-gradient(60% 50% at 50% 52%,rgba(255,90,40,.16),transparent 72%)}
+.fx.fx-urgent::before{opacity:1}
+.fx.fx-final::before{animation:fxGlow 1s ease-in-out infinite}
+@keyframes fxGlow{0%,100%{opacity:.55}50%{opacity:1}}
+
+.fx-top{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.fx-brand{display:inline-flex;align-items:center;gap:10px;font:500 11px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:rgba(236,238,242,.62)}
+.fx-dot{width:8px;height:8px;border-radius:50%;background:#ff5a28;box-shadow:0 0 0 3px rgba(255,90,40,.18);animation:fxDot 1.6s ease-in-out infinite}
+@keyframes fxDot{50%{opacity:.35}}
+.fx-now{position:absolute;left:50%;transform:translateX(-50%);font:500 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:rgba(236,238,242,.46);font-variant-numeric:tabular-nums}
+.fx-x{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:3px;cursor:pointer;color:#eceef2;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.fx-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.fx-x:hover{background:rgba(255,255,255,.1)}
+
+.fx-main{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.6vh,16px);min-height:0;text-align:center}
+.fx-kind{font:500 11px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:rgba(236,238,242,.5)}
+.fx-title{border:0;background:none;padding:0 8px;color:#eceef2;font:300 clamp(26px,min(5.2vw,6.4vh),58px)/1.12 'Outfit',system-ui,sans-serif;letter-spacing:-.01em;cursor:pointer;
+  max-width:min(1000px,94vw);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fx-title:disabled{cursor:default}
+.fx-when{font-size:clamp(13px,1.6vw,16px);color:rgba(236,238,242,.55);font-variant-numeric:tabular-nums}
+
+/* the clock: every digit in its own fixed-width cell, so nothing shifts as it counts */
+.fx-clock{display:flex;align-items:baseline;justify-content:center;margin-top:clamp(4px,1.4vh,14px);line-height:.86;font-weight:200;
+  font-size:clamp(84px,min(27vw,38vh),340px);letter-spacing:0;color:#f4f5f7;transition:color .4s ease}
+.fx-clock[data-len="lg"]{font-size:clamp(64px,min(21vw,32vh),280px)}
+.fx-clock[data-len="xl"]{font-size:clamp(54px,min(18vw,28vh),240px)}
+.fx-hms{display:inline-flex}
+.fx-hms i{font-style:normal;display:inline-block;text-align:center}
+.fx-hms i.d{width:.6em}
+.fx-hms i.c{width:.26em;opacity:.55;transform:translateY(-.04em)}
+.fx-ms{display:inline-block;width:4.4ch;text-align:left;margin-left:.12em;font:500 clamp(16px,min(3.2vw,5vh),40px)/1 var(--mono);color:rgba(255,90,40,.82);font-variant-numeric:tabular-nums}
+.fx-hms.beat{animation:fxBeat .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes fxBeat{from{opacity:.62;transform:translateY(.012em)}to{opacity:1;transform:none}}
+.fx-urgent .fx-clock{color:#ff5a28}
+.fx-final .fx-hms.beat{animation:fxBeatHard .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes fxBeatHard{0%{transform:scale(1.06);opacity:.7}100%{transform:none;opacity:1}}
+
+/* each second, a small bar runs out */
+.fx-tick{width:min(380px,58vw);height:2px;border-radius:1px;background:rgba(236,238,242,.1);overflow:hidden}
+.fx-tick i{display:block;height:100%;background:#ff5a28;transform-origin:left center}
+
+/* how far through it you are */
+.fx-bar{width:min(920px,88vw);display:flex;flex-direction:column;gap:9px;margin-top:clamp(6px,2vh,22px)}
+.fx-track{height:6px;border-radius:3px;background:rgba(236,238,242,.09);overflow:hidden}
+.fx-fill{display:block;height:100%;border-radius:3px;background:#eceef2;transform-origin:left center;transition:background .4s ease}
+.fx-urgent .fx-fill{background:#ff5a28}
+.fx-ends{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(236,238,242,.46);font-variant-numeric:tabular-nums}
+.fx-ends .fx-a{text-align:left}
+.fx-ends .fx-b{text-align:right}
+.fx-ends .fx-left{color:rgba(236,238,242,.7)}
+.fx[data-mode="wait"] .fx-bar,.fx[data-mode="free"] .fx-bar{visibility:hidden}
+.fx[data-mode="wait"] .fx-clock{color:rgba(236,238,242,.86)}
+.fx[data-mode="free"] .fx-clock{color:rgba(236,238,242,.7)}
+.fx[data-mode="free"] .fx-ms{color:rgba(236,238,242,.35)}
+
+.fx-foot{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+.fx-then{font:500 11px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(236,238,242,.55);min-width:0;flex:1 1 240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-acts{display:flex;gap:10px;margin-left:auto}
+.fx-btn{min-height:50px;min-width:104px;padding:0 20px;border:0;border-radius:3px;cursor:pointer;font:500 11.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  color:#eceef2;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.fx-btn:hover{background:rgba(255,255,255,.1)}
+.fx-btn.solid{background:#eceef2;color:#060606;box-shadow:none}
+.fx-btn.solid:hover{background:#fff}
+.fx-btn[hidden]{display:none}
+.fx-btn:active,.fx-x:active{transform:scale(.96)}
+
+/* opening, and rolling into the next thing */
+.fx.fx-in{animation:fxIn .36s cubic-bezier(.16,.9,.24,1)}
+@keyframes fxIn{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
+.fx.fx-swap .fx-main{animation:fxSwap .55s cubic-bezier(.16,.9,.24,1)}
+@keyframes fxSwap{0%{opacity:0;transform:translateY(18px)}100%{opacity:1;transform:none}}
+.fx.fx-swap::after{content:"";position:absolute;inset:0;pointer-events:none;background:#fff;animation:fxFlash .5s ease-out forwards}
+@keyframes fxFlash{from{opacity:.16}to{opacity:0}}
+
+@media (max-width:600px){
+  .fx-foot{flex-direction:column;align-items:stretch}
+  .fx-then{flex:none;text-align:center;white-space:normal}
+  .fx-acts{margin:0}
+  .fx-btn{flex:1}
+  .fx-now{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .fx *,.fx::before,.fx::after,.fx{animation:none!important;transition:none!important} }
+
+/* the Focus button on what's happening now on the calendar: only where the block has room, like its words */
+.blk-fx{position:absolute;z-index:2;pointer-events:none;container-type:size}
+.tl-col .blk.now{padding-right:30px}
+.fx-go{position:absolute;right:5px;bottom:5px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px 0 7px;border:0;border-radius:3px;cursor:pointer;pointer-events:auto;
+  background:#0b0c0e;color:#eceef2;box-shadow:0 0 0 1px rgba(255,255,255,.12);font:600 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.fx-go svg{width:13px;height:13px;fill:none;stroke:#ff5a28;stroke-width:2;stroke-linecap:round;flex:none}
+.fx-go:hover{background:#17181c}
+@container (max-width:118px){ .fx-go span{display:none} .fx-go{padding:0;width:26px;justify-content:center} }
+@container (max-height:40px){ .fx-go{height:20px;width:20px;padding:0;justify-content:center;bottom:50%;right:4px;transform:translateY(50%)} .fx-go span{display:none} .fx-go svg{width:12px;height:12px} }
+@container (max-height:21px){ .fx-go{display:none} }
+@container (max-width:50px){ .fx-go{display:none} }
+/* the Focus button on the task that's on now, in the day's task list */
+.tq-fx{border:0;background:#0b0c0e;color:#eceef2;border-radius:3px;padding:8px 12px 8px 10px;align-items:center!important;gap:7px!important;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+.tq-fx svg{width:15px;height:15px;fill:none;stroke:#ff5a28;stroke-width:2;stroke-linecap:round;flex:none}
+.tq-fx b{font:600 10.5px/1 var(--mono)!important;letter-spacing:.16em!important;text-transform:uppercase;color:#eceef2!important}
+.tq-fx:hover{background:#17181c}
