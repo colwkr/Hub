@@ -53,7 +53,15 @@ window.POSJarvis = function (ctx) {
   function highlight() {
     const spans = document.querySelectorAll('[data-jv] .jv-w');
     if (!spans.length || !speakAt) return;
-    const n = Math.min(spans.length - 1, Math.floor((Date.now() - speakAt) / 1000 * 2.7));
+    // each word takes time by its length, plus a pause after commas and full stops
+    const t = (Date.now() - speakAt) / 1000 - 0.3;
+    let acc = 0, n = 0;
+    for (let i = 0; i < spans.length; i++) {
+      const w = spans[i].textContent;
+      acc += 0.12 + w.replace(/[^\w]/g, '').length * 0.062 + (/[.!?]$/.test(w) ? 0.4 : /[,;:]$/.test(w) ? 0.2 : 0);
+      n = i;
+      if (t < acc) break;
+    }
     spans.forEach((sp, i) => { sp.classList.toggle('said', i < n); sp.classList.toggle('now', i === n); });
   }
   function apply(row) {
