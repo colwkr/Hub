@@ -41,35 +41,36 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261019211826">
-<script src="finance.js?v=20261019211826"></script>
-<link rel="stylesheet" href="car.css?v=20261019211826">
-<script src="car.js?v=20261019211826"></script>
-<link rel="stylesheet" href="sections.css?v=20261019211826">
-<link rel="stylesheet" href="tv.css?v=20261019211826">
-<link rel="stylesheet" href="noir.css?v=20261019211826">
-<link rel="stylesheet" href="focus.css?v=20261019211826">
-<script src="records.js?v=20261019211826"></script>
-<script src="layout.js?v=20261019211826"></script>
-<script src="remote.js?v=20261019211826"></script>
-<script src="people.js?v=20261019211826"></script>
-<script src="wheels.js?v=20261019211826"></script>
-<script src="keyboard.js?v=20261019211826"></script>
-<script src="notes.js?v=20261019211826"></script>
-<script src="reminders.js?v=20261019211826"></script>
-<script src="gear.js?v=20261019211826"></script>
-<script src="lights.js?v=20261019211826"></script>
-<script src="tv.js?v=20261019211826"></script>
-<script src="work.js?v=20261019211826"></script>
-<script src="health.js?v=20261019211826"></script>
-<script src="pets.js?v=20261019211826"></script>
-<script src="places.js?v=20261019211826"></script>
-<script src="placestab.js?v=20261019211826"></script>
-<script src="usmap.js?v=20261019211826"></script>
-<script src="voice.js?v=20261019211826"></script>
-<script src="assistant.js?v=20261019211826"></script>
-<script src="packages.js?v=20261019211826"></script>
-<script src="focus.js?v=20261019211826"></script>
+<link rel="stylesheet" href="finance.css?v=20261019212917">
+<script src="finance.js?v=20261019212917"></script>
+<link rel="stylesheet" href="car.css?v=20261019212917">
+<script src="car.js?v=20261019212917"></script>
+<link rel="stylesheet" href="sections.css?v=20261019212917">
+<link rel="stylesheet" href="tv.css?v=20261019212917">
+<link rel="stylesheet" href="noir.css?v=20261019212917">
+<link rel="stylesheet" href="focus.css?v=20261019212917">
+<script src="records.js?v=20261019212917"></script>
+<script src="layout.js?v=20261019212917"></script>
+<script src="remote.js?v=20261019212917"></script>
+<script src="jarvis.js?v=20261019212917"></script>
+<script src="people.js?v=20261019212917"></script>
+<script src="wheels.js?v=20261019212917"></script>
+<script src="keyboard.js?v=20261019212917"></script>
+<script src="notes.js?v=20261019212917"></script>
+<script src="reminders.js?v=20261019212917"></script>
+<script src="gear.js?v=20261019212917"></script>
+<script src="lights.js?v=20261019212917"></script>
+<script src="tv.js?v=20261019212917"></script>
+<script src="work.js?v=20261019212917"></script>
+<script src="health.js?v=20261019212917"></script>
+<script src="pets.js?v=20261019212917"></script>
+<script src="places.js?v=20261019212917"></script>
+<script src="placestab.js?v=20261019212917"></script>
+<script src="usmap.js?v=20261019212917"></script>
+<script src="voice.js?v=20261019212917"></script>
+<script src="assistant.js?v=20261019212917"></script>
+<script src="packages.js?v=20261019212917"></script>
+<script src="focus.js?v=20261019212917"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1542,7 +1543,7 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261019211826"></script>
+<script src="appearance.js?v=20261019212917"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
@@ -1550,7 +1551,7 @@ dialog::backdrop{background:transparent}
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
   // Drive times are switched off for now (they're coming back, reworked); the code for them stays, waiting on this.
   const DRIVES = false;
-  const VERSION = '20261019211826';
+  const VERSION = '20261019212917';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1673,7 +1674,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, LAYOUT = null, REMOTE = null, FOCUS = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null, VOICE = null;
+  let sb = null, LAYOUT = null, REMOTE = null, JV = null, FOCUS = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null, VOICE = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2421,7 +2422,9 @@ dialog::backdrop{background:transparent}
     for (const w of row.widgets) {
       if (!w || w.hidden || typeof w.id !== 'string') continue;
       const f = w.filter && typeof w.filter === 'object' ? w.filter : {};
-      if (w.id.startsWith('x.')) { const h = LAYOUT.one(w); if (h) out.push(`<div class="qh-card qh-x lay-${esc(w.size || 'm')}" data-widget="${esc(w.id)}">${h}</div>`); continue; }
+      if (!Object.values(HOME_W).includes(w.id)) { // an any-screen widget (Jarvis, or a custom x.* one)
+        const h = LAYOUT.one(w); if (h) out.push(`<div class="qh-card qh-x lay-${esc(w.size || 'm')}" data-widget="${esc(w.id)}">${h}</div>`); continue;
+      }
       let mine = cards.filter(c => HOME_W[c.kind] === w.id && !(c.kind === 'bill' && f.late_only && !c.warn));
       if (f.max > 0) mine = mine.slice(0, f.max);
       for (const c of mine) out.push(qCard(c, w.size, w.id));
@@ -6413,10 +6416,11 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(appsLoad, 0); if (LAYOUT) LAYOUT.start(); if (REMOTE) REMOTE.start(); setTimeout(() => ASSIST && ASSIST.status(true), 0); setTimeout(() => VOICE && VOICE.loadSaved().then(() => VOICE.warm()), 1500); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(appsLoad, 0); if (LAYOUT) LAYOUT.start(); if (REMOTE) REMOTE.start(); if (JV) JV.start(); setTimeout(() => ASSIST && ASSIST.status(true), 0); setTimeout(() => VOICE && VOICE.loadSaved().then(() => VOICE.warm()), 1500); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
       if (LAYOUT) LAYOUT.stop();
       if (REMOTE) REMOTE.stop();
+      if (JV) JV.stop();
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
       if (PEOPLE) PEOPLE.stop();
@@ -6602,7 +6606,7 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { cluLoad(); ackLoad(); identLoad(); appsLoad(); if (LAYOUT) LAYOUT.start(); if (REMOTE) REMOTE.start(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { cluLoad(); ackLoad(); identLoad(); appsLoad(); if (LAYOUT) LAYOUT.start(); if (REMOTE) REMOTE.start(); if (JV) JV.start(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
 
   /* ---------- remote control (remote.js): what a command from Jarvis does on this copy. Each answers {ok, note}.
@@ -6663,6 +6667,10 @@ dialog::backdrop{background:transparent}
       setTimeout(() => el.classList.remove('lay-flash'), 1800);
       return { ok: true, note: `scrolled to ${a.widget}` };
     }
+    if (action === 'jarvis') { // he heard his wake word: show him here
+      if (!JV) return { ok: false, note: 'the Jarvis widget did not load' };
+      return { ok: true, note: JV.open() };
+    }
     return { ok: false, note: `unknown command ${action}` };
   }
 
@@ -6687,6 +6695,7 @@ dialog::backdrop{background:transparent}
     if (window.POSLayout) LAYOUT = window.POSLayout({ sb, esc, rerender: () => render(), version: VERSION });
     const layout = () => LAYOUT;
     if (window.POSRemote) REMOTE = window.POSRemote({ sb, run: remoteRun, onScreen: () => S.tab });
+    if (window.POSJarvis) { JV = window.POSJarvis({ sb, esc }); if (LAYOUT) LAYOUT.addCommon('jarvis.live', JV.widget); }
     if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer, layout });
     if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null), layout });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });

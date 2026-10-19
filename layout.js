@@ -9,6 +9,7 @@ window.POSLayout = function (ctx) {
   const { sb, esc, rerender, version } = ctx;
   let rows = [], loaded = false, channel = null, timer = null, customLoaded = false;
   const custom = {}; // widget types from widgets/, by id
+  const common = {}; // built-in widgets that work on any screen (jarvis.live), added by index.html
 
   try { const c = JSON.parse(localStorage.getItem('pos.layouts') || 'null'); if (Array.isArray(c)) { rows = c; loaded = true; } } catch (e) {}
   try {
@@ -91,7 +92,7 @@ window.POSLayout = function (ctx) {
     const row = get(screen);
     if (!row || !Array.isArray(row.widgets)) return null;
     const html = row.widgets.filter(w => w && !w.hidden).map(w => {
-      const def = widgets[w.id] || custom[w.id];
+      const def = widgets[w.id] || common[w.id] || custom[w.id];
       if (!def) return '';
       let inner = '';
       try { inner = def.render(w.filter && typeof w.filter === 'object' ? w.filter : {}, SIZE[w.size] ? w.size : 'm', { esc, sb }) || ''; } catch (e) { inner = ''; }
@@ -100,9 +101,9 @@ window.POSLayout = function (ctx) {
     return `<div class="lay-grid" data-layout="${esc(screen)}">${html || '<p class="empty">Nothing is set to show here. Ask to put widgets back.</p>'}</div>`;
   }
 
-  // one custom (x.*) widget on its own, for screens that place widgets themselves (Home's cards)
+  // one any-screen widget (built-in common, or custom x.*) on its own, for screens that place widgets themselves (Home)
   function one(w) {
-    const def = w && custom[w.id];
+    const def = w && (common[w.id] || custom[w.id]);
     if (!def) return '';
     try { return def.render(w.filter && typeof w.filter === 'object' ? w.filter : {}, SIZE[w.size] ? w.size : 'm', { esc, sb }) || ''; } catch (e) { return ''; }
   }
@@ -129,5 +130,7 @@ window.POSLayout = function (ctx) {
   // a widgets/*.js file calls POSWidget('x.name', { label, render(filter, size, { esc, sb }) { return html } })
   window.POSWidget = register;
 
-  return { get, render, one, apps, saveApps, start, stop, register, deviceName, deviceType };
+  const addCommon = (id, def) => { if (def && typeof def.render === 'function') common[id] = def; };
+
+  return { get, render, one, apps, saveApps, start, stop, register, addCommon, deviceName, deviceType };
 };

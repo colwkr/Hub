@@ -11,6 +11,11 @@
     "l": "two thirds",
     "full": "the whole width"
   },
+  "everywhere": {
+    "jarvis.live": {
+      "label": "Jarvis: his state, your words as he hears them, his reply as it streams (size s: just the state)"
+    }
+  },
   "screens": {
     "home": {
       "note": "Cards beside the orb, plus the app icons (the apps list). Home size 's' shows just the main line.",

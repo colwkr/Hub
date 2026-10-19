@@ -1141,3 +1141,31 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 .lay-flash{animation:layFlash 1.6s ease-out}
 @keyframes layFlash{0%,35%{box-shadow:0 0 0 3px rgba(255,90,40,.75)}100%{box-shadow:0 0 0 3px rgba(255,90,40,0)}}
 @media (prefers-reduced-motion:reduce){ .lay-flash{animation:none;outline:3px solid rgba(255,90,40,.75)} }
+
+/* the Jarvis widget (jarvis.js): his state as a colour, your words, his reply as it streams. Also floats bottom-right
+   (#jvFloat) when he hears his wake word and this screen doesn't already show it. */
+.jv{--jv:#5f6670;display:flex;flex-direction:column;gap:10px;padding:14px 16px;min-width:0}
+.jv-idle{--jv:#5f6670}.jv-off{--jv:#3a3e45}.jv-listening{--jv:#4da3ff}.jv-thinking{--jv:#f0a63a}.jv-speaking{--jv:#3ecf7a}
+.jv-muted,.jv-error{--jv:#e5484d}
+.jv-head{display:flex;align-items:center;gap:10px}
+.jv-dot{width:12px;height:12px;border-radius:50%;background:var(--jv);flex:none;box-shadow:0 0 0 0 var(--jv)}
+.jv-listening .jv-dot{animation:jvPulse 1.4s ease-in-out infinite}
+@keyframes jvPulse{0%{opacity:1;box-shadow:0 0 0 0 rgba(77,163,255,.55)}50%{opacity:.55;box-shadow:0 0 0 7px rgba(77,163,255,0)}100%{opacity:1;box-shadow:0 0 0 0 rgba(77,163,255,0)}}
+.jv-state{font:500 11px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.jv-mode{margin-left:auto;font:500 10px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+.jv-talk{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;scrollbar-width:none}
+.jv-talk::-webkit-scrollbar{display:none}
+.jv-talk p{margin:0;font:400 15px/1.4 var(--font)}
+.jv-who{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+.jv-you{opacity:.75}.jv-you.draft{opacity:.5;font-style:italic}
+.jv-empty{opacity:.5}
+.jv-small .jv-talk{display:none}
+#jvFloat{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 32px));z-index:900;
+  opacity:0;transform:translateY(12px);transition:opacity .22s ease,transform .22s ease}
+#jvFloat.on{opacity:1;transform:none}
+#jvFloat .jv{background:rgba(22,24,28,.88);-webkit-backdrop-filter:blur(18px) saturate(120%);backdrop-filter:blur(18px) saturate(120%);color:#e6e8eb;
+  box-shadow:0 12px 40px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.06)}
+#jvFloat .jv-state{color:#e6e8eb}
+.jv-x{position:absolute;top:6px;right:8px;z-index:1;border:0;background:none;color:#8b929c;font-size:20px;line-height:1;padding:4px 6px;cursor:pointer}
+.jv-x:hover{color:#e6e8eb}
+@media (prefers-reduced-motion:reduce){ .jv-listening .jv-dot{animation:none} #jvFloat{transition:none} }
