@@ -1163,8 +1163,10 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 .jv-w.said{opacity:.85}
 .jv-w.now{opacity:1;background:rgba(77,163,255,.35);color:inherit}
 .jv-small .jv-talk,.jv-small .jv-waves{display:none}
-/* the two live waveforms (stream only): your mic and his voice, scrolling right to left, flat when nothing comes in */
-.jv-waves{display:flex;flex-direction:column;gap:4px}
+/* the two live waveforms (stream only): your mic and his voice, scrolling right to left, flat when nothing comes in;
+   hidden unless the stream is connected (jv-live), so the phone, iPad and an offline PC show no dead lines */
+.jv-waves{display:none;flex-direction:column;gap:4px}
+.jv-live:not(.jv-small) .jv-waves{display:flex}
 .jv-wv{--wv:#4da3ff;display:flex;align-items:center;gap:10px;min-width:0}
 .jv-wv-tts{--wv:#3ecf7a}
 .jv-wl{flex:0 0 54px;font:500 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.45;transition:opacity .2s,color .2s}

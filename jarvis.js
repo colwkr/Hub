@@ -55,13 +55,14 @@ window.POSJarvis = function (ctx) {
   // the widget as a layout piece; size 's' keeps just the state line
   function render(filter, size) {
     if (live) ensureLoop();
-    return `<section class="float jv jv-${shown()}${size === 's' ? ' jv-small' : ''}" data-jv>${inner()}</section>`;
+    return `<section class="float jv jv-${shown()}${size === 's' ? ' jv-small' : ''}${live ? ' jv-live' : ''}" data-jv>${inner()}</section>`;
   }
   // repaint every Jarvis widget on the page (and the floating panel) without a full render; the canvases stay put
   function paint() {
     const s = shown();
     for (const el of document.querySelectorAll('[data-jv]')) {
       el.className = el.className.replace(/\bjv-(starting|idle|listening|thinking|speaking|error|muted|off)\b/g, '').replace(/\s+/g, ' ').trim() + ` jv-${s}`;
+      el.classList.toggle('jv-live', live); // the waveforms show only while the stream is connected
       const head = el.querySelector(':scope > .jv-head'), talk = el.querySelector(':scope > .jv-talk');
       if (head && talk && el.querySelector(':scope > .jv-waves')) { head.innerHTML = headHtml(s); talk.innerHTML = talkHtml(s); }
       else el.innerHTML = inner();
@@ -310,7 +311,7 @@ window.POSJarvis = function (ctx) {
     return 'connecting to the Jarvis stream';
   }
   function onMsg(m) {
-    if (!live) { live = true; backoff = 0; estTimer(); }
+    if (!live) { live = true; backoff = 0; estTimer(); soon(); }
     switch (m.t) {
       case 'hello':
         levelMs = Number(m.level_ms) > 0 ? Number(m.level_ms) : 20;
