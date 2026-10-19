@@ -41,36 +41,36 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261019220739">
-<script src="finance.js?v=20261019220739"></script>
-<link rel="stylesheet" href="car.css?v=20261019220739">
-<script src="car.js?v=20261019220739"></script>
-<link rel="stylesheet" href="sections.css?v=20261019220739">
-<link rel="stylesheet" href="tv.css?v=20261019220739">
-<link rel="stylesheet" href="noir.css?v=20261019220739">
-<link rel="stylesheet" href="focus.css?v=20261019220739">
-<script src="records.js?v=20261019220739"></script>
-<script src="layout.js?v=20261019220739"></script>
-<script src="remote.js?v=20261019220739"></script>
-<script src="jarvis.js?v=20261019220739"></script>
-<script src="people.js?v=20261019220739"></script>
-<script src="wheels.js?v=20261019220739"></script>
-<script src="keyboard.js?v=20261019220739"></script>
-<script src="notes.js?v=20261019220739"></script>
-<script src="reminders.js?v=20261019220739"></script>
-<script src="gear.js?v=20261019220739"></script>
-<script src="lights.js?v=20261019220739"></script>
-<script src="tv.js?v=20261019220739"></script>
-<script src="work.js?v=20261019220739"></script>
-<script src="health.js?v=20261019220739"></script>
-<script src="pets.js?v=20261019220739"></script>
-<script src="places.js?v=20261019220739"></script>
-<script src="placestab.js?v=20261019220739"></script>
-<script src="usmap.js?v=20261019220739"></script>
-<script src="voice.js?v=20261019220739"></script>
-<script src="assistant.js?v=20261019220739"></script>
-<script src="packages.js?v=20261019220739"></script>
-<script src="focus.js?v=20261019220739"></script>
+<link rel="stylesheet" href="finance.css?v=20261019222752">
+<script src="finance.js?v=20261019222752"></script>
+<link rel="stylesheet" href="car.css?v=20261019222752">
+<script src="car.js?v=20261019222752"></script>
+<link rel="stylesheet" href="sections.css?v=20261019222752">
+<link rel="stylesheet" href="tv.css?v=20261019222752">
+<link rel="stylesheet" href="noir.css?v=20261019222752">
+<link rel="stylesheet" href="focus.css?v=20261019222752">
+<script src="records.js?v=20261019222752"></script>
+<script src="layout.js?v=20261019222752"></script>
+<script src="remote.js?v=20261019222752"></script>
+<script src="jarvis.js?v=20261019222752"></script>
+<script src="people.js?v=20261019222752"></script>
+<script src="wheels.js?v=20261019222752"></script>
+<script src="keyboard.js?v=20261019222752"></script>
+<script src="notes.js?v=20261019222752"></script>
+<script src="reminders.js?v=20261019222752"></script>
+<script src="gear.js?v=20261019222752"></script>
+<script src="lights.js?v=20261019222752"></script>
+<script src="tv.js?v=20261019222752"></script>
+<script src="work.js?v=20261019222752"></script>
+<script src="health.js?v=20261019222752"></script>
+<script src="pets.js?v=20261019222752"></script>
+<script src="places.js?v=20261019222752"></script>
+<script src="placestab.js?v=20261019222752"></script>
+<script src="usmap.js?v=20261019222752"></script>
+<script src="voice.js?v=20261019222752"></script>
+<script src="assistant.js?v=20261019222752"></script>
+<script src="packages.js?v=20261019222752"></script>
+<script src="focus.js?v=20261019222752"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1543,7 +1543,7 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261019220739"></script>
+<script src="appearance.js?v=20261019222752"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
@@ -1551,7 +1551,7 @@ dialog::backdrop{background:transparent}
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
   // Drive times are switched off for now (they're coming back, reworked); the code for them stays, waiting on this.
   const DRIVES = false;
-  const VERSION = '20261019220739';
+  const VERSION = '20261019222752';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -6618,6 +6618,7 @@ dialog::backdrop{background:transparent}
   const nextFrame = () => new Promise(r => setTimeout(r, 60));
   async function remoteRun(action, a) {
     if (!S.user) return { ok: false, note: 'signed out on this device' };
+    if (action === 'jarvis') return jarvisCmd(a); // never takes focus, so it runs even while he's typing
     if (typingHere()) return { ok: false, note: 'busy: someone is typing on this device' };
     const scr = String(a.screen || '').toLowerCase();
     if (action === 'open') {
@@ -6667,11 +6668,16 @@ dialog::backdrop{background:transparent}
       setTimeout(() => el.classList.remove('lay-flash'), 1800);
       return { ok: true, note: `scrolled to ${a.widget}` };
     }
-    if (action === 'jarvis') { // he heard his wake word: show him here
-      if (!JV) return { ok: false, note: 'the Jarvis widget did not load' };
-      return { ok: true, note: JV.open() };
-    }
     return { ok: false, note: `unknown command ${action}` };
+  }
+  // jarvis: he heard his wake word (or was told to connect). args.stream: his live stream's address to connect to
+  // ('' disconnects; PC only). args.open false: don't show the panel.
+  function jarvisCmd(a) {
+    if (!JV) return { ok: false, note: 'the Jarvis widget did not load' };
+    const notes = [];
+    if (typeof a.stream === 'string') notes.push(JV.stream(a.stream));
+    if (a.open !== false) notes.push(JV.open());
+    return { ok: true, note: notes.join('; ') || 'nothing to do' };
   }
 
   if (window.POSLook) POSLook.setToast(toast);
