@@ -129,7 +129,13 @@ window.POSHealth = function (ctx) {
     let body;
     if (S.failed) body = '<p class="empty">Health did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading…</p>';
-    else body = `${logBar()}<div class="hl-grid">${sleepCard()}${gymCard()}${runCard()}${habitsCard()}</div>`;
+    else {
+      // a layout row for this device (layout.js) decides which cards show and how; otherwise the built-in grid
+      const L = ctx.layout && ctx.layout();
+      const widgets = { 'health.log': { render: () => logBar() }, 'health.sleep': { render: () => sleepCard() }, 'health.gym': { render: () => gymCard() },
+        'health.run': { render: () => runCard() }, 'health.habits': { render: () => habitsCard() } };
+      body = (L && L.render('health', widgets)) || `${logBar()}<div class="hl-grid">${sleepCard()}${gymCard()}${runCard()}${habitsCard()}</div>`;
+    }
     return `<div class="health"><div class="health-scroll" id="healthScroll" data-keep>${body}</div></div>`;
   }
 

@@ -316,7 +316,12 @@ window.POSCar = function (ctx) {
     else if (!S.loaded) body = '<p class="empty">Loading your car…</p>';
     else {
       const v = car();
-      body = `<div class="car-grid"><div class="car-col">${hero(v)}${oilCard()}${moneyCard()}</div><div class="car-col">${issueList()}${recList()}${history()}${notes()}${details(v)}</div></div>`;
+      // a layout row for this device (layout.js) decides which cards show and how; otherwise the built-in two columns
+      const L = ctx.layout && ctx.layout();
+      const widgets = { 'car.hero': { render: () => hero(v) }, 'car.oil': { render: () => oilCard() }, 'car.money': { render: () => moneyCard() },
+        'car.issues': { render: () => issueList() }, 'car.recs': { render: () => recList() }, 'car.history': { render: () => history() },
+        'car.notes': { render: () => notes() }, 'car.details': { render: () => details(v) } };
+      body = (L && L.render('car', widgets)) || `<div class="car-grid"><div class="car-col">${hero(v)}${oilCard()}${moneyCard()}</div><div class="car-col">${issueList()}${recList()}${history()}${notes()}${details(v)}</div></div>`;
     }
     return `<div class="car"><div class="car-scroll" id="carScroll" data-keep>${body}</div></div>`;
   }

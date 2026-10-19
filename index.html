@@ -41,33 +41,35 @@
 <title>NERV</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="finance.css?v=20261019165227">
-<script src="finance.js?v=20261019165227"></script>
-<link rel="stylesheet" href="car.css?v=20261019165227">
-<script src="car.js?v=20261019165227"></script>
-<link rel="stylesheet" href="sections.css?v=20261019165227">
-<link rel="stylesheet" href="tv.css?v=20261019165227">
-<link rel="stylesheet" href="noir.css?v=20261019165227">
-<link rel="stylesheet" href="focus.css?v=20261019165227">
-<script src="records.js?v=20261019165227"></script>
-<script src="people.js?v=20261019165227"></script>
-<script src="wheels.js?v=20261019165227"></script>
-<script src="keyboard.js?v=20261019165227"></script>
-<script src="notes.js?v=20261019165227"></script>
-<script src="reminders.js?v=20261019165227"></script>
-<script src="gear.js?v=20261019165227"></script>
-<script src="lights.js?v=20261019165227"></script>
-<script src="tv.js?v=20261019165227"></script>
-<script src="work.js?v=20261019165227"></script>
-<script src="health.js?v=20261019165227"></script>
-<script src="pets.js?v=20261019165227"></script>
-<script src="places.js?v=20261019165227"></script>
-<script src="placestab.js?v=20261019165227"></script>
-<script src="usmap.js?v=20261019165227"></script>
-<script src="voice.js?v=20261019165227"></script>
-<script src="assistant.js?v=20261019165227"></script>
-<script src="packages.js?v=20261019165227"></script>
-<script src="focus.js?v=20261019165227"></script>
+<link rel="stylesheet" href="finance.css?v=20261019205325">
+<script src="finance.js?v=20261019205325"></script>
+<link rel="stylesheet" href="car.css?v=20261019205325">
+<script src="car.js?v=20261019205325"></script>
+<link rel="stylesheet" href="sections.css?v=20261019205325">
+<link rel="stylesheet" href="tv.css?v=20261019205325">
+<link rel="stylesheet" href="noir.css?v=20261019205325">
+<link rel="stylesheet" href="focus.css?v=20261019205325">
+<script src="records.js?v=20261019205325"></script>
+<script src="layout.js?v=20261019205325"></script>
+<script src="remote.js?v=20261019205325"></script>
+<script src="people.js?v=20261019205325"></script>
+<script src="wheels.js?v=20261019205325"></script>
+<script src="keyboard.js?v=20261019205325"></script>
+<script src="notes.js?v=20261019205325"></script>
+<script src="reminders.js?v=20261019205325"></script>
+<script src="gear.js?v=20261019205325"></script>
+<script src="lights.js?v=20261019205325"></script>
+<script src="tv.js?v=20261019205325"></script>
+<script src="work.js?v=20261019205325"></script>
+<script src="health.js?v=20261019205325"></script>
+<script src="pets.js?v=20261019205325"></script>
+<script src="places.js?v=20261019205325"></script>
+<script src="placestab.js?v=20261019205325"></script>
+<script src="usmap.js?v=20261019205325"></script>
+<script src="voice.js?v=20261019205325"></script>
+<script src="assistant.js?v=20261019205325"></script>
+<script src="packages.js?v=20261019205325"></script>
+<script src="focus.js?v=20261019205325"></script>
 <style>
 /* page frame: content stays clear of the iPad/iPhone system bars */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -1540,7 +1542,7 @@ dialog::backdrop{background:transparent}
 
 <div id="toast" class="toast" role="status" hidden></div>
 
-<script src="appearance.js?v=20261019165227"></script>
+<script src="appearance.js?v=20261019205325"></script>
 <script>
 (() => {
   // Supabase project for POS. The publishable key is meant to be public; every table is locked to its owner.
@@ -1548,7 +1550,7 @@ dialog::backdrop{background:transparent}
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
   // Drive times are switched off for now (they're coming back, reworked); the code for them stays, waiting on this.
   const DRIVES = false;
-  const VERSION = '20261019165227';
+  const VERSION = '20261019205325';
   const $ = (s, r = document) => r.querySelector(s);
   const NOIR = document.documentElement.hasAttribute('data-noir');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1671,7 +1673,7 @@ dialog::backdrop{background:transparent}
     wakeWant: false, wakeOn: false, wakeNote: '',
     user: null, gcal: null, events: [], evWin: null, evErr: '', authMode: 'in',
   };
-  let sb = null, FOCUS = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null, VOICE = null;
+  let sb = null, LAYOUT = null, REMOTE = null, FOCUS = null, PLACES = null, FIN = null, CAR = null, PEOPLE = null, PETS = null, LIGHTS = null, TV = null, GEAR = null, NOTES = null, HEALTH = null, WORK = null, REM = null, PLT = null, PKG = null, ASSIST = null, VOICE = null;
   // which lists in Tasks are opened up (they start folded to one line)
   const listOpen = new Set((() => { try { return JSON.parse(localStorage.getItem('pos.listOpen') || '[]'); } catch (e) { return []; } })());
   // rows in the database use day / at_time / done_at; the page works in date / time / doneAt
@@ -2408,10 +2410,29 @@ dialog::backdrop{background:transparent}
     if (kw != null) add({ key: `askey:${tk}`, kind: 'assist', lab: kw <= 0 ? 'Assistant · Key expired' : `Assistant · Key expires in ${kw} ${kw === 1 ? 'day' : 'days'}`, title: 'Make a new key and paste it in Settings', open: 'data-act="settings"', sort: 5, warn: true });
     return cards.sort((a, b) => (!!b.sticky - !!a.sticky) || a.sort - b.sort);
   }
-  function qCard(c) {
+  // Home's cards, shown only when this device's Home has a layout row (layout.js): the row says which kinds of card
+  // appear and in what order. Within one kind they keep their usual order (the next hour first). Size 's' shows just
+  // the line that matters; filter {max: n} keeps the first n of a kind; Bills also take {late_only: true}.
+  const HOME_W = { meeting: 'home.meetings', event: 'home.calendar', task: 'home.tasks', tasks: 'home.tasks', bill: 'home.bills', bday: 'home.birthdays', pkg: 'home.packages', rem: 'home.reminders', car: 'home.car', pets: 'home.pets', assist: 'home.assistant' };
+  function vHomeCards(cards) {
+    const row = LAYOUT && LAYOUT.get('home');
+    if (!row || !Array.isArray(row.widgets)) return '';
+    const out = [];
+    for (const w of row.widgets) {
+      if (!w || w.hidden || typeof w.id !== 'string') continue;
+      const f = w.filter && typeof w.filter === 'object' ? w.filter : {};
+      if (w.id.startsWith('x.')) { const h = LAYOUT.one(w); if (h) out.push(`<div class="qh-card qh-x lay-${esc(w.size || 'm')}" data-widget="${esc(w.id)}">${h}</div>`); continue; }
+      let mine = cards.filter(c => HOME_W[c.kind] === w.id && !(c.kind === 'bill' && f.late_only && !c.warn));
+      if (f.max > 0) mine = mine.slice(0, f.max);
+      for (const c of mine) out.push(qCard(c, w.size, w.id));
+    }
+    return `<div class="qh-cards" aria-label="Today">${out.join('')}</div>`;
+  }
+  function qCard(c, size, wid) {
+    if (size === 's') c = { ...c, meta: '', list: null };
     const right = c.sticky ? `<span class="qh-soon">${esc(soonText(c.st))}</span>` : `<button type="button" class="qh-ack" data-act="qh-ack" data-key="${esc(c.key)}" data-sec="${esc(SECTION[c.kind] || '')}" aria-label="Got it: ${esc(c.title)}">Got it</button>`;
     const body = c.list ? `<span class="qh-list">${c.list.map(x => `<span>${esc(x)}</span>`).join('')}${c.more ? `<span class="qh-more">+${c.more} more</span>` : ''}</span>` : `<span class="qh-title">${esc(c.title)}</span>${c.meta ? `<span class="qh-meta">${esc(c.meta)}</span>` : ''}`;
-    return `<div class="qh-card${c.sticky ? ' sticky' : ''}${c.warn ? ' warn' : ''}"><button type="button" class="qh-open" ${c.open}><span class="qh-lab">${esc(c.lab)}</span>${body}</button>${right}</div>`;
+    return `<div class="qh-card${c.sticky ? ' sticky' : ''}${c.warn ? ' warn' : ''}"${wid ? ` data-widget="${esc(wid)}"` : ''}><button type="button" class="qh-open" ${c.open}><span class="qh-lab">${esc(c.lab)}</span>${body}</button>${right}</div>`;
   }
   const qDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
   /* ---------- the data the creature is made of: one node for each open thing ---------- */
@@ -2678,8 +2699,17 @@ dialog::backdrop{background:transparent}
   const appSvg = id => dockSvg(id === 'settings' ? '[data-act="settings"]' : `.nav [data-tab="${id}"]`);
   const NERV_SVG = '<svg class="i nerv-g" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2"/></svg>';
   let appOrder = (() => { try { const o = JSON.parse(localStorage.getItem('pos.apps') || 'null'); return Array.isArray(o) ? o : null; } catch (e) { return null; } })();
-  // your order, with any app it doesn't know yet at the end (and any that's gone left out)
-  const appsInOrder = () => { const known = (appOrder || []).filter(id => APP_NAME[id]); return known.concat(APPS.map(a => a[0]).filter(id => !known.includes(id))); };
+  // your order, with any app it doesn't know yet at the end (and any that's gone left out). A Home layout row for this
+  // device (layout.js) decides instead, and can hide icons; Settings always stays.
+  const appsInOrder = () => {
+    const lay = LAYOUT && LAYOUT.apps('home');
+    if (lay) {
+      const hidden = new Set(lay.filter(a => a.hidden && a.id !== 'settings').map(a => a.id));
+      const known = lay.filter(a => !hidden.has(a.id) && APP_NAME[a.id]).map(a => a.id);
+      return known.concat(APPS.map(a => a[0]).filter(id => !known.includes(id) && !hidden.has(id)));
+    }
+    const known = (appOrder || []).filter(id => APP_NAME[id]); return known.concat(APPS.map(a => a[0]).filter(id => !known.includes(id)));
+  };
   async function appsLoad() {
     if (!sb || !S.user) return;
     try {
@@ -2689,6 +2719,10 @@ dialog::backdrop{background:transparent}
     } catch (e) {}
   }
   async function appsSave(order) {
+    if (LAYOUT && LAYOUT.apps('home')) { // this device's Home has a layout: the order goes into that row
+      if (!(await LAYOUT.saveApps('home', order))) toast('The new order did not reach your account.');
+      return;
+    }
     appOrder = order;
     try { localStorage.setItem('pos.apps', JSON.stringify(order)); } catch (e) {}
     if (!sb || !S.canSave) return;
@@ -2831,6 +2865,7 @@ dialog::backdrop{background:transparent}
         <p class="qh-status"><span class="qh-k">${esc(status)}</span>${statusSub ? `<span class="qh-k qh-faint">${esc(statusSub)}</span>` : ''}</p>
         ${ASSIST && ASSIST.inStage() ? ASSIST.panel() : vApps()}
       </div>
+      ${vHomeCards(cards)}
       ${S.peek ? vPeek() : ''}
       <div class="qh-c q-bl">${cluCorner()}<span class="qh-dot${S.failed ? ' qh-off' : S.canSave ? ' qh-on' : ''}"></span><span class="qh-k qh-faint">${S.failed ? 'Offline' : S.canSave ? 'Online' : 'Connecting'}</span></div>
       <div class="qh-c q-br">${ASSIST && ASSIST.canSession() ? `<button type="button" class="qh-link qh-sess${ASSIST.sessionOn() ? ' on' : ''}" data-act="as-sess">${ASSIST.sessionOn() ? 'End session' : 'Start session'}</button>` : ''}${canFull ? `<button type="button" class="qh-link" data-act="qh-full">${isFull ? 'Exit full screen' : 'Full screen'}</button>` : ''}</div>
@@ -5962,6 +5997,7 @@ dialog::backdrop{background:transparent}
     render();
     window.scrollTo(0, 0);
     if (NOIR && was !== tab) winMove(was, tab, ghost);
+    if (REMOTE && was !== tab) REMOTE.moved();
   }
   /* sections open out of the dock icon you tapped and fill the screen; going Home folds the section back into its icon */
   let dockFrom = null, growOrigin = null;
@@ -6377,8 +6413,10 @@ dialog::backdrop{background:transparent}
   function setUser(u) {
     const was = S.user ? S.user.id : null;
     S.user = u || null; S.canSave = !!u;
-    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(appsLoad, 0); setTimeout(() => ASSIST && ASSIST.status(true), 0); setTimeout(() => VOICE && VOICE.loadSaved().then(() => VOICE.warm()), 1500); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (u && was !== u.id) { startData(); setTimeout(cluLoad, 0); setTimeout(ackLoad, 0); setTimeout(identLoad, 0); setTimeout(appsLoad, 0); if (LAYOUT) LAYOUT.start(); if (REMOTE) REMOTE.start(); setTimeout(() => ASSIST && ASSIST.status(true), 0); setTimeout(() => VOICE && VOICE.loadSaved().then(() => VOICE.warm()), 1500); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
     if (!u) {
+      if (LAYOUT) LAYOUT.stop();
+      if (REMOTE) REMOTE.stop();
       if (FIN) FIN.stop();
       if (CAR) CAR.stop();
       if (PEOPLE) PEOPLE.stop();
@@ -6564,8 +6602,69 @@ dialog::backdrop{background:transparent}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     checkVersion(); loadWeather(false);
-    if (S.user) { cluLoad(); ackLoad(); identLoad(); appsLoad(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
+    if (S.user) { cluLoad(); ackLoad(); identLoad(); appsLoad(); if (LAYOUT) LAYOUT.start(); if (REMOTE) REMOTE.start(); reloadTasks(); loadEvents(false); if (FIN) FIN.start(); if (CAR) CAR.start(); if (PEOPLE) PEOPLE.start(); if (PETS) PETS.start(); if (LIGHTS) LIGHTS.start(); if (TV) TV.start(); if (GEAR) GEAR.start(); if (WORK) WORK.start(); if (REM) REM.start(); if (PKG) PKG.start(); if (NOTES) NOTES.start(); if (HEALTH) HEALTH.start(); }
   });
+
+  /* ---------- remote control (remote.js): what a command from Jarvis does on this copy. Each answers {ok, note}.
+     open {screen} · show {id, day} (an item from the tasks table: a task, event or meeting; a repeating one opens on
+     that day, or its next one) · view {screen, view} (Calendar's day/week/month/year, or a Finance section) ·
+     scroll {widget, screen} (to a laid-out widget, which flashes). It never takes over a box you're typing in. ---------- */
+  const typingHere = () => { const a = document.activeElement; return !!(a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)); };
+  function closeSheets() { for (const d of document.querySelectorAll('dialog[open]')) { try { d.close(); } catch (e) {} } }
+  const nextFrame = () => new Promise(r => setTimeout(r, 60));
+  async function remoteRun(action, a) {
+    if (!S.user) return { ok: false, note: 'signed out on this device' };
+    if (typingHere()) return { ok: false, note: 'busy: someone is typing on this device' };
+    const scr = String(a.screen || '').toLowerCase();
+    if (action === 'open') {
+      if (scr === 'settings') { closeSheets(); openSettings(); return { ok: true, note: 'opened Settings' }; }
+      if (!views[scr] || scr === 'work') return { ok: false, note: `there's no screen called ${scr}` };
+      closeSheets(); setTab(scr);
+      return { ok: true, note: `opened ${TITLES[scr] || scr}` };
+    }
+    if (action === 'show') {
+      const ref = String(a.id || '').toLowerCase(), hits = ref.length >= 6 ? S.all.filter(x => x.id.startsWith(ref)) : [];
+      if (hits.length !== 1) return { ok: false, note: hits.length ? 'that id matches more than one item' : 'no such item on this device' };
+      const r = hits[0];
+      let day = /^\d{4}-\d{2}-\d{2}$/.test(a.day || '') ? a.day : null;
+      if (r.repeat) { day = day && occursOn(r, day) ? day : nextOcc(r, day || todayKey()); if (!day) return { ok: false, note: `${r.title} has no date coming up` }; }
+      else day = r.date || null;
+      closeSheets();
+      if (day) S.calDay = day;
+      if (S.tab !== 'calendar') setTab('calendar'); else { aimTimeline(); render(); }
+      openTask(r.repeat ? `${r.id}@${day}` : r.id);
+      return { ok: true, note: `showing ${r.title}${day ? ' on ' + day : ''}` };
+    }
+    if (action === 'view') {
+      const v = String(a.view || '').toLowerCase();
+      if (CAL_VIEWS.some(x => x[0] === v) && (!scr || scr === 'calendar')) {
+        closeSheets();
+        if (S.tab !== 'calendar') setTab('calendar');
+        setCalView(v, /^\d{4}-\d{2}-\d{2}$/.test(a.day || '') ? a.day : null);
+        return { ok: true, note: `calendar in ${v} view` };
+      }
+      const subs = FIN && FIN.side ? FIN.side().items.map(i => i.key) : [];
+      if (subs.includes(v) && (!scr || scr === 'finance')) {
+        closeSheets();
+        if (S.tab !== 'finance') setTab('finance');
+        FIN.act('fin-sub', { dataset: { sub: v } });
+        render();
+        return { ok: true, note: `finance ${v}` };
+      }
+      return { ok: false, note: `no view called ${v}${scr ? ' on ' + scr : ''}` };
+    }
+    if (action === 'scroll') {
+      if (scr && views[scr] && scr !== 'work' && S.tab !== scr) { closeSheets(); setTab(scr); }
+      await nextFrame();
+      const el = document.querySelector(`[data-widget="${CSS.escape(String(a.widget || ''))}"]`);
+      if (!el) return { ok: false, note: `${a.widget} isn't on the screen (it may not be in this device's layout)` };
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.remove('lay-flash'); void el.offsetWidth; el.classList.add('lay-flash');
+      setTimeout(() => el.classList.remove('lay-flash'), 1800);
+      return { ok: true, note: `scrolled to ${a.widget}` };
+    }
+    return { ok: false, note: `unknown command ${action}` };
+  }
 
   if (window.POSLook) POSLook.setToast(toast);
   async function boot() {
@@ -6585,15 +6684,18 @@ dialog::backdrop{background:transparent}
     }
     sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'hub.auth' } });
     if (window.POSFocus) FOCUS = window.POSFocus({ esc, items: focusItems, done: id => askDone(id), edit: id => openTask(id), ready: () => !!(S.user && S.loaded) });
-    if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer });
-    if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null) });
+    if (window.POSLayout) LAYOUT = window.POSLayout({ sb, esc, rerender: () => render(), version: VERSION });
+    const layout = () => LAYOUT;
+    if (window.POSRemote) REMOTE = window.POSRemote({ sb, run: remoteRun, onScreen: () => S.tab });
+    if (window.POSFinance) FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: () => render(), canSave: () => S.canSave, setDrawer, layout });
+    if (window.POSCar) CAR = window.POSCar({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, setDrawer, fin: () => (FIN && FIN.carMoney ? FIN.carMoney() : null), layout });
     if (window.POSPeople) PEOPLE = window.POSPeople({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });
     if (window.POSKeys) window.POSKeys();
     if (window.POSWheels) { POSWheels.mount($('#sheet')); POSWheels.mount($('#cfSheet')); }
     if (window.POSPlaces) { PLACES = window.POSPlaces({ sb }); PLACES.onLeg(() => render()); PLACES.onMe(() => { fillMe(); render(); }); }
     if (window.POSPackages) PKG = window.POSPackages({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, places: () => PLACES });
     if (window.POSPlacesTab) PLT = window.POSPlacesTab({ esc, toast, rerender: () => render(), canSave: () => S.canSave, places: () => PLACES, whereNow: () => whereNow() });
-    if (window.POSHealth) HEALTH = window.POSHealth({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave,
+    if (window.POSHealth) HEALTH = window.POSHealth({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave, layout,
       goals: re => (FIN && FIN.goals ? FIN.goals(re) : []),
       doneToday: () => { const tk = todayKey(), seen = new Set(); return S.tasks.filter(t => t.done && (t.date === tk || (t.doneAt && dkey(new Date(t.doneAt)) === tk))).map(t => t.title.trim()).filter(n => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())); } });
     if (window.POSNotes) NOTES = window.POSNotes({ sb, toast, esc, rerender: () => render(), canSave: () => S.canSave });

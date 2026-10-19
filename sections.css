@@ -1127,3 +1127,17 @@ dialog#voiceLab.vl-dlg{width:min(920px,calc(100vw - 24px));max-width:none;margin
 #sheet .focus-b{display:inline-flex;align-items:center;gap:8px}
 #sheet .focus-b svg.i{width:16px;height:16px;color:#ff5a28}
 #sheet .focus-b[hidden]{display:none}
+
+/* layouts (layout.js): a screen drawn from a row of the layouts table. One column on a phone; twelve where there's
+   room, a widget taking 4 (s), 6 (m), 8 (l) or all 12 (full). Nothing here touches a screen without a layout row. */
+.lay-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.lay-w{min-width:0;display:flex;flex-direction:column;gap:14px}
+@media (min-width:760px) and (min-height:500px){
+  .lay-grid{grid-template-columns:repeat(12,minmax(0,1fr))}
+  .lay-w.lay-s{grid-column:span 4}.lay-w.lay-m{grid-column:span 6}.lay-w.lay-l{grid-column:span 8}.lay-w.lay-full{grid-column:1/-1}
+}
+.qh-card.qh-x{display:block;padding:14px 16px;color:var(--qink)}
+/* a widget Jarvis scrolled to (remote.js) glows for a moment */
+.lay-flash{animation:layFlash 1.6s ease-out}
+@keyframes layFlash{0%,35%{box-shadow:0 0 0 3px rgba(255,90,40,.75)}100%{box-shadow:0 0 0 3px rgba(255,90,40,0)}}
+@media (prefers-reduced-motion:reduce){ .lay-flash{animation:none;outline:3px solid rgba(255,90,40,.75)} }

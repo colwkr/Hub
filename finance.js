@@ -1146,6 +1146,46 @@ window.POSFinance = function (ctx) {
     </div>${examplesBar()}`;
   }
 
+  // A list of bills for layouts, filtered. filter.status: 'upcoming' (not paid, due or late this month, or due within
+  // filter.days, default 31), 'late', 'unpaid', 'paid', or 'all' (default); filter.group: 'bill' or 'sub'; filter.days.
+  function billsWidget(f) {
+    const status = ['upcoming', 'late', 'unpaid', 'paid', 'all'].includes(f.status) ? f.status : 'all';
+    const days = f.days > 0 ? Math.min(f.days, 366) : status === 'upcoming' ? 31 : null;
+    const horizon = days ? startOfDay(Date.now()) + days * DAY : null;
+    const ok = (b, s) => {
+      if (f.group === 'bill' || f.group === 'sub') { if (groupOf(b) !== f.group) return false; }
+      if (status === 'late') return s.st === 'late';
+      if (status === 'paid') return s.st === 'paid';
+      if (status === 'unpaid' && s.st === 'paid') return false;
+      if (status === 'upcoming' && !['soon', 'waiting', 'late', 'next'].includes(s.st)) return false;
+      if (horizon && status !== 'all' && s.due && s.due > horizon) return false;
+      return true;
+    };
+    const list = S.bills.map(b => ({ b, s: billState(b) })).filter(x => ok(x.b, x.s)).sort((x, y) => (x.s.due || 9e15) - (y.s.due || 9e15) || byDay(x.b, y.b));
+    const what = f.group === 'sub' ? 'Subscriptions' : f.group === 'bill' ? 'Bills' : 'Bills and subscriptions';
+    const label = { upcoming: `Upcoming · next ${days} days`, late: 'Late', unpaid: 'Not paid yet', paid: 'Paid this month', all: '' }[status];
+    const total = list.reduce((t, x) => t + (x.b.amount || 0), 0);
+    return `<section class="sec"><div class="sec-head"><span class="lab">${esc(what)}${label ? ' · ' + esc(label) : ''}${list.length ? ' · ' + fmt(total) : ''}</span></div>
+      <div class="float list">${list.length ? list.map(x => billRow(x.b)).join('') : '<p class="empty">Nothing here right now.</p>'}</div></section>`;
+  }
+  // the overview's cards by name, for a layout row (layout.js). Each takes the row's filter and size.
+  function widgets() {
+    const mk = ovMk();
+    return {
+      'fin.approve': { render: () => { const todo = inbox(); return todo.length ? `<section class="sec" id="finTodo"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>` : ''; } },
+      'fin.pay-notes': { render: () => { const p = payNotes(); return p ? `<div class="stack">${p}</div>` : ''; } },
+      'fin.worth': { render: () => worthCard() },
+      'fin.money': { render: () => moneyCard(mk) },
+      'fin.pay': { render: () => payCard(mk) },
+      'fin.accounts': { render: () => acctList() },
+      'fin.saving': { render: () => saveCard(mk) },
+      'fin.heat': { render: () => heatCal(mk) },
+      'fin.day': { render: () => dayCard(mk) },
+      'fin.bill-line': { render: () => billLine() },
+      'fin.bills': { render: f => billsWidget(f) },
+    };
+  }
+
   // whether the Regions alert emails are reaching POS
   function mailLine() {
     if (!S.mail) return '<p class="meta mail-line"><i class="mdot off"></i>Regions alerts: none received yet</p>';
@@ -1461,7 +1501,11 @@ window.POSFinance = function (ctx) {
     let body;
     if (S.failed) body = '<p class="empty">Your finances did not load. Check the connection; ' + posName() + ' tries again when you come back to it.</p>';
     else if (!S.loaded) body = '<p class="empty">Loading your accounts and categories…</p>';
-    else body = views[S.sub]();
+    else {
+      // the Overview follows a layout row when this device has one (layout.js); otherwise it's built in
+      const L = S.sub === 'home' && ctx.layout && ctx.layout();
+      body = (L && L.render('finance', widgets())) || views[S.sub]();
+    }
     return `<div class="fin"><div class="fin-scroll" id="finScroll" data-keep>${body}</div></div>`;
   }
   // what the menu badge shows: charges to approve plus savings to sort
