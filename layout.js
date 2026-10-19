@@ -1,7 +1,8 @@
 /* Layouts: which widgets a screen shows, in what order, how big, and filtered how, per device.
    Rows live in the Supabase table `layouts` ({screen, device, widgets, apps}); widgets is an ordered list of
-   {id, size: 's'|'m'|'l'|'full', hidden, filter}. The most specific row wins: this device's own name (set once by
-   opening POS with ?device=wall-ipad; ?device= clears it), then its type (phone, tablet, desktop), then '*'.
+   {id, size: 's'|'m'|'l'|'full', hidden, filter}. The most specific row wins: this device's name (ipad, phone or pc,
+   or one set once by opening POS with ?device=wall-ipad; ?device= clears it), then its type (phone, tablet, desktop),
+   then '*'.
    A screen with no row keeps its built-in layout, untouched. Changes arrive by realtime and re-render.
    New widget types live in widgets/ (listed in widgets/manifest.json) and register with POSLayout.register. */
 window.POSLayout = function (ctx) {
@@ -19,7 +20,14 @@ window.POSLayout = function (ctx) {
   } catch (e) {}
 
   const mm = q => !!(window.matchMedia && matchMedia(q).matches);
-  const deviceName = () => { try { return localStorage.getItem('pos.device') || ''; } catch (e) { return ''; } };
+  // the same name remote.js registers under: the ?device= one, or else ipad / phone / pc (a touch computer: tablet)
+  const deviceName = () => {
+    try { const n = localStorage.getItem('pos.device'); if (n) return n; } catch (e) {}
+    const touch = (navigator.maxTouchPoints || 0) > 0, s = window.screen || {};
+    if (touch && Math.min(s.width || 9999, s.height || 9999) < 500) return 'phone';
+    if ((navigator.maxTouchPoints || 0) > 1 && /iPad|Macintosh/.test(navigator.userAgent)) return 'ipad';
+    return touch ? 'tablet' : 'pc';
+  };
   // the same breakpoints the rest of POS uses: a phone below 760px wide (or 500 tall); otherwise a mouse means desktop
   const deviceType = () => (!mm('(min-width:760px) and (min-height:500px)') ? 'phone' : mm('(hover:hover) and (pointer:fine)') ? 'desktop' : 'tablet');
 

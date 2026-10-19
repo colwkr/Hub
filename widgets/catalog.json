@@ -1,61 +1,202 @@
 {
-  "about": "Every widget a layout row can place, by screen. Kept in step with the widgets() maps in finance.js, car.js, health.js and HOME_W in index.html. Custom widget types (ids starting x.) are listed in manifest.json and can go on any screen.",
-  "devices": ["phone", "tablet", "desktop", "*"],
-  "sizes": { "s": "a third of the width", "m": "half (default)", "l": "two thirds", "full": "the whole width" },
+  "about": "Every widget a layout row can place, by screen. Kept in step with the widgets() maps in finance.js, car.js, health.js and HOME_W in index.html. Custom widget types (ids starting x.) are listed in manifest.json and can go on any screen. Each screen's default is the order it draws today, the starting point for a new layout row.",
+  "devices": {
+    "names": "ipad, phone, pc (automatic), or a name set with ?device= - matched first",
+    "types": "phone, tablet, desktop - matched next",
+    "any": "* - every device without a more specific row"
+  },
+  "sizes": {
+    "s": "a third of the width",
+    "m": "half (default)",
+    "l": "two thirds",
+    "full": "the whole width"
+  },
   "screens": {
     "home": {
       "note": "Cards beside the orb, plus the app icons (the apps list). Home size 's' shows just the main line.",
       "widgets": {
-        "home.meetings": { "label": "Meetings today" },
-        "home.calendar": { "label": "Calendar events today" },
-        "home.tasks": { "label": "Tasks due today" },
-        "home.bills": { "label": "Bills due today or late", "filters": { "late_only": "true: only late ones" } },
-        "home.birthdays": { "label": "Birthdays today" },
-        "home.packages": { "label": "Packages out for delivery or delivered" },
-        "home.reminders": { "label": "Reminders due" },
-        "home.car": { "label": "Car needs a look" },
-        "home.pets": { "label": "Pet checkups due" },
-        "home.assistant": { "label": "Assistant key expiring" }
+        "home.meetings": {
+          "label": "Meetings today"
+        },
+        "home.calendar": {
+          "label": "Calendar events today"
+        },
+        "home.tasks": {
+          "label": "Tasks due today"
+        },
+        "home.bills": {
+          "label": "Bills due today or late",
+          "filters": {
+            "late_only": "true: only late ones"
+          }
+        },
+        "home.birthdays": {
+          "label": "Birthdays today"
+        },
+        "home.packages": {
+          "label": "Packages out for delivery or delivered"
+        },
+        "home.reminders": {
+          "label": "Reminders due"
+        },
+        "home.car": {
+          "label": "Car needs a look"
+        },
+        "home.pets": {
+          "label": "Pet checkups due"
+        },
+        "home.assistant": {
+          "label": "Assistant key expiring"
+        }
       },
-      "common_filters": { "max": "show at most this many cards of this kind" },
-      "apps": ["tasks", "calendar", "notes", "reminders", "finance", "health", "car", "places", "packages", "pets", "lights", "tv", "settings"]
+      "common_filters": {
+        "max": "show at most this many cards of this kind"
+      },
+      "apps": [
+        "tasks",
+        "calendar",
+        "notes",
+        "reminders",
+        "finance",
+        "health",
+        "car",
+        "places",
+        "packages",
+        "pets",
+        "lights",
+        "tv",
+        "settings"
+      ],
+      "default": [
+        "home.assistant",
+        "home.meetings",
+        "home.calendar",
+        "home.tasks",
+        "home.bills",
+        "home.birthdays",
+        "home.packages",
+        "home.reminders",
+        "home.car",
+        "home.pets"
+      ]
     },
     "finance": {
       "note": "The Finance Overview section.",
       "widgets": {
-        "fin.approve": { "label": "Charges needing approval" },
-        "fin.pay-notes": { "label": "Pay notes" },
-        "fin.worth": { "label": "Net worth" },
-        "fin.money": { "label": "Where the month's money went" },
-        "fin.pay": { "label": "This month's pay" },
-        "fin.accounts": { "label": "Account balances" },
-        "fin.saving": { "label": "Savings" },
-        "fin.heat": { "label": "Spending calendar" },
-        "fin.day": { "label": "A day's spending" },
-        "fin.bill-line": { "label": "Bills timeline for the month" },
-        "fin.bills": { "label": "Bills list", "filters": { "status": "upcoming | late | unpaid | paid | all", "group": "bill | sub", "days": "only due within this many days" } }
-      }
+        "fin.approve": {
+          "label": "Charges needing approval"
+        },
+        "fin.pay-notes": {
+          "label": "Pay notes"
+        },
+        "fin.worth": {
+          "label": "Net worth"
+        },
+        "fin.money": {
+          "label": "Where the month's money went"
+        },
+        "fin.pay": {
+          "label": "This month's pay"
+        },
+        "fin.accounts": {
+          "label": "Account balances"
+        },
+        "fin.saving": {
+          "label": "Savings"
+        },
+        "fin.heat": {
+          "label": "Spending calendar"
+        },
+        "fin.day": {
+          "label": "A day's spending"
+        },
+        "fin.bill-line": {
+          "label": "Bills timeline for the month"
+        },
+        "fin.bills": {
+          "label": "Bills list",
+          "filters": {
+            "status": "upcoming | late | unpaid | paid | all",
+            "group": "bill | sub",
+            "days": "only due within this many days"
+          }
+        }
+      },
+      "default": [
+        "fin.approve",
+        "fin.pay-notes",
+        "fin.worth",
+        "fin.accounts",
+        "fin.money",
+        "fin.saving",
+        "fin.heat",
+        "fin.day",
+        "fin.pay"
+      ]
     },
     "health": {
       "widgets": {
-        "health.log": { "label": "Quick log bar (bed, wake, gym, run)" },
-        "health.sleep": { "label": "Sleep, last 14 nights" },
-        "health.gym": { "label": "Gym, 12 weeks" },
-        "health.run": { "label": "Running, 8 weeks" },
-        "health.habits": { "label": "Habits, 7 days" }
-      }
+        "health.log": {
+          "label": "Quick log bar (bed, wake, gym, run)"
+        },
+        "health.sleep": {
+          "label": "Sleep, last 14 nights"
+        },
+        "health.gym": {
+          "label": "Gym, 12 weeks"
+        },
+        "health.run": {
+          "label": "Running, 8 weeks"
+        },
+        "health.habits": {
+          "label": "Habits, 7 days"
+        }
+      },
+      "default": [
+        "health.log",
+        "health.sleep",
+        "health.gym",
+        "health.run",
+        "health.habits"
+      ]
     },
     "car": {
       "widgets": {
-        "car.hero": { "label": "The car and its mileage" },
-        "car.oil": { "label": "Next oil change" },
-        "car.money": { "label": "Car money" },
-        "car.issues": { "label": "Open issues" },
-        "car.recs": { "label": "Shop recommendations" },
-        "car.history": { "label": "Service history" },
-        "car.notes": { "label": "Notes" },
-        "car.details": { "label": "Specs and details" }
-      }
+        "car.hero": {
+          "label": "The car and its mileage"
+        },
+        "car.oil": {
+          "label": "Next oil change"
+        },
+        "car.money": {
+          "label": "Car money"
+        },
+        "car.issues": {
+          "label": "Open issues"
+        },
+        "car.recs": {
+          "label": "Shop recommendations"
+        },
+        "car.history": {
+          "label": "Service history"
+        },
+        "car.notes": {
+          "label": "Notes"
+        },
+        "car.details": {
+          "label": "Specs and details"
+        }
+      },
+      "default": [
+        "car.hero",
+        "car.oil",
+        "car.money",
+        "car.issues",
+        "car.recs",
+        "car.history",
+        "car.notes",
+        "car.details"
+      ]
     }
   }
 }
