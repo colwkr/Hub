@@ -18,7 +18,9 @@ window.POSJarvis = function (ctx) {
   function inner() {
     const s = shown();
     const you = st.heard ? `<p class="jv-you${st.heard_final ? '' : ' draft'}"><span class="jv-who">You</span>${esc(st.heard)}</p>` : '';
-    const him = st.reply ? `<p class="jv-him"><span class="jv-who">Jarvis</span>${esc(st.reply)}</p>` : '';
+    const words = st.reply ? st.reply.split(/\s+/).filter(Boolean) : [];
+    const body = s === 'speaking' ? words.map((w, i) => `<span class="jv-w" data-w="${i}">${esc(w)}</span>`).join(' ') : esc(st.reply);
+    const him = st.reply ? `<p class="jv-him"><span class="jv-who">Jarvis</span>${body}</p>` : '';
     return `<div class="jv-head"><i class="jv-dot" aria-hidden="true"></i><span class="jv-state">${esc(LABEL[s] || s)}</span>${st.conversation ? '<span class="jv-mode">conversation</span>' : ''}</div>
       <div class="jv-talk" aria-live="polite">${you}${him}${!you && !him ? '<p class="jv-empty">Say “hey Jarvis”.</p>' : ''}</div>`;
   }
@@ -34,6 +36,7 @@ window.POSJarvis = function (ctx) {
       el.innerHTML = inner();
       const t = el.querySelector('.jv-talk'); if (t) t.scrollTop = t.scrollHeight;
     }
+    highlight();
     // the floating panel: away once he's been quiet a while
     if (floating) {
       const quiet = s === 'idle' || s === 'off' || s === 'muted';
@@ -45,9 +48,22 @@ window.POSJarvis = function (ctx) {
     }
   }
 
+  // highlight the word being spoken, estimated from time since speech began (about 2.7 words a second)
+  let speakAt = 0, lastTurn = null, hl = null;
+  function highlight() {
+    const spans = document.querySelectorAll('[data-jv] .jv-w');
+    if (!spans.length || !speakAt) return;
+    const n = Math.min(spans.length - 1, Math.floor((Date.now() - speakAt) / 1000 * 2.7));
+    spans.forEach((sp, i) => { sp.classList.toggle('said', i < n); sp.classList.toggle('now', i === n); });
+  }
   function apply(row) {
     if (!row) return;
+    const was = shown();
     st = { ...st, ...row };
+    if (shown() === 'speaking' && (was !== 'speaking' || st.turn !== lastTurn)) speakAt = Date.now();
+    lastTurn = st.turn;
+    if (shown() === 'speaking') { if (!hl) hl = setInterval(highlight, 100); }
+    else if (hl) { clearInterval(hl); hl = null; }
     paint();
   }
   async function load() {
